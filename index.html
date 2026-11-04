@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNI | S Natural Intelligence - Official Website</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f8ff;
+    color: #172b4d;
+}
+
+/* NAVIGATION */
+
+header {
+    background: rgba(7, 27, 59, 0.97);
+    color: white;
+    padding: 16px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    text-decoration: none;
+    transition: transform 0.25s ease;
+}
+
+.logo:hover {
+    transform: translateY(-2px);
+}
+
+.logo-mark {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #f5c75e;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #164783, #071b3b);
+    color: #f5c75e;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.logo:hover .logo-mark {
+    border-color: #f5c75e;
+    box-shadow: 0 0 18px rgba(245, 199, 94, 0.3);
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.brand-name {
+    color: #f5c75e;
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1;
+}
+
+.logo-text small {
+    color: #c5d2e6;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo,
+    .logo-mark {
+        transition: none;
+    }
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: color 0.3s, background-color 0.3s;
+}
+
+nav a:hover,
+nav a:focus-visible {
+    color: #f5c75e;
+    background: rgba(245, 199, 94, 0.12);
+}
+
+nav a:focus-visible {
+    outline: 2px solid #f5c75e;
+    outline-offset: 3px;
+}
+
+/* HERO */
+.hero {
+    min-height: 570px;
+    padding: 100px 8%;
+    background:
+        radial-gradient(circle at 80% 20%, rgba(245,199,94,0.18), transparent 30%),
+        linear-gradient(120deg, #041127, #0b3470, #124b91);
+    color: white;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 750px;
+    animation: appear 1.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+}
+
+.hero-content {
+    max-width: 750px;
+    animation: appear 1.2s ease;
+}
+
+.hero h1 {
+    font-size: 52px;
+    margin-bottom: 20px;
+}
+
+.hero h1 span {
+    color: #f5c75e;
+}
+
+.hero p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #e1eaff;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    background: #f5c75e;
+    color: #071b3b;
+    padding: 14px 28px;
+    border-radius: 7px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background: white;
+    transform: translateY(-3px);
+}
+
+/* SECTIONS */
+section {
+    padding: 75px 8%;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 34px;
+    color: #071b3b;
+    margin-bottom: 15px;
+}
+
+.section-subtitle {
+    text-align: center;
+    color: #65758d;
+    margin-bottom: 40px;
+}
+
+/* ABOUT */
+.about {
+    text-align: center;
+    max-width: 850px;
+    margin: auto;
+}
+
+.about p {
+    line-height: 1.9;
+    font-size: 17px;
+}
+
+/* SERVICES */
+.services {
+    background: #eaf1fc;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+}
+
+
+.card {
+    background: white;
+    padding: 35px 28px;
+    border-radius: 16px;
+    border: 1px solid #e2eaf5;
+    box-shadow: 0 8px 25px rgba(7,27,59,0.08);
+    transition: all 0.35s ease;
+    text-align: center;
+}
+
+
+.card {
+    background: white;
+    padding: 35px 28px;
+    border-radius: 16px;
+    border: 1px solid #e2eaf5;
+    box-shadow: 0 8px 25px rgba(7,27,59,0.08);
+    transition: all 0.35s ease;
+    text-align: center;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    border-color: #f5c75e;
+    box-shadow: 0 15px 35px rgba(7,27,59,0.15);
+}
+
+.card .symbol {
+    font-size: 45px;
+    margin-bottom: 20px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .symbol {
+    transform: scale(1.2);
+}
+
+}
+
+.card .symbol {
+    font-size: 45px;
+    margin-bottom: 20px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .symbol {
+    transform: scale(1.2);
+}
+
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.card .symbol {
+    font-size: 35px;
+    margin-bottom: 18px;
+}
+
+.card h3 {
+    color: #124b91;
+    margin-bottom: 12px;
+}
+
+.card p {
+    color: #65758d;
+    line-height: 1.7;
+}
+
+/* CONTACT */
+.contact {
+    text-align: center;
+    background: #071b3b;
+    color: white;
+}
+
+
+.contact {
+    text-align: center;
+    background: linear-gradient(135deg, #041127, #124b91);
+    color: white;
+    padding: 85px 8%;
+}
+
+.contact .section-title {
+    color: #f5c75e;
+    font-size: 38px;
+}
+
+.contact p {
+    margin: 20px 0 30px;
+    line-height: 1.9;
+    font-size: 17px;
+    color: #e1eaff;
+}
+
+.contact .btn {
+    display: inline-block;
+    background: #f5c75e;
+    color: #071b3b;
+    padding: 15px 35px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.contact .btn:hover {
+    background: white;
+    transform: translateY(-4px);
+}
+
+}
+
+
+.contact {
+    text-align: center;
+    background: linear-gradient(135deg, #041127, #124b91);
+    color: white;
+    padding: 85px 8%;
+}
+
+.contact .section-title {
+    color: #f5c75e;
+    font-size: 38px;
+}
+
+.contact p {
+    margin: 20px 0 30px;
+    line-height: 1.9;
+    font-size: 17px;
+    color: #e1eaff;
+}
+
+.contact .btn {
+    display: inline-block;
+    background: #f5c75e;
+    color: #071b3b;
+    padding: 15px 35px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.contact .btn:hover {
+    background: white;
+    transform: translateY(-4px);
+}
+
+}
+
+/* FOOTER */
+footer {
+    background: #041127;
+    color: #b9c7dd;
+    text-align: center;
+    padding: 22px;
+    font-size: 14px;
+}
+
+/* ANIMATION */
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* MOBILE */
+@media (max-width: 650px) {
+    header {
+        justify-content: center;
+        gap: 18px;
+    }
+
+    nav {
+        text-align: center;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    nav a {
+        padding: 8px 10px;
+    }
+
+    .hero {
+        padding: 75px 7%;
+        min-height: 450px;
+    }
+
+    .hero h1 {
+        font-size: 37px;
+    }
+
+    section {
+        padding: 55px 7%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<a class="logo" href="#home" aria-label="SNI home">
+    <span class="logo-mark" aria-hidden="true">S</span>
+
+    <div class="logo-text">
+        <span class="brand-name">SNI</span>
+        <small>S NATURAL INTELLIGENCE</small>
+    </div>
+</a>
+
+
+    <nav aria-label="Main navigation">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+    </nav>
+</header>
+
+<main>
+
+<section class="hero" id="home">
+    <div class="hero-content">
+        <h1>Welcome to <span>SNI</span></h1>
+        <p>
+            S Natural Intelligence<br>
+            Innovation, Technology and Creative Ideas.
+            Building a smarter and more connected future.
+        </p>
+        <a href="#about" class="btn">Discover More</a>
+    </div>
+</section>
+
+<section id="about">
+    <div class="about">
+        <h2 class="section-title">About SNI</h2>
+        <p class="section-subtitle">Ideas. Innovation. Intelligence.</p>
+
+        <p>
+            S Natural Intelligence (SNI) is a platform focused on
+            creativity, technology and innovative ideas.
+            Our vision is to explore new possibilities and create
+            meaningful digital experiences.
+        </p>
+    </div>
+</section>
+
+<section class="services" id="services">
+    <h2 class="section-title">Our Services</h2>
+    <p class="section-subtitle">
+        Explore our areas of interest
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="symbol">💡</div>
+            <h3>Innovation</h3>
+            <p>Creative thinking and new ideas for tomorrow.</p>
+        </div>
+
+        <div class="card">
+            <div class="symbol">💻</div>
+            <h3>Technology</h3>
+            <p>Modern digital solutions and technology concepts.</p>
+        </div>
+
+        <div class="card">
+            <div class="symbol">🚀</div>
+            <h3>Creative Ideas</h3>
+            <p>Turning imagination into meaningful experiences.</p>
+        </div>
+
+    </div>
+</section>
+
+
+<section class="contact" id="contact">
+
+    <h2 class="section-title">Let's Connect</h2>
+
+    <p>
+        Have an idea or want to connect with SNI?<br>
+        Let's create something meaningful together.
+    </p>
+
+    <a href="mailto:info@sni.org.in" class="btn">
+        ✉ Contact SNI
+    </a>
+
+    <p style="margin-top:30px;">
+        <strong>Email:</strong> info@sni.org.in
+        <br>
+        <strong>Website:</strong> www.sni.org.in
+    </p>
+
+</section>
+
+    <h2 class="section-title">Contact SNI</h2>
+    <p>
+        Have an idea or want to connect with us?<br>
+        We would be happy to hear from you.
+    </p>
+    <a href="mailto:info@sni.org.in" class="btn">
+        Email Us
+    </a>
+</section>
+
+</main>
+
+<footer>
+    © 2026 S Natural Intelligence (SNI). All Rights Reserved.
+</footer>
+
+</body>
+</html>
