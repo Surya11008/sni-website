@@ -50,39 +50,43 @@ header {
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     text-decoration: none;
-    filter: drop-shadow(0 0 8px #f5c75e75);
-    transition: filter 0.2s ease;
-}
-
-.logo:hover {
-    filter: drop-shadow(0 0 13px #f5c75eb8);
 }
 
 .logo-mark {
-    width: 48px;
-    height: 48px;
     position: relative;
-    display: grid;
-    place-items: center;
-    border: 2px solid var(--gold);
-    border-radius: 12px;
-    color: var(--gold);
-    font-size: 28px;
-    font-weight: bold;
-    text-shadow: 0 0 12px #f5c75ecc;
-    box-shadow: 0 0 16px #f5c75e80, inset 0 0 12px #f5c75e30;
+    display: block;
+    width: 54px;
+    height: 62px;
 }
 
-.logo-crown {
+.logo-emblem {
     position: absolute;
-    width: 29px;
-    height: 25px;
-    top: -18px;
-    left: 50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.logo-emblem-outline {
+    fill: #ffffff08;
+    stroke: #d9b85d;
+    stroke-width: 1.7;
+    stroke-linejoin: round;
+}
+
+.logo-emblem-crown {
     fill: var(--gold);
-    filter: drop-shadow(0 0 5px #f5c75ecc);
+}
+
+.logo-initial {
+    position: absolute;
+    top: 29px;
+    left: 50%;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1;
     transform: translateX(-50%);
 }
 
@@ -91,15 +95,13 @@ header {
     font-size: 27px;
     font-weight: bold;
     letter-spacing: 3px;
-    text-shadow: 0 0 12px #f5c75e99;
 }
 
 .logo small {
     display: block;
-    color: #fff0c2;
+    color: #d5e1f2;
     font-size: 9px;
     letter-spacing: 1.5px;
-    text-shadow: 0 0 8px #f5c75e80;
 }
 
 nav {
@@ -361,10 +363,11 @@ footer span {
 
     <a class="logo" href="#home">
         <div class="logo-mark">
-            <svg class="logo-crown" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M2 7l5 4 5-8 5 8 5-4-2 12H4L2 7zm2.4 14h15.2v2H4.4v-2z"/>
+            <svg class="logo-emblem" viewBox="0 0 56 64" aria-hidden="true">
+                <path class="logo-emblem-outline" d="M8 23 3 8l14 9L28 3l11 14 14-9-5 15q4 4 4 10v17q0 7-7 7H11q-7 0-7-7V33q0-6 4-10Z"/>
+                <path class="logo-emblem-crown" d="m18 23-2-7 7 4 5-8 5 8 7-4-2 7q-10 4-20 0Zm1 2h18v2H19z"/>
             </svg>
-            S
+            <span class="logo-initial">S</span>
         </div>
         <div>
             <div class="logo-name">SNI</div>
