@@ -320,6 +320,212 @@ footer span {
         font-size: 29px;
     }
 }
+
+/* GALAXY THEME */
+
+:root {
+    --navy: #080b1c;
+    --blue: #a9b5ff;
+    --gold: #c5a7ff;
+}
+
+html {
+    scroll-padding-top: 100px;
+}
+
+body {
+    background: #080b1c;
+    color: #eef0ff;
+    background-image:
+        radial-gradient(1px 1px at 12% 18%, #ffffffb3 50%, transparent 100%),
+        radial-gradient(1px 1px at 76% 34%, #c5a7ffb3 50%, transparent 100%),
+        radial-gradient(2px 2px at 42% 72%, #ffffff80 50%, transparent 100%),
+        radial-gradient(1px 1px at 91% 83%, #a9b5ffb3 50%, transparent 100%);
+    background-size: 310px 310px, 430px 430px, 570px 570px, 370px 370px;
+    background-attachment: fixed;
+}
+
+header {
+    background: #080b1ceF;
+    border-bottom: 1px solid #a9b5ff25;
+    backdrop-filter: blur(14px);
+}
+
+.logo-mark {
+    border-radius: 50%;
+    box-shadow: 0 0 20px #c5a7ff35, inset 0 0 14px #c5a7ff20;
+}
+
+.logo-name,
+.hero h1 span,
+.contact .section-title,
+.contact .email {
+    color: var(--gold);
+}
+
+nav a {
+    transition: color 0.2s, background 0.2s;
+}
+
+nav a:hover {
+    background: #a9b5ff15;
+}
+
+.hero {
+    position: relative;
+    min-height: 610px;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 75% 45%, #7549c345, transparent 34%),
+        radial-gradient(ellipse at 25% 80%, #2456a333, transparent 42%),
+        linear-gradient(125deg, #080b1c, #11183b 55%, #1a1740);
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 10%;
+    width: clamp(200px, 30vw, 390px);
+    aspect-ratio: 1;
+    border: 1px solid #c5a7ff45;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 34% 30%, #e6ddff, #9d7be8 13%, #493d9b 40%, #171a48 69%, #0b102b 72%);
+    box-shadow: 0 0 70px #8e6bf855, 0 0 150px #4639bb33;
+    transform: translateY(-50%);
+    opacity: 0.78;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 5%;
+    width: clamp(260px, 39vw, 510px);
+    aspect-ratio: 1;
+    border: 1px solid #c5a7ff35;
+    border-radius: 50%;
+    transform: translateY(-50%) rotate(-24deg) scaleY(0.35);
+    box-shadow: 0 0 35px #8e6bf822;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    animation: appear 1s ease;
+}
+
+.hero h1 {
+    text-shadow: 0 0 35px #a88aff30;
+}
+
+.hero p {
+    color: #d3d8f4;
+}
+
+.btn {
+    border: 1px solid #e0d3ff80;
+    border-radius: 999px;
+    background: linear-gradient(110deg, #c5a7ff, #8ca4ff);
+    box-shadow: 0 0 28px #9a7bff35;
+}
+
+.btn:hover {
+    color: #11142e;
+    background: #f0eaff;
+}
+
+section {
+    position: relative;
+    background-color: #0a0e22;
+}
+
+.section-title {
+    color: #f0edff;
+}
+
+.section-subtitle,
+.about-content p,
+.why-content p {
+    color: #aeb6d5;
+}
+
+.services {
+    background:
+        radial-gradient(ellipse at 50% 0, #6047a31c, transparent 60%),
+        #0d122b;
+}
+
+.card {
+    border: 1px solid #9faaff28;
+    background: linear-gradient(145deg, #151b39eF, #10152deF);
+    box-shadow: 0 12px 35px #0004, inset 0 1px #ffffff08;
+}
+
+.card:hover {
+    border-color: #c5a7ff99;
+    box-shadow: 0 15px 40px #7861d333, inset 0 1px #ffffff12;
+}
+
+.card h3 {
+    color: #c9caff;
+}
+
+.card p {
+    color: #aeb6d5;
+}
+
+.why {
+    background:
+        radial-gradient(ellipse at 50% 100%, #2d4d9d25, transparent 60%),
+        #090d20;
+}
+
+.contact {
+    background:
+        radial-gradient(ellipse at 50% 0, #7549c345, transparent 60%),
+        linear-gradient(135deg, #0a0e22, #11183b);
+}
+
+.contact p {
+    color: #d3d8f4;
+}
+
+footer {
+    border-top: 1px solid #a9b5ff20;
+    background: #070a18;
+}
+
+@media (max-width: 650px) {
+    html {
+        scroll-padding-top: 145px;
+    }
+
+    .hero {
+        min-height: 480px;
+    }
+
+    .hero::after {
+        right: -100px;
+        opacity: 0.35;
+    }
+
+    .hero::before {
+        right: -130px;
+        opacity: 0.3;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 </style>
 </head>
 
