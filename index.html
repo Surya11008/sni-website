@@ -57,37 +57,14 @@ header {
 .logo-mark {
     position: relative;
     display: block;
-    width: 54px;
-    height: 62px;
+    width: 82px;
+    height: 82px;
 }
 
 .logo-emblem {
-    position: absolute;
-    inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
-}
-
-.logo-emblem-outline {
-    fill: #ffffff08;
-    stroke: #d9b85d;
-    stroke-width: 1.7;
-    stroke-linejoin: round;
-}
-
-.logo-emblem-crown {
-    fill: var(--gold);
-}
-
-.logo-initial {
-    position: absolute;
-    top: 29px;
-    left: 50%;
-    color: #ffffff;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 1;
-    transform: translateX(-50%);
 }
 
 .logo-name {
@@ -363,11 +340,52 @@ footer span {
 
     <a class="logo" href="#home">
         <div class="logo-mark">
-            <svg class="logo-emblem" viewBox="0 0 56 64" aria-hidden="true">
-                <path class="logo-emblem-outline" d="M8 23 3 8l14 9L28 3l11 14 14-9-5 15q4 4 4 10v17q0 7-7 7H11q-7 0-7-7V33q0-6 4-10Z"/>
-                <path class="logo-emblem-crown" d="m18 23-2-7 7 4 5-8 5 8 7-4-2 7q-10 4-20 0Zm1 2h18v2H19z"/>
+            <svg class="logo-emblem" viewBox="0 0 100 100" role="img" aria-labelledby="logo-emblem-title">
+                <title id="logo-emblem-title">SNI crowned laurel emblem</title>
+                <defs>
+                    <linearGradient id="logo-gold" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#f0d47a"/>
+                        <stop offset="0.5" stop-color="#c59b35"/>
+                        <stop offset="1" stop-color="#8f681e"/>
+                    </linearGradient>
+                    <path id="logo-leaf" d="M0 0c-4-1-7-5-11-4 1 4 4 7 10 6z"/>
+                </defs>
+                <g fill="url(#logo-gold)" stroke="url(#logo-gold)" stroke-linecap="round" stroke-linejoin="round">
+                    <g stroke-width="0.9">
+                        <path fill="none" d="M41 25C24 32 14 47 15 64c1 14 10 25 29 31"/>
+                        <use href="#logo-leaf" transform="translate(39 28) rotate(-35)"/>
+                        <use href="#logo-leaf" transform="translate(33 32) rotate(-45)"/>
+                        <use href="#logo-leaf" transform="translate(27 37) rotate(-55)"/>
+                        <use href="#logo-leaf" transform="translate(22 43) rotate(-65)"/>
+                        <use href="#logo-leaf" transform="translate(18 50) rotate(-75)"/>
+                        <use href="#logo-leaf" transform="translate(16 58) rotate(-82)"/>
+                        <use href="#logo-leaf" transform="translate(17 66) rotate(-72)"/>
+                        <use href="#logo-leaf" transform="translate(20 74) rotate(-60)"/>
+                        <use href="#logo-leaf" transform="translate(25 81) rotate(-48)"/>
+                        <use href="#logo-leaf" transform="translate(32 87) rotate(-35)"/>
+                        <use href="#logo-leaf" transform="translate(40 92) rotate(-20)"/>
+                    </g>
+                    <g transform="translate(100 0) scale(-1 1)">
+                        <path fill="none" stroke-width="0.9" d="M41 25C24 32 14 47 15 64c1 14 10 25 29 31"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(39 28) rotate(-35)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(33 32) rotate(-45)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(27 37) rotate(-55)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(22 43) rotate(-65)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(18 50) rotate(-75)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(16 58) rotate(-82)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(17 66) rotate(-72)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(20 74) rotate(-60)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(25 81) rotate(-48)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(32 87) rotate(-35)"/>
+                        <use href="#logo-leaf" stroke-width="0.9" transform="translate(40 92) rotate(-20)"/>
+                    </g>
+                    <path d="M30 13c-1-1 0-3 1-3l8 7 11-10 11 10 8-7c1-1 2 1 1 3l-5 13H35z"/>
+                    <circle cx="30" cy="11" r="2.1"/>
+                    <circle cx="50" cy="7" r="2.1"/>
+                    <circle cx="70" cy="11" r="2.1"/>
+                </g>
+                <text x="50" y="71" fill="url(#logo-gold)" font-family="Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="-3" text-anchor="middle">S</text>
             </svg>
-            <span class="logo-initial">S</span>
         </div>
         <div>
             <div class="logo-name">SNI</div>
