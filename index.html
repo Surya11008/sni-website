@@ -52,11 +52,18 @@ header {
     align-items: center;
     gap: 12px;
     text-decoration: none;
+    filter: drop-shadow(0 0 8px #f5c75e75);
+    transition: filter 0.2s ease;
+}
+
+.logo:hover {
+    filter: drop-shadow(0 0 13px #f5c75eb8);
 }
 
 .logo-mark {
     width: 48px;
     height: 48px;
+    position: relative;
     display: grid;
     place-items: center;
     border: 2px solid var(--gold);
@@ -64,6 +71,19 @@ header {
     color: var(--gold);
     font-size: 28px;
     font-weight: bold;
+    text-shadow: 0 0 12px #f5c75ecc;
+    box-shadow: 0 0 16px #f5c75e80, inset 0 0 12px #f5c75e30;
+}
+
+.logo-crown {
+    position: absolute;
+    width: 29px;
+    height: 25px;
+    top: -18px;
+    left: 50%;
+    fill: var(--gold);
+    filter: drop-shadow(0 0 5px #f5c75ecc);
+    transform: translateX(-50%);
 }
 
 .logo-name {
@@ -71,13 +91,15 @@ header {
     font-size: 27px;
     font-weight: bold;
     letter-spacing: 3px;
+    text-shadow: 0 0 12px #f5c75e99;
 }
 
 .logo small {
     display: block;
-    color: #d5e1f2;
+    color: #fff0c2;
     font-size: 9px;
     letter-spacing: 1.5px;
+    text-shadow: 0 0 8px #f5c75e80;
 }
 
 nav {
@@ -338,7 +360,12 @@ footer span {
 <header>
 
     <a class="logo" href="#home">
-        <div class="logo-mark">S</div>
+        <div class="logo-mark">
+            <svg class="logo-crown" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 7l5 4 5-8 5 8 5-4-2 12H4L2 7zm2.4 14h15.2v2H4.4v-2z"/>
+            </svg>
+            S
+        </div>
         <div>
             <div class="logo-name">SNI</div>
             <small>S NATURAL INTELLIGENCE</small>
