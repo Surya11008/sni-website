@@ -422,7 +422,8 @@
             const isAdmin = user?.uid === ADMIN_UID;
             adminPanel.hidden = !isAdmin;
             adminToggle.hidden = isAdmin;
-            loginForm.hidden = isAdmin || loginForm.hidden;
+            if (isAdmin) adminToggle.setAttribute("aria-expanded", "false");
+            loginForm.hidden = isAdmin || adminToggle.getAttribute("aria-expanded") !== "true";
             if (unsubscribeVideos) unsubscribeVideos();
             unsubscribeVideos = onSnapshot(
                 query(videosCollection, orderBy("createdAt", "desc")),
