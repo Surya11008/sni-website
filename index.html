@@ -128,9 +128,9 @@ nav a:hover {
 
 .hero {
     min-height: 570px;
-    padding: 100px 8%;
+    padding: 48px 8% 100px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     color: white;
     background:
         radial-gradient(circle at 80% 20%, #f5c75e30, transparent 30%),
@@ -156,6 +156,62 @@ nav a:hover {
     font-size: 19px;
     color: #e1eaff;
     margin-bottom: 30px;
+}
+
+.hero-site-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.hero-site-card {
+    display: flex;
+    flex: 1 1 210px;
+    align-items: center;
+    gap: 12px;
+    max-width: 250px;
+    padding: 12px 15px;
+    border: 1px solid #ffffff35;
+    border-radius: 12px;
+    background: #ffffff12;
+    color: white;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.hero-site-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--gold);
+    background: #ffffff20;
+}
+
+.hero-site-card:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+}
+
+.hero-site-logo {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 10px;
+    background: white;
+    color: var(--blue);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.hero-site-name {
+    display: block;
+    font-weight: bold;
+}
+
+.hero-site-url {
+    display: block;
+    color: #d5e1f2;
+    font-size: 12px;
 }
 
 .btn {
@@ -334,7 +390,7 @@ footer span {
 
     .hero {
         min-height: 450px;
-        padding: 75px 7%;
+        padding: 40px 7% 75px;
     }
 
     section {
@@ -390,19 +446,31 @@ footer span {
 
     <div class="hero-content">
 
-        <h1>
-            Welcome to <span>SNI</span>
-        </h1>
+        <div class="hero-site-links" aria-label="SNI websites">
+            <a class="hero-site-card" href="https://star.sni.org.in/" target="_blank" rel="noopener noreferrer">
+                <span class="hero-site-logo" aria-hidden="true">★</span>
+                <span>
+                    <span class="hero-site-name">STAR</span>
+                    <span class="hero-site-url">star.sni.org.in</span>
+                </span>
+            </a>
 
-        <p>
-            S Natural Intelligence<br>
-            Innovation, Technology and Creative Ideas.
-            Building a smarter and more connected future.
-        </p>
+            <a class="hero-site-card" href="https://support.sni.org.in/" target="_blank" rel="noopener noreferrer">
+                <span class="hero-site-logo" aria-hidden="true">S</span>
+                <span>
+                    <span class="hero-site-name">Support</span>
+                    <span class="hero-site-url">support.sni.org.in</span>
+                </span>
+            </a>
 
-        <a href="#about" class="btn">
-            Discover More
-        </a>
+            <a class="hero-site-card" href="https://eva.sni.org.in/" target="_blank" rel="noopener noreferrer">
+                <span class="hero-site-logo" aria-hidden="true">E</span>
+                <span>
+                    <span class="hero-site-name">EVA</span>
+                    <span class="hero-site-url">eva.sni.org.in</span>
+                </span>
+            </a>
+        </div>
 
     </div>
 
