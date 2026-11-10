@@ -94,12 +94,26 @@ body {
     transform: translateY(-2px);
 }
 
-.site-nav .site-search-link {
+.site-nav .site-search-link,
+.site-search-link {
     display: inline-grid;
     width: 36px;
     height: 36px;
     padding: 0;
     place-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--white);
+    cursor: pointer;
+    border-radius: 6px;
+    font: inherit;
+    transition: color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+}
+
+.site-search-link:hover {
+    color: var(--gold);
+    background: #ffffff15;
+    transform: translateY(-2px);
 }
 
 .site-search-link svg,
