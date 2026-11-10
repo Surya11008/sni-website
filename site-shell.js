@@ -153,6 +153,24 @@ if (installButton) {
             keywords: "services solutions web development engineering cloud technology tools creative systems"
         },
         {
+            title: "Notices & Announcements",
+            desc: "Official SNI notifications, announcements, timetables, circulars, and updates.",
+            category: "Pages",
+            categorySlug: "notices",
+            icon: "📢",
+            url: `${rootPrefix}index.html#notices`,
+            keywords: "notices announcements news circulars updates alerts notifications guidelines notice board"
+        },
+        {
+            title: "New Arrivals",
+            desc: "Explore newly launched portals, games, materials, publications, and feature arrivals.",
+            category: "Pages",
+            categorySlug: "arrivals",
+            icon: "✨",
+            url: `${rootPrefix}index.html#new-arrivals`,
+            keywords: "new arrivals latest recent added additions games releases updates releases"
+        },
+        {
             title: "Why SNI — Natural vs Artificial Intelligence",
             desc: "Why choose S Natural Intelligence. Combining human insight, organic intelligence and tech excellence.",
             category: "Pages",

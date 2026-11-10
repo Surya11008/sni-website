@@ -487,6 +487,462 @@ footer span:hover {
         transform: none;
     }
 }
+
+/* NOTICES & ANNOUNCEMENTS */
+.notices-section {
+    background: #ffffff;
+    padding: 80px 8%;
+}
+
+.arrivals-section {
+    background: #eaf1fc;
+    padding: 80px 8%;
+}
+
+.section-head-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 35px;
+}
+
+.section-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(7, 27, 59, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    margin-top: 10px;
+}
+
+.section-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(7, 27, 59, 0.3);
+    background: linear-gradient(135deg, #0b2d62, #1860b8);
+}
+
+.notices-grid,
+.arrivals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+/* Notice Card */
+.notice-card {
+    background: white;
+    padding: 26px 24px;
+    border-radius: 16px;
+    border: 1px solid #e2eaf5;
+    box-shadow: 0 8px 25px #071b3b10;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    position: relative;
+}
+
+.notice-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold);
+    box-shadow: 0 14px 30px #071b3b18;
+}
+
+.notice-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.notice-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #eaf1fc;
+    color: var(--blue);
+}
+
+.notice-date {
+    font-size: 12px;
+    color: #65758d;
+    font-weight: 600;
+}
+
+.notice-card h3 {
+    color: var(--navy);
+    font-size: 18px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.notice-details {
+    color: #53647c;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex-grow: 1;
+    white-space: pre-line;
+}
+
+.notice-attachment {
+    margin-bottom: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e2eaf5;
+    background: #f8fafc;
+}
+
+.notice-attachment img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.notice-attachment img:hover {
+    transform: scale(1.02);
+}
+
+.notice-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.notice-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eaf1fc;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.notice-link-btn:hover {
+    background: var(--blue);
+    color: white;
+}
+
+.item-delete-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.item-delete-btn:hover {
+    color: #e11d48;
+}
+
+/* Arrival Card */
+.arrival-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2eaf5;
+    box-shadow: 0 8px 25px #071b3b10;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    overflow: hidden;
+}
+
+.arrival-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold);
+    box-shadow: 0 14px 30px #071b3b18;
+}
+
+.arrival-media-wrap {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, #071b3b, #124b91);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.arrival-media-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.arrival-card:hover .arrival-media-wrap img {
+    transform: scale(1.05);
+}
+
+.arrival-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.arrival-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.arrival-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(245, 199, 94, 0.25);
+    color: #8c5804;
+}
+
+.arrival-date {
+    font-size: 11px;
+    color: #65758d;
+    font-weight: 600;
+}
+
+.arrival-card h3 {
+    color: var(--navy);
+    font-size: 17px;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    flex-grow: 1;
+}
+
+.arrival-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.arrival-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 7px 15px;
+    border-radius: 8px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.arrival-link-btn:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+/* Modal Windows */
+.sni-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 17, 39, 0.7);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 20000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.sni-modal-overlay.active {
+    display: flex;
+}
+
+.sni-modal-card {
+    background: white;
+    border-radius: 20px;
+    max-width: 520px;
+    width: 100%;
+    padding: 26px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.sni-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2eaf5;
+}
+
+.sni-modal-title {
+    font-size: 20px;
+    color: var(--navy);
+    font-weight: bold;
+}
+
+.sni-modal-close {
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #475569;
+    transition: background 0.2s ease;
+}
+
+.sni-modal-close:hover {
+    background: #e2e8f0;
+}
+
+.sni-form-group {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.sni-form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.sni-form-input,
+.sni-form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #f8fafc;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.sni-form-input:focus,
+.sni-form-textarea:focus {
+    border-color: var(--blue);
+    background: #ffffff;
+}
+
+.sni-form-textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.sni-upload-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.sni-upload-box:hover {
+    border-color: var(--blue);
+}
+
+.sni-upload-preview {
+    max-height: 120px;
+    border-radius: 8px;
+    margin-top: 8px;
+    display: none;
+    object-fit: cover;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sni-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid #e2eaf5;
+}
+
+.sni-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.sni-btn-submit {
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.empty-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+    font-size: 14px;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+}
+
 </style>
 </head>
 
@@ -698,6 +1154,437 @@ footer span:hover {
     All Rights Reserved.
 
 </footer>
+
+
+<!-- Notice Modal -->
+<div class="sni-modal-overlay" id="noticeModal">
+    <div class="sni-modal-card">
+        <div class="sni-modal-header">
+            <h3 class="sni-modal-title">Post New Notice</h3>
+            <button type="button" class="sni-modal-close" id="closeNoticeModalBtn">&times;</button>
+        </div>
+        <form id="noticeForm">
+            <div class="sni-form-group">
+                <label for="noticeTitle">Notice Title *</label>
+                <input type="text" id="noticeTitle" class="sni-form-input" placeholder="e.g., Annual Evaluation Guidelines Released" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="noticeDate">Date *</label>
+                <input type="date" id="noticeDate" class="sni-form-input" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="noticeDetails">Details / Description *</label>
+                <textarea id="noticeDetails" class="sni-form-textarea" placeholder="Write full notice details here..." required></textarea>
+            </div>
+            <div class="sni-form-group">
+                <label for="noticeLink">Link Embed (Optional)</label>
+                <input type="url" id="noticeLink" class="sni-form-input" placeholder="e.g., https://example.com or page URL">
+            </div>
+            <div class="sni-form-group">
+                <label>Upload File / Image (Optional)</label>
+                <div class="sni-upload-box" onclick="document.getElementById('noticeFile').click()">
+                    <span style="font-size: 13px; color: #475569;">📁 Click here to choose an image or document</span>
+                    <input type="file" id="noticeFile" accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                    <img id="noticeFilePreview" class="sni-upload-preview" alt="Preview">
+                </div>
+            </div>
+            <div class="sni-modal-actions">
+                <button type="button" class="sni-btn-cancel" id="cancelNoticeBtn">Cancel</button>
+                <button type="submit" class="sni-btn-submit">Post Notice</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Arrival Modal -->
+<div class="sni-modal-overlay" id="arrivalModal">
+    <div class="sni-modal-card">
+        <div class="sni-modal-header">
+            <h3 class="sni-modal-title">Add New Arrival</h3>
+            <button type="button" class="sni-modal-close" id="closeArrivalModalBtn">&times;</button>
+        </div>
+        <form id="arrivalForm">
+            <div class="sni-form-group">
+                <label for="arrivalTitle">Title *</label>
+                <input type="text" id="arrivalTitle" class="sni-form-input" placeholder="e.g., Word Search 1000 Stages Game" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="arrivalDate">Date *</label>
+                <input type="date" id="arrivalDate" class="sni-form-input" required>
+            </div>
+            <div class="sni-form-group">
+                <label>Upload Preview Image / Cover (Optional)</label>
+                <div class="sni-upload-box" onclick="document.getElementById('arrivalFile').click()">
+                    <span style="font-size: 13px; color: #475569;">🖼️ Click here to select image</span>
+                    <input type="file" id="arrivalFile" accept="image/*" style="display: none;">
+                    <img id="arrivalFilePreview" class="sni-upload-preview" alt="Preview">
+                </div>
+            </div>
+            <div class="sni-form-group">
+                <label for="arrivalLink">Link Embed (Optional)</label>
+                <input type="url" id="arrivalLink" class="sni-form-input" placeholder="e.g., wordsearch.html or https://...">
+            </div>
+            <div class="sni-modal-actions">
+                <button type="button" class="sni-btn-cancel" id="cancelArrivalBtn">Cancel</button>
+                <button type="submit" class="sni-btn-submit">Add Arrival</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// --- NOTICES & NEW ARRIVALS STATE & LOGIC ---
+(function() {
+    // Initial Default Notices
+    const defaultNotices = [
+        {
+            id: 'not-1',
+            title: 'Official Evaluation Schedule & Timetable 2026',
+            date: '2026-11-10',
+            details: 'The official schedule for all subjects and academies is fully published and accessible. Open the Evaluation page to inspect your slots and test dates.',
+            link: 'evaluation/',
+            fileData: null
+        },
+        {
+            id: 'not-2',
+            title: 'Word Search Game Released with 1000 Stages',
+            date: '2026-11-09',
+            details: 'A brand-new 1000-stage Word Search game is now live on SNI! Challenge your vocabulary, track stage progress, and compete across 1000 levels.',
+            link: 'wordsearch.html',
+            fileData: null
+        },
+        {
+            id: 'not-3',
+            title: 'Support Portal & Resource Materials Updated',
+            date: '2026-11-05',
+            details: 'Updated preaching videos, SPB books, and study guides have been uploaded to the Support library. All resources can be accessed freely.',
+            link: 'support/',
+            fileData: null
+        }
+    ];
+
+    // Initial Default New Arrivals
+    const defaultArrivals = [
+        {
+            id: 'arr-1',
+            title: 'Word Search — 1000 Stages Game',
+            date: '2026-11-10',
+            link: 'wordsearch.html',
+            fileData: null,
+            symbol: '🔤'
+        },
+        {
+            id: 'arr-2',
+            title: 'Official Schedule Timetable 2026',
+            date: '2026-11-08',
+            link: 'evaluation/',
+            fileData: null,
+            symbol: '📅'
+        },
+        {
+            id: 'arr-3',
+            title: 'STAR Galaxy Academies & Member Tracking',
+            date: '2026-11-02',
+            link: 'star/',
+            fileData: null,
+            symbol: '★'
+        }
+    ];
+
+    // Load from LocalStorage or seed defaults
+    function getNotices() {
+        try {
+            const data = localStorage.getItem('sni_notices');
+            return data ? JSON.parse(data) : defaultNotices;
+        } catch(e) {
+            return defaultNotices;
+        }
+    }
+
+    function saveNotices(notices) {
+        localStorage.setItem('sni_notices', JSON.stringify(notices));
+    }
+
+    function getArrivals() {
+        try {
+            const data = localStorage.getItem('sni_arrivals');
+            return data ? JSON.parse(data) : defaultArrivals;
+        } catch(e) {
+            return defaultArrivals;
+        }
+    }
+
+    function saveArrivals(arrivals) {
+        localStorage.setItem('sni_arrivals', JSON.stringify(arrivals));
+    }
+
+    // Render Notices
+    function renderNotices() {
+        const container = document.getElementById('noticesContainer');
+        if (!container) return;
+        const notices = getNotices();
+
+        if (notices.length === 0) {
+            container.innerHTML = '<div class="empty-placeholder">No notices posted yet. Click "+ New Notice" to post the first notice.</div>';
+            return;
+        }
+
+        container.innerHTML = notices.map(item => {
+            const formattedDate = item.date || 'Recent';
+            let attachmentHtml = '';
+            if (item.fileData) {
+                if (item.fileData.startsWith('data:image')) {
+                    attachmentHtml = `<div class="notice-attachment"><img src="${item.fileData}" alt="Notice Attachment" onclick="window.open('${item.fileData}')"></div>`;
+                } else {
+                    attachmentHtml = `<div class="notice-attachment"><a href="${item.fileData}" download="notice-file" class="notice-link-btn" style="width:100%; justify-content:center;">📎 Download Attachment</a></div>`;
+                }
+            }
+
+            let linkHtml = '';
+            if (item.link) {
+                linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="notice-link-btn">Visit Link ↗</a>`;
+            }
+
+            return `
+                <div class="notice-card" id="notice-${item.id}">
+                    <div class="notice-top-row">
+                        <span class="notice-tag">📢 Notice</span>
+                        <span class="notice-date">${formattedDate}</span>
+                    </div>
+                    <h3>${escapeHtml(item.title)}</h3>
+                    <p class="notice-details">${escapeHtml(item.details)}</p>
+                    ${attachmentHtml}
+                    <div class="notice-bottom-row">
+                        <div>${linkHtml}</div>
+                        <button type="button" class="item-delete-btn" onclick="deleteNotice('${item.id}')" title="Delete notice">&times;</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Render Arrivals
+    function renderArrivals() {
+        const container = document.getElementById('arrivalsContainer');
+        if (!container) return;
+        const arrivals = getArrivals();
+
+        if (arrivals.length === 0) {
+            container.innerHTML = '<div class="empty-placeholder">No arrivals added yet. Click "+ Add New Arrival" to add the first item.</div>';
+            return;
+        }
+
+        container.innerHTML = arrivals.map(item => {
+            const formattedDate = item.date || 'New';
+            let mediaHtml = '';
+            if (item.fileData) {
+                mediaHtml = `<img src="${item.fileData}" alt="${escapeHtml(item.title)}">`;
+            } else {
+                mediaHtml = `<span class="arrival-placeholder-icon" style="font-size: 55px;">${item.symbol || '✨'}</span>`;
+            }
+
+            let linkHtml = '';
+            if (item.link) {
+                linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="arrival-link-btn">Explore ↗</a>`;
+            }
+
+            return `
+                <div class="arrival-card" id="arrival-${item.id}">
+                    <div class="arrival-media-wrap">
+                        ${mediaHtml}
+                    </div>
+                    <div class="arrival-body">
+                        <div class="arrival-top-row">
+                            <span class="arrival-badge">✨ Arrival</span>
+                            <span class="arrival-date">${formattedDate}</span>
+                        </div>
+                        <h3>${escapeHtml(item.title)}</h3>
+                        <div class="arrival-bottom-row">
+                            <div>${linkHtml}</div>
+                            <button type="button" class="item-delete-btn" onclick="deleteArrival('${item.id}')" title="Delete arrival">&times;</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Global deletion functions
+    window.deleteNotice = function(id) {
+        if (!confirm('Are you sure you want to delete this notice?')) return;
+        let notices = getNotices().filter(n => n.id !== id);
+        saveNotices(notices);
+        renderNotices();
+    };
+
+    window.deleteArrival = function(id) {
+        if (!confirm('Are you sure you want to delete this arrival?')) return;
+        let arrivals = getArrivals().filter(a => a.id !== id);
+        saveArrivals(arrivals);
+        renderArrivals();
+    };
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // Modal Control Setup
+    function setupModals() {
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Notice Modal
+        const noticeModal = document.getElementById('noticeModal');
+        const openNoticeBtn = document.getElementById('openNoticeModalBtn');
+        const closeNoticeBtn = document.getElementById('closeNoticeModalBtn');
+        const cancelNoticeBtn = document.getElementById('cancelNoticeBtn');
+        const noticeForm = document.getElementById('noticeForm');
+        const noticeDate = document.getElementById('noticeDate');
+        const noticeFile = document.getElementById('noticeFile');
+        const noticeFilePreview = document.getElementById('noticeFilePreview');
+
+        let noticeUploadedData = null;
+
+        if (openNoticeBtn && noticeModal) {
+            openNoticeBtn.addEventListener('click', () => {
+                noticeForm.reset();
+                noticeDate.value = todayStr;
+                noticeFilePreview.style.display = 'none';
+                noticeFilePreview.src = '';
+                noticeUploadedData = null;
+                noticeModal.classList.add('active');
+            });
+            const closeN = () => noticeModal.classList.remove('active');
+            closeNoticeBtn.addEventListener('click', closeN);
+            cancelNoticeBtn.addEventListener('click', closeN);
+            noticeModal.addEventListener('click', (e) => {
+                if (e.target === noticeModal) closeN();
+            });
+
+            noticeFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    noticeUploadedData = ev.target.result;
+                    if (file.type.startsWith('image/')) {
+                        noticeFilePreview.src = noticeUploadedData;
+                        noticeFilePreview.style.display = 'block';
+                    } else {
+                        noticeFilePreview.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            noticeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('noticeTitle').value.trim();
+                const date = document.getElementById('noticeDate').value;
+                const details = document.getElementById('noticeDetails').value.trim();
+                const link = document.getElementById('noticeLink').value.trim();
+
+                const newNotice = {
+                    id: 'not-' + Date.now(),
+                    title,
+                    date,
+                    details,
+                    link: link || null,
+                    fileData: noticeUploadedData || null
+                };
+
+                const list = getNotices();
+                list.unshift(newNotice);
+                saveNotices(list);
+                renderNotices();
+                closeN();
+            });
+        }
+
+        // Arrival Modal
+        const arrivalModal = document.getElementById('arrivalModal');
+        const openArrivalBtn = document.getElementById('openArrivalModalBtn');
+        const closeArrivalBtn = document.getElementById('closeArrivalModalBtn');
+        const cancelArrivalBtn = document.getElementById('cancelArrivalBtn');
+        const arrivalForm = document.getElementById('arrivalForm');
+        const arrivalDate = document.getElementById('arrivalDate');
+        const arrivalFile = document.getElementById('arrivalFile');
+        const arrivalFilePreview = document.getElementById('arrivalFilePreview');
+
+        let arrivalUploadedData = null;
+
+        if (openArrivalBtn && arrivalModal) {
+            openArrivalBtn.addEventListener('click', () => {
+                arrivalForm.reset();
+                arrivalDate.value = todayStr;
+                arrivalFilePreview.style.display = 'none';
+                arrivalFilePreview.src = '';
+                arrivalUploadedData = null;
+                arrivalModal.classList.add('active');
+            });
+            const closeA = () => arrivalModal.classList.remove('active');
+            closeArrivalBtn.addEventListener('click', closeA);
+            cancelArrivalBtn.addEventListener('click', closeA);
+            arrivalModal.addEventListener('click', (e) => {
+                if (e.target === arrivalModal) closeA();
+            });
+
+            arrivalFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    arrivalUploadedData = ev.target.result;
+                    if (file.type.startsWith('image/')) {
+                        arrivalFilePreview.src = arrivalUploadedData;
+                        arrivalFilePreview.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            arrivalForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('arrivalTitle').value.trim();
+                const date = document.getElementById('arrivalDate').value;
+                const link = document.getElementById('arrivalLink').value.trim();
+
+                const newArrival = {
+                    id: 'arr-' + Date.now(),
+                    title,
+                    date,
+                    link: link || null,
+                    fileData: arrivalUploadedData || null,
+                    symbol: '✨'
+                };
+
+                const list = getArrivals();
+                list.unshift(newArrival);
+                saveArrivals(list);
+                renderArrivals();
+                closeA();
+            });
+        }
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNotices();
+            renderArrivals();
+            setupModals();
+        });
+    } else {
+        renderNotices();
+        renderArrivals();
+        setupModals();
+    }
+})();
+</script>
 
 <script src="site-shell.js" defer></script>
 </body>
