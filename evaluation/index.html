@@ -52,6 +52,28 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        /* Normal, smooth, calm blinking & pulsing */
+        @keyframes ping {
+            0% { transform: scale(1); opacity: 0.8; }
+            75%, 100% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15%); }
+        }
+        .animate-ping {
+            animation: ping 2.8s cubic-bezier(0, 0, 0.2, 1) infinite !important;
+        }
+        .animate-pulse {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+        }
+        .animate-bounce {
+            animation: bounce 2.4s ease-in-out infinite !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
