@@ -139,48 +139,24 @@ nav a:focus-visible,
     outline-offset: 3px;
 }
 
-/* HERO */
-
-.hero {
-    padding: clamp(32px, 6vw, 64px) 8%;
-    display: flex;
-    align-items: flex-start;
-    color: white;
-    background:
-        radial-gradient(circle at 80% 20%, #f5c75e30, transparent 30%),
-        linear-gradient(120deg, #041127, #0b3470, #124b91);
-}
-
-.hero-content {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    animation: appear 1s ease;
-}
-
-.hero h1 {
-    font-size: clamp(38px, 6vw, 62px);
-    line-height: 1.2;
-    margin-bottom: 22px;
-}
-
-.hero h1 span {
-    color: var(--gold);
-}
-
-.hero p {
-    font-size: 19px;
-    color: #e1eaff;
-    margin-bottom: 30px;
-}
-
-.hero-site-links {
+.site-card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
     gap: 12px;
 }
 
-.hero-site-card {
+.site-shortcuts {
+    padding: 48px 8%;
+    background: linear-gradient(120deg, #041127, #0b3470, #124b91);
+}
+
+.site-shortcuts .site-card-grid {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.site-card {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -194,18 +170,18 @@ nav a:focus-visible,
     transition: 0.3s;
 }
 
-.hero-site-card:hover {
+.site-card:hover {
     transform: translateY(-4px);
     border-color: var(--gold);
     background: #ffffff20;
 }
 
-.hero-site-card:focus-visible {
+.site-card:focus-visible {
     outline: 3px solid var(--gold);
     outline-offset: 3px;
 }
 
-.hero-site-logo {
+.site-card-logo {
     display: grid;
     flex: 0 0 42px;
     width: 42px;
@@ -218,12 +194,12 @@ nav a:focus-visible,
     font-weight: bold;
 }
 
-.hero-site-name {
+.site-card-name {
     display: block;
     font-weight: bold;
 }
 
-.hero-site-url {
+.site-card-url {
     display: block;
     color: #d5e1f2;
     font-size: 12px;
@@ -381,19 +357,6 @@ footer span {
     color: var(--gold);
 }
 
-/* ANIMATION */
-
-@keyframes appear {
-    from {
-        opacity: 0;
-        transform: translateY(25px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* MOBILE */
 
 @media (max-width: 650px) {
@@ -409,8 +372,8 @@ footer span {
         padding: 7px 9px;
     }
 
-    .hero {
-        padding: 32px 7%;
+    .site-shortcuts {
+        padding: 36px 7%;
     }
 
     section {
@@ -451,7 +414,7 @@ footer span:hover {
 
     .logo:hover,
     nav a:hover,
-    .hero-site-card:hover,
+    .site-card:hover,
     .card:hover,
     .btn:hover,
     .contact .email:hover,
@@ -469,7 +432,7 @@ footer span:hover {
 
 <body>
 
-<header>
+<header id="home">
 
     <a class="logo" href="#home">
         <div class="logo-mark">
@@ -483,10 +446,6 @@ footer span:hover {
 
     <nav>
         <a href="#home">Home</a>
-        <a href="star.html">Star</a>
-        <a href="support.html">Support</a>
-        <a href="evaluation.html">Evaluation</a>
-        <a href="videos.html">Videos</a>
         <a href="#about">About</a>
         <a href="#services">Services</a>
         <a href="#why">Why SNI</a>
@@ -496,42 +455,6 @@ footer span:hover {
 </header>
 
 <main>
-
-<!-- HOME -->
-
-<section class="hero" id="home">
-
-    <div class="hero-content">
-
-        <div class="hero-site-links" aria-label="SNI websites">
-            <a class="hero-site-card" href="star.html">
-                <span class="hero-site-logo" aria-hidden="true">★</span>
-                <span>
-                    <span class="hero-site-name">STAR</span>
-                    <span class="hero-site-url">star.sni.org.in</span>
-                </span>
-            </a>
-
-            <a class="hero-site-card" href="support.html">
-                <span class="hero-site-logo" aria-hidden="true">S</span>
-                <span>
-                    <span class="hero-site-name">Support</span>
-                    <span class="hero-site-url">support.sni.org.in</span>
-                </span>
-            </a>
-
-            <a class="hero-site-card" href="evaluation.html">
-                <span class="hero-site-logo" aria-hidden="true">E</span>
-                <span>
-                    <span class="hero-site-name">EVA</span>
-                    <span class="hero-site-url">eva.sni.org.in</span>
-                </span>
-            </a>
-        </div>
-
-    </div>
-
-</section>
 
 <!-- ABOUT -->
 
@@ -657,6 +580,42 @@ footer span:hover {
 </section>
 
 </main>
+
+<section class="site-shortcuts" aria-label="SNI websites and videos">
+    <div class="site-card-grid">
+        <a class="site-card" href="https://star.sni.org.in/">
+            <span class="site-card-logo" aria-hidden="true">★</span>
+            <span>
+                <span class="site-card-name">STAR</span>
+                <span class="site-card-url">star.sni.org.in</span>
+            </span>
+        </a>
+
+        <a class="site-card" href="https://support.sni.org.in/">
+            <span class="site-card-logo" aria-hidden="true">S</span>
+            <span>
+                <span class="site-card-name">Support</span>
+                <span class="site-card-url">support.sni.org.in</span>
+            </span>
+        </a>
+
+        <a class="site-card" href="https://eva.sni.org.in/">
+            <span class="site-card-logo" aria-hidden="true">E</span>
+            <span>
+                <span class="site-card-name">Evaluation</span>
+                <span class="site-card-url">eva.sni.org.in</span>
+            </span>
+        </a>
+
+        <a class="site-card" href="videos.html">
+            <span class="site-card-logo" aria-hidden="true">▶</span>
+            <span>
+                <span class="site-card-name">Videos</span>
+                <span class="site-card-url">Browse video library</span>
+            </span>
+        </a>
+    </div>
+</section>
 
 <footer>
 
