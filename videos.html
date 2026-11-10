@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071b3b">
+    <title>Videos | SNI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    <link rel="stylesheet" href="site-pages.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="site-logo" href="index.html#home">
+            <img src="Images/sni-logo.png" alt="">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#home">Home</a>
+            <a href="star.html">Star</a>
+            <a href="support.html">Support</a>
+            <a href="evaluation.html">Evaluation</a>
+            <a href="videos.html" aria-current="page">Videos</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#services">Services</a>
+            <a href="index.html#contact">Contact</a>
+        </nav>
+    </header>
+    <main class="app-main">
+        <div class="app-heading">
+            <div>
+                <h1>Videos</h1>
+                <p>Browse videos by category.</p>
+            </div>
+        </div>
+        <p class="video-intro">Paste YouTube, Vimeo, or direct video URLs into <code>videos.json</code> under a category name. Put each URL in quotes inside its category list; the videos and category filters update automatically.</p>
+        <pre class="video-example"><code>{
+  "Worship": [],
+  "Education": []
+}</code></pre>
+        <div class="video-categories" id="video-categories" aria-label="Filter videos by category"></div>
+        <p class="video-message" id="video-message" role="status">Loading videos…</p>
+        <div class="video-grid" id="video-grid"></div>
+    </main>
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). <a href="index.html">Home</a></footer>
+    <script>
+        const categoryContainer = document.getElementById("video-categories");
+        const videoGrid = document.getElementById("video-grid");
+        const message = document.getElementById("video-message");
+        let allVideos = [];
+
+        function parseVideoUrl(value) {
+            let url;
+            try {
+                url = new URL(value);
+            } catch {
+                return null;
+            }
+
+            if (url.protocol !== "https:") return null;
+            const host = url.hostname.toLowerCase().replace(/^www\./, "");
+
+            if (host === "youtu.be" || host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+                const parts = url.pathname.split("/").filter(Boolean);
+                const id = host === "youtu.be"
+                    ? parts[0]
+                    : url.searchParams.get("v") || (["embed", "shorts", "live"].includes(parts[0]) ? parts[1] : "");
+                if (!/^[\w-]{11}$/.test(id || "")) return null;
+                return { kind: "embed", src: `https://www.youtube-nocookie.com/embed/${id}` };
+            }
+
+            if (host === "vimeo.com" || host === "player.vimeo.com") {
+                const parts = url.pathname.split("/").filter(Boolean);
+                const id = host === "player.vimeo.com" && parts[0] === "video" ? parts[1] : parts[0];
+                if (!/^\d{6,12}$/.test(id || "")) return null;
+                return { kind: "embed", src: `https://player.vimeo.com/video/${id}` };
+            }
+
+            if (/\.(mp4|webm|ogg)$/i.test(url.pathname)) {
+                return { kind: "video", src: url.href };
+            }
+
+            return { kind: "link", src: url.href };
+        }
+
+        function showMessage(text, isError = false) {
+            message.textContent = text;
+            message.classList.toggle("error", isError);
+            message.hidden = false;
+        }
+
+        function renderVideos(category = "All") {
+            videoGrid.replaceChildren();
+            const visibleVideos = category === "All"
+                ? allVideos
+                : allVideos.filter(video => video.category === category);
+
+            if (!visibleVideos.length) {
+                showMessage("No videos in this category yet. Add video links to videos.json.");
+                return;
+            }
+
+            message.hidden = true;
+            visibleVideos.forEach(video => {
+                const card = document.createElement("article");
+                card.className = "video-card";
+                const title = `${video.category} · Video ${video.number}`;
+
+                if (video.embed.kind === "embed") {
+                    const frame = document.createElement("iframe");
+                    frame.src = video.embed.src;
+                    frame.title = title;
+                    frame.loading = "lazy";
+                    frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                    frame.allowFullscreen = true;
+                    frame.referrerPolicy = "strict-origin-when-cross-origin";
+                    card.append(frame);
+                } else if (video.embed.kind === "video") {
+                    const player = document.createElement("video");
+                    player.src = video.embed.src;
+                    player.controls = true;
+                    player.preload = "metadata";
+                    card.append(player);
+                } else {
+                    const openLink = document.createElement("a");
+                    openLink.href = video.embed.src;
+                    openLink.className = "video-link-preview";
+                    openLink.target = "_blank";
+                    openLink.rel = "noopener noreferrer";
+                    openLink.textContent = "Open video link";
+                    card.append(openLink);
+                }
+
+                const info = document.createElement("div");
+                info.className = "video-card-info";
+                const heading = document.createElement("h2");
+                heading.textContent = title;
+                const categoryLabel = document.createElement("p");
+                categoryLabel.textContent = video.category;
+                info.append(heading, categoryLabel);
+                card.append(info);
+                videoGrid.append(card);
+            });
+        }
+
+        function createFilters(categories) {
+            categoryContainer.replaceChildren();
+            ["All", ...categories].forEach((category, index) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "video-filter";
+                button.textContent = category === "All" ? "All videos" : category;
+                button.setAttribute("aria-pressed", index === 0 ? "true" : "false");
+                button.addEventListener("click", () => {
+                    categoryContainer.querySelectorAll("button").forEach(filter => {
+                        filter.setAttribute("aria-pressed", String(filter === button));
+                    });
+                    renderVideos(category);
+                });
+                categoryContainer.append(button);
+            });
+        }
+
+        async function loadVideos() {
+            const response = await fetch("videos.json", { cache: "no-store" });
+            if (!response.ok) throw new Error(`Could not load videos.json (HTTP ${response.status}).`);
+            const data = await response.json();
+            if (!data || Array.isArray(data) || typeof data !== "object") {
+                throw new Error("videos.json must be an object containing category names and URL lists.");
+            }
+
+            const categories = Object.keys(data);
+            const invalidCategories = categories.filter(category =>
+                !category.trim() || category !== category.trim() || category.toLowerCase() === "all" || !Array.isArray(data[category])
+            );
+            if (invalidCategories.length) {
+                throw new Error(`Use non-empty category names other than "All", with a list of links for each: ${invalidCategories.join(", ")}.`);
+            }
+
+            let invalidLinks = 0;
+            allVideos = categories.flatMap(category => data[category].map((url, index) => {
+                const embed = typeof url === "string" ? parseVideoUrl(url.trim()) : null;
+                if (!embed) {
+                    invalidLinks += 1;
+                    return null;
+                }
+                return { category, number: index + 1, embed };
+            }).filter(Boolean));
+
+            createFilters(categories.filter(category => data[category].length));
+            renderVideos();
+            if (invalidLinks) {
+                showMessage(`${invalidLinks} invalid or unsupported video link${invalidLinks === 1 ? " was" : "s were"} skipped. Use HTTPS YouTube, Vimeo, or direct video links.`, true);
+            }
+        }
+
+        loadVideos().catch(error => showMessage(error.message, true));
+    </script>
+</body>
+</html>
