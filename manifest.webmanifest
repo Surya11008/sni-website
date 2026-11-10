@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "S Natural Intelligence",
+  "short_name": "SNI",
+  "description": "S Natural Intelligence - Innovation, Technology and Creative Ideas.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f8ff",
+  "theme_color": "#071b3b",
+  "icons": [
+    {
+      "src": "/Images/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Images/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#071b3b">
+    <link rel="manifest" href="manifest.webmanifest">
     <title>Videos | SNI</title>
     <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
     <link rel="stylesheet" href="site-pages.css">
@@ -19,6 +20,13 @@
             <a href="index.html#about">About</a>
             <a href="index.html#services">Services</a>
             <a href="index.html#contact">Contact</a>
+            <a class="site-search-link" href="#videoSearch" aria-label="Search videos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </a>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install SNI as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
         </nav>
     </header>
     <main class="app-main">
@@ -29,6 +37,10 @@
             </div>
         </div>
         <p class="video-intro">Videos are shared across the site. Admins can add a title and category, paste a video link, and optionally provide a cover photo.</p>
+        <div class="video-search" role="search">
+            <label for="videoSearch">Search videos</label>
+            <input id="videoSearch" type="search" placeholder="Search by title or category" autocomplete="off">
+        </div>
         <button class="video-filter" id="admin-toggle" type="button" aria-expanded="false">Admin login</button>
         <form class="video-admin-form" id="admin-login" hidden>
             <label>
@@ -67,7 +79,8 @@
                 </label>
                 <div class="video-form-actions form-wide">
                     <button class="video-filter video-submit" id="metadata-button" type="button">Auto-fill title and cover</button>
-                    <button class="video-filter video-submit" type="submit">Add video</button>
+                    <button class="video-filter video-submit" id="video-submit-button" type="submit">Add video</button>
+                    <button class="video-filter" id="cancel-edit-button" type="button" hidden>Cancel edit</button>
                 </div>
                 <p class="video-form-status form-wide" id="video-form-status" role="status"></p>
             </form>
@@ -77,6 +90,7 @@
         <div class="video-grid" id="video-grid"></div>
     </main>
     <footer class="site-footer">© 2026 S Natural Intelligence (SNI). <a href="index.html">Home</a></footer>
+    <script src="site-shell.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
         import {
@@ -95,6 +109,7 @@
             orderBy,
             query,
             serverTimestamp,
+            updateDoc,
         } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -127,9 +142,13 @@
         const coverInput = document.getElementById("video-cover");
         const categoryInput = document.getElementById("video-category");
         const categoryOptions = document.getElementById("video-category-options");
+        const searchInput = document.getElementById("videoSearch");
+        const submitButton = document.getElementById("video-submit-button");
+        const cancelEditButton = document.getElementById("cancel-edit-button");
         let allVideos = [];
         let unsubscribeVideos;
         let selectedCategory = "All";
+        let editingVideoId = null;
 
         function parseVideoUrl(value) {
             let url;
@@ -171,7 +190,7 @@
                 return { kind: "video", src: url.href };
             }
 
-            return { kind: "link", src: url.href };
+            return { kind: "iframe", src: url.href };
         }
 
         function showMessage(text, isError = false) {
@@ -181,36 +200,95 @@
         }
 
         function makePlayer(video, parsed, preview) {
-            if (parsed.kind === "embed") {
+            if (parsed.kind === "embed" || parsed.kind === "iframe") {
                 const frame = document.createElement("iframe");
-                frame.src = parsed.src;
+                const playerUrl = new URL(parsed.src);
+                if (parsed.kind === "embed") {
+                    playerUrl.searchParams.set("autoplay", "1");
+                    playerUrl.searchParams.set("controls", "1");
+                    playerUrl.searchParams.set("playsinline", "1");
+                    playerUrl.searchParams.set("rel", "0");
+                } else {
+                    frame.sandbox = "allow-scripts allow-same-origin allow-forms allow-popups allow-presentation";
+                }
+                frame.src = playerUrl.href;
                 frame.title = video.title;
                 frame.loading = "lazy";
-                frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                frame.referrerPolicy = "strict-origin-when-cross-origin";
+                frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
                 frame.allowFullscreen = true;
                 preview.replaceWith(frame);
             } else if (parsed.kind === "video") {
+                const shell = document.createElement("div");
+                shell.className = "video-player-shell";
                 const player = document.createElement("video");
                 player.src = parsed.src;
                 player.controls = true;
                 player.preload = "metadata";
                 player.autoplay = true;
-                preview.replaceWith(player);
-            } else {
-                window.open(parsed.src, "_blank", "noopener,noreferrer");
+                player.playsInline = true;
+                player.title = video.title;
+                shell.append(player);
+
+                const controls = document.createElement("div");
+                controls.className = "video-player-controls";
+                const rewindButton = document.createElement("button");
+                rewindButton.type = "button";
+                rewindButton.textContent = "−10s";
+                rewindButton.setAttribute("aria-label", "Rewind 10 seconds");
+                rewindButton.addEventListener("click", () => {
+                    player.currentTime = Math.max(0, player.currentTime - 10);
+                });
+                const muteButton = document.createElement("button");
+                muteButton.type = "button";
+                muteButton.textContent = "Mute";
+                muteButton.addEventListener("click", () => {
+                    player.muted = !player.muted;
+                    muteButton.textContent = player.muted ? "Unmute" : "Mute";
+                });
+                const forwardButton = document.createElement("button");
+                forwardButton.type = "button";
+                forwardButton.textContent = "+10s";
+                forwardButton.setAttribute("aria-label", "Forward 10 seconds");
+                forwardButton.addEventListener("click", () => {
+                    player.currentTime = Math.min(player.duration || Infinity, player.currentTime + 10);
+                });
+                const fullscreenButton = document.createElement("button");
+                fullscreenButton.type = "button";
+                fullscreenButton.textContent = "Full screen";
+                fullscreenButton.addEventListener("click", async () => {
+                    try {
+                        if (!shell.requestFullscreen) throw new Error("Full screen is not supported by this browser.");
+                        await shell.requestFullscreen();
+                    } catch (error) {
+                        showMessage(`Could not open full screen: ${error.message}`, true);
+                    }
+                });
+                controls.append(rewindButton, muteButton, forwardButton, fullscreenButton);
+                shell.append(controls);
+                preview.replaceWith(shell);
+                player.play().catch(error => {
+                    if (error.name !== "NotAllowedError") showMessage(`Could not play video: ${error.message}`, true);
+                });
             }
         }
 
         function renderVideos() {
             videoGrid.replaceChildren();
-            const visibleVideos = selectedCategory === "All"
-                ? allVideos
-                : allVideos.filter(video => video.category === selectedCategory);
+            const searchTerm = searchInput.value.trim().toLocaleLowerCase();
+            const visibleVideos = allVideos.filter(video => {
+                const matchesCategory = selectedCategory === "All" || video.category === selectedCategory;
+                const matchesSearch = !searchTerm
+                    || `${video.title} ${video.category}`.toLocaleLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
 
             if (!visibleVideos.length) {
-                showMessage(selectedCategory === "All"
-                    ? "No videos have been added yet."
-                    : `No videos in ${selectedCategory} yet.`);
+                showMessage(searchTerm
+                    ? `No videos match "${searchInput.value.trim()}".`
+                    : selectedCategory === "All"
+                        ? "No videos have been added yet."
+                        : `No videos in ${selectedCategory} yet.`);
                 return;
             }
 
@@ -247,14 +325,27 @@
                 const categoryLabel = document.createElement("p");
                 categoryLabel.textContent = video.category;
                 info.append(heading, categoryLabel);
-                const originalLink = document.createElement("a");
-                originalLink.href = video.videoUrl;
-                originalLink.target = "_blank";
-                originalLink.rel = "noopener noreferrer";
-                originalLink.textContent = "Open original link";
-                info.append(originalLink);
 
                 if (auth.currentUser?.uid === ADMIN_UID) {
+                    const actions = document.createElement("div");
+                    actions.className = "video-card-actions";
+                    const editButton = document.createElement("button");
+                    editButton.type = "button";
+                    editButton.className = "video-filter";
+                    editButton.textContent = "Edit";
+                    editButton.addEventListener("click", () => {
+                        editingVideoId = video.id;
+                        titleInput.value = video.title;
+                        categoryInput.value = video.category;
+                        videoUrlInput.value = video.videoUrl;
+                        coverInput.value = video.coverUrl || "";
+                        submitButton.textContent = "Save changes";
+                        cancelEditButton.hidden = false;
+                        videoFormStatus.textContent = `Editing "${video.title}".`;
+                        videoForm.scrollIntoView({ behavior: "smooth", block: "center" });
+                    });
+                    actions.append(editButton);
+
                     const removeButton = document.createElement("button");
                     removeButton.type = "button";
                     removeButton.className = "video-filter video-delete";
@@ -267,7 +358,8 @@
                             showMessage(`Could not delete video: ${error.message}`, true);
                         }
                     });
-                    info.append(removeButton);
+                    actions.append(removeButton);
+                    info.append(actions);
                 }
 
                 card.append(info);
@@ -292,6 +384,14 @@
                 });
                 categoryContainer.append(button);
             });
+        }
+
+        function cancelEditing() {
+            editingVideoId = null;
+            videoForm.reset();
+            submitButton.textContent = "Add video";
+            cancelEditButton.hidden = true;
+            videoFormStatus.textContent = "";
         }
 
         async function fillVideoMetadata() {
@@ -369,6 +469,8 @@
 
         document.getElementById("admin-logout").addEventListener("click", () => signOut(auth));
         document.getElementById("metadata-button").addEventListener("click", fillVideoMetadata);
+        cancelEditButton.addEventListener("click", cancelEditing);
+        searchInput.addEventListener("input", renderVideos);
         videoUrlInput.addEventListener("change", () => {
             if (videoUrlInput.value.trim()) fillVideoMetadata();
         });
@@ -396,19 +498,24 @@
                 return;
             }
 
-            videoFormStatus.textContent = "Adding video…";
+            const videoData = { title, category, videoUrl, coverUrl };
+            const editId = editingVideoId;
+            videoFormStatus.textContent = editId ? "Saving changes…" : "Adding video…";
             try {
-                await addDoc(videosCollection, {
-                    title,
-                    category,
-                    videoUrl,
-                    coverUrl,
-                    createdAt: serverTimestamp(),
-                });
-                videoForm.reset();
-                videoFormStatus.textContent = "Video added to the shared library.";
+                if (editId) {
+                    await updateDoc(doc(database, "videos", editId), videoData);
+                    cancelEditing();
+                    videoFormStatus.textContent = "Video updated.";
+                } else {
+                    await addDoc(videosCollection, {
+                        ...videoData,
+                        createdAt: serverTimestamp(),
+                    });
+                    videoForm.reset();
+                    videoFormStatus.textContent = "Video added to the shared library.";
+                }
             } catch (error) {
-                videoFormStatus.textContent = `Could not add video: ${error.message}`;
+                videoFormStatus.textContent = `Could not ${editId ? "update" : "add"} video: ${error.message}`;
             }
         });
 
@@ -424,6 +531,7 @@
             adminToggle.hidden = isAdmin;
             if (isAdmin) adminToggle.setAttribute("aria-expanded", "false");
             loginForm.hidden = isAdmin || adminToggle.getAttribute("aria-expanded") !== "true";
+            if (!isAdmin && editingVideoId) cancelEditing();
             if (unsubscribeVideos) unsubscribeVideos();
             unsubscribeVideos = onSnapshot(
                 query(videosCollection, orderBy("createdAt", "desc")),

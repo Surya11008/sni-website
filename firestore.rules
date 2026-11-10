@@ -9,6 +9,23 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == '6NguI1ON0Dg95qeJNeXnbw2aRyX2';
     }
 
+    function isValidVideo(data) {
+      return data.keys().hasOnly(['title', 'category', 'videoUrl', 'coverUrl', 'createdAt'])
+        && data.keys().hasAll(['title', 'category', 'videoUrl', 'coverUrl', 'createdAt'])
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 160
+        && data.category is string
+        && data.category.size() > 0
+        && data.category.size() <= 50
+        && data.videoUrl is string
+        && data.videoUrl.size() <= 2048
+        && data.videoUrl.matches('https://.+')
+        && data.coverUrl is string
+        && data.coverUrl.size() <= 2048
+        && (data.coverUrl == '' || data.coverUrl.matches('https://.+'));
+    }
+
     match /artifacts/{appId}/public/data/schedules/{scheduleId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
@@ -32,22 +49,11 @@ service cloud.firestore {
     match /videos/{videoId} {
       allow read: if true;
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['title', 'category', 'videoUrl', 'coverUrl', 'createdAt'])
-        && request.resource.data.keys().hasAll(['title', 'category', 'videoUrl', 'coverUrl', 'createdAt'])
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.title.size() <= 160
-        && request.resource.data.category is string
-        && request.resource.data.category.size() > 0
-        && request.resource.data.category.size() <= 50
-        && request.resource.data.videoUrl is string
-        && request.resource.data.videoUrl.size() <= 2048
-        && request.resource.data.videoUrl.matches('https://.+')
-        && request.resource.data.coverUrl is string
-        && request.resource.data.coverUrl.size() <= 2048
-        && (request.resource.data.coverUrl == '' || request.resource.data.coverUrl.matches('https://.+'))
+        && isValidVideo(request.resource.data)
         && request.resource.data.createdAt == request.time;
-      allow update: if false;
+      allow update: if isAdmin()
+        && isValidVideo(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isAdmin();
     }
 
