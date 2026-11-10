@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Evaluation",
+  "short_name": "Evaluation",
+  "description": "Evaluation official schedule and subject manager",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4338ca",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

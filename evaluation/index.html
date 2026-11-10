@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="Evaluation official schedule and subject manager">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="S Natural Intelligence">
+    <meta property="og:title" content="Evaluation | SNI">
+    <meta property="og:description" content="View and manage the Evaluation schedule.">
+    <meta property="og:url" content="https://sni.org.in/evaluation/">
+    <meta property="og:image" content="https://sni.org.in/evaluation/social-card.png">
+    <meta property="og:image:secure_url" content="https://sni.org.in/evaluation/social-card.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Evaluation logo and official schedule">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Evaluation | SNI">
+    <meta name="twitter:description" content="View and manage the Evaluation schedule.">
+    <meta name="twitter:image" content="https://sni.org.in/evaluation/social-card.png">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../site-pages.css">
+    <link rel="canonical" href="https://sni.org.in/evaluation/">
+    <title>Evaluation | SNI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sree+Krushnadevaraya&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Sree Krushnadevaraya', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="site-header" style="z-index: 60;">
+        <a class="site-logo" href="../index.html#home">
+            <img src="../Images/sni-logo.png" alt="">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="../index.html#home">Home</a>
+            <a href="../star/">Star</a>
+            <a href="../support/">Support</a>
+            <a href="./" aria-current="page">Evaluation</a>
+            <a href="../videos.html">Videos</a>
+            <a href="../index.html#about">About</a>
+            <a href="../index.html#services">Services</a>
+            <a href="../index.html#contact">Contact</a>
+            <a class="site-search-link" href="../videos.html#videoSearch" aria-label="Search videos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </a>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install Evaluation as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-md relative z-30">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="relative bg-indigo-600 p-2.5 rounded-xl shadow-inner border border-indigo-500" role="img" aria-label="Person teaching from an open book">
+                    <i class="fa-solid fa-book-open text-xl text-indigo-100"></i>
+                    <i class="fa-solid fa-person-chalkboard absolute -top-1 -right-1 text-xs text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Evaluation</h1>
+                    <p class="text-xs sm:text-sm text-indigo-200">Official Schedule</p>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <span id="syncStatus" class="bg-indigo-800 text-indigo-200 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud text-emerald-400"></i> Connecting Cloud...
+                </span>
+                <span id="signedInUser" class="hidden max-w-48 truncate text-xs text-indigo-100"></span>
+                <button type="button" id="loginButton" onclick="openLoginPage()" class="bg-white text-indigo-700 hover:bg-indigo-50 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                </button>
+                <button type="button" id="logoutButton" onclick="logout()" class="hidden bg-indigo-800 hover:bg-indigo-900 text-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+                <button data-admin-only onclick="openSubjectModal()" class="hidden bg-indigo-800 hover:bg-indigo-900 text-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-book-medical"></i> Add Subject
+                </button>
+                <button data-admin-only onclick="openAddModal()" class="hidden bg-white text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Schedule
+                </button>
+                <button data-admin-only onclick="document.getElementById('scheduleImport').click()" class="hidden bg-indigo-800 hover:bg-indigo-900 text-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5" title="Import schedules from JSON">
+                    <i class="fa-solid fa-file-import"></i> Import
+                </button>
+                <input type="file" id="scheduleImport" accept="application/json,.json" class="hidden" onchange="importSchedules(event)">
+                <button id="exportButton" onclick="exportData()" class="hidden bg-indigo-800 hover:bg-indigo-900 text-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5" title="Export JSON">
+                    <i class="fa-solid fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="loginPage" class="fixed inset-0 bg-slate-100 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="loginPageTitle">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-4xl w-full overflow-hidden">
+                <div class="bg-indigo-700 text-white px-6 py-5 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-indigo-600 p-2.5 rounded-xl border border-indigo-500" aria-hidden="true">
+                            <i class="fa-solid fa-book-open text-xl text-indigo-100"></i>
+                        </div>
+                        <div>
+                            <h2 id="loginPageTitle" class="text-xl font-bold">Login to Evaluation</h2>
+                            <p class="text-sm text-indigo-200">Member and administrator sign in</p>
+                        </div>
+                    </div>
+                    <button type="button" data-authenticated-only onclick="closeLoginPage()" class="hidden text-indigo-200 hover:text-white text-lg" aria-label="Close login page"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="p-6 sm:p-8">
+                    <div id="authError" class="hidden mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert"></div>
+                    <div id="authStatusMessage" class="hidden mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900" role="status">
+                        Checking sign-in status…
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <section class="rounded-xl border border-slate-200 p-5">
+                            <h3 class="text-base font-bold text-slate-800">Member Login</h3>
+                            <p class="text-sm text-slate-500 mt-1 mb-4">Sign in with your Google account or email.</p>
+                            <button type="button" id="googleLoginButton" onclick="loginWithGoogle()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm">
+                                <i class="fa-brands fa-google mr-2"></i>Continue with Google
+                            </button>
+                            <div class="flex items-center gap-3 my-4 text-xs text-slate-400"><span class="h-px bg-slate-200 flex-1"></span>OR EMAIL<span class="h-px bg-slate-200 flex-1"></span></div>
+                            <form class="space-y-3" onsubmit="loginWithEmail(event)">
+                                <div>
+                                    <label for="memberEmail" class="block text-xs font-semibold text-slate-600 mb-1">Email address</label>
+                                    <input id="memberEmail" type="email" autocomplete="email" required placeholder="you@example.com" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label for="memberPassword" class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                                    <input id="memberPassword" type="password" autocomplete="current-password" required placeholder="Enter your password" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm">Login with Email</button>
+                            </form>
+                        </section>
+                        <section class="rounded-xl border border-slate-200 p-5">
+                            <h3 class="text-base font-bold text-slate-800">Admin Login</h3>
+                            <p class="text-sm text-slate-500 mt-1 mb-4">Use the administrator account configured in Firebase Authentication.</p>
+                            <form class="space-y-3" onsubmit="loginAsAdmin(event)">
+                                <div>
+                                    <label for="adminId" class="block text-xs font-semibold text-slate-600 mb-1">Admin ID</label>
+                                    <input id="adminId" type="text" autocomplete="username" required placeholder="Admin ID" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label for="adminPassword" class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                                    <input id="adminPassword" type="password" autocomplete="current-password" required placeholder="Enter admin password" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm">Admin Login</button>
+                            </form>
+                            <p class="mt-4 text-xs text-slate-500">The admin password must be verified by Firebase; it is never embedded in this website.</p>
+                        </section>
+                    </div>
+                    <div class="flex justify-end mt-6">
+                        <button type="button" onclick="closeLoginPage()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl">Back to Schedule</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main id="appContent" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- Schedule Filters -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2.5 flex flex-wrap items-center gap-2">
+            <div class="flex h-9 items-center gap-1 rounded-xl bg-slate-50 px-1.5">
+                <i class="fa-solid fa-calendar-week px-1 text-xs text-indigo-500" aria-hidden="true"></i>
+                <button type="button" onclick="changeWeek(-1)" class="h-7 w-7 rounded-lg text-slate-500 hover:bg-white hover:text-indigo-700" aria-label="Previous week" title="Previous week"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                <button type="button" onclick="setCurrentWeek()" class="max-w-40 truncate px-1 text-xs font-semibold text-slate-700 hover:text-indigo-700" title="Go to this week"><span id="weekLabel">This week</span></button>
+                <button type="button" onclick="changeWeek(1)" class="h-7 w-7 rounded-lg text-slate-500 hover:bg-white hover:text-indigo-700" aria-label="Next week" title="Next week"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+            </div>
+            <label class="relative w-36 sm:w-40">
+                <span class="sr-only">Filter by subject</span>
+                <i class="fa-solid fa-book-open pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400" aria-hidden="true"></i>
+                <select id="subjectFilter" onchange="filterData()" title="Filter by subject" class="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 py-1 pl-7 pr-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All subjects</option>
+                </select>
+            </label>
+            <label class="relative w-36 sm:w-40">
+                <span class="sr-only">Filter by position</span>
+                <i class="fa-solid fa-user-tag pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400" aria-hidden="true"></i>
+                <select id="positionFilter" onchange="filterData()" title="Filter by position" class="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 py-1 pl-7 pr-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All positions</option>
+                </select>
+            </label>
+            <label class="relative w-28">
+                <span class="sr-only">Filter by type</span>
+                <i class="fa-solid fa-layer-group pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400" aria-hidden="true"></i>
+                <select id="typeFilter" onchange="filterData()" title="Filter by type" class="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 py-1 pl-7 pr-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All types</option>
+                </select>
+            </label>
+            <div class="flex h-9 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2" role="group" aria-label="Filter by date range">
+                <i class="fa-solid fa-calendar-days mr-0.5 text-[11px] text-slate-400" aria-hidden="true"></i>
+                <label class="flex items-center gap-1">
+                    <span class="sr-only">Filter from date</span>
+                    <span class="text-[10px] text-slate-400" aria-hidden="true">From</span>
+                    <input type="date" id="filterFrom" onchange="filterData()" aria-label="From date" title="From date" class="h-7 w-[124px] rounded-lg border border-transparent bg-transparent px-1 text-[11px] focus:border-indigo-300 focus:bg-white focus:outline-none">
+                </label>
+                <span class="text-[10px] text-slate-300" aria-hidden="true">–</span>
+                <label class="flex items-center gap-1">
+                    <span class="sr-only">Filter to date</span>
+                    <span class="text-[10px] text-slate-400" aria-hidden="true">To</span>
+                    <input type="date" id="filterTo" onchange="filterData()" aria-label="To date" title="To date" class="h-7 w-[124px] rounded-lg border border-transparent bg-transparent px-1 text-[11px] focus:border-indigo-300 focus:bg-white focus:outline-none">
+                </label>
+            </div>
+            <div class="basis-full flex items-center justify-between gap-2">
+                <label class="relative w-36 sm:w-40">
+                    <span class="sr-only">Search schedules by name</span>
+                    <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400" aria-hidden="true"></i>
+                    <input type="search" id="searchInput" oninput="filterData()" placeholder="Name" title="Search by name" class="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-7 pr-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </label>
+                <div class="flex h-9 items-center gap-2">
+                    <span id="recordCount" class="whitespace-nowrap rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">Loading schedules...</span>
+                    <div class="flex rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+                        <button onclick="switchView('table')" id="tableViewBtn" class="h-8 w-8 rounded-lg text-xs font-semibold bg-white text-indigo-700 shadow-sm" aria-label="Table view" title="Table view"><i class="fa-solid fa-table"></i></button>
+                        <button onclick="switchView('card')" id="cardViewBtn" class="h-8 w-8 rounded-lg text-xs font-semibold text-slate-600" aria-label="Card view" title="Card view"><i class="fa-solid fa-id-card"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-2 border-b border-slate-200" role="tablist" aria-label="Schedule pages">
+            <button type="button" id="scheduleTab" onclick="switchTab('schedule')" role="tab" aria-selected="true" class="px-4 py-2.5 border-b-2 border-indigo-600 text-indigo-700 text-sm font-semibold">
+                <i class="fa-solid fa-calendar-week mr-1.5"></i>Schedule
+            </button>
+            <button type="button" id="statusTab" onclick="switchTab('status')" role="tab" aria-selected="false" class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 hover:text-indigo-700 text-sm font-semibold">
+                <i class="fa-solid fa-ranking-star mr-1.5"></i>Status &amp; Rankings
+            </button>
+        </div>
+
+        <!-- Desktop / Tablet Table View Container -->
+        <div id="tableViewContainer" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div class="overflow-x-auto max-h-[680px]">
+                <table class="w-full text-left border-collapse min-w-[950px]">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs font-bold tracking-wider sticky top-0 z-20 border-b border-slate-200 shadow-sm">
+                        <tr id="scheduleHeaderRow"></tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-200 text-sm">
+                        <!-- Dynamically populated from Firestore -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile / Card View Container -->
+        <div id="cardViewContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically populated from Firestore -->
+        </div>
+
+        <section id="statusViewContainer" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" role="tabpanel" aria-labelledby="statusTab">
+            <div class="p-5 border-b border-slate-200 bg-indigo-50/60">
+                <p class="text-xs uppercase tracking-wide font-semibold text-indigo-600">Leaderboard</p>
+                <h2 id="topPerformer" class="mt-1 text-lg font-bold text-slate-900">No progress yet</h2>
+                <p class="mt-1 text-xs text-slate-500">Completion percentages include every subject on each person’s schedule.</p>
+            </div>
+            <div class="overflow-x-auto max-h-[680px]">
+                <table class="w-full text-left border-collapse min-w-[850px]">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs font-bold tracking-wider sticky top-0 z-20 border-b border-slate-200">
+                        <tr id="rankingHeaderRow"></tr>
+                    </thead>
+                    <tbody id="statusTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+                </table>
+            </div>
+            <p id="statusEmptyState" class="hidden p-10 text-center text-sm text-slate-500">No status matches your current filters.</p>
+        </section>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center gap-3">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-700">No schedules found</h3>
+            <p class="text-sm text-slate-500 max-w-sm">No records match your search or filter criteria.</p>
+            <button onclick="clearFilters()" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                Clear Filters
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Add / Edit Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto transform transition-all">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modalTitle" class="text-lg font-bold">Add Schedule</h3>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="scheduleForm" onsubmit="saveSchedule(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editDocId">
+                
+                <div>
+                    <label for="modalName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Name</label>
+                    <input type="text" id="modalName" required maxlength="100" placeholder="Enter a name" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label for="modalPosition" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Position</label>
+                    <div class="flex gap-2">
+                        <select id="modalPosition" required class="min-w-0 flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                        <button type="button" data-admin-only onclick="openCategoryModal('position', 'add')" class="hidden rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                        <button type="button" data-admin-only onclick="openCategoryModal('position', 'edit')" class="hidden rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="modalType" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Type</label>
+                    <div class="flex gap-2">
+                        <select id="modalType" required class="min-w-0 flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                        <button type="button" data-admin-only onclick="openCategoryModal('type', 'add')" class="hidden rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                        <button type="button" data-admin-only onclick="openCategoryModal('type', 'edit')" class="hidden rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="modalDateFrom" class="block text-xs font-semibold text-slate-700 uppercase mb-1">From date</label>
+                        <input type="date" id="modalDateFrom" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="modalDateTo" class="block text-xs font-semibold text-slate-700 uppercase mb-1">To date</label>
+                        <input type="date" id="modalDateTo" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="subjectSelect" class="block text-xs font-semibold text-slate-700 uppercase">Select subjects</label>
+                        <button type="button" onclick="openSubjectModal()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-plus"></i> New subject</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="subjectSelect" class="min-w-0 flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="">Choose a subject</option>
+                        </select>
+                        <button type="button" onclick="addSelectedSubject()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-xl transition"><i class="fa-solid fa-plus"></i> Add</button>
+                    </div>
+                    <div id="selectedSubjects" class="flex flex-wrap gap-2 mt-3" aria-live="polite"></div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                        Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="subjectModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Add Subject</h3>
+                <button type="button" onclick="closeSubjectModal()" class="text-indigo-200 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveSubject(event)" class="p-6 space-y-4">
+                <div>
+                    <label for="newSubjectName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Subject name</label>
+                    <input type="text" id="newSubjectName" required maxlength="150" placeholder="Enter a new subject" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeSubjectModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">Add Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="categoryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="categoryModalTitle" class="text-lg font-bold">Manage category</h3>
+                <button type="button" onclick="closeCategoryModal()" class="text-indigo-200 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveCategory(event)" class="p-6 space-y-4">
+                <input type="hidden" id="categoryKind">
+                <input type="hidden" id="categoryMode">
+                <label id="categoryCurrentWrap" class="hidden block">
+                    <span class="mb-1 block text-xs font-semibold uppercase text-slate-700">Select category to edit</span>
+                    <select id="categoryCurrent" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></select>
+                </label>
+                <label class="block">
+                    <span id="categoryNameLabel" class="mb-1 block text-xs font-semibold uppercase text-slate-700">New category name</span>
+                    <input id="categoryName" type="text" required maxlength="60" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </label>
+                <p id="categoryHelp" class="text-xs text-slate-500"></p>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeCategoryModal()" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">Cancel</button>
+                    <button id="categorySaveButton" type="submit" class="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="postponeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="postponeTitle" class="text-lg font-bold">Postpone schedule</h3>
+                <button type="button" onclick="closePostponeModal()" class="text-indigo-200 hover:text-white text-lg" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="savePostpone(event)" class="p-6 space-y-4">
+                <input type="hidden" id="postponeMode">
+                <input type="hidden" id="postponeScheduleId">
+                <input type="hidden" id="postponeSubjectKey">
+                <p id="postponeDescription" class="text-sm text-slate-600"></p>
+                <div id="postponeScheduleDates" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="postponeFrom" class="block text-xs font-semibold text-slate-700 uppercase mb-1">New from date</label>
+                        <input type="date" id="postponeFrom" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="postponeTo" class="block text-xs font-semibold text-slate-700 uppercase mb-1">New to date</label>
+                        <input type="date" id="postponeTo" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div id="postponeSubjectDate" class="hidden">
+                    <label for="postponeDate" class="block text-xs font-semibold text-slate-700 uppercase mb-1">New subject date</label>
+                    <input type="date" id="postponeDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closePostponeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">Save postponement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMsg">Action completed successfully</span>
+    </div>
+
+    <!-- Firebase SDK & App Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase handles
+        let db, auth, currentUser;
+        let scheduleData = [];
+        let subjectData = [];
+        let selectedSubjects = [];
+        let duplicateScheduleData = null;
+        let isAdmin = false;
+        let currentView = 'table';
+        let currentTab = 'schedule';
+        let weekOffset = 0;
+        const appId = 'weekly-schedule-2026';
+        const adminId = 'surya11008';
+        const adminEmail = 'admin11008@gmail.com';
+        const adminUid = '6NguI1ON0Dg95qeJNeXnbw2aRyX2';
+        const defaultPositions = ['Overseer', '(D)Overseer', 'Deacon', 'BCL', 'PBCL', 'Group Leader', 'Unit Leader', 'Co-Worker', 'Evangelist', 'Member', 'Other'];
+        const defaultScheduleTypes = Array.from({ length: 10 }, (_, index) => `Type ${index + 1}`);
+        let positions = [...defaultPositions];
+        let scheduleTypes = [...defaultScheduleTypes];
+        let categoryData = [];
+        let unsubscribeCategories = null;
+        const defaultColumnOrders = {
+            schedule: ['name', 'position', 'type', 'from', 'to', 'subjects', 'actions'],
+            rankings: ['rank', 'name', 'progress', 'position', 'type', 'completed']
+        };
+        let columnOrders = {
+            schedule: [...defaultColumnOrders.schedule],
+            rankings: [...defaultColumnOrders.rankings]
+        };
+        let unsubscribeColumnSettings = null;
+        const columnDefinitions = {
+            schedule: {
+                name: { label: 'Name', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                position: { label: 'Position', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                type: { label: 'Type', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                from: { label: 'From', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                to: { label: 'To', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                subjects: { label: 'Subjects', className: 'py-3.5 px-4 bg-slate-100 border-r border-slate-200' },
+                actions: { label: 'Actions', className: 'py-3.5 px-3 bg-slate-100 text-center w-32' }
+            },
+            rankings: {
+                rank: { label: 'Rank', className: 'py-3.5 px-4' },
+                name: { label: 'Name', className: 'py-3.5 px-4' },
+                progress: { label: 'Progress', className: 'py-3.5 px-4' },
+                position: { label: 'Position', className: 'py-3.5 px-4' },
+                type: { label: 'Type', className: 'py-3.5 px-4' },
+                completed: { label: 'Completed subjects', className: 'py-3.5 px-4' }
+            }
+        };
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGFYGJDBQeAkMUucaj4O0PWWPB03lL01Y",
+            authDomain: "evaluation-dd0ff.firebaseapp.com",
+            databaseURL: "https://evaluation-dd0ff-default-rtdb.firebaseio.com",
+            projectId: "evaluation-dd0ff",
+            storageBucket: "evaluation-dd0ff.firebasestorage.app",
+            messagingSenderId: "889018796074",
+            appId: "1:889018796074:web:042a59274a4cd589d85b53",
+            measurementId: "G-MMGPR1ENVS"
+        };
+        let unsubscribeSchedules = null;
+        let unsubscribeSubjects = null;
+        const catalogSubjects = [
+            "1-1 పాపక్షమాపణ యొక్క రహస్యము మరియు క్రీస్తు అన్ సాంగ్ హోంగ్ గారు",
+            "1-2 ప్రతి యుగములో రక్షకుడు మరియు క్రొత్త పేరు",
+            "1-3 జీవ వృక్ష ఫలము మరియు క్రీస్తు అన్ సాంగ్ హోంగ్ గారు",
+            "1-4 యెరూషలేము తల్లి",
+            "1-5 పరలోక కుటుంబము మరియు భూలోక కుటుంబము",
+            "1-6 విశ్రాంతిదినమును పరిశుద్ధముగా ఆచరించండి",
+            "1-7 నిత్యజీవమునకు మార్గమైన పస్కా",
+            "1-8 సిలువ ఆరాధన విగ్రహారాధన",
+            "1-9 వెంటనే బాప్తిస్మము పొందండి",
+            "1-10 పరిశుద్ధ గ్రంథము సత్యము",
+            "2-1 పరిశుద్ధ గ్రంథం ఎవరి గురించి సాక్ష్యం ఇస్తుంది?",
+            "2-2 దావీదు రాజు క్రీస్తు అన్ సాంగ్ హోంగ్ గారు",
+            "2-3 సీయోను నిర్మించిన దేవుడు",
+            "2-4 పరలోకపు పెండ్లి విందు",
+            "2-5 అబ్రాహాము యొక్క కుటుంబ చరిత్ర",
+            "2-6 దానియేలు 2, 7 యొక్క ప్రవచనము",
+            "2-7 ప్రకటన 13 యొక్క ప్రవచనము",
+            "2-8 ప్రకటన 17,18 యొక్క ప్రవచనము",
+            "2-9 దశమభాగము యొక్క నియమము",
+            "2-10 ఆశ్రయంపురము మరియు భూమి",
+            "3-1 త్రియేక దేవుడు",
+            "3-2 మెల్కీసెదెకు యొక్క క్రమము",
+            "3-3 జీవజలములకు ఊటయైన తల్లి",
+            "3-4 గురుగులు మరియు గోధుములు",
+            "3-5 దేవుడు తన స్వరక్తముతో సంపాదించిన సంఘము",
+            "3-6 సువార్త అనగా ఏమిటి?",
+            "3-7 నేను తప్ప వేరొక దేవుడు నీకు ఉండకూడదు",
+            "3-8 దేవుని యొక్క ముద్ర వేసే కార్యము",
+            "3-9 జీవగ్రంధము",
+            "3-10 ఆత్మ ఉన్నది",
+            "4-1 దావీదు యొక్క వేరు చిగురు చేత స్థాపించబడిన సంఘము",
+            "4-2 కడపటి ఆదాము మరియు క్రీస్తు అన్ సాంగ్ హోంగ్ గారు",
+            "4-3 పరిశుద్ధగ్రంథం ఒక ప్రవచన గ్రంథం",
+            "4-4 వారములోని ఏ దినము పరిశుద్ధ గ్రంథము యొక్క విశ్రాంతి దినము",
+            "4-5 పస్కా యొక్క నిజమైన అర్ధము",
+            "4-6 మోషే యొక్క ధర్మశాస్త్రము మరియు క్రీస్తు యొక్క ధర్మ శాస్త్రము",
+            "4-7 మోషే మరియు యేసు (సిలువ యొక్క అర్ధము)",
+            "4-8 అబద్ధ ప్రవక్తలు ఎవరు?",
+            "4-9 దశమ భాగము చేయడం ద్వారా ఆశీర్వాదములు",
+            "4-10 ఆహారము గురించి",
+            "5-1 దేవుని యొక్క వాక్యములు పరిపూర్ణమైనవి",
+            "5-2 నాకు వేరుగా ఉండి మీరేమియు చేయలేరు",
+            "5-3 దేవుని యొక్క ఆజ్ఞలు మరియు మనుషుల యొక్క పద్ధతులు",
+            "5-4 అబద్ధ ప్రవక్తలను గూర్చి జాగ్రత్తపడుడి",
+            "5-5 దేవుని యొక్క పరిపాలన మరియు అపవాది యొక్క పరిపాలన",
+            "5-6 జీవపు నియమము మరియు మరణపు నియమము",
+            "5-7 రెండవ రాకడ మరియు అంతిమ తీర్పు",
+            "5-8 మేఘారూఢుడై వచ్చుట",
+            "5-9 అంజూరపు చెట్టు యొక్క ఉపమానము",
+            "5-10 తూర్పు నుండి దేవుని రాకడ",
+            "1-1 ‘క్రీస్తు యొక్క భార్య'కు కలిగిన రెండు అర్థములు",
+            "1-2 ప్రక 22:17 యొక్క పెండ్లికుమార్తె సంఘము(పరిశుద్ధులు)ను సూచించును అనే అబద్ధ వాదన",
+            "1-3 ప్రక 19:7 యొక్క గొఱ్ఱపిల్ల యొక్క భార్య సంఘము(పరిశుద్ధులు)ను సూచించును అనే అబద్ధ వాదన",
+            "1-4 ఆది 1:26 యొక్క 'మన' అనగా త్రియేక దేవుడు అనే అబద్ధ వాదన",
+            "1-5 దేవుడొక్కడే గనుక ఇద్దరు కానేరరు అనే అబద్ధ వాదన",
+            "1-6 దేవుడు మనిషిగా రాలేరు అనే అబద్ధ వాదన",
+            "1-7 సూచక క్రియలు మహత్కార్యములు చేస్తేనే క్రీస్తు అనే అబద్ధ వాదన",
+            "1-8 కనబడలేదు గనుక విశ్వసించలేము అనే అబద్ధ వాదన",
+            "1-9 పరిశుద్ధ గ్రంథము కేవలము మనుష్యుల చేత వ్రాయబడిన పుస్తకము అనే అబద్ధ వాదన",
+            "1-10 కేవలము విశ్వాసము వలన రక్షింపబడగలము అనే అబద్ధ వాదన",
+            "2-1 కుడి ప్రక్కన దొంగ వలె క్రియలు రక్షణతో సంబంధము లేదు అనే అబద్ధ వాదన",
+            "2-2 క్రొత్త నిబంధన పస్కా రద్దుచేయబడిన చరిత్ర",
+            "2-3 ఆదివారపు ఆరాధన యొక్క ఆరంభము",
+            "2-4 పునరుత్థానము మరియు పరిశుద్ధాత్మ కుమ్మరింపు జరిగిన ఆదివారమున ఆరాధన చేస్తాము అనే అబద్ధ వాదన",
+            "2-5 తొలినాటి సంఘము ఆదివారమందు ఆరాధన చేస్తూ కానుకలు అర్పించెను అనే అబద్ధ వాదన",
+            "2-6 తొలినాటి సంఘము ఆదివారమును ప్రభువు దినముగా ఆచరించారు అనే అబద్ధ వాదన",
+            "2-7 తొలినాటి సంఘము ఆదివారమందు పరిశుద్ధ భోజనమును చేసారు అనే అబద్ధ వాదన",
+            "2-8 హోషే 2:11 చూపిస్తూ విశ్రాంతిదినము మరియు పండుగలు కొట్టివేయబడెను అనే అబద్ధ వాదన",
+            "2-9 కొలొ 2:16 చూపిస్తూ విశ్రాంతిదినము మరియు పండుగలు కొట్టివేయబడెను అనే అబద్ధ వాదన",
+            "2-10 గల 4:10 చూపిస్తూ విశ్రాంతిదినము మరియు పండుగలు కొట్టివేయబడెను అనే అబద్ధ వాదన"
+        ];
+
+        // Initialize Firebase
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                updatePositionOptions();
+                updateTypeOptions();
+                renderTableHeaders();
+                setWeekRange(0);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                document.getElementById('authStatusMessage').innerText = 'Connecting to secure sign-in…';
+                document.getElementById('authStatusMessage').classList.remove('hidden');
+
+                onAuthStateChanged(auth, user => {
+                    currentUser = user;
+                    isAdmin = Boolean(user && user.uid === adminUid);
+                    updateAuthUI();
+                    stopDataListeners();
+                    scheduleData = [];
+                    subjectData = [];
+                    categoryData = [];
+                    positions = [...defaultPositions];
+                    scheduleTypes = [...defaultScheduleTypes];
+                    updateSubjectOptions();
+                    updatePositionOptions();
+                    updateTypeOptions();
+                    columnOrders = {
+                        schedule: [...defaultColumnOrders.schedule],
+                        rankings: [...defaultColumnOrders.rankings]
+                    };
+                    renderTableHeaders();
+                    renderSchedule();
+
+                    if (user) {
+                        startDataListeners();
+                    } else {
+                        document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-lock text-amber-300"></i> Sign in required';
+                    }
+                }, error => {
+                    console.error("Authentication state error:", error);
+                    document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Auth error';
+                    showAuthError(firebaseErrorMessage(error));
+                });
+            } catch (e) {
+                console.error("Firebase initialization error:", e);
+                document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Firebase error';
+                showAuthError('Could not connect to Firebase. Check your internet connection and Firebase project settings.');
+            }
+        });
+
+        function getDefaultSubjects() {
+            return [...new Set(catalogSubjects)];
+        }
+
+        function startDataListeners() {
+            const schedulesRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            const subjectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'subjects');
+            const categoriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'categories');
+            const columnSettingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'tableSettings', 'column-order');
+            subjectData = getDefaultSubjects();
+            updateSubjectOptions();
+
+            unsubscribeColumnSettings = onSnapshot(columnSettingsRef, snapshot => {
+                const settings = snapshot.exists() ? snapshot.data() : {};
+                columnOrders = {
+                    schedule: normalizeColumnOrder(settings.schedule, defaultColumnOrders.schedule),
+                    rankings: normalizeColumnOrder(settings.rankings, defaultColumnOrders.rankings)
+                };
+                renderTableHeaders();
+                renderSchedule();
+            }, handleFirestoreError);
+
+            unsubscribeSubjects = onSnapshot(subjectsRef, snapshot => {
+                subjectData = [...new Set([
+                    ...getDefaultSubjects(),
+                    ...snapshot.docs.map(subjectDoc => subjectDoc.data().name)
+                        .filter(name => typeof name === 'string' && name.trim())
+                ])];
+                updateSubjectOptions();
+            }, handleFirestoreError);
+
+            unsubscribeCategories = onSnapshot(categoriesRef, snapshot => {
+                categoryData = snapshot.docs.map(categoryDoc => ({ id: categoryDoc.id, ...categoryDoc.data() }))
+                    .filter(category => ['position', 'type'].includes(category.kind)
+                        && typeof category.name === 'string' && category.name.trim());
+                const retiredPositions = categoryData
+                    .filter(category => category.kind === 'position' && category.sourceName)
+                    .map(category => category.sourceName);
+                const retiredTypes = categoryData
+                    .filter(category => category.kind === 'type' && category.sourceName)
+                    .map(category => category.sourceName);
+                positions = [...new Set([
+                    ...defaultPositions.filter(position => !retiredPositions.includes(position)),
+                    ...categoryData.filter(category => category.kind === 'position').map(category => category.name)
+                ])].sort((a, b) => a.localeCompare(b));
+                scheduleTypes = [...new Set([
+                    ...defaultScheduleTypes.filter(type => !retiredTypes.includes(type)),
+                    ...categoryData.filter(category => category.kind === 'type').map(category => category.name)
+                ])].sort((a, b) => a.localeCompare(b));
+                updatePositionOptions();
+                updateTypeOptions();
+                renderSchedule();
+            }, handleFirestoreError);
+
+            unsubscribeSchedules = onSnapshot(schedulesRef, snapshot => {
+                scheduleData = snapshot.docs.map(scheduleDoc => ({
+                    id: scheduleDoc.id,
+                    ...scheduleDoc.data()
+                }));
+                scheduleData.sort((a, b) => {
+                    const first = normalizeSchedule(a);
+                    const second = normalizeSchedule(b);
+                    return first.dateFrom.localeCompare(second.dateFrom) || first.name.localeCompare(second.name);
+                });
+                renderSchedule();
+                document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-cloud text-emerald-400"></i> Live Sync';
+            }, handleFirestoreError);
+        }
+
+        function stopDataListeners() {
+            if (unsubscribeSchedules) unsubscribeSchedules();
+            if (unsubscribeSubjects) unsubscribeSubjects();
+            if (unsubscribeCategories) unsubscribeCategories();
+            if (unsubscribeColumnSettings) unsubscribeColumnSettings();
+            unsubscribeSchedules = null;
+            unsubscribeSubjects = null;
+            unsubscribeCategories = null;
+            unsubscribeColumnSettings = null;
+        }
+
+        function handleFirestoreError(error) {
+            console.error("Firestore access error:", error);
+            document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Data access error';
+            showToast(error.code === 'permission-denied'
+                ? 'Access denied. Publish the provided Firestore security rules.'
+                : 'Could not load live data from Firestore', 'error');
+        }
+
+        function updateAuthUI() {
+            const authenticated = Boolean(currentUser);
+            document.getElementById('appContent').classList.toggle('hidden', !authenticated);
+            document.getElementById('loginPage').classList.toggle('hidden', authenticated);
+            document.getElementById('loginButton').classList.toggle('hidden', authenticated);
+            document.getElementById('logoutButton').classList.toggle('hidden', !authenticated);
+            document.getElementById('signedInUser').classList.toggle('hidden', !authenticated);
+            document.getElementById('signedInUser').innerText = currentUser?.email || '';
+            document.getElementById('authStatusMessage').classList.add('hidden');
+            document.querySelectorAll('[data-authenticated-only]').forEach(element => {
+                element.classList.toggle('hidden', !authenticated);
+            });
+            document.querySelectorAll('[data-admin-only]').forEach(element => {
+                element.classList.toggle('hidden', !isAdmin);
+            });
+            document.getElementById('exportButton').classList.toggle('hidden', !isAdmin);
+            renderTableHeaders();
+        }
+
+        function showAuthError(message) {
+            const errorElement = document.getElementById('authError');
+            errorElement.innerText = message;
+            errorElement.classList.remove('hidden');
+        }
+
+        function requireAdmin() {
+            if (currentUser && isAdmin) return true;
+            showToast('Administrator sign-in is required for this action.', 'error');
+            return false;
+        }
+
+        function clearAuthError() {
+            document.getElementById('authError').classList.add('hidden');
+        }
+
+        function firebaseErrorMessage(error) {
+            const messages = {
+                'auth/invalid-credential': 'Email, admin ID, or password is incorrect.',
+                'auth/user-not-found': 'No account exists for these sign-in details.',
+                'auth/wrong-password': 'Email, admin ID, or password is incorrect.',
+                'auth/invalid-email': 'Enter a valid email address.',
+                'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+                'auth/popup-closed-by-user': 'The Google sign-in window was closed before completing login.',
+                'auth/unauthorized-domain': 'Add this website domain to Firebase Authentication authorized domains.',
+                'auth/operation-not-allowed': 'Enable this sign-in provider in Firebase Authentication settings.',
+                'auth/network-request-failed': 'Network error. Check your internet connection and try again.'
+            };
+            return messages[error.code] || 'Sign-in failed. Check your details and Firebase Authentication settings.';
+        }
+
+        async function completeSignIn(operation) {
+            clearAuthError();
+            try {
+                await operation();
+            } catch (error) {
+                console.error("Sign-in error:", error);
+                showAuthError(error.code ? firebaseErrorMessage(error) : error.message);
+            }
+        }
+
+        window.loginWithGoogle = function() {
+            return completeSignIn(() => signInWithPopup(auth, new GoogleAuthProvider()));
+        }
+
+        window.loginWithEmail = function(event) {
+            event.preventDefault();
+            const email = document.getElementById('memberEmail').value.trim();
+            const password = document.getElementById('memberPassword').value;
+            return completeSignIn(() => signInWithEmailAndPassword(auth, email, password));
+        }
+
+        window.loginAsAdmin = function(event) {
+            event.preventDefault();
+            const enteredId = document.getElementById('adminId').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            if (enteredId.toLocaleLowerCase() !== adminId) {
+                showAuthError('Admin ID or password is incorrect.');
+                return;
+            }
+
+            return completeSignIn(async () => {
+                const credential = await signInWithEmailAndPassword(auth, adminEmail, password);
+                if (credential.user.uid !== adminUid) {
+                    await signOut(auth);
+                    throw new Error('The Firebase account is not authorized as the Evaluation admin.');
+                }
+            });
+        }
+
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Sign-out error:", error);
+                showToast('Could not sign out. Please try again.', 'error');
+            }
+        }
+
+        function getSlotBadge(val) {
+            if (!val || val.trim() === '') return '';
+            const index = getAllSubjects().indexOf(val);
+            const hue = (((index < 0 ? 0 : index) * 137.508) % 360).toFixed(2);
+            return `<span style="background-color:hsl(${hue} 75% 92%);color:hsl(${hue} 55% 28%);border-color:hsl(${hue} 45% 78%)" class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium border shadow-2xs">${escapeHtml(val)}</span>`;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function normalizeSchedule(item) {
+            const legacySubjects = ['mon', 'tue', 'wed', 'thu', 'fri'].map(day => item[day]).filter(Boolean);
+            return {
+                ...item,
+                name: typeof item.name === 'string' ? item.name : '',
+                position: positions.includes(item.position) ? item.position : 'Other',
+                type: scheduleTypes.includes(item.type) ? item.type : 'Type 1',
+                dateFrom: item.dateFrom || '2026-11-09',
+                dateTo: item.dateTo || '2026-11-13',
+                subjects: Array.isArray(item.subjects)
+                    ? [...new Set(item.subjects.filter(subject => typeof subject === 'string' && subject.trim()).map(subject => subject.trim()))]
+                    : [...new Set(legacySubjects)],
+                subjectStatus: item.subjectStatus && typeof item.subjectStatus === 'object' && !Array.isArray(item.subjectStatus)
+                    ? item.subjectStatus
+                    : {},
+                subjectDates: item.subjectDates && typeof item.subjectDates === 'object' && !Array.isArray(item.subjectDates)
+                    ? item.subjectDates
+                    : {}
+            };
+        }
+
+        function subjectKey(subject) {
+            const binary = Array.from(new TextEncoder().encode(subject), byte => String.fromCharCode(byte)).join('');
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        }
+
+        function getCompletionStats(item) {
+            const schedule = normalizeSchedule(item);
+            const total = schedule.subjects.length;
+            const completed = schedule.subjects.filter(subject => Boolean(schedule.subjectStatus[subjectKey(subject)])).length;
+            return { total, completed, percentage: total ? Math.round(completed / total * 100) : 0 };
+        }
+
+        function updatePositionOptions() {
+            const filter = document.getElementById('positionFilter');
+            const selector = document.getElementById('modalPosition');
+            if (!filter || !selector) return;
+            const currentFilter = filter.value;
+            const currentPosition = selector.value;
+            filter.innerHTML = '<option value="">All positions</option>' + positions.map(position =>
+                `<option value="${escapeHtml(position)}">${escapeHtml(position)}</option>`
+            ).join('');
+            selector.innerHTML = positions.map(position =>
+                `<option value="${escapeHtml(position)}">${escapeHtml(position)}</option>`
+            ).join('');
+            filter.value = positions.includes(currentFilter) ? currentFilter : '';
+            selector.value = positions.includes(currentPosition) ? currentPosition : 'Other';
+        }
+
+        function updateTypeOptions() {
+            const filter = document.getElementById('typeFilter');
+            const selector = document.getElementById('modalType');
+            if (!filter || !selector) return;
+            const currentFilter = filter.value;
+            const currentType = selector.value;
+            filter.innerHTML = '<option value="">All types</option>' + scheduleTypes.map(type =>
+                `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`
+            ).join('');
+            selector.innerHTML = scheduleTypes.map(type =>
+                `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`
+            ).join('');
+            filter.value = scheduleTypes.includes(currentFilter) ? currentFilter : '';
+            selector.value = scheduleTypes.includes(currentType) ? currentType : 'Type 1';
+        }
+
+        function categoryDocumentId(kind, name) {
+            const binary = Array.from(new TextEncoder().encode(name), byte => String.fromCharCode(byte)).join('');
+            const key = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+            return `category_${kind}_${key}`;
+        }
+
+        window.openCategoryModal = function(kind, mode) {
+            if (!requireAdmin()) return;
+            const options = kind === 'position' ? positions : scheduleTypes;
+            const select = document.getElementById('categoryCurrent');
+            const currentValue = document.getElementById(kind === 'position' ? 'modalPosition' : 'modalType').value;
+            document.getElementById('categoryKind').value = kind;
+            document.getElementById('categoryMode').value = mode;
+            document.getElementById('categoryModalTitle').innerText = `${mode === 'add' ? 'Add' : 'Edit'} ${kind === 'position' ? 'Position' : 'Type'}`;
+            document.getElementById('categoryCurrentWrap').classList.toggle('hidden', mode !== 'edit');
+            document.getElementById('categoryNameLabel').innerText = mode === 'add' ? `New ${kind} name` : 'Updated name';
+            document.getElementById('categoryHelp').innerText = mode === 'edit'
+                ? 'Renaming this option also updates schedules currently assigned to it.'
+                : 'The new option will be available to everyone in schedule and status filters.';
+            select.innerHTML = options.map(option =>
+                `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`
+            ).join('');
+            select.onchange = () => {
+                document.getElementById('categoryName').value = select.value;
+            };
+            if (mode === 'edit') {
+                select.value = options.includes(currentValue) ? currentValue : options[0] || '';
+                document.getElementById('categoryName').value = select.value;
+            } else {
+                document.getElementById('categoryName').value = '';
+            }
+            document.getElementById('categoryModal').classList.remove('hidden');
+            document.getElementById('categoryName').focus();
+        }
+
+        window.closeCategoryModal = function() {
+            document.getElementById('categoryModal').classList.add('hidden');
+        }
+
+        window.saveCategory = async function(event) {
+            event.preventDefault();
+            if (!requireAdmin()) return;
+            const kind = document.getElementById('categoryKind').value;
+            const mode = document.getElementById('categoryMode').value;
+            const newName = document.getElementById('categoryName').value.trim();
+            const oldName = mode === 'edit' ? document.getElementById('categoryCurrent').value : '';
+            const options = kind === 'position' ? positions : scheduleTypes;
+            if (!['position', 'type'].includes(kind) || !['add', 'edit'].includes(mode) || !newName) {
+                showToast('Enter a valid category name.', 'error');
+                return;
+            }
+            if (options.some(option => option.toLocaleLowerCase() === newName.toLocaleLowerCase() && option !== oldName)) {
+                showToast(`That ${kind} already exists.`, 'error');
+                return;
+            }
+            if (mode === 'edit' && newName === oldName) {
+                closeCategoryModal();
+                return;
+            }
+
+            const existingCategory = categoryData.find(category => category.kind === kind && category.name === oldName);
+            const categoryId = mode === 'edit' && existingCategory
+                ? existingCategory.id
+                : categoryDocumentId(kind, mode === 'edit' ? oldName : newName);
+            const sourceName = mode === 'edit'
+                ? existingCategory?.sourceName || ((kind === 'position' ? defaultPositions : defaultScheduleTypes).includes(oldName) ? oldName : '')
+                : '';
+            const categoryRef = doc(db, 'artifacts', appId, 'public', 'data', 'categories', categoryId);
+            const batch = writeBatch(db);
+            batch.set(categoryRef, {
+                kind,
+                name: newName,
+                ...(sourceName ? { sourceName } : {}),
+                ...(mode === 'edit' ? { previousName: oldName } : {})
+            });
+
+            if (mode === 'edit') {
+                const updatedSchedules = scheduleData
+                    .map(record => normalizeSchedule(record))
+                    .filter(schedule => schedule[kind] === oldName);
+                if (updatedSchedules.length > 498) {
+                    showToast('Too many schedules to rename in one operation. Contact support.', 'error');
+                    return;
+                }
+                for (const schedule of updatedSchedules) {
+                    batch.set(
+                        doc(db, 'artifacts', appId, 'public', 'data', 'schedules', schedule.id),
+                        { [kind]: newName },
+                        { merge: true }
+                    );
+                }
+            }
+
+            try {
+                await batch.commit();
+                if (kind === 'position') {
+                    document.getElementById('modalPosition').value = newName;
+                    document.getElementById('positionFilter').value = oldName && document.getElementById('positionFilter').value === oldName
+                        ? newName
+                        : document.getElementById('positionFilter').value;
+                } else {
+                    document.getElementById('modalType').value = newName;
+                    document.getElementById('typeFilter').value = oldName && document.getElementById('typeFilter').value === oldName
+                        ? newName
+                        : document.getElementById('typeFilter').value;
+                }
+                closeCategoryModal();
+                showToast(mode === 'add' ? `${kind} added` : `${kind} updated`, 'success');
+            } catch (error) {
+                console.error('Category update error:', error);
+                showToast(`Could not ${mode === 'add' ? 'add' : 'update'} ${kind}. Check Firestore rules and try again.`, 'error');
+            }
+        }
+
+        function formatDate(date) {
+            if (!date) return '—';
+            const parsedDate = new Date(`${date}T00:00:00`);
+            return Number.isNaN(parsedDate.getTime()) ? '—' : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsedDate);
+        }
+
+        function formatTimestamp(value) {
+            if (!value) return '';
+            let date;
+            if (typeof value.toDate === 'function') {
+                date = value.toDate();
+            } else if (typeof value === 'object' && typeof value.seconds === 'number') {
+                date = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1000000);
+            } else {
+                date = new Date(value);
+            }
+            return Number.isNaN(date.getTime())
+                ? ''
+                : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+        }
+
+        function dateToISO(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function parseLocalDate(value) {
+            const [year, month, day] = value.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function shiftDate(value, days) {
+            const date = parseLocalDate(value);
+            date.setDate(date.getDate() + days);
+            return dateToISO(date);
+        }
+
+        function getWeekRange(offset = 0) {
+            const start = new Date();
+            start.setHours(0, 0, 0, 0);
+            start.setDate(start.getDate() - start.getDay() + offset * 7);
+            const end = new Date(start);
+            end.setDate(end.getDate() + 6);
+            return { from: dateToISO(start), to: dateToISO(end) };
+        }
+
+        function setWeekRange(offset) {
+            weekOffset = offset;
+            const range = getWeekRange(weekOffset);
+            document.getElementById('filterFrom').value = range.from;
+            document.getElementById('filterTo').value = range.to;
+            updateWeekLabel();
+            renderSchedule();
+        }
+
+        function updateWeekLabel() {
+            const from = document.getElementById('filterFrom').value;
+            const to = document.getElementById('filterTo').value;
+            const label = document.getElementById('weekLabel');
+            if (!from || !to) {
+                label.innerText = 'Custom date range';
+                return;
+            }
+            if (from === getWeekRange(0).from && to === getWeekRange(0).to) {
+                label.innerText = 'This week';
+                return;
+            }
+            const start = parseLocalDate(from);
+            const end = parseLocalDate(to);
+            const isWeek = start.getDay() === 0 && end.getDay() === 6
+                && Math.round((end - start) / 86400000) === 6;
+            label.innerText = isWeek ? `Week of ${formatDate(from)} – ${formatDate(to)}` : 'Custom date range';
+        }
+
+        window.changeWeek = function(amount) {
+            const from = document.getElementById('filterFrom').value || getWeekRange().from;
+            const to = document.getElementById('filterTo').value || getWeekRange().to;
+            const nextFrom = shiftDate(from, amount * 7);
+            document.getElementById('filterFrom').value = nextFrom;
+            document.getElementById('filterTo').value = shiftDate(to, amount * 7);
+            const currentFrom = getWeekRange().from;
+            weekOffset = Math.round((parseLocalDate(nextFrom) - parseLocalDate(currentFrom)) / 604800000);
+            updateWeekLabel();
+            renderSchedule();
+        }
+
+        window.setCurrentWeek = function() {
+            setWeekRange(0);
+        }
+
+        function getAllSubjects() {
+            return [...new Set([
+                ...catalogSubjects,
+                ...subjectData,
+                ...scheduleData.flatMap(item => normalizeSchedule(item).subjects)
+            ])].sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+        }
+
+        function updateSubjectOptions() {
+            const allSubjects = getAllSubjects();
+            const filter = document.getElementById('subjectFilter');
+            const select = document.getElementById('subjectSelect');
+            if (!filter || !select) return;
+            const currentFilter = filter.value;
+            const currentSelection = select.value;
+            filter.innerHTML = '<option value="">All subjects</option>' + allSubjects.map(subject =>
+                `<option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>`
+            ).join('');
+            select.innerHTML = '<option value="">Choose a subject</option>' + allSubjects.map(subject =>
+                `<option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>`
+            ).join('');
+            filter.value = allSubjects.includes(currentFilter) ? currentFilter : '';
+            select.value = allSubjects.includes(currentSelection) ? currentSelection : '';
+        }
+
+        window.filterData = function() {
+            updateWeekLabel();
+            renderSchedule();
+        }
+
+        window.openLoginPage = function() {
+            clearAuthError();
+            document.getElementById('loginPage').classList.remove('hidden');
+        }
+
+        window.closeLoginPage = function() {
+            if (currentUser) document.getElementById('loginPage').classList.add('hidden');
+        }
+
+        window.clearFilters = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('subjectFilter').value = '';
+            document.getElementById('positionFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            setWeekRange(0);
+        }
+
+        function normalizeColumnOrder(savedOrder, defaults) {
+            const allowed = new Set(defaults);
+            const validSaved = Array.isArray(savedOrder)
+                ? savedOrder.filter((key, index) => allowed.has(key) && savedOrder.indexOf(key) === index)
+                : [];
+            return [...validSaved, ...defaults.filter(key => !validSaved.includes(key))];
+        }
+
+        function renderTableHeaders() {
+            for (const tableName of Object.keys(defaultColumnOrders)) {
+                const headerRow = document.getElementById(tableName === 'schedule' ? 'scheduleHeaderRow' : 'rankingHeaderRow');
+                const order = columnOrders[tableName];
+                const visibleOrder = tableName === 'schedule' && !isAdmin
+                    ? order.filter(key => key !== 'actions')
+                    : order;
+                headerRow.innerHTML = visibleOrder.map((key, index) => {
+                    const column = columnDefinitions[tableName][key];
+                    const moveButtons = isAdmin ? `
+                        <span class="ml-1 inline-flex items-center gap-0.5 normal-case">
+                            <button type="button" onclick="moveTableColumn('${tableName}', '${key}', -1)" aria-label="Move ${column.label} left" title="Move left" ${index === 0 ? 'disabled' : ''} class="rounded p-1 text-slate-400 hover:bg-white hover:text-indigo-700 disabled:invisible"><i class="fa-solid fa-chevron-left text-[9px]"></i></button>
+                            <button type="button" onclick="moveTableColumn('${tableName}', '${key}', 1)" aria-label="Move ${column.label} right" title="Move right" ${index === visibleOrder.length - 1 ? 'disabled' : ''} class="rounded p-1 text-slate-400 hover:bg-white hover:text-indigo-700 disabled:invisible"><i class="fa-solid fa-chevron-right text-[9px]"></i></button>
+                        </span>` : '';
+                    return `<th class="${column.className}"><div class="flex items-center ${tableName === 'schedule' && key === 'actions' ? 'justify-center' : ''}"><span>${column.label}</span>${moveButtons}</div></th>`;
+                }).join('');
+            }
+        }
+
+        window.moveTableColumn = async function(tableName, columnKey, direction) {
+            if (!requireAdmin()) return;
+            if (!Object.hasOwn(defaultColumnOrders, tableName) || ![-1, 1].includes(direction)) return;
+            const order = columnOrders[tableName];
+            const index = order.indexOf(columnKey);
+            const targetIndex = index + direction;
+            if (index < 0 || targetIndex < 0 || targetIndex >= order.length) return;
+
+            const previousOrders = {
+                schedule: [...columnOrders.schedule],
+                rankings: [...columnOrders.rankings]
+            };
+            [order[index], order[targetIndex]] = [order[targetIndex], order[index]];
+            renderTableHeaders();
+            renderSchedule();
+
+            try {
+                await setDoc(
+                    doc(db, 'artifacts', appId, 'public', 'data', 'tableSettings', 'column-order'),
+                    columnOrders,
+                    { merge: true }
+                );
+            } catch (error) {
+                console.error('Column order update error:', error);
+                columnOrders = previousOrders;
+                renderTableHeaders();
+                renderSchedule();
+                showToast('Could not save column order. Check Firestore rules and try again.', 'error');
+            }
+        }
+
+        function renderSchedule() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const subject = document.getElementById('subjectFilter').value;
+            const position = document.getElementById('positionFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const filterFrom = document.getElementById('filterFrom').value;
+            const filterTo = document.getElementById('filterTo').value;
+
+            const filtered = scheduleData.map(normalizeSchedule).filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(search);
+                const matchesSubject = subject === '' || item.subjects.includes(subject);
+                const matchesPosition = position === '' || item.position === position;
+                const matchesType = type === '' || item.type === type;
+                const inRange = date => (!filterFrom || date >= filterFrom) && (!filterTo || date <= filterTo);
+                const overlapsRange = from => (!filterTo || from <= filterTo) && (!filterFrom || item.dateTo >= filterFrom);
+                let matchesDate = overlapsRange(item.dateFrom);
+                if (subject) {
+                    const individualDate = item.subjectDates[subjectKey(subject)]?.date;
+                    if (individualDate) matchesDate = inRange(individualDate);
+                } else if (!matchesDate) {
+                    matchesDate = item.subjects.some(name => {
+                        const individualDate = item.subjectDates[subjectKey(name)]?.date;
+                        return individualDate && inRange(individualDate);
+                    });
+                }
+                return matchesSearch && matchesSubject && matchesPosition && matchesType && matchesDate;
+            });
+
+            document.getElementById('recordCount').innerText = `Showing ${filtered.length} of ${scheduleData.length}`;
+            updateWeekLabel();
+            renderStatus(filtered);
+
+            const tbody = document.getElementById('tableBody');
+            const cardContainer = document.getElementById('cardViewContainer');
+            const emptyState = document.getElementById('emptyState');
+            document.getElementById('tableViewContainer').classList.toggle('hidden', currentTab !== 'schedule' || currentView !== 'table');
+            cardContainer.classList.toggle('hidden', currentTab !== 'schedule' || currentView !== 'card');
+            document.getElementById('statusViewContainer').classList.toggle('hidden', currentTab !== 'status');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                cardContainer.innerHTML = '';
+                emptyState.classList.toggle('hidden', currentTab !== 'schedule');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let tableHtml = '';
+            let cardHtml = '';
+
+            filtered.forEach(item => {
+                const subjectItems = item.subjects.map(subject => {
+                    const key = subjectKey(subject);
+                    const completion = item.subjectStatus[key];
+                    const completedAt = formatTimestamp(completion?.completedAt);
+                    const subjectDate = item.subjectDates[key];
+                    const subjectDateLabel = subjectDate?.date
+                        ? `<span class="text-xs text-amber-700"><i class="fa-regular fa-calendar-check mr-1"></i>Postponed to ${formatDate(subjectDate.date)}${formatTimestamp(subjectDate.postponedAt) ? ` · ${escapeHtml(formatTimestamp(subjectDate.postponedAt))}` : ''}</span>`
+                        : '';
+                    return `
+                        <div class="flex flex-col items-start gap-1.5 rounded-lg border border-slate-100 bg-white p-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="inline-flex items-center gap-1.5 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}">
+                                    <input type="checkbox" data-action="toggle-completion" data-id="${escapeHtml(item.id)}" data-subject-key="${escapeHtml(key)}" ${completion ? 'checked' : ''} ${isAdmin ? '' : 'disabled'} aria-label="Completed: ${escapeHtml(subject)}" class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-100">
+                                    ${getSlotBadge(subject)}
+                                </label>
+                                ${isAdmin ? `<button type="button" data-action="postpone-subject" data-id="${escapeHtml(item.id)}" data-subject-key="${escapeHtml(key)}" class="text-xs font-semibold text-amber-700 hover:text-amber-900" title="Postpone this subject"><i class="fa-regular fa-calendar-plus"></i> Postpone</button>` : ''}
+                            </div>
+                            ${completedAt ? `<span class="text-xs text-emerald-700"><i class="fa-solid fa-circle-check mr-1"></i>Completed ${escapeHtml(completedAt)}</span>` : ''}
+                            ${subjectDateLabel}
+                        </div>`;
+                }).join('');
+                const stats = getCompletionStats(item);
+                const actionButtons = isAdmin ? `
+                    <button data-action="postpone-all" data-id="${escapeHtml(item.id)}" class="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-50 rounded-lg transition" title="Postpone all subjects in this schedule">
+                        <i class="fa-regular fa-calendar-plus text-xs"></i>
+                    </button>
+                    <button data-action="duplicate" data-id="${escapeHtml(item.id)}" class="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition" title="Duplicate schedule">
+                        <i class="fa-regular fa-copy text-xs"></i>
+                    </button>
+                    <button data-action="edit" data-id="${escapeHtml(item.id)}" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Edit">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button data-action="delete" data-id="${escapeHtml(item.id)}" class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Delete">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>` : '';
+                const cells = {
+                    name: `<td class="py-3 px-4 border-r border-slate-200">
+                        <div class="font-semibold text-slate-800">${escapeHtml(item.name)}</div>
+                        <div class="mt-1 text-xs font-semibold text-emerald-700">${stats.percentage}% complete · ${stats.completed}/${stats.total}</div>
+                    </td>`,
+                    position: `<td class="py-3 px-4 border-r border-slate-200 text-sm">${escapeHtml(item.position)}</td>`,
+                    type: `<td class="py-3 px-4 border-r border-slate-200 text-sm">${escapeHtml(item.type)}</td>`,
+                    from: `<td class="py-3 px-4 border-r border-slate-200 text-sm">${formatDate(item.dateFrom)}</td>`,
+                    to: `<td class="py-3 px-4 border-r border-slate-200 text-sm">${formatDate(item.dateTo)}</td>`,
+                    subjects: `<td class="py-3 px-4 border-r border-slate-200"><div class="flex flex-col gap-2">${subjectItems || '<span class="text-slate-400 text-xs">No subjects</span>'}</div></td>`,
+                    actions: `<td class="py-3 px-2 text-center">
+                    <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition">${actionButtons}</div>
+                </td>`
+                };
+                tableHtml += `
+                    <tr class="hover:bg-slate-50/80 transition group">
+                        ${columnOrders.schedule.filter(column => isAdmin || column !== 'actions').map(column => cells[column]).join('')}
+                    </tr>
+                `;
+
+                cardHtml += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between gap-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900">${escapeHtml(item.name)}</h3>
+                                <p class="mt-1 text-xs font-semibold text-emerald-700">${stats.percentage}% complete · ${stats.completed}/${stats.total}</p>
+                                <p class="mt-1 text-xs text-slate-500">${escapeHtml(item.position)}</p>
+                                <p class="mt-1 text-xs text-indigo-600">${escapeHtml(item.type)}</p>
+                            </div>
+                            ${isAdmin ? `<div class="flex items-center gap-1">${actionButtons}</div>` : ''}
+                        </div>
+
+                        <div class="text-sm space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p><span class="font-semibold text-slate-500">From:</span> ${formatDate(item.dateFrom)}</p>
+                            <p><span class="font-semibold text-slate-500">To:</span> ${formatDate(item.dateTo)}</p>
+                            <div class="flex flex-col gap-2 pt-1">${subjectItems || '<span class="text-slate-400 text-xs">No subjects</span>'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tbody.innerHTML = tableHtml;
+            cardContainer.innerHTML = cardHtml;
+            updateSubjectOptions();
+            updatePositionOptions();
+            updateTypeOptions();
+            document.getElementById('tableViewContainer').classList.toggle('hidden', currentTab !== 'schedule' || currentView !== 'table');
+            cardContainer.classList.toggle('hidden', currentTab !== 'schedule' || currentView !== 'card');
+            document.getElementById('statusViewContainer').classList.toggle('hidden', currentTab !== 'status');
+            [tbody, cardContainer].forEach(container => {
+                container.onclick = event => {
+                    const button = event.target.closest('button[data-action]');
+                    if (!button) return;
+                    if (button.dataset.action === 'edit') window.openEditModal(button.dataset.id);
+                    if (button.dataset.action === 'duplicate') window.openDuplicateModal(button.dataset.id);
+                    if (button.dataset.action === 'delete') window.deleteRecord(button.dataset.id);
+                    if (button.dataset.action === 'postpone-all') window.openPostponeModal(button.dataset.id);
+                    if (button.dataset.action === 'postpone-subject') window.openPostponeModal(button.dataset.id, button.dataset.subjectKey);
+                };
+                container.onchange = event => {
+                    const checkbox = event.target.closest('input[data-action="toggle-completion"]');
+                    if (checkbox) toggleSubjectCompletion(checkbox.dataset.id, checkbox.dataset.subjectKey, checkbox.checked);
+                };
+            });
+        }
+
+        function renderStatus(filteredSchedules) {
+            const ranked = filteredSchedules
+                .map(item => ({ ...item, stats: getCompletionStats(item) }))
+                .sort((a, b) => b.stats.percentage - a.stats.percentage
+                    || b.stats.completed - a.stats.completed
+                    || a.name.localeCompare(b.name));
+            const topPerformer = document.getElementById('topPerformer');
+            const statusEmptyState = document.getElementById('statusEmptyState');
+            const statusTableBody = document.getElementById('statusTableBody');
+            if (ranked.length === 0) {
+                topPerformer.innerText = 'No progress yet';
+                statusTableBody.innerHTML = '';
+                statusEmptyState.classList.remove('hidden');
+                return;
+            }
+
+            const leader = ranked[0];
+            topPerformer.innerText = leader.stats.completed > 0
+                ? `${leader.name} · ${leader.stats.percentage}% complete`
+                : 'No subjects completed yet';
+            statusEmptyState.classList.add('hidden');
+            let previousPercentage = null;
+            let currentRank = 0;
+            statusTableBody.innerHTML = ranked.map((item, index) => {
+                if (item.stats.percentage !== previousPercentage) currentRank = index + 1;
+                previousPercentage = item.stats.percentage;
+                const completionDetails = item.subjects.map(name => {
+                    const completion = item.subjectStatus[subjectKey(name)];
+                    return completion
+                        ? `<span class="inline-flex flex-col rounded-lg bg-emerald-50 px-2 py-1 text-xs text-emerald-800"><span><i class="fa-solid fa-check mr-1"></i>${escapeHtml(name)}</span><span class="mt-0.5 text-[10px]">${escapeHtml(formatTimestamp(completion.completedAt) || 'Completed')}</span></span>`
+                        : '';
+                }).filter(Boolean).join(' ');
+                const cells = {
+                    rank: `<td class="py-3 px-4 font-bold text-indigo-700">#${currentRank}</td>`,
+                    name: `<td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(item.name)}</td>`,
+                    progress: `<td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            <div class="h-2 w-24 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-emerald-500" style="width:${item.stats.percentage}%"></div></div>
+                            <span class="font-semibold text-emerald-700">${item.stats.percentage}%</span>
+                        </div>
+                    </td>`,
+                    position: `<td class="py-3 px-4">${escapeHtml(item.position)}</td>`,
+                    type: `<td class="py-3 px-4">${escapeHtml(item.type)}</td>`,
+                    completed: `<td class="py-3 px-4">
+                        <p class="mb-1 text-xs font-medium text-slate-600">${item.stats.completed} of ${item.stats.total} complete</p>
+                        <div class="flex flex-wrap gap-1">${completionDetails || '<span class="text-xs text-slate-400">No subjects completed</span>'}</div>
+                    </td>`
+                };
+                return `
+                    <tr class="hover:bg-slate-50">
+                        ${columnOrders.rankings.map(column => cells[column]).join('')}
+                    </tr>`;
+            }).join('');
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const onStatus = tab === 'status';
+            document.getElementById('scheduleTab').setAttribute('aria-selected', String(!onStatus));
+            document.getElementById('statusTab').setAttribute('aria-selected', String(onStatus));
+            document.getElementById('scheduleTab').className = `px-4 py-2.5 border-b-2 ${onStatus ? 'border-transparent text-slate-500 hover:text-indigo-700' : 'border-indigo-600 text-indigo-700'} text-sm font-semibold`;
+            document.getElementById('statusTab').className = `px-4 py-2.5 border-b-2 ${onStatus ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-indigo-700'} text-sm font-semibold`;
+            document.getElementById('tableViewContainer').classList.toggle('hidden', onStatus || currentView !== 'table');
+            document.getElementById('cardViewContainer').classList.toggle('hidden', onStatus || currentView !== 'card');
+            document.getElementById('statusViewContainer').classList.toggle('hidden', !onStatus);
+            document.getElementById('emptyState').classList.toggle('hidden', onStatus || scheduleData.length === 0);
+            renderSchedule();
+        }
+
+        async function toggleSubjectCompletion(scheduleId, key, completed) {
+            if (!requireAdmin()) {
+                renderSchedule();
+                return;
+            }
+            const record = scheduleData.find(item => item.id === scheduleId);
+            if (!record) return;
+            const schedule = normalizeSchedule(record);
+            const subjectStatus = { ...schedule.subjectStatus };
+            if (completed) {
+                subjectStatus[key] = { completedAt: serverTimestamp() };
+            } else {
+                delete subjectStatus[key];
+            }
+            try {
+                await setDoc(
+                    doc(db, 'artifacts', appId, 'public', 'data', 'schedules', scheduleId),
+                    { subjectStatus },
+                    { merge: true }
+                );
+            } catch (error) {
+                console.error('Completion update error:', error);
+                renderSchedule();
+                showToast('Could not update subject completion', 'error');
+            }
+        }
+
+        window.openPostponeModal = function(scheduleId, key = '') {
+            if (!requireAdmin()) return;
+            const record = scheduleData.find(item => item.id === scheduleId);
+            if (!record) return;
+            const schedule = normalizeSchedule(record);
+            const individual = Boolean(key);
+            document.getElementById('postponeMode').value = individual ? 'subject' : 'schedule';
+            document.getElementById('postponeScheduleId').value = scheduleId;
+            document.getElementById('postponeSubjectKey').value = key;
+            document.getElementById('postponeScheduleDates').classList.toggle('hidden', individual);
+            document.getElementById('postponeSubjectDate').classList.toggle('hidden', !individual);
+            document.getElementById('postponeFrom').required = !individual;
+            document.getElementById('postponeTo').required = !individual;
+            document.getElementById('postponeDate').required = individual;
+            if (individual) {
+                const subject = schedule.subjects.find(name => subjectKey(name) === key);
+                if (!subject) return;
+                document.getElementById('postponeTitle').innerText = 'Postpone subject';
+                document.getElementById('postponeDescription').innerText = subject;
+                document.getElementById('postponeDate').value = shiftDate(schedule.subjectDates[key]?.date || schedule.dateFrom, 7);
+            } else {
+                document.getElementById('postponeTitle').innerText = 'Postpone all subjects';
+                document.getElementById('postponeDescription').innerText = `Move every subject in “${schedule.name}” to a later schedule date range.`;
+                document.getElementById('postponeFrom').value = shiftDate(schedule.dateFrom, 7);
+                document.getElementById('postponeTo').value = shiftDate(schedule.dateTo, 7);
+            }
+            document.getElementById('postponeModal').classList.remove('hidden');
+        }
+
+        window.closePostponeModal = function() {
+            document.getElementById('postponeModal').classList.add('hidden');
+        }
+
+        window.savePostpone = async function(event) {
+            event.preventDefault();
+            if (!requireAdmin()) return;
+            const scheduleId = document.getElementById('postponeScheduleId').value;
+            const record = scheduleData.find(item => item.id === scheduleId);
+            if (!record) {
+                showToast('Schedule was not found. Refresh and try again.', 'error');
+                return;
+            }
+            const schedule = normalizeSchedule(record);
+            const isIndividual = document.getElementById('postponeMode').value === 'subject';
+            const reference = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', scheduleId);
+            try {
+                if (isIndividual) {
+                    const key = document.getElementById('postponeSubjectKey').value;
+                    const newDate = document.getElementById('postponeDate').value;
+                    const previousDate = schedule.subjectDates[key]?.date || schedule.dateFrom;
+                    if (!newDate || newDate <= previousDate) {
+                        showToast('Choose a date later than the subject’s current date.', 'error');
+                        return;
+                    }
+                    const subjectDates = {
+                        ...schedule.subjectDates,
+                        [key]: { date: newDate, postponedAt: serverTimestamp() }
+                    };
+                    await setDoc(reference, { ...schedule, subjectDates });
+                } else {
+                    const dateFrom = document.getElementById('postponeFrom').value;
+                    const dateTo = document.getElementById('postponeTo').value;
+                    if (!dateFrom || dateFrom <= schedule.dateFrom) {
+                        showToast('The new start date must be later than the current start date.', 'error');
+                        return;
+                    }
+                    if (dateFrom > dateTo) {
+                        showToast('The end date must be on or after the new start date.', 'error');
+                        return;
+                    }
+                    const offset = Math.round((parseLocalDate(dateFrom) - parseLocalDate(schedule.dateFrom)) / 86400000);
+                    const subjectDates = Object.fromEntries(Object.entries(schedule.subjectDates).map(([key, value]) => [
+                        key,
+                        value?.date
+                            ? { ...value, date: shiftDate(value.date, offset), postponedAt: serverTimestamp() }
+                            : value
+                    ]));
+                    await setDoc(reference, { ...schedule, dateFrom, dateTo, subjectDates });
+                }
+                closePostponeModal();
+                showToast('Postponement saved and synced', 'success');
+            } catch (error) {
+                console.error('Postponement error:', error);
+                showToast('Could not save postponement', 'error');
+            }
+        }
+
+        window.switchView = function(view) {
+            currentView = view;
+            const tableContainer = document.getElementById('tableViewContainer');
+            const cardContainer = document.getElementById('cardViewContainer');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+
+            if (view === 'table') {
+                tableContainer.classList.toggle('hidden', currentTab !== 'schedule');
+                cardContainer.classList.add('hidden');
+                tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-indigo-700 shadow-sm flex items-center gap-1.5";
+                cardBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+            } else {
+                tableContainer.classList.add('hidden');
+                cardContainer.classList.toggle('hidden', currentTab !== 'schedule');
+                cardBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-indigo-700 shadow-sm flex items-center gap-1.5";
+                tableBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+            }
+            renderSchedule();
+        }
+
+        window.openAddModal = function() {
+            if (!requireAdmin()) return;
+            duplicateScheduleData = null;
+            document.getElementById('modalTitle').innerText = 'Add Schedule';
+            document.getElementById('editDocId').value = '';
+            document.getElementById('modalName').value = '';
+            updatePositionOptions();
+            document.getElementById('modalPosition').value = 'Other';
+            updateTypeOptions();
+            document.getElementById('modalType').value = 'Type 1';
+            document.getElementById('modalDateFrom').value = '';
+            document.getElementById('modalDateTo').value = '';
+            selectedSubjects = [];
+            renderSelectedSubjects();
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        window.openEditModal = function(id) {
+            if (!requireAdmin()) return;
+            duplicateScheduleData = null;
+            const record = scheduleData.find(item => item.id === id);
+            if (!record) return;
+            const schedule = normalizeSchedule(record);
+
+            document.getElementById('modalTitle').innerText = `Edit Schedule: ${schedule.name}`;
+            document.getElementById('editDocId').value = record.id;
+            document.getElementById('modalName').value = schedule.name;
+            updatePositionOptions();
+            document.getElementById('modalPosition').value = schedule.position;
+            updateTypeOptions();
+            document.getElementById('modalType').value = schedule.type;
+            document.getElementById('modalDateFrom').value = schedule.dateFrom;
+            document.getElementById('modalDateTo').value = schedule.dateTo;
+            selectedSubjects = [...schedule.subjects];
+            renderSelectedSubjects();
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        window.openDuplicateModal = function(id) {
+            if (!requireAdmin()) return;
+            const record = scheduleData.find(item => item.id === id);
+            if (!record) {
+                showToast('Schedule was not found. Refresh and try again.', 'error');
+                return;
+            }
+            const schedule = normalizeSchedule(record);
+            duplicateScheduleData = {
+                position: schedule.position,
+                subjectDates: schedule.subjectDates
+            };
+            document.getElementById('modalTitle').innerText = `Duplicate Schedule: ${schedule.name}`;
+            document.getElementById('editDocId').value = '';
+            document.getElementById('modalName').value = `${schedule.name} (Copy)`;
+            updatePositionOptions();
+            document.getElementById('modalPosition').value = schedule.position;
+            updateTypeOptions();
+            document.getElementById('modalType').value = schedule.type;
+            document.getElementById('modalDateFrom').value = schedule.dateFrom;
+            document.getElementById('modalDateTo').value = schedule.dateTo;
+            selectedSubjects = [...schedule.subjects];
+            renderSelectedSubjects();
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('scheduleModal').classList.add('hidden');
+            duplicateScheduleData = null;
+        }
+
+        window.addSelectedSubject = function() {
+            const subjectSelect = document.getElementById('subjectSelect');
+            const subject = subjectSelect.value;
+            if (!subject) {
+                showToast('Choose a subject first', 'error');
+                return;
+            }
+            if (selectedSubjects.includes(subject)) {
+                showToast('Subject is already added', 'error');
+                return;
+            }
+            selectedSubjects.push(subject);
+            renderSelectedSubjects();
+            subjectSelect.value = '';
+        }
+
+        function renderSelectedSubjects() {
+            const container = document.getElementById('selectedSubjects');
+            container.innerHTML = selectedSubjects.map((subject, index) => `
+                <span class="inline-flex items-center gap-2 px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg text-xs font-medium">
+                    ${escapeHtml(subject)}
+                    <button type="button" data-index="${index}" class="text-indigo-600 hover:text-rose-600" aria-label="Remove ${escapeHtml(subject)}"><i class="fa-solid fa-xmark"></i></button>
+                </span>
+            `).join('');
+            container.onclick = event => {
+                const button = event.target.closest('button[data-index]');
+                if (!button) return;
+                selectedSubjects.splice(Number(button.dataset.index), 1);
+                renderSelectedSubjects();
+            };
+        }
+
+        window.saveSchedule = async function(e) {
+            e.preventDefault();
+            if (!requireAdmin()) return;
+            const editId = document.getElementById('editDocId').value;
+            const name = document.getElementById('modalName').value.trim();
+            const dateFrom = document.getElementById('modalDateFrom').value;
+            const dateTo = document.getElementById('modalDateTo').value;
+            if (dateFrom > dateTo) {
+                showToast('The end date must be on or after the start date', 'error');
+                return;
+            }
+            if (selectedSubjects.length === 0) {
+                showToast('Add at least one subject', 'error');
+                return;
+            }
+
+            if (!name) {
+                showToast('Enter a name for the schedule', 'error');
+                return;
+            }
+
+            const docId = editId ? editId : `sched_${crypto.randomUUID()}`;
+            const existing = scheduleData.find(item => item.id === docId);
+            const previous = existing ? normalizeSchedule(existing) : null;
+            const source = duplicateScheduleData;
+            const payload = {
+                ...(previous || {}),
+                id: docId,
+                name,
+                position: document.getElementById('modalPosition').value,
+                type: document.getElementById('modalType').value,
+                dateFrom,
+                dateTo,
+                subjects: [...selectedSubjects],
+                subjectStatus: previous?.subjectStatus || {},
+                subjectDates: previous?.subjectDates || source?.subjectDates || {}
+            };
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', docId);
+                await setDoc(docRef, payload);
+                showToast(source ? 'Schedule duplicated successfully' : 'Schedule saved successfully', 'success');
+                closeModal();
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast('Error saving to cloud', 'error');
+            }
+        }
+
+        window.openSubjectModal = function() {
+            if (!requireAdmin()) return;
+            document.getElementById('newSubjectName').value = '';
+            document.getElementById('subjectModal').classList.remove('hidden');
+            document.getElementById('newSubjectName').focus();
+        }
+
+        window.closeSubjectModal = function() {
+            document.getElementById('subjectModal').classList.add('hidden');
+        }
+
+        window.saveSubject = async function(e) {
+            e.preventDefault();
+            if (!requireAdmin()) return;
+            const name = document.getElementById('newSubjectName').value.trim();
+            if (!name) return;
+            if ([...subjectData, ...scheduleData.flatMap(item => normalizeSchedule(item).subjects)]
+                .some(subject => subject.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+                showToast('That subject already exists', 'error');
+                return;
+            }
+
+            try {
+                const subjectId = `subject_${crypto.randomUUID()}`;
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'subjects', subjectId), { name });
+                updateSubjectOptions();
+                document.getElementById('subjectSelect').value = name;
+                closeSubjectModal();
+                showToast('Subject added. Select it and press Add.', 'success');
+            } catch (err) {
+                console.error("Subject save error:", err);
+                showToast('Error saving subject to cloud', 'error');
+            }
+        }
+
+        window.deleteRecord = async function(id) {
+            if (!requireAdmin()) return;
+            if (confirm('Are you sure you want to delete this schedule record?')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id));
+                    showToast('Schedule deleted', 'success');
+                } catch (err) {
+                    console.error("Delete error:", err);
+                    showToast('Error deleting record', 'error');
+                }
+            }
+        }
+
+        window.exportData = function() {
+            if (!requireAdmin()) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scheduleData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "schedule_data.json");
+            dlAnchorElem.click();
+            showToast('Schedule exported as JSON', 'success');
+        }
+
+        window.importSchedules = async function(event) {
+            if (!requireAdmin()) return;
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            try {
+                const parsed = JSON.parse(await file.text());
+                if (!Array.isArray(parsed)) throw new Error('The JSON file must contain an array of schedules.');
+                if (parsed.length > 450) throw new Error('Import up to 450 schedules at a time.');
+                const schedules = parsed.map((item, index) => {
+                    if (!item || typeof item !== 'object' || typeof item.name !== 'string' || !item.name.trim()) {
+                        throw new Error(`Schedule ${index + 1} needs a name.`);
+                    }
+                    const schedule = normalizeSchedule(item);
+                    if (schedule.dateFrom > schedule.dateTo) throw new Error(`Schedule ${index + 1} has an invalid date range.`);
+                    const id = typeof item.id === 'string' && item.id && !item.id.includes('/')
+                        ? item.id
+                        : `sched_${crypto.randomUUID()}`;
+                    const existing = scheduleData.find(record => record.id === id);
+                    const previous = existing ? normalizeSchedule(existing) : null;
+                    return {
+                        id,
+                        name: schedule.name.trim(),
+                        position: previous?.position || schedule.position,
+                        type: previous?.type || schedule.type,
+                        dateFrom: schedule.dateFrom,
+                        dateTo: schedule.dateTo,
+                        subjects: schedule.subjects,
+                        subjectStatus: previous?.subjectStatus || schedule.subjectStatus,
+                        subjectDates: previous?.subjectDates || schedule.subjectDates
+                    };
+                });
+                const batch = writeBatch(db);
+                for (const schedule of schedules) {
+                    batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', schedule.id), schedule);
+                }
+                await batch.commit();
+                showToast(`Imported ${schedules.length} schedules`, 'success');
+            } catch (error) {
+                console.error("Schedule import error:", error);
+                showToast(error.message || 'Could not import schedules', 'error');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = message;
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400 text-base";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').catch(error => {
+                    console.error('App install support could not be enabled:', error);
+                });
+            });
+        }
+    </script>
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="../index.html">Home</a></footer>
+    <script src="../site-shell.js"></script>
+</body>
+</html>

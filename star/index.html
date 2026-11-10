@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="stylesheet" href="../site-pages.css" />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⭐ Star Galaxy — Weekly Status & Academies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>.goog-te-banner-frame.skiptranslate,.goog-te-banner-frame{display:none!important}body{top:0!important}.goog-tooltip,#goog-gt-tt{display:none!important}.goog-text-highlight{box-shadow:none!important;background-color:#0000!important}#google_translate_element select{color:#334155;background:#fff;border:1px solid #cbd5e1;border-radius:.75rem;padding:.25rem .5rem;font-size:.75rem;font-weight:700}</style>
+    <script type="module" crossorigin src="assets/index-IyhDXIls.js"></script>
+    <link rel="stylesheet" crossorigin href="assets/index-D1LGIps3.css">
+    <style>
+      #sni-site-header { z-index: 1000000; }
+      @media (max-width: 767px) {
+        .site-footer { margin-bottom: 5rem; }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-100 font-sans antialiased text-slate-800 select-none">
+    <header class="site-header" id="sni-site-header">
+      <a class="site-logo" href="../index.html#home">
+        <img src="../Images/sni-logo.png" alt="">
+        <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="../index.html#home">Home</a>
+        <a href="./" aria-current="page">Star</a>
+        <a href="../support/">Support</a>
+        <a href="../evaluation/">Evaluation</a>
+        <a href="../videos.html">Videos</a>
+        <a href="../index.html#about">About</a>
+        <a href="../index.html#services">Services</a>
+        <a href="../index.html#contact">Contact</a>
+        <a class="site-search-link" href="../videos.html#videoSearch" aria-label="Search videos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+        </a>
+        <button class="site-install-button" id="site-install-button" type="button" aria-label="Install Star as an app" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+          <span>Install</span>
+        </button>
+      </nav>
+    </header>
+    <div id="root"></div>
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="../index.html">Home</a></footer>
+
+    <!-- Google Translate Script for 100+ World & Indian Languages -->
+    <div id="google_translate_element" style="display: none;"></div>
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            autoDisplay: false
+          }, 'google_translate_element');
+        }
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script>
+      window.deferredPWAInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPWAInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('star-galaxy-pwa-installable'));
+      });
+      window.addEventListener('appinstalled', () => {
+        window.deferredPWAInstallPrompt = null;
+        window.dispatchEvent(new CustomEvent('star-galaxy-pwa-installed'));
+      });
+      if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(error => {
+            console.error('Star app offline support could not be enabled:', error);
+          });
+        });
+      }
+    </script>
+    <script src="../site-shell.js"></script>
+  </body>
+</html>
