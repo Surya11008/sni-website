@@ -123,6 +123,15 @@ if (installButton) {
             url: `${rootPrefix}videos.html`,
             keywords: "videos video library watch youtube player presentations preachings tutorials clips"
         },
+        {
+            title: "Word Search — 1000 Stages",
+            desc: "Interactive 1000-stage word search puzzle journey. Horizontal and vertical word finding with stage progression.",
+            category: "Portals",
+            categorySlug: "wordsearch",
+            icon: "🔤",
+            url: `${rootPrefix}wordsearch.html`,
+            keywords: "word search 1000 stages puzzle game bible words vocabulary quest levels letters"
+        },
 
         // --- HOMEPAGE SECTIONS ---
         {
@@ -554,6 +563,11 @@ if (installButton) {
                 background: rgba(225, 29, 72, 0.25);
                 color: #fda4af;
                 border: 1px solid rgba(225, 29, 72, 0.4);
+            }
+            .sni-cat-wordsearch {
+                background: rgba(37, 99, 235, 0.25);
+                color: #93c5fd;
+                border: 1px solid rgba(37, 99, 235, 0.4);
             }
             .sni-cat-pages,
             .sni-cat-about,

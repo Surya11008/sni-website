@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search - 1000 Stages | SNI</title>
+    <!-- Tailwind CSS with Dark Mode support -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#071b3b">
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="site-pages.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(100, 116, 139, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+        .grid-cell {
+            touch-action: none;
+        }
+        #authModal, #stageMapModal, #winModal {
+            z-index: 100000 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- SNI Official Header Banner -->
+    <header class="site-header" id="sni-site-header">
+        <a class="site-logo" href="index.html#home">
+            <img src="Images/sni-logo.png" alt="">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#services">Services</a>
+            <a href="index.html#contact">Contact</a>
+            <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </button>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install SNI as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
+        </nav>
+    </header>
+
+
+    <!-- Auth / Login & Sign Up Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-blue-500/30 transform transition-all">
+            <div class="flex justify-center mb-4">
+                <!-- Custom SVG Magnifying Glass Over Letter Tiles Logo -->
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-xl border border-blue-300">
+                    <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                        <circle cx="17.5" cy="17.5" r="4.5"></circle>
+                        <path d="M21 21l-2-2"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 id="authTitle" class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400 mb-1">Word Search</h2>
+            <p id="authSubtitle" class="text-center text-xs text-slate-500 dark:text-slate-400 mb-6">Log in or sign up to save your 1000-stage journey</p>
+
+            <!-- Mode Switch Tabs -->
+            <div class="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl mb-6 border border-slate-200 dark:border-slate-700">
+                <button type="button" id="tabLogin" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow transition">Log In</button>
+                <button type="button" id="tabSignup" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Sign Up</button>
+            </div>
+
+            <form id="authForm" class="space-y-4">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Name</label>
+                    <input type="text" id="authName" placeholder="e.g., David John" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Player ID / Email</label>
+                    <input type="text" id="authIdentifier" required placeholder="e.g., david@gmail.com or UserID" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
+                    Log In to Game
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-white/80 dark:bg-slate-900/90 backdrop-blur-md shadow-md border-b border-blue-500/20 py-3 px-6 relative z-20 transition-colors duration-300">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-2.5 rounded-2xl shadow-md flex items-center justify-center">
+                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                        <circle cx="17.5" cy="17.5" r="4.5"></circle>
+                        <path d="M21 21l-2-2"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
+                        Word Search
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">1000 Stages &bull; Horizontal & Vertical Only</p>
+                </div>
+            </div>
+
+            <!-- User Profile, Theme Toggle & Stage Map Button -->
+            <div class="flex items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-blue-400 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-xs flex items-center justify-center" title="Toggle Light/Dark Theme">
+                    <svg id="themeIconSun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="themeIconMoon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-2xl shadow-inner">
+                    <div id="userAvatar" class="w-8 h-8 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center text-sm shadow">
+                        U
+                    </div>
+                    <div class="text-left pr-2">
+                        <span id="displayUserName" class="block text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">Player</span>
+                        <span id="displayUserIdentifier" class="block text-[10px] text-slate-500 dark:text-slate-400">id@gmail.com</span>
+                    </div>
+                    <button id="logoutBtn" class="ml-2 text-[10px] bg-slate-200 dark:bg-slate-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-slate-700 dark:text-slate-300 px-2 py-1 rounded transition" title="Log Out">Logout</button>
+                </div>
+
+                <button id="stageMapBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
+                    Stages (<span id="currentStageBadge">1</span>/1000)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow flex flex-col lg:flex-row gap-6 items-start justify-center">
+        
+        <!-- Left Panel: Stage Info & Word List -->
+        <div class="w-full lg:w-80 bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-xl border border-blue-500/20 flex flex-col gap-4 transition-colors duration-300">
+            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Stage <span id="stageNumTitle">1</span> / 1000</span>
+                    <h2 id="stageThemeTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100">Creation & Genesis</h2>
+                </div>
+                <div class="flex gap-1">
+                    <button id="prevStageBtn" class="p-2 bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition text-xs font-bold" title="Previous Stage">&lt;</button>
+                    <button id="nextStageBtn" class="p-2 bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition text-xs font-bold" title="Next Stage">&gt;</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="hintBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
+                    Hint (First Letter)
+                </button>
+                <button id="restartBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2 px-3 rounded-xl shadow-xs transition text-xs flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                    Reset
+                </button>
+            </div>
+
+            <hr class="border-slate-200 dark:border-slate-800">
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wide">Words to Find:</h3>
+                    <span id="wordsRemaining" class="text-xs bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-medium px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">0 remaining</span>
+                </div>
+                <div id="wordListContainer" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1">
+                    <!-- Word list items injected dynamically -->
+                </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <span class="font-bold text-blue-600 dark:text-blue-400">Rule:</span> Drag or click across letters horizontally (Right) or vertically (Down). No diagonals or crosses!
+            </div>
+        </div>
+
+        <!-- Right Panel: Puzzle Grid -->
+        <div class="flex-1 flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-blue-500/20 w-full overflow-hidden transition-colors duration-300">
+            
+            <!-- Selection Status / Feedback -->
+            <div id="selectionStatus" class="mb-4 h-9 flex items-center justify-center text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner w-full max-w-md text-center">
+                Ready! Drag or click letters to find words.
+            </div>
+
+            <!-- Puzzle Grid Container -->
+            <div id="puzzleContainer" class="relative overflow-auto max-w-full p-2 flex justify-center">
+                <div id="puzzleGrid" class="grid gap-1.5 bg-slate-100 dark:bg-slate-800 p-3 rounded-xl shadow-inner select-none border border-slate-200 dark:border-slate-700">
+                    <!-- Grid generated dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Stage Map Modal (1000 Stages) -->
+    <div id="stageMapModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-4xl w-full max-h-[85vh] flex flex-col border border-blue-500/30">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-600 dark:text-blue-400">1000 Stages Quest Map</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Complete stages sequentially to unlock the journey up to level 1000</p>
+                </div>
+                <button id="closeStageMapBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition border border-slate-200 dark:border-slate-700">X</button>
+            </div>
+            
+            <div id="stageMapGrid" class="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-20 gap-1.5 overflow-y-auto p-2 flex-grow">
+                <!-- 1000 stage buttons generated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal (Stage Completed) -->
+    <div id="winModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center border border-blue-500/30 transform scale-95 transition-transform duration-300" id="winModalContent">
+            <div class="w-20 h-20 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold shadow-inner border border-blue-500/30">
+                WIN
+            </div>
+            <h2 id="winModalTitle" class="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">Stage Completed!</h2>
+            <p id="winModalDesc" class="text-slate-600 dark:text-slate-300 text-sm mb-6">Great job! You unlocked the next stage.</p>
+            
+            <div class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mb-6 flex justify-around border border-slate-200 dark:border-slate-700">
+                <div>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400">Stage</span>
+                    <span id="winStageNum" class="font-bold text-blue-600 dark:text-blue-400 text-lg">1</span>
+                </div>
+                <div class="h-10 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400">Total Unlocked</span>
+                    <span id="winUnlockedCount" class="font-bold text-emerald-600 dark:text-emerald-400 text-lg">2 / 1000</span>
+                </div>
+            </div>
+
+            <button id="nextStageModalBtn" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
+                Next Stage
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 transition-colors duration-300">
+        Word Search &bull; 1000 Stages &bull; No Diagonals or Crosses
+    </footer>
+
+    <!-- Game Logic JavaScript -->
+    <script>
+        // Comprehensive biblical and general vocabulary word bank for procedural generation across 1000 stages
+        const biblicalPool = [
+            "GRACE", "MERCY", "SAVIOR", "GLORY", "ANGEL", "WORSHIP", "SANCTUARY", "PROPHET", "APOSTLE", "KINGDOM", 
+            "BLESSING", "PRAYER", "ALTAR", "HERITAGE", "WISDOM", "HEAVEN", "ETERNAL", "HOLINESS", "RIGHTEOUS", "REDEEMER",
+            "EDEN", "LIGHT", "EARTH", "WATER", "ADAM", "EVE", "NOAH", "ARK", "FLOOD", "DOVE", "OLIVE", "RAINBOW",
+            "ABRAHAM", "SARAH", "ISAAC", "FAITH", "COVENANT", "STAR", "JOSEPH", "DREAM", "COAT", "PHARAOH", "EGYPT",
+            "MOSES", "BURNING", "BUSH", "PLAGUE", "EXODUS", "ROD", "DESERT", "LAW", "STONE", "TABLET", "SINAI",
+            "JOSHUA", "JERICHO", "TRUMPET", "WALL", "CANAAN", "JORDAN", "VICTORY", "GIDEON", "FLEECE", "TORCH",
+            "RUTH", "NAOMI", "BOAZ", "GLEAN", "FIELD", "LOYAL", "SAMUEL", "ELI", "TEMPLE", "VOICE", "OIL", "ANOINT",
+            "DAVID", "GIANT", "SLING", "PSALM", "HARP", "SHEEP", "SOLOMON", "GOLD", "CEDAR", "QUEEN", "SHALOM",
+            "ELIJAH", "RAVEN", "FIRE", "CARMEL", "WHISPER", "CHARIOT", "ELISHA", "AXE", "FLOAT", "DOUBLE", "HEAL",
+            "JOB", "PATIENCE", "SUFFER", "TEST", "RESTORE", "FAITHFUL", "REJOICE", "SHOUT", "SING", "PSALTER",
+            "KNOWLEDGE", "FEAR", "PRUDENT", "DISCERN", "PATH", "MESSIAH", "VIRGIN", "CHILD", "WONDERFUL", "PRINCE",
+            "JEREMIAH", "TEARS", "POTTER", "CLAY", "HEART", "NEW", "EZEKIEL", "WHEEL", "VALLEY", "BONE", "RIVER",
+            "DANIEL", "LION", "DEN", "FIERY", "FURNACE", "PRAY", "JONAH", "WHALE", "FISH", "NINEVEH", "STORM", "REPENT",
+            "HOSEA", "JOEL", "AMOS", "MICAH", "NAHUM", "HABAKKUK", "MALACHI", "MANGER", "BETHLEHEM", "WISE", "HEROD",
+            "MARY", "BAPTIZE", "LOCUST", "HONEY", "PREPARE", "BELOVED", "SON", "MOUNT", "BLESS", "MEEK", "PURE", "SALT",
+            "BLIND", "WALK", "LOAVES", "CALM", "SOWER", "SEED", "PEARL", "LOST", "COIN", "FATHER", "SAMARITAN", "ROBBER",
+            "WOUND", "WINE", "INN", "NEIGHBOR", "PRODIGAL", "FESTIVAL", "CALF", "FOUND", "PETER", "ANDREW", "JAMES",
+            "PHILIP", "BARTHOLOMEW", "MATTHEW", "THOMAS", "SIMON", "JUDAS", "THADDEUS", "MATTHIAS", "PAUL", "SUPPER",
+            "BODY", "BLOOD", "PASSOVER", "MEMORIAL", "GETHSEMANE", "CUP", "SWEAT", "WATCH", "SLEEP", "CROSS", "CROWN",
+            "THORN", "NAIL", "SPEAR", "TOMB", "GOLGOTHA", "RISE", "EMPTY", "ALIVE", "DAWN", "EMMAUS", "EYE", "OPEN",
+            "BURN", "BREAK", "ASCEND", "CLOUD", "PROMISE", "WAIT", "POWER", "WITNESS", "PENTECOST", "WIND", "TONGUE",
+            "SPEAK", "BOLD", "CHURCH", "FELLOWSHIP", "COMMUNITY", "SHARE", "GLAD", "SHADOW", "PRISON", "CHAIN", "GATE",
+            "SAUL", "DAMASCUS", "SCALE", "ANANIAS", "PREACH", "SHIPWRECK", "ISLAND", "VIPER", "ROME", "VOYAGE", "MISSION",
+            "GENTILE", "JOY", "PEACE", "KINDNESS", "GOODNESS", "GENTLENESS", "SELF", "CONTROL", "ARMOR", "SHIELD",
+            "HELMET", "SWORD", "ROMANS", "CORINTHIANS", "GALATIANS", "EPHESIANS", "PHILIPPIANS", "COLOSSIANS", "HEBREWS",
+            "JUDE", "LETTER", "TEACH", "REVELATION", "THRONE", "LAMB", "ALPHA", "OMEGA"
+        ];
+
+        // Generate 1000 stages programmatically with thematic names and curated words
+        const stageThemes = [];
+        const themesList = [
+            "Genesis Beginnings", "Patriarch Journeys", "Exodus & Laws", "Promised Land Conquests",
+            "Kingdom of Israel", "Psalms & Wisdom", "Major Prophets", "Minor Prophets",
+            "Life of Jesus", "Parables of Grace", "Miracles & Wonders", "The Twelve Apostles",
+            "Last Supper & Passion", "Resurrection & Life", "Early Church & Pentecost",
+            "Epistles & Paul's Journeys", "Revelation & Eternity", "Heavenly Zion", "Divine Revelation", "Eternal Glory"
+        ];
+
+        for (let i = 1; i <= 1000; i++) {
+            let themeBase = themesList[(i - 1) % themesList.length];
+            let stageWords = [];
+            let count = i <= 200 ? 5 : (i <= 600 ? 6 : 7);
+            for (let w = 0; w < count; w++) {
+                let index = (i * 7 + w * 13) % biblicalPool.length;
+                let word = biblicalPool[index];
+                if (!stageWords.includes(word)) {
+                    stageWords.push(word);
+                }
+            }
+            if (stageWords.length < 4) {
+                stageWords.push("FAITH", "GRACE", "LORD", "HOLY");
+            }
+            stageThemes.push({
+                theme: `${themeBase} (Part ${Math.ceil(i/20)})`,
+                words: stageWords
+            });
+        }
+
+        // App Users & Persistence State
+        let usersDB = JSON.parse(localStorage.getItem('word_search_users_db') || '{}');
+        let currentAuthUser = JSON.parse(localStorage.getItem('word_search_current_user') || 'null');
+
+        let currentStage = 1;
+        let maxUnlockedStage = 1;
+        
+        let gridSize = 10;
+        let currentWords = [];
+        let grid = [];
+        let placedWordsInfo = [];
+        let foundWords = new Set();
+        let solvedCellMap = new Map();
+
+        let isMouseDown = false;
+        let startCell = null;
+        let currentSelectedCells = [];
+        let gameActive = true;
+
+        // ONLY Horizontal Right and Vertical Down (No diagonals, no crosses)
+        const directions = [
+            [0, 1],   // Horizontal Right
+            [1, 0]    // Vertical Down
+        ];
+
+        // DOM Elements
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const authModal = document.getElementById('authModal');
+        const authForm = document.getElementById('authForm');
+        const authTitle = document.getElementById('authTitle');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const tabLogin = document.getElementById('tabLogin');
+        const tabSignup = document.getElementById('tabSignup');
+        const nameFieldContainer = document.getElementById('nameFieldContainer');
+        const authName = document.getElementById('authName');
+        const authIdentifier = document.getElementById('authIdentifier');
+        const authPassword = document.getElementById('authPassword');
+        const authSubmitBtn = document.getElementById('authSubmitBtn');
+
+        const displayUserName = document.getElementById('displayUserName');
+        const displayUserIdentifier = document.getElementById('displayUserIdentifier');
+        const userAvatar = document.getElementById('userAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        const stageMapBtn = document.getElementById('stageMapBtn');
+        const currentStageBadge = document.getElementById('currentStageBadge');
+        const stageNumTitle = document.getElementById('stageNumTitle');
+        const stageThemeTitle = document.getElementById('stageThemeTitle');
+        const prevStageBtn = document.getElementById('prevStageBtn');
+        const nextStageBtn = document.getElementById('nextStageBtn');
+        const hintBtn = document.getElementById('hintBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const wordsRemainingEl = document.getElementById('wordsRemaining');
+        const wordListContainerEl = document.getElementById('wordListContainer');
+        const selectionStatusEl = document.getElementById('selectionStatus');
+        const puzzleGridEl = document.getElementById('puzzleGrid');
+
+        const stageMapModal = document.getElementById('stageMapModal');
+        const closeStageMapBtn = document.getElementById('closeStageMapBtn');
+        const stageMapGrid = document.getElementById('stageMapGrid');
+
+        const winModal = document.getElementById('winModal');
+        const winModalContent = document.getElementById('winModalContent');
+        const winStageNum = document.getElementById('winStageNum');
+        const winUnlockedCount = document.getElementById('winUnlockedCount');
+        const nextStageModalBtn = document.getElementById('nextStageModalBtn');
+
+        let isSignupMode = false;
+
+        // Theme Toggle Handler
+        const savedTheme = localStorage.getItem('word_search_theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('word_search_theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('word_search_theme', 'dark');
+            }
+        });
+
+        // Auth Tab Switching
+        tabLogin.addEventListener('click', () => {
+            isSignupMode = false;
+            tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow transition";
+            tabSignup.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+            nameFieldContainer.classList.add('hidden');
+            authName.removeAttribute('required');
+            authTitle.textContent = "Word Search";
+            authSubtitle.textContent = "Log in with your ID and password";
+            authSubmitBtn.textContent = "Log In to Game";
+        });
+
+        tabSignup.addEventListener('click', () => {
+            isSignupMode = true;
+            tabSignup.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow transition";
+            tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+            nameFieldContainer.classList.remove('hidden');
+            authName.setAttribute('required', 'true');
+            authTitle.textContent = "Word Search - Sign Up";
+            authSubtitle.textContent = "Sign up to track your 1000-stage game";
+            authSubmitBtn.textContent = "Sign Up & Start Game";
+        });
+
+        // Auth Form Handler
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const identifier = authIdentifier.value.trim();
+            const password = authPassword.value.trim();
+            const name = authName.value.trim();
+
+            if (!identifier || !password) return;
+
+            if (isSignupMode) {
+                if (!name) return;
+                if (usersDB[identifier]) {
+                    alert("An account with this ID/Email already exists. Please log in.");
+                    return;
+                }
+                usersDB[identifier] = { name, password, maxStage: 1 };
+                localStorage.setItem('word_search_users_db', JSON.stringify(usersDB));
+                currentAuthUser = { identifier, name, maxStage: 1 };
+            } else {
+                let userRecord = usersDB[identifier];
+                if (!userRecord || userRecord.password !== password) {
+                    alert("Invalid ID/Email or Password. Please check your credentials or sign up.");
+                    return;
+                }
+                currentAuthUser = { identifier, name: userRecord.name, maxStage: userRecord.maxStage || 1 };
+            }
+
+            localStorage.setItem('word_search_current_user', JSON.stringify(currentAuthUser));
+            maxUnlockedStage = currentAuthUser.maxStage;
+            updateUserUI();
+            authModal.classList.add('hidden');
+            loadStage(currentStage);
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            currentAuthUser = null;
+            localStorage.removeItem('word_search_current_user');
+            authModal.classList.remove('hidden');
+        });
+
+        function updateUserUI() {
+            if (!currentAuthUser) return;
+            displayUserName.textContent = currentAuthUser.name;
+            displayUserIdentifier.textContent = currentAuthUser.identifier;
+            userAvatar.textContent = currentAuthUser.name.charAt(0).toUpperCase();
+        }
+
+        // Web Audio API Sound Synthesizer
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'win') {
+                const now = audioCtx.currentTime;
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                osc.start(now);
+                osc.stop(now + 0.7);
+            }
+        }
+
+        // Initialize Session Check
+        function initAppSession() {
+            if (currentAuthUser) {
+                maxUnlockedStage = currentAuthUser.maxStage || 1;
+                updateUserUI();
+                authModal.classList.add('hidden');
+                loadStage(currentStage);
+            } else {
+                authModal.classList.remove('hidden');
+            }
+        }
+
+        // Load Stage Data
+        function loadStage(stageNum) {
+            currentStage = stageNum;
+            currentStageBadge.textContent = currentStage;
+            stageNumTitle.textContent = currentStage;
+            
+            const stageData = stageThemes[currentStage - 1];
+            stageThemeTitle.textContent = stageData.theme;
+            currentWords = [...stageData.words];
+
+            foundWords.clear();
+            solvedCellMap.clear();
+            gameActive = true;
+            hideWinModal();
+
+            // Determine grid size based on max word length and stage difficulty (10 to 14)
+            const maxLen = Math.max(...currentWords.map(w => w.length));
+            gridSize = Math.max(10, maxLen + 2, Math.min(14, 10 + Math.floor(currentStage / 250)));
+
+            generateGridAndPlaceWords();
+            renderWordList();
+            renderGrid();
+        }
+
+        // Automatic Word Placement (Horizontal Right & Vertical Down only)
+        function generateGridAndPlaceWords() {
+            let success = false;
+            let attempts = 0;
+
+            while (!success && attempts < 100) {
+                attempts++;
+                grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+                placedWordsInfo = [];
+
+                let allPlaced = true;
+                let sortedWords = [...currentWords].sort((a, b) => b.length - a.length);
+
+                for (let word of sortedWords) {
+                    let wordPlaced = false;
+                    let wordAttempts = 0;
+
+                    while (!wordPlaced && wordAttempts < 100) {
+                        wordAttempts++;
+                        const dir = directions[Math.floor(Math.random() * directions.length)];
+                        const row = Math.floor(Math.random() * gridSize);
+                        const col = Math.floor(Math.random() * gridSize);
+
+                        if (canPlaceWord(word, row, col, dir)) {
+                            placeWord(word, row, col, dir);
+                            wordPlaced = true;
+                        }
+                    }
+
+                    if (!wordPlaced) {
+                        allPlaced = false;
+                        break;
+                    }
+                }
+
+                if (allPlaced) success = true;
+            }
+
+            // Fill empty cells with random letters
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+        }
+
+        function canPlaceWord(word, row, col, dir) {
+            const len = word.length;
+            const endRow = row + (len - 1) * dir[0];
+            const endCol = col + (len - 1) * dir[1];
+
+            if (endRow < 0 || endRow >= gridSize || endCol < 0 || endCol >= gridSize) return false;
+
+            for (let i = 0; i < len; i++) {
+                const r = row + i * dir[0];
+                const c = col + i * dir[1];
+                if (grid[r][c] !== '' && grid[r][c] !== word[i]) return false;
+            }
+            return true;
+        }
+
+        function placeWord(word, row, col, dir) {
+            let coords = [];
+            for (let i = 0; i < word.length; i++) {
+                const r = row + i * dir[0];
+                const c = col + i * dir[1];
+                grid[r][c] = word[i];
+                coords.push({ r, c });
+            }
+            placedWordsInfo.push({ word, coordinates: coords });
+        }
+
+        // Render Word List UI
+        function renderWordList() {
+            wordListContainerEl.innerHTML = '';
+            currentWords.forEach(word => {
+                const isFound = foundWords.has(word);
+                const item = document.createElement('div');
+                item.className = `px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between border transition-all ${
+                    isFound 
+                        ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 line-through opacity-75' 
+                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-xs'
+                }`;
+                item.innerHTML = `<span>${word}</span><span>${isFound ? 'Found' : 'Pending'}</span>`;
+                wordListContainerEl.appendChild(item);
+            });
+
+            wordsRemainingEl.textContent = `${currentWords.length - foundWords.size} remaining`;
+
+            if (foundWords.size === currentWords.length && gameActive) {
+                triggerStageWin();
+            }
+        }
+
+        // Render Grid UI
+        function renderGrid() {
+            puzzleGridEl.innerHTML = '';
+            puzzleGridEl.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs text-slate-800 dark:text-slate-200`;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.textContent = grid[r][c];
+
+                    const cellKey = `${r},${c}`;
+                    if (solvedCellMap.has(cellKey)) {
+                        cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-emerald-600 text-white border-emerald-500 shadow-md`;
+                    }
+
+                    // Mouse & Touch bindings
+                    cell.addEventListener('mousedown', (e) => onCellDown(r, c));
+                    cell.addEventListener('mouseenter', () => onCellEnter(r, c));
+                    cell.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        onCellDown(r, c);
+                    }, { passive: false });
+
+                    puzzleGridEl.appendChild(cell);
+                }
+            }
+        }
+
+        // Global Drag Listeners
+        window.addEventListener('mouseup', onPointerUp);
+        window.addEventListener('touchend', onPointerUp);
+        window.addEventListener('touchmove', (e) => {
+            if (!isMouseDown) return;
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (target && target.classList.contains('grid-cell')) {
+                const r = parseInt(target.dataset.row);
+                const c = parseInt(target.dataset.col);
+                if (!isNaN(r) && !isNaN(c)) {
+                    onCellEnter(r, c);
+                }
+            }
+        }, { passive: false });
+
+        function onCellDown(r, c) {
+            if (!gameActive) return;
+            isMouseDown = true;
+            startCell = { r, c };
+            currentSelectedCells = [{ r, c }];
+            updateVisualSelection();
+            selectionStatusEl.textContent = `Selected: ${grid[r][c]}`;
+        }
+
+        function onCellEnter(r, c) {
+            if (!isMouseDown || !startCell) return;
+            const cells = getStrictLineCells(startCell.r, startCell.c, r, c);
+            if (cells.length > 0) {
+                currentSelectedCells = cells;
+                updateVisualSelection();
+                const wordStr = currentSelectedCells.map(cell => grid[cell.r][cell.c]).join('');
+                selectionStatusEl.textContent = `Selecting: ${wordStr}`;
+            }
+        }
+
+        function onPointerUp() {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+
+            if (currentSelectedCells.length > 0) {
+                const selectedWord = currentSelectedCells.map(cell => grid[cell.r][cell.c]).join('');
+                
+                let matchedWord = null;
+                if (currentWords.includes(selectedWord) && !foundWords.has(selectedWord)) {
+                    matchedWord = selectedWord;
+                }
+
+                if (matchedWord) {
+                    playSound('success');
+                    foundWords.add(matchedWord);
+                    currentSelectedCells.forEach(cell => {
+                        solvedCellMap.set(`${cell.r},${cell.c}`, matchedWord);
+                    });
+                    selectionStatusEl.textContent = `Found: ${matchedWord}`;
+                    selectionStatusEl.classList.add('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+                    setTimeout(() => {
+                        selectionStatusEl.classList.remove('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+                        selectionStatusEl.textContent = 'Continue searching words!';
+                    }, 2000);
+                    renderWordList();
+                } else {
+                    selectionStatusEl.textContent = 'Not a valid word or already found!';
+                    selectionStatusEl.classList.add('text-rose-600', 'dark:text-rose-400');
+                    setTimeout(() => {
+                        selectionStatusEl.classList.remove('text-rose-600', 'dark:text-rose-400');
+                        selectionStatusEl.textContent = 'Continue searching words!';
+                    }, 1500);
+                }
+            }
+
+            currentSelectedCells = [];
+            startCell = null;
+            renderGrid();
+        }
+
+        // Strict Horizontal & Vertical Line Selection Helper
+        function getStrictLineCells(r1, c1, r2, c2) {
+            const cells = [];
+            if (r1 === r2) {
+                const startC = Math.min(c1, c2);
+                const endC = Math.max(c1, c2);
+                if (c1 <= c2) {
+                    for (let c = startC; c <= endC; c++) cells.push({ r: r1, c });
+                } else {
+                    for (let c = endC; c >= startC; c--) cells.push({ r: r1, c });
+                }
+            } else if (c1 === c2) {
+                const startR = Math.min(r1, r2);
+                const endR = Math.max(r1, r2);
+                if (r1 <= r2) {
+                    for (let r = startR; r <= endR; r++) cells.push({ r, c: c1 });
+                } else {
+                    for (let r = endR; r >= startR; r--) cells.push({ r, c: c1 });
+                }
+            }
+            return cells;
+        }
+
+        function updateVisualSelection() {
+            const allCells = puzzleGridEl.querySelectorAll('.grid-cell');
+            allCells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                const isSelected = currentSelectedCells.some(cellObj => cellObj.r === r && cellObj.c === c);
+                const isSolved = solvedCellMap.has(`${r},${c}`);
+
+                if (isSolved) {
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-emerald-600 text-white border-emerald-500 shadow-md`;
+                } else if (isSelected) {
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-blue-500 text-white border-blue-400 shadow-md scale-105`;
+                } else {
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs text-slate-800 dark:text-slate-200`;
+                }
+            });
+        }
+
+        // Hint Button
+        hintBtn.addEventListener('click', () => {
+            if (!gameActive) return;
+            const unfound = currentWords.filter(w => !foundWords.has(w));
+            if (unfound.length === 0) return;
+
+            const hintWord = unfound[Math.floor(Math.random() * unfound.length)];
+            const info = placedWordsInfo.find(p => p.word === hintWord);
+            if (info && info.coordinates.length > 0) {
+                const coord = info.coordinates[0];
+                const cellEl = puzzleGridEl.querySelector(`[data-row="${coord.r}"][data-col="${coord.c}"]`);
+                if (cellEl) {
+                    cellEl.classList.add('bg-blue-400', 'text-slate-950', 'animate-pulse');
+                    setTimeout(() => {
+                        cellEl.classList.remove('bg-blue-400', 'animate-pulse');
+                        renderGrid();
+                    }, 1500);
+                }
+                selectionStatusEl.textContent = `Hint: First letter of '${hintWord}' highlighted!`;
+            }
+        });
+
+        restartBtn.addEventListener('click', () => loadStage(currentStage));
+
+        // Stage Navigation
+        prevStageBtn.addEventListener('click', () => {
+            if (currentStage > 1) loadStage(currentStage - 1);
+        });
+        nextStageBtn.addEventListener('click', () => {
+            if (currentStage < maxUnlockedStage && currentStage < 1000) loadStage(currentStage + 1);
+        });
+
+        // Stage Map Modal (1000 Stages)
+        stageMapBtn.addEventListener('click', () => {
+            renderStageMapGrid();
+            stageMapModal.classList.remove('hidden');
+        });
+        closeStageMapBtn.addEventListener('click', () => {
+            stageMapModal.classList.add('hidden');
+        });
+
+        function renderStageMapGrid() {
+            stageMapGrid.innerHTML = '';
+            for (let i = 1; i <= 1000; i++) {
+                const btn = document.createElement('button');
+                const isUnlocked = i <= maxUnlockedStage;
+                const isCurrent = i === currentStage;
+
+                btn.className = `h-9 rounded-lg text-[10px] font-bold flex flex-col items-center justify-center transition shadow-xs ${
+                    isCurrent 
+                        ? 'bg-blue-500 text-white ring-2 ring-blue-300 ring-offset-1 ring-offset-white dark:ring-offset-slate-900' 
+                        : isUnlocked 
+                            ? 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700' 
+                            : 'bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                }`;
+                btn.innerHTML = `<span>${i}</span>`;
+
+                if (isUnlocked) {
+                    btn.addEventListener('click', () => {
+                        loadStage(i);
+                        stageMapModal.classList.add('hidden');
+                    });
+                }
+                stageMapGrid.appendChild(btn);
+            }
+        }
+
+        // Win Stage Handler
+        function triggerStageWin() {
+            gameActive = false;
+            playSound('win');
+            
+            if (currentStage >= maxUnlockedStage && maxUnlockedStage < 1000) {
+                maxUnlockedStage = currentStage + 1;
+                if (currentAuthUser) {
+                    currentAuthUser.maxStage = maxUnlockedStage;
+                    usersDB[currentAuthUser.identifier].maxStage = maxUnlockedStage;
+                    localStorage.setItem('word_search_users_db', JSON.stringify(usersDB));
+                    localStorage.setItem('word_search_current_user', JSON.stringify(currentAuthUser));
+                }
+            }
+
+            winStageNum.textContent = currentStage;
+            winUnlockedCount.textContent = `${maxUnlockedStage} / 1000`;
+
+            winModal.classList.remove('hidden');
+            setTimeout(() => {
+                winModal.classList.remove('opacity-0');
+                winModalContent.classList.remove('scale-95');
+                winModalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function hideWinModal() {
+            winModal.classList.add('opacity-0');
+            winModalContent.classList.remove('scale-100');
+            winModalContent.classList.add('scale-95');
+            setTimeout(() => winModal.classList.add('hidden'), 300);
+        }
+
+        nextStageModalBtn.addEventListener('click', () => {
+            if (currentStage < 1000) {
+                loadStage(currentStage + 1);
+            } else {
+                hideWinModal();
+            }
+        });
+
+        window.onload = () => {
+            initAppSession();
+        };
+    </script>
+
+    <!-- SNI Official Footer Banner -->
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="index.html">Home</a></footer>
+
+    <!-- Universal Site Shell (Global Search & App Shell) -->
+    <script src="site-shell.js"></script>
+</body>
+</html>
