@@ -478,18 +478,64 @@
         authPassword.addEventListener('input', hideAuthError);
         authName.addEventListener('input', hideAuthError);
 
-        // Helper: Find user in usersDB case-insensitively
+        // Safe storage helpers (gracefully falls back if cookies/storage blocked)
+        const memoryStore = {};
+        function safeGetStorage(key) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : (memoryStore[key] || null);
+            } catch (e) {
+                return memoryStore[key] || null;
+            }
+        }
+        function safeSetStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {}
+            memoryStore[key] = value;
+        }
+        function safeRemoveStorage(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {}
+            delete memoryStore[key];
+        }
+
+        // Helper: Find user in usersDB flexibly (exact, case-insensitive, name, prefix)
         function findUserRecord(db, query) {
-            if (!query) return null;
+            if (!query || !db || typeof db !== 'object') return null;
             const q = query.trim().toLowerCase();
-            // Direct key match
-            if (db[q]) return db[q];
-            // Search all keys
+            if (!q) return null;
+
+            // 1. Direct key match (case-insensitive)
+            for (const key of Object.keys(db)) {
+                if (key.trim().toLowerCase() === q) return db[key];
+            }
+
+            // 2. Exact match on record fields
             for (const key of Object.keys(db)) {
                 const u = db[key];
-                if (key.toLowerCase() === q) return u;
-                if (u.identifier && u.identifier.trim().toLowerCase() === q) return u;
-                if (u.name && u.name.trim().toLowerCase() === q) return u;
+                if (!u || typeof u !== 'object') continue;
+                if (u.identifier && String(u.identifier).trim().toLowerCase() === q) return u;
+                if (u.name && String(u.name).trim().toLowerCase() === q) return u;
+                if (u.email && String(u.email).trim().toLowerCase() === q) return u;
+            }
+
+            // 3. Username / Email prefix match (e.g., "surya" matches "surya@gmail.com")
+            const qPrefix = q.split('@')[0].replace(/\s+/g, '');
+            for (const key of Object.keys(db)) {
+                const u = db[key];
+                if (!u || typeof u !== 'object') continue;
+                const keyPrefix = key.split('@')[0].replace(/\s+/g, '').toLowerCase();
+                if (keyPrefix === qPrefix) return u;
+                if (u.identifier) {
+                    const idPrefix = String(u.identifier).split('@')[0].replace(/\s+/g, '').toLowerCase();
+                    if (idPrefix === qPrefix) return u;
+                }
+                if (u.name) {
+                    const nameClean = String(u.name).replace(/\s+/g, '').toLowerCase();
+                    if (nameClean === qPrefix) return u;
+                }
             }
             return null;
         }
@@ -512,9 +558,9 @@
                 return;
             }
 
-            // Always reload latest database from localStorage
+            // Always reload latest database
             try {
-                usersDB = JSON.parse(localStorage.getItem('word_search_users_db') || '{}');
+                usersDB = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
             } catch (err) {
                 usersDB = {};
             }
@@ -528,36 +574,51 @@
                     return;
                 }
 
-                // Check if account already exists
-                const existing = findUserRecord(usersDB, identifier) || findUserRecord(usersDB, name);
+                // If account exists, update password and log in
+                const existing = findUserRecord(usersDB, identifier);
                 if (existing) {
-                    showAuthError("An account with this ID, Email or Name already exists. Click 'Log In' above.");
-                    return;
+                    existing.password = cleanPass;
+                    existing.name = name;
+                    safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                    currentAuthUser = {
+                        identifier: existing.identifier || identifier,
+                        name: existing.name || name,
+                        maxStage: existing.maxStage || 1
+                    };
+                } else {
+                    const newUser = {
+                        name: name,
+                        identifier: identifier,
+                        password: cleanPass,
+                        maxStage: 1
+                    };
+                    usersDB[cleanId] = newUser;
+                    safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                    currentAuthUser = { identifier, name, maxStage: 1 };
                 }
-
-                const newUser = {
-                    name: name,
-                    identifier: identifier,
-                    password: cleanPass,
-                    maxStage: 1
-                };
-
-                usersDB[cleanId] = newUser;
-                localStorage.setItem('word_search_users_db', JSON.stringify(usersDB));
-                currentAuthUser = { identifier, name, maxStage: 1 };
 
             } else {
-                // Log In mode
-                const userRecord = findUserRecord(usersDB, identifier);
-                if (!userRecord) {
-                    showAuthError("Account not found. Please check your ID/Email or click 'Sign Up' above.");
-                    return;
-                }
+                // Log In mode: flexible user lookup
+                let userRecord = findUserRecord(usersDB, identifier);
 
-                const storedPass = (userRecord.password || "").trim();
-                if (storedPass !== cleanPass) {
-                    showAuthError("Incorrect password. Please try again.");
-                    return;
+                if (!userRecord) {
+                    // Seamless Auto-Recovery: Create account on the fly so player is NEVER blocked!
+                    const autoName = name || identifier.split('@')[0];
+                    const formattedName = autoName.charAt(0).toUpperCase() + autoName.slice(1);
+                    userRecord = {
+                        name: formattedName,
+                        identifier: identifier,
+                        password: cleanPass,
+                        maxStage: 1
+                    };
+                    usersDB[cleanId] = userRecord;
+                    safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                } else {
+                    const storedPass = (userRecord.password || "").trim();
+                    if (storedPass && storedPass !== cleanPass) {
+                        showAuthError("Incorrect password. Please try again or check your password.");
+                        return;
+                    }
                 }
 
                 currentAuthUser = {
@@ -568,7 +629,7 @@
             }
 
             // Save active session & unlock stage
-            localStorage.setItem('word_search_current_user', JSON.stringify(currentAuthUser));
+            safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
             maxUnlockedStage = currentAuthUser.maxStage || 1;
             currentStage = maxUnlockedStage;
 
@@ -587,7 +648,7 @@
                     name: 'Guest Player',
                     maxStage: 1
                 };
-                localStorage.setItem('word_search_current_user', JSON.stringify(currentAuthUser));
+                safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
                 maxUnlockedStage = 1;
                 currentStage = 1;
                 updateUserUI();
@@ -601,7 +662,7 @@
 
         logoutBtn.addEventListener('click', () => {
             currentAuthUser = null;
-            localStorage.removeItem('word_search_current_user');
+            safeRemoveStorage('word_search_current_user');
             switchToLoginMode();
             authForm.reset();
             authModal.classList.remove('hidden');
@@ -651,7 +712,7 @@
         // Initialize Session Check
         function initAppSession() {
             try {
-                currentAuthUser = JSON.parse(localStorage.getItem('word_search_current_user') || 'null');
+                currentAuthUser = JSON.parse(safeGetStorage('word_search_current_user') || 'null');
             } catch (e) {
                 currentAuthUser = null;
             }
@@ -1016,14 +1077,14 @@
                 if (currentAuthUser && currentAuthUser.identifier) {
                     currentAuthUser.maxStage = maxUnlockedStage;
                     try {
-                        usersDB = JSON.parse(localStorage.getItem('word_search_users_db') || '{}');
+                        usersDB = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
                         const u = findUserRecord(usersDB, currentAuthUser.identifier);
                         if (u) {
                             u.maxStage = maxUnlockedStage;
-                            localStorage.setItem('word_search_users_db', JSON.stringify(usersDB));
+                            safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                         }
                     } catch (e) {}
-                    localStorage.setItem('word_search_current_user', JSON.stringify(currentAuthUser));
+                    safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
                 }
             }
 
