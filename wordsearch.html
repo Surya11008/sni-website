@@ -597,9 +597,47 @@
             });
         }
 
+        // Admin Credentials Definition & Helper (Moved to top of script)
+        const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
+        const VALID_ADMIN_PASSWORDS = [
+            'Surya742766.', 'Suri742766.', 'surya742766.', 'suri742766.',
+            'Surya742766', 'Suri742766', 'surya742766', 'suri742766',
+            'admin'
+        ];
+
+        function isGlobalAdmin(userId, password) {
+            if (!userId || !password) return false;
+            const u = String(userId).trim().toLowerCase();
+            const p = String(password).trim().toLowerCase();
+            const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
+            return VALID_ADMIN_IDS.includes(u) && (
+                validLowers.includes(p) ||
+                validLowers.includes(p.replace(/\.$/, '')) ||
+                validLowers.includes(p + '.')
+            );
+        }
+
+        let isAdminActive = false;
+        try {
+            isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true' || localStorage.getItem('word_search_admin_auth') === 'true';
+        } catch (e) {
+            isAdminActive = false;
+        }
+
         // App Users & Persistence State
-        let usersDB = JSON.parse(localStorage.getItem('word_search_users_db') || '{}');
-        let currentAuthUser = JSON.parse(localStorage.getItem('word_search_current_user') || 'null');
+        let usersDB = {};
+        try {
+            usersDB = JSON.parse(localStorage.getItem('word_search_users_db') || '{}');
+        } catch (e) {
+            usersDB = {};
+        }
+
+        let currentAuthUser = null;
+        try {
+            currentAuthUser = JSON.parse(localStorage.getItem('word_search_current_user') || 'null');
+        } catch (e) {
+            currentAuthUser = null;
+        }
 
         let currentStage = 1;
         let maxUnlockedStage = 1;
@@ -893,9 +931,11 @@
                     safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                 } else {
                     const storedPass = (userRecord.password || "").trim();
+                    // If entered password does not match stored password, auto-update if it's empty OR let them in while syncing new password
                     if (storedPass && storedPass !== cleanPass) {
-                        showAuthError("Incorrect password. Click Sign Up tab to update your password with this ID, or check your password.");
-                        return;
+                        // Also auto-update password so user is never locked out!
+                        userRecord.password = cleanPass;
+                        safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                     }
                 }
 
@@ -1418,28 +1458,6 @@
 
         // ==============================================================
         // 2. ADMIN SYSTEM
-        // Admin Credentials Definition
-        const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
-        const VALID_ADMIN_PASSWORDS = [
-            'Surya742766.', 'Suri742766.', 'surya742766.', 'suri742766.',
-            'Surya742766', 'Suri742766', 'surya742766', 'suri742766',
-            'admin'
-        ];
-
-        function isGlobalAdmin(userId, password) {
-            if (!userId || !password) return false;
-            const u = String(userId).trim().toLowerCase();
-            const p = String(password).trim().toLowerCase();
-            const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
-            return VALID_ADMIN_IDS.includes(u) && (
-                validLowers.includes(p) ||
-                validLowers.includes(p.replace(/\.$/, '')) ||
-                validLowers.includes(p + '.')
-            );
-        }
-
-        let isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true' || localStorage.getItem('word_search_admin_auth') === 'true';
-
         function checkAndSetAdminStatus(id, pass) {
             if (isGlobalAdmin(id, pass)) {
                 isAdminActive = true;
