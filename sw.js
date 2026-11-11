@@ -1,10 +1,11 @@
-const CACHE_NAME = "sni-app-shell-v20";
+const CACHE_NAME = "sni-app-shell-v21";
 const APP_SHELL = [
     "/",
     "/index.html",
     "/videos.html",
     "/wordsearch.html",
     "/counter.html",
+    "/diary.html",
     "/site-pages.css",
     "/site-shell.js",
     "/manifest.webmanifest",

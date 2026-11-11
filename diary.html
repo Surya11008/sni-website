@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#8b5cf6">
+    <link rel="manifest" href="manifest.webmanifest">
+    <title>Gospel Diary | SNI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    
+    <!-- Tailwind CSS with Dark Mode -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        diary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SNI App Shell Stylesheet -->
+    <link rel="stylesheet" href="site-pages.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col justify-between">
+
+    <!-- SNI Official Header Banner -->
+    <header class="site-header" id="sni-site-header">
+        <a class="site-logo" href="index.html#home">
+            <img src="Images/sni-logo.png" alt="SNI Logo">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#notices">Notices</a>
+            <a href="wordsearch.html">Word Search</a>
+            <a href="counter.html">Counter</a>
+            <a href="diary.html" class="active font-bold text-violet-400">Gospel Diary</a>
+            <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </button>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install SNI as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6">
+        
+        <!-- App Title Bar -->
+        <div class="bg-white dark:bg-slate-900 border border-violet-500/30 rounded-3xl p-4 sm:p-6 shadow-xl mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-violet-500/30">
+                    📔
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        Gospel Diary
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 font-bold border border-violet-300/40">Star Galaxy Sync</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Spiritual Journal, Blessings & Sermon Reflections</p>
+                </div>
+            </div>
+
+            <!-- User Status & Actions -->
+            <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap">
+                <div id="userInfoPill" class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="userDisplayName">Guest</span>
+                </div>
+
+                <button type="button" id="openEntryModalBtn" onclick="openEntryModal()" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-2xl text-xs shadow-md shadow-violet-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                    <span>➕ New Entry</span>
+                </button>
+
+                <button type="button" id="themeToggleBtn" onclick="toggleTheme()" class="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition" title="Toggle Dark/Light Mode">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <button type="button" id="logoutBtn" onclick="handleLogout()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 font-bold rounded-2xl text-xs border border-rose-200 dark:border-rose-800/60 transition" title="Sign Out">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="relative w-full sm:w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="searchInput" oninput="renderEntries()" placeholder="Search diary entries..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500">
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                <input type="date" id="dateFilter" onchange="renderEntries()" class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                <button type="button" onclick="clearFilters()" class="text-xs text-violet-600 dark:text-violet-400 font-bold hover:underline px-2">Clear</button>
+                <button type="button" onclick="syncDiaryFromCloud()" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5" title="Sync from Cloud Firestore">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Sync</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Entries Feed -->
+        <div id="entriesFeed" class="space-y-4">
+            <!-- Rendered by JavaScript -->
+        </div>
+
+        <!-- Empty State (Shown when no entries) -->
+        <div id="emptyState" class="hidden text-center py-16 px-4 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl">
+            <div class="w-16 h-16 mx-auto mb-4 bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 rounded-2xl flex items-center justify-center text-3xl">
+                📖
+            </div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-1">No Gospel Diary Entries Found</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-5">Start writing down your spiritual reflections, daily devotions, sermon teachings, and thanksgiving memories.</p>
+            <button type="button" onclick="openEntryModal()" class="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-2xl text-xs shadow-md transition inline-flex items-center gap-1.5">
+                <span>➕ Write First Diary Entry</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Create / Edit Diary Entry Modal -->
+    <div id="entryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-4 overflow-y-auto hidden" style="z-index: 100000;">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-5 sm:p-6 max-w-lg w-full border border-violet-500/40 max-h-[calc(100vh-6rem)] overflow-y-auto my-auto sm:my-0">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">✍️</span>
+                    <div>
+                        <h2 id="entryModalTitle" class="text-lg font-bold text-slate-900 dark:text-slate-100">New Gospel Diary Entry</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Synced directly with Star Galaxy</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEntryModal()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">&times;</button>
+            </div>
+
+            <form id="entryForm" onsubmit="handleSaveEntry(event)" class="space-y-4">
+                <input type="hidden" id="entryId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Date</label>
+                    <input type="date" id="entryDate" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Title / Occasion</label>
+                    <input type="text" id="entryTitle" required placeholder="e.g. Blessing Gathering / Gospel Time" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Spiritual Reflection &amp; Notes</label>
+                    <textarea id="entryWriting" rows="8" required placeholder="Write what God has blessed you with today, preachings, thankful moments..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none leading-relaxed resize-y"></textarea>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeEntryModal()" class="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" id="saveEntryBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition">
+                        Save Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth / Login Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-4 overflow-y-auto hidden" style="z-index: 100000;">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-md w-full border border-violet-500/40 max-h-[calc(100vh-6rem)] overflow-y-auto my-auto sm:my-0">
+            
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg border border-violet-300">
+                    📔
+                </div>
+            </div>
+
+            <h2 id="authTitle" class="text-xl font-black text-center text-violet-600 dark:text-violet-400 mb-1">Gospel Diary Login</h2>
+            <p id="authSubtitle" class="text-center text-xs text-slate-500 dark:text-slate-400 mb-6">Use your Star Galaxy, Counter or Word Search credentials</p>
+
+            <!-- Tabs: Login vs Register -->
+            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700">
+                <button type="button" id="tabLoginBtn" onclick="switchAuthMode('login')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition">
+                    Sign In
+                </button>
+                <button type="button" id="tabRegisterBtn" onclick="switchAuthMode('register')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                    Register
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">User ID, Phone or Contact</label>
+                    <input type="text" id="loginUserId" required placeholder="e.g. David1948 or surya11008" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div id="loginErrorMsg" class="hidden text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs p-2.5 rounded-xl text-center font-medium"></div>
+                <button type="submit" id="loginSubmitBtn" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                    <input type="text" id="regFullName" required placeholder="e.g. David" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">User ID / Username</label>
+                    <input type="text" id="regUserId" required placeholder="e.g. David1948" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone / Contact</label>
+                    <input type="text" id="regPhone" required placeholder="e.g. 9876543210" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Place / Fellowship</label>
+                    <input type="text" id="regPlace" placeholder="e.g. Nellore" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                </div>
+                <div id="regErrorMsg" class="hidden text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs p-2 rounded-xl text-center font-medium"></div>
+                <button type="submit" id="regSubmitBtn" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">
+                    Create Account
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 transition-colors duration-300">
+        SNI Gospel Diary &bull; Connected with Star Galaxy Cloud Firestore
+    </footer>
+
+    <!-- SNI Site Shell Script -->
+    <script src="site-shell.js"></script>
+
+    <!-- Gospel Diary Logic Script -->
+    <script>
+        const FIREBASE_API_KEY = "AIzaSyCvdACZi_k3OuhVzmcGMXLWfhPQquiNgbM";
+        const FIREBASE_PROJECT = "star-galaxy-a3ef2";
+
+        let currentUser = null;
+        let diaryEntries = [];
+
+        // Admin credentials fallback
+        function isUserAdmin(uid, pass) {
+            const u = (uid || '').trim().toLowerCase();
+            const p = (pass || '').trim();
+            return (u === 'surya11008' || u === 'admin') && (p === 'Surya742766.' || p === 'Suri742766.');
+        }
+
+        // Theme management
+        function initTheme() {
+            const isDark = localStorage.getItem('sni_theme') === 'dark' || 
+                (!('sni_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-sun text-amber-400';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('sni_theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon';
+        }
+
+        // Check Unified Session across Star Galaxy, Counter, Word Search, and Gospel Diary
+        async function checkUnifiedSession() {
+            try {
+                // Check unified session key
+                const sess = localStorage.getItem('sni_unified_session');
+                if (sess) {
+                    const parsed = JSON.parse(sess);
+                    if (parsed && parsed.userId) {
+                        currentUser = parsed;
+                        onUserAuthenticated();
+                        return;
+                    }
+                }
+
+                // Check Star Galaxy logged in user
+                const starMember = localStorage.getItem('star_galaxy_current_member_id') || localStorage.getItem('star_galaxy_selected_member');
+                if (starMember) {
+                    currentUser = {
+                        userId: starMember,
+                        fullName: starMember,
+                        role: starMember === 'surya11008' ? 'admin' : 'member'
+                    };
+                    onUserAuthenticated();
+                    return;
+                }
+
+                // Check Counter user
+                const counterUser = localStorage.getItem('sni_counter_current_user');
+                if (counterUser) {
+                    const parsed = JSON.parse(counterUser);
+                    if (parsed && parsed.userId) {
+                        currentUser = parsed;
+                        onUserAuthenticated();
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            // Show auth modal if not authenticated
+            showAuthModal();
+        }
+
+        function onUserAuthenticated() {
+            hideAuthModal();
+            const displayName = currentUser.fullName || currentUser.userId;
+            document.getElementById('userDisplayName').textContent = displayName;
+            
+            // Save to unified session
+            try {
+                localStorage.setItem('sni_unified_session', JSON.stringify(currentUser));
+            } catch(e) {}
+
+            // Load diary entries
+            loadDiaryEntries();
+        }
+
+        // Show/Hide Modals
+        function showAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+        function hideAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function switchAuthMode(mode) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLoginBtn = document.getElementById('tabLoginBtn');
+            const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLoginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition';
+                tabRegisterBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegisterBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition';
+                tabLoginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUserId').value.trim();
+            const pInput = document.getElementById('loginPassword').value.trim();
+            const errEl = document.getElementById('loginErrorMsg');
+            const btn = document.getElementById('loginSubmitBtn');
+
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            if (isUserAdmin(uInput, pInput)) {
+                currentUser = {
+                    userId: 'surya11008',
+                    fullName: 'Admin (Surya)',
+                    role: 'admin'
+                };
+                onUserAuthenticated();
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+                return;
+            }
+
+            try {
+                // Verify with Firestore
+                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users?pageSize=150&key=${FIREBASE_API_KEY}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    const q = uInput.toLowerCase();
+                    let match = null;
+
+                    for (const doc of (data.documents || [])) {
+                        const f = doc.fields || {};
+                        const uId = (f.username?.stringValue || f.id?.stringValue || '').toLowerCase();
+                        const uPhone = (f.phone?.stringValue || f.contact?.stringValue || '').toLowerCase();
+                        const uEmail = (f.email?.stringValue || '').toLowerCase();
+                        const uPass = f.plainPassword?.stringValue || f.password?.stringValue || f.personalPin?.stringValue || '';
+
+                        if (uId === q || uPhone === q || uEmail === q) {
+                            if (uPass === pInput) {
+                                match = {
+                                    userId: f.username?.stringValue || f.id?.stringValue || q,
+                                    fullName: f.name?.stringValue || f.nickname?.stringValue || uInput,
+                                    role: f.role?.stringValue || 'member',
+                                    status: f.status?.stringValue || 'approved'
+                                };
+                                break;
+                            }
+                        }
+                    }
+
+                    if (match) {
+                        if (match.status === 'pending') {
+                            errEl.textContent = 'Your account is pending Admin approval. Please wait for admin approval.';
+                            errEl.classList.remove('hidden');
+                            btn.disabled = false;
+                            btn.textContent = 'Sign In';
+                            return;
+                        }
+                        currentUser = match;
+                        onUserAuthenticated();
+                        btn.disabled = false;
+                        btn.textContent = 'Sign In';
+                        return;
+                    }
+                }
+            } catch(err) {
+                console.warn('Network error during login:', err);
+            }
+
+            // Fallback check against local cache
+            try {
+                const starState = JSON.parse(localStorage.getItem('star_galaxy_saved_state') || '{}');
+                const users = starState.users || [];
+                const q = uInput.toLowerCase();
+                const localMatch = users.find(u => {
+                    const uid = (u.username || u.id || '').toLowerCase();
+                    const phone = (u.phone || u.contact || '').toLowerCase();
+                    const pass = u.plainPassword || u.password || u.personalPin || '';
+                    return (uid === q || phone === q) && pass === pInput;
+                });
+                if (localMatch) {
+                    currentUser = {
+                        userId: localMatch.username || localMatch.id,
+                        fullName: localMatch.name || localMatch.nickname || uInput,
+                        role: localMatch.role || 'member'
+                    };
+                    onUserAuthenticated();
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                    return;
+                }
+            } catch(e) {}
+
+            errEl.textContent = 'Invalid User ID or Password. Please try again.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('regFullName').value.trim();
+            const userId = document.getElementById('regUserId').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const pass = document.getElementById('regPassword').value.trim();
+            const place = document.getElementById('regPlace').value.trim();
+            const errEl = document.getElementById('regErrorMsg');
+            const btn = document.getElementById('regSubmitBtn');
+
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+
+            // Check auto approval setting
+            let autoApprove = true;
+            try {
+                const stored = localStorage.getItem('star_galaxy_auto_user_approval');
+                if (stored !== null) autoApprove = JSON.parse(stored);
+            } catch(e) {}
+
+            const newUser = {
+                id: 'usr-' + Date.now(),
+                username: userId,
+                name: fullName,
+                phone: phone,
+                contact: phone,
+                password: pass,
+                plainPassword: pass,
+                place: place,
+                role: 'member',
+                status: autoApprove ? 'approved' : 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            // Sync to Firestore users
+            try {
+                const docId = encodeURIComponent(newUser.id);
+                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users/${docId}?key=${FIREBASE_API_KEY}`;
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            id: { stringValue: newUser.id },
+                            username: { stringValue: newUser.username },
+                            name: { stringValue: newUser.name },
+                            phone: { stringValue: newUser.phone },
+                            contact: { stringValue: newUser.contact },
+                            password: { stringValue: newUser.password },
+                            plainPassword: { stringValue: newUser.plainPassword },
+                            place: { stringValue: newUser.place || '' },
+                            role: { stringValue: 'member' },
+                            status: { stringValue: newUser.status },
+                            createdAt: { stringValue: newUser.createdAt }
+                        }
+                    })
+                });
+            } catch(e) {}
+
+            if (!autoApprove) {
+                alert('Registration submitted! Since Auto Approval is currently OFF, an Admin will review and approve your account shortly.');
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+                switchAuthMode('login');
+                return;
+            }
+
+            currentUser = {
+                userId: newUser.username,
+                fullName: newUser.name,
+                role: 'member'
+            };
+            onUserAuthenticated();
+            btn.disabled = false;
+            btn.textContent = 'Create Account';
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to sign out?')) {
+                currentUser = null;
+                try {
+                    localStorage.removeItem('sni_unified_session');
+                } catch(e) {}
+                showAuthModal();
+            }
+        }
+
+        // --- DIARY ENTRIES MANAGEMENT ---
+        function getStorageKey() {
+            return 'sni_gospel_diary_' + (currentUser?.userId || 'guest');
+        }
+
+        async function loadDiaryEntries() {
+            if (!currentUser) return;
+            const key = getStorageKey();
+            
+            // 1. Try local storage first for instant render
+            try {
+                const local = localStorage.getItem(key);
+                if (local) {
+                    diaryEntries = JSON.parse(local);
+                    renderEntries();
+                } else {
+                    // Check Star Galaxy state
+                    const starState = JSON.parse(localStorage.getItem('star_galaxy_saved_state') || '{}');
+                    const starEntries = starState.gospelDiary?.[currentUser.userId];
+                    if (Array.isArray(starEntries) && starEntries.length > 0) {
+                        diaryEntries = starEntries;
+                        localStorage.setItem(key, JSON.stringify(diaryEntries));
+                        renderEntries();
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Fetch fresh entries from Cloud Firestore
+            await syncDiaryFromCloud();
+        }
+
+        async function syncDiaryFromCloud() {
+            if (!currentUser) return;
+            try {
+                const docId = encodeURIComponent(currentUser.userId);
+                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/gospel_diary/${docId}?key=${FIREBASE_API_KEY}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    const rawList = data.fields?.entries?.arrayValue?.values || [];
+                    const cloudEntries = rawList.map(v => {
+                        const m = v.mapValue?.fields || {};
+                        return {
+                            id: m.id?.stringValue || ('diary-' + Date.now()),
+                            title: m.title?.stringValue || 'Gospel Note',
+                            date: m.date?.stringValue || new Date().toISOString().slice(0, 10),
+                            writing: m.writing?.stringValue || '',
+                            authorName: m.authorName?.stringValue || currentUser.fullName || currentUser.userId,
+                            createdAt: m.createdAt?.stringValue || new Date().toISOString()
+                        };
+                    });
+
+                    if (cloudEntries.length > 0) {
+                        diaryEntries = cloudEntries;
+                        try {
+                            localStorage.setItem(getStorageKey(), JSON.stringify(diaryEntries));
+                        } catch(e) {}
+                        renderEntries();
+                    }
+                }
+            } catch(e) {
+                console.warn('Cloud sync note:', e);
+            }
+            renderEntries();
+        }
+
+        async function saveDiaryToCloud(entries) {
+            if (!currentUser) return;
+            try {
+                const docId = encodeURIComponent(currentUser.userId);
+                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/gospel_diary/${docId}?key=${FIREBASE_API_KEY}`;
+                
+                const firestoreValues = entries.map(item => ({
+                    mapValue: {
+                        fields: {
+                            id: { stringValue: item.id || ('diary-' + Date.now()) },
+                            title: { stringValue: item.title || '' },
+                            date: { stringValue: item.date || '' },
+                            writing: { stringValue: item.writing || '' },
+                            authorName: { stringValue: item.authorName || currentUser.fullName || currentUser.userId },
+                            createdAt: { stringValue: item.createdAt || new Date().toISOString() }
+                        }
+                    }
+                }));
+
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            entries: {
+                                arrayValue: { values: firestoreValues }
+                            }
+                        }
+                    })
+                });
+
+                // Also update Star Galaxy local state so Star Galaxy receives updates immediately!
+                try {
+                    const starStateRaw = localStorage.getItem('star_galaxy_saved_state');
+                    if (starStateRaw) {
+                        const starState = JSON.parse(starStateRaw);
+                        starState.gospelDiary = starState.gospelDiary || {};
+                        starState.gospelDiary[currentUser.userId] = entries;
+                        localStorage.setItem('star_galaxy_saved_state', JSON.stringify(starState));
+                    }
+                } catch(e) {}
+            } catch(e) {
+                console.warn('Error saving to Cloud Firestore:', e);
+            }
+        }
+
+        function renderEntries() {
+            const feed = document.getElementById('entriesFeed');
+            const empty = document.getElementById('emptyState');
+            const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const dateVal = document.getElementById('dateFilter')?.value;
+
+            let filtered = diaryEntries.filter(entry => {
+                if (dateVal && entry.date !== dateVal) return false;
+                if (q) {
+                    const title = (entry.title || '').toLowerCase();
+                    const text = (entry.writing || '').toLowerCase();
+                    return title.includes(q) || text.includes(q);
+                }
+                return true;
+            });
+
+            // Sort newest first
+            filtered.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+
+            if (filtered.length === 0) {
+                feed.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            feed.innerHTML = filtered.map(entry => {
+                const dateObj = new Date(entry.date + 'T00:00:00');
+                const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString(undefined, {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : entry.date;
+
+                const escapedText = (entry.writing || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br/>');
+
+                return `
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-300/40">
+                                        📅 ${formattedDate}
+                                    </span>
+                                    <span class="text-xs text-slate-400 font-medium">by ${entry.authorName || 'Me'}</span>
+                                </div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">${entry.title}</h3>
+                            </div>
+                            <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                                <button type="button" onclick="editEntry('${entry.id}')" class="p-2 rounded-xl text-slate-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/50 transition text-xs font-bold" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" onclick="deleteEntry('${entry.id}')" class="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition text-xs font-bold" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            ${escapedText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateFilter').value = '';
+            renderEntries();
+        }
+
+        // Entry Modal Operations
+        function openEntryModal(entry = null) {
+            const modal = document.getElementById('entryModal');
+            const titleEl = document.getElementById('entryModalTitle');
+            const idInput = document.getElementById('entryId');
+            const dateInput = document.getElementById('entryDate');
+            const titleInput = document.getElementById('entryTitle');
+            const writingInput = document.getElementById('entryWriting');
+
+            if (entry) {
+                titleEl.textContent = 'Edit Gospel Diary Entry';
+                idInput.value = entry.id;
+                dateInput.value = entry.date;
+                titleInput.value = entry.title;
+                writingInput.value = entry.writing;
+            } else {
+                titleEl.textContent = 'New Gospel Diary Entry';
+                idInput.value = '';
+                dateInput.value = new Date().toISOString().slice(0, 10);
+                titleInput.value = '';
+                writingInput.value = '';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeEntryModal() {
+            document.getElementById('entryModal').classList.add('hidden');
+        }
+
+        async function handleSaveEntry(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('entryId').value;
+            const dateInput = document.getElementById('entryDate').value;
+            const titleInput = document.getElementById('entryTitle').value.trim();
+            const writingInput = document.getElementById('entryWriting').value.trim();
+            const saveBtn = document.getElementById('saveEntryBtn');
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            if (idInput) {
+                // Edit existing
+                const idx = diaryEntries.findIndex(e => e.id === idInput);
+                if (idx !== -1) {
+                    diaryEntries[idx] = {
+                        ...diaryEntries[idx],
+                        date: dateInput,
+                        title: titleInput,
+                        writing: writingInput,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                // Add new
+                const newEntry = {
+                    id: 'diary-' + Date.now(),
+                    date: dateInput,
+                    title: titleInput,
+                    writing: writingInput,
+                    authorName: currentUser.fullName || currentUser.userId,
+                    createdAt: new Date().toISOString()
+                };
+                diaryEntries.unshift(newEntry);
+            }
+
+            // Save locally
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(diaryEntries));
+            } catch(e) {}
+
+            renderEntries();
+            closeEntryModal();
+
+            // Sync with Cloud Firestore
+            await saveDiaryToCloud(diaryEntries);
+
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Entry';
+        }
+
+        function editEntry(id) {
+            const entry = diaryEntries.find(e => e.id === id);
+            if (entry) openEntryModal(entry);
+        }
+
+        async function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this diary entry?')) {
+                diaryEntries = diaryEntries.filter(e => e.id !== id);
+                try {
+                    localStorage.setItem(getStorageKey(), JSON.stringify(diaryEntries));
+                } catch(e) {}
+                renderEntries();
+                await saveDiaryToCloud(diaryEntries);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            checkUnifiedSession();
+        });
+    </script>
+</body>
+</html>
