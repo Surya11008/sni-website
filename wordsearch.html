@@ -485,7 +485,7 @@
                     🤝 1. Help Support
                 </button>
                 <button type="button" id="tabMpFunny" onclick="switchMpTab('funny')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
-                    ⚔️ 2. Funny Battle
+                    ⚔️ 2. Biblical Battle
                 </button>
             </div>
 
@@ -520,18 +520,40 @@
                 </button>
             </div>
 
-            <!-- Tab 2: Funny Battle Content -->
+            <!-- Live Scan Connection Status Header in Modal -->
+            <div id="mpModalStatusPill" class="flex items-center justify-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-xs font-semibold mb-3">
+                <span id="mpModalStatusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="mpModalStatusText">Scan QR to connect instantly...</span>
+            </div>
+
+            <!-- Tab 2: Biblical Battle Content -->
             <div id="mpFunnyContainer" class="hidden space-y-4">
                 <div class="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-2xl border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 leading-relaxed">
-                    <strong>⚔️ Live Funny Battle (Versus):</strong> Challenge your partner in real-time! Both players play simultaneously on the same board with live updates. <strong>Whoever finds more words wins!</strong> Scores update live (+100 pts per word).
+                    <strong>⚔️ Biblical Word Battle (Versus):</strong> Challenge your partner in real-time! Both players play on the <strong>exact same table with the exact same biblical words</strong>. Whoever finds more words wins (+100 pts per word). Live touch updates show on both screens!
+                </div>
+
+                <!-- Difficulty Selector for Battle -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Battle Difficulty</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" id="diffEasyBtn" onclick="selectBattleDifficulty('easy')" class="py-2 px-2 text-xs font-bold rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition">
+                            🟢 Easy
+                        </button>
+                        <button type="button" id="diffNormalBtn" onclick="selectBattleDifficulty('normal')" class="py-2 px-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white shadow-sm transition">
+                            🟡 Normal
+                        </button>
+                        <button type="button" id="diffHardBtn" onclick="selectBattleDifficulty('hard')" class="py-2 px-2 text-xs font-bold rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition">
+                            🔴 Hard
+                        </button>
+                    </div>
                 </div>
 
                 <div class="text-center">
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                        Scan with Phone Camera to Join Live Battle Match
+                        Scan with Phone Camera to Join Biblical Battle
                     </span>
                     <div class="inline-block p-3 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                        <div id="mpFunnyQrDiv" class="w-48 h-48 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpFunnyQrImg" src="" alt="Funny Battle QR Code" class="w-full h-full object-contain rounded-xl" /></div>
+                        <div id="mpFunnyQrDiv" class="w-48 h-48 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpFunnyQrImg" src="" alt="Biblical Battle QR Code" class="w-full h-full object-contain rounded-xl" /></div>
                     </div>
                 </div>
 
@@ -547,7 +569,7 @@
 
                 <div class="flex gap-2">
                     <button type="button" id="startFunnyPlayNowBtn" onclick="hostStartFunnyBattleNow()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow transition text-xs">
-                        Start Match Now ▶
+                        Start Battle Now ▶
                     </button>
                     <button type="button" id="shareFunnyWhatsAppBtn" onclick="shareMpWhatsApp('funny')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-sm"></i>
@@ -1278,7 +1300,7 @@
             currentSelectedCells = [{ r, c }];
             updateVisualSelection();
             selectionStatusEl.textContent = `Selected: ${grid[r][c]}`;
-            broadcastLiveTouch(grid[r][c]);
+            broadcastLiveTouch(grid[r][c], currentSelectedCells);
         }
 
         function onCellEnter(r, c) {
@@ -1289,7 +1311,7 @@
                 updateVisualSelection();
                 const wordStr = currentSelectedCells.map(cell => grid[cell.r][cell.c]).join('');
                 selectionStatusEl.textContent = `Selecting: ${wordStr}`;
-                broadcastLiveTouch(wordStr);
+                broadcastLiveTouch(wordStr, currentSelectedCells);
             }
         }
 
@@ -1360,18 +1382,25 @@
             return cells;
         }
 
+        let partnerTouchingCells = [];
+
         function updateVisualSelection() {
             const allCells = puzzleGridEl.querySelectorAll('.grid-cell');
             allCells.forEach(cell => {
                 const r = parseInt(cell.dataset.row);
                 const c = parseInt(cell.dataset.col);
                 const isSelected = currentSelectedCells.some(cellObj => cellObj.r === r && cellObj.c === c);
+                const isPartnerTouching = partnerTouchingCells.some(cellObj => cellObj.r === r && cellObj.c === c);
                 const isSolved = solvedCellMap.has(`${r},${c}`);
 
                 if (isSolved) {
                     cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-emerald-600 text-white border-emerald-500 shadow-md`;
+                } else if (isSelected && isPartnerTouching) {
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-gradient-to-r from-blue-600 to-amber-500 text-white ring-2 ring-amber-300 shadow-lg scale-110 font-black animate-pulse`;
                 } else if (isSelected) {
                     cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-blue-500 text-white border-blue-400 shadow-md scale-105`;
+                } else if (isPartnerTouching) {
+                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 border-amber-300 ring-2 ring-amber-400 ring-offset-1 shadow-lg scale-105 font-black animate-pulse`;
                 } else {
                     cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs text-slate-800 dark:text-slate-200`;
                 }
@@ -1708,16 +1737,27 @@
         }
 
         // ==============================================================
-        // 4. REAL-TIME 2-PLAYER MULTIPLAYER (MQTT & LIVE CROSS-DEVICE SYNC)
+        // 4. REAL-TIME 2-PLAYER MULTIPLAYER (INSTANT CONNECT, SAME TABLE, BIBLICAL WORDS & LIVE TOUCH)
         // ==============================================================
-        const funnyWordPool = [
-            "BANANA", "MONKEY", "GIGGLE", "POPCORN", "TICKLE",
-            "BOING", "JOKER", "NINJA", "SNEAKY", "CHUCKLE",
-            "ROBOT", "PIZZA", "MAGIC", "ROCKET", "COOKIE",
-            "BUBBLE", "ZOOM", "WOBBLE", "DISCO", "PENGUIN",
-            "CUPCAKE", "WIZARD", "PUPPY", "SUPERSTAR"
-        ];
+        const biblicalBattlePool = {
+            easy: [
+                "FAITH", "GRACE", "JESUS", "DAVID", "MOSES", "CROSS", "BIBLE", "PEACE",
+                "PRAY", "GLORY", "ANGEL", "SAINT", "LIGHT", "TRUTH", "MERCY", "HEAVEN",
+                "EDEN", "ARK", "ZION", "LOVE", "HOPE", "NOAH", "PETER", "PAUL", "MARY", "JOHN"
+            ],
+            normal: [
+                "APOSTLE", "PROPHET", "GOSPEL", "BLESSED", "MIRACLE", "BAPTISM", "WORSHIP",
+                "SAVIOR", "DISCIPLE", "GENESIS", "EXODUS", "SALVATION", "KINGDOM", "PARABLE",
+                "BELIEVE", "COVENANT", "ISRAEL", "SOLOMON", "ABRAHAM", "JERUSALEM", "BETHLEHEM"
+            ],
+            hard: [
+                "RESURRECTION", "RIGHTEOUSNESS", "COMMANDMENT", "REVELATION", "COMPASSION",
+                "TABERNACLE", "FELLOWSHIP", "FORGIVENESS", "SANCTUARY", "EVERLASTING",
+                "PENTECOST", "DELIVERANCE", "TESTAMENT", "TRANSFIGURATION"
+            ]
+        };
 
+        let currentBattleDifficulty = 'normal'; // 'easy', 'normal', 'hard'
         let mpActiveMode = null; // null, 'help', or 'battle'
         let mpRoomId = null;
         let mpIsHost = false;
@@ -1727,14 +1767,14 @@
         let partnerPlayerName = 'Partner';
         let p1Score = 0;
         let p2Score = 0;
-        let currentFunnyWords = [];
         let activeMatchSeed = null;
 
         let wsMqttClient = null;
         let wsBroadcastChannel = null;
         let touchThrottleTimer = 0;
+        let pingIntervalTimer = null;
 
-        // Render QR Code helper (supports QRCode canvas and API fallback)
+        // Render QR Code helper (dual canvas + immediate image API)
         function renderQr(containerId, imgId, url) {
             const container = document.getElementById(containerId);
             const img = document.getElementById(imgId);
@@ -1746,8 +1786,8 @@
                     container.innerHTML = '';
                     new QRCode(container, {
                         text: url,
-                        width: 190,
-                        height: 190,
+                        width: 192,
+                        height: 192,
                         colorDark: "#0f172a",
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.M
@@ -1768,66 +1808,131 @@
             }
         }
 
+        // Difficulty Selection in Biblical Battle Modal
+        window.selectBattleDifficulty = function(diff) {
+            currentBattleDifficulty = diff;
+            const btnEasy = document.getElementById('diffEasyBtn');
+            const btnNormal = document.getElementById('diffNormalBtn');
+            const btnHard = document.getElementById('diffHardBtn');
+
+            const inactiveClass = "py-2 px-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+            if (btnEasy) btnEasy.className = diff === 'easy' ? "py-2 px-2 text-xs font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 text-white shadow-sm transition" : inactiveClass;
+            if (btnNormal) btnNormal.className = diff === 'normal' ? "py-2 px-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white shadow-sm transition" : inactiveClass;
+            if (btnHard) btnHard.className = diff === 'hard' ? "py-2 px-2 text-xs font-bold rounded-xl border-2 border-rose-600 bg-rose-600 text-white shadow-sm transition" : inactiveClass;
+
+            generateMultiplayerLinks();
+        };
+
+        function selectBiblicalWordsForDifficulty(diff, seed) {
+            const pool = biblicalBattlePool[diff] || biblicalBattlePool.normal;
+            const rng = seed ? createSeededRNG(seed) : Math.random;
+            const shuffled = [...pool].sort(() => 0.5 - rng());
+            const count = diff === 'easy' ? 6 : (diff === 'hard' ? 10 : 8);
+            return shuffled.slice(0, count);
+        }
+
         function generateMultiplayerLinks() {
             const baseUrl = window.location.origin + window.location.pathname;
 
-            // 1. Help Support Link (Current Stage)
-            const helpRoom = 'help_s' + currentStage + '_' + Math.random().toString(36).substring(2, 7);
-            const matchSeed = Math.floor(Math.random() * 900000 + 100000);
-            const helpLink = `${baseUrl}?mode=help&stage=${currentStage}&room=${helpRoom}&seed=${matchSeed}`;
+            // Maintain stable room ID while modal is open so scanning works 100%
+            if (!window.currentGeneratedHelp || window.currentGeneratedHelp.stage !== currentStage) {
+                const helpRoom = 'ws_h_' + currentStage + '_' + Math.random().toString(36).substring(2, 7);
+                const helpSeed = Math.floor(Math.random() * 900000 + 100000);
+                const helpLink = `${baseUrl}?mode=help&stage=${currentStage}&room=${helpRoom}&seed=${helpSeed}`;
+                window.currentGeneratedHelp = { room: helpRoom, seed: helpSeed, link: helpLink, stage: currentStage };
+            }
 
+            // Battle Link with Biblical words & selected difficulty
+            const battleRoom = window.currentGeneratedBattle?.room || ('ws_b_' + Math.random().toString(36).substring(2, 8));
+            const battleSeed = window.currentGeneratedBattle?.seed || Math.floor(Math.random() * 900000 + 100000);
+            const battleWords = selectBiblicalWordsForDifficulty(currentBattleDifficulty, battleSeed);
+            const battleLink = `${baseUrl}?mode=battle&room=${battleRoom}&diff=${currentBattleDifficulty}&seed=${battleSeed}&words=${encodeURIComponent(battleWords.join(','))}`;
+            
+            window.currentGeneratedBattle = {
+                room: battleRoom,
+                seed: battleSeed,
+                link: battleLink,
+                diff: currentBattleDifficulty,
+                words: battleWords
+            };
+
+            // Update Help Tab UI
             const mpHelpStageNum = document.getElementById('mpHelpStageNum');
             const mpHelpLinkInput = document.getElementById('mpHelpLinkInput');
             if (mpHelpStageNum) mpHelpStageNum.textContent = currentStage;
-            if (mpHelpLinkInput) mpHelpLinkInput.value = helpLink;
+            if (mpHelpLinkInput) mpHelpLinkInput.value = window.currentGeneratedHelp.link;
+            renderQr('mpHelpQrDiv', 'mpHelpQrImg', window.currentGeneratedHelp.link);
 
-            renderQr('mpHelpQrDiv', 'mpHelpQrImg', helpLink);
-
-            // 2. Funny Battle Link (8 pre-selected funny words)
-            const shuffled = [...funnyWordPool].sort(() => 0.5 - Math.random());
-            currentFunnyWords = shuffled.slice(0, 8);
-            const battleRoom = 'battle_' + Math.random().toString(36).substring(2, 8);
-            const funnyLink = `${baseUrl}?mode=funny&room=${battleRoom}&seed=${matchSeed}&words=${encodeURIComponent(currentFunnyWords.join(','))}`;
-
+            // Update Battle Tab UI
             const mpFunnyLinkInput = document.getElementById('mpFunnyLinkInput');
-            if (mpFunnyLinkInput) mpFunnyLinkInput.value = funnyLink;
+            if (mpFunnyLinkInput) mpFunnyLinkInput.value = window.currentGeneratedBattle.link;
+            renderQr('mpFunnyQrDiv', 'mpFunnyQrImg', window.currentGeneratedBattle.link);
 
-            renderQr('mpFunnyQrDiv', 'mpFunnyQrImg', funnyLink);
+            // Host joins the active room immediately so any partner scan connects in 0 seconds!
+            const activeTabIsBattle = document.getElementById('mpFunnyContainer') && !document.getElementById('mpFunnyContainer').classList.contains('hidden');
+            const targetRoom = activeTabIsBattle ? window.currentGeneratedBattle.room : window.currentGeneratedHelp.room;
+            const targetMode = activeTabIsBattle ? 'battle' : 'help';
+            
+            mpActiveMode = targetMode;
+            mpRoomId = targetRoom;
+            mpIsHost = true;
+            activeMatchSeed = activeTabIsBattle ? window.currentGeneratedBattle.seed : window.currentGeneratedHelp.seed;
 
-            window.currentGeneratedHelp = { room: helpRoom, seed: matchSeed, link: helpLink };
-            window.currentGeneratedBattle = { room: battleRoom, seed: matchSeed, link: funnyLink, words: currentFunnyWords };
+            setPartnerStatus(false, 'Waiting for partner to scan QR...');
+            connectMultiplayerRealTime(mpRoomId);
         }
 
         // Live Multiplayer Real-Time Connection
         function connectMultiplayerRealTime(roomId) {
+            if (!roomId) return;
             const topic = `sni/wordsearch/room/${roomId}`;
 
-            // Local BroadcastChannel for same-device multi-tab sync
+            // 1. BroadcastChannel (Instant sync across tabs/windows)
             try {
                 if (window.BroadcastChannel) {
                     if (wsBroadcastChannel) wsBroadcastChannel.close();
                     wsBroadcastChannel = new BroadcastChannel(`sni_ws_${roomId}`);
                     wsBroadcastChannel.onmessage = (e) => handleMpMessage(e.data);
                 }
-            } catch (e) {
-                console.warn('BroadcastChannel error:', e);
-            }
+            } catch (e) {}
 
-            // Cross-device MQTT via HiveMQ Public Broker
+            // 2. Storage event fallback for same device
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'sni_ws_msg_' + roomId && e.newValue) {
+                    try {
+                        const data = JSON.parse(e.newValue);
+                        handleMpMessage(data);
+                    } catch(err){}
+                }
+            });
+
+            // 3. HiveMQ Public MQTT WebSocket Broker (Instant cross-device sync)
             if (window.mqtt) {
                 try {
                     if (wsMqttClient) {
                         try { wsMqttClient.end(true); } catch(e){}
                     }
                     wsMqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-                        clientId: 'sni_ws_' + myPlayerId,
+                        clientId: 'sni_ws_' + myPlayerId + '_' + Math.random().toString(16).substring(2, 6),
                         clean: true,
-                        reconnectPeriod: 2500
+                        keepalive: 30,
+                        connectTimeout: 5000,
+                        reconnectPeriod: 2000
                     });
 
                     wsMqttClient.on('connect', () => {
-                        console.log('WordSearch MQTT connected to room:', roomId);
-                        wsMqttClient.subscribe(topic);
+                        console.log('⚡ Connected to Word Search Room:', roomId);
+                        wsMqttClient.subscribe(topic, { qos: 1 });
+
+                        // Announce immediate join
+                        sendMpEvent({
+                            type: 'PLAYER_JOIN',
+                            senderId: myPlayerId,
+                            senderName: mpIsHost ? 'Host' : 'Partner',
+                            isHost: mpIsHost,
+                            stage: currentStage,
+                            difficulty: currentBattleDifficulty
+                        });
                     });
 
                     wsMqttClient.on('message', (t, payload) => {
@@ -1850,12 +1955,18 @@
             eventObj.senderId = myPlayerId;
             eventObj.timestamp = Date.now();
 
+            const jsonStr = JSON.stringify(eventObj);
+
             if (wsBroadcastChannel) {
                 try { wsBroadcastChannel.postMessage(eventObj); } catch(e){}
             }
+            try {
+                localStorage.setItem('sni_ws_msg_' + mpRoomId, jsonStr);
+            } catch(e){}
+
             if (wsMqttClient && wsMqttClient.connected) {
                 try {
-                    wsMqttClient.publish(`sni/wordsearch/room/${mpRoomId}`, JSON.stringify(eventObj));
+                    wsMqttClient.publish(`sni/wordsearch/room/${mpRoomId}`, jsonStr, { qos: 0 });
                 } catch(e){}
             }
         }
@@ -1863,12 +1974,25 @@
         function setPartnerStatus(connected, text) {
             const statusContainer = document.getElementById('mpLivePartnerStatus');
             const statusText = document.getElementById('mpLivePartnerStatusText');
+            const modalStatusText = document.getElementById('mpModalStatusText');
+            const modalStatusPill = document.getElementById('mpModalStatusPill');
+
             if (statusText) statusText.textContent = text || (connected ? '🟢 Partner Connected' : 'Waiting for partner...');
-            if (statusContainer) {
-                if (connected) {
-                    statusContainer.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse";
-                } else {
+            if (modalStatusText) modalStatusText.textContent = text || (connected ? '🟢 Partner Connected! Opening game...' : 'Waiting for partner to scan QR...');
+
+            if (connected) {
+                if (statusContainer) {
+                    statusContainer.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 animate-pulse";
+                }
+                if (modalStatusPill) {
+                    modalStatusPill.className = "flex items-center justify-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-2xl text-xs font-bold animate-pulse mb-3";
+                }
+            } else {
+                if (statusContainer) {
                     statusContainer.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                }
+                if (modalStatusPill) {
+                    modalStatusPill.className = "flex items-center justify-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-xs font-semibold mb-3";
                 }
             }
         }
@@ -1876,43 +2000,90 @@
         function handleMpMessage(data) {
             if (!data || data.senderId === myPlayerId) return;
 
-            // 1. Partner Join
+            // 1. Partner Join Announcement
             if (data.type === 'PLAYER_JOIN') {
                 partnerPlayerId = data.senderId;
                 partnerPlayerName = data.senderName || 'Partner';
                 setPartnerStatus(true, `🟢 ${partnerPlayerName} Connected`);
 
+                // If host received join, reply immediately with exact grid, words, and found words!
                 if (mpIsHost) {
                     sendMpEvent({
-                        type: 'SYNC_STATE',
-                        seed: activeMatchSeed,
-                        stage: currentStage,
+                        type: 'PLAYER_JOIN_ACK',
+                        senderId: myPlayerId,
+                        senderName: 'Host',
+                        isHost: true,
+                        grid: grid,
+                        gridSize: gridSize,
                         words: currentWords,
                         foundWords: Array.from(foundWords),
+                        stage: currentStage,
+                        difficulty: currentBattleDifficulty,
+                        mode: mpActiveMode,
                         p1Score: p1Score,
                         p2Score: p2Score
                     });
+
+                    // Auto-close modal for host if partner joined
+                    setTimeout(() => {
+                        const modal = document.getElementById('multiplayerModal');
+                        if (modal && !modal.classList.contains('hidden')) {
+                            hideGameModal(modal);
+                            showBannerForMultiplayer();
+                        }
+                    }, 400);
                 }
             }
 
-            // 2. Sync State from Host
-            if (data.type === 'SYNC_STATE') {
+            // 2. Partner Join ACK / Exact Table Sync (Received by Guest)
+            if (data.type === 'PLAYER_JOIN_ACK' || data.type === 'SYNC_GRID') {
                 setPartnerStatus(true, '🟢 Partner Connected');
-                if (data.foundWords && Array.isArray(data.foundWords)) {
-                    data.foundWords.forEach(w => {
-                        foundWords.add(w);
-                        markWordOnBoard(w);
-                    });
+                if (pingIntervalTimer) {
+                    clearInterval(pingIntervalTimer);
+                    pingIntervalTimer = null;
+                }
+
+                // CLONE EXACT TABLE AND WORDS FROM HOST
+                if (data.grid && Array.isArray(data.grid) && data.grid.length > 0) {
+                    grid = data.grid;
+                    gridSize = data.gridSize || grid.length;
+                    if (data.words && Array.isArray(data.words)) {
+                        currentWords = [...data.words];
+                    }
+                    foundWords.clear();
+                    solvedCellMap.clear();
+
+                    if (data.foundWords && Array.isArray(data.foundWords)) {
+                        data.foundWords.forEach(w => {
+                            foundWords.add(w);
+                            markWordOnBoard(w);
+                        });
+                    }
+
+                    if (typeof data.p1Score === 'number') p1Score = data.p1Score;
+                    if (typeof data.p2Score === 'number') p2Score = data.p2Score;
+                    if (data.difficulty) currentBattleDifficulty = data.difficulty;
+
+                    gameActive = true;
+                    hideWinModal();
                     renderWordList();
                     renderGrid();
+                    updateFunnyScoreUI();
                 }
-                if (typeof data.p1Score === 'number') p1Score = data.p1Score;
-                if (typeof data.p2Score === 'number') p2Score = data.p2Score;
-                updateFunnyScoreUI();
+
+                // Auto-close modal if still visible
+                const modal = document.getElementById('multiplayerModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    hideGameModal(modal);
+                    showBannerForMultiplayer();
+                }
             }
 
-            // 3. Live Touch Selection from Partner
+            // 3. Live Touch Selection from Partner ON BOARD
             if (data.type === 'TOUCH') {
+                partnerTouchingCells = data.cells || [];
+                updateVisualSelection();
+
                 const touchBar = document.getElementById('mpLiveTouchBar');
                 const touchText = document.getElementById('mpLiveTouchText');
                 if (touchBar && touchText) {
@@ -1923,16 +2094,19 @@
             }
 
             if (data.type === 'TOUCH_END') {
+                partnerTouchingCells = [];
+                updateVisualSelection();
+
                 const touchBar = document.getElementById('mpLiveTouchBar');
                 if (touchBar) {
                     setTimeout(() => {
                         touchBar.classList.add('hidden');
                         touchBar.style.display = 'none';
-                    }, 600);
+                    }, 500);
                 }
             }
 
-            // 4. Word Found by Partner
+            // 4. Word Found by Partner!
             if (data.type === 'WORD_FOUND') {
                 const word = data.word;
                 if (word && !foundWords.has(word)) {
@@ -1964,6 +2138,41 @@
                             }, 500);
                         }
                     }
+                }
+            }
+        }
+
+        function showBannerForMultiplayer() {
+            const multiplayerBanner = document.getElementById('multiplayerBanner');
+            const funnyScoreboard = document.getElementById('funnyScoreboard');
+            const mpModeIcon = document.getElementById('mpModeIcon');
+            const mpModeTitle = document.getElementById('mpModeTitle');
+            const mpModeSubtitle = document.getElementById('mpModeSubtitle');
+            const p1LabelName = document.getElementById('p1LabelName');
+            const p2LabelName = document.getElementById('p2LabelName');
+
+            if (multiplayerBanner) {
+                multiplayerBanner.classList.remove('hidden');
+                multiplayerBanner.style.display = 'block';
+            }
+
+            if (mpActiveMode === 'battle') {
+                if (mpModeIcon) mpModeIcon.textContent = '⚔️';
+                if (mpModeTitle) mpModeTitle.textContent = `Biblical Battle (${currentBattleDifficulty.toUpperCase()})`;
+                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Race live! Whoever finds more biblical words wins (+100 pts per word)';
+                if (funnyScoreboard) {
+                    funnyScoreboard.classList.remove('hidden');
+                    funnyScoreboard.style.display = 'flex';
+                }
+                if (p1LabelName) p1LabelName.textContent = mpIsHost ? 'You (P1)' : 'Host (P1)';
+                if (p2LabelName) p2LabelName.textContent = mpIsHost ? 'Partner (P2)' : 'You (P2)';
+            } else {
+                if (mpModeIcon) mpModeIcon.textContent = '🤝';
+                if (mpModeTitle) mpModeTitle.textContent = `Co-op Help Support (Stage ${currentStage})`;
+                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Playing together live! Words found highlight on both screens.';
+                if (funnyScoreboard) {
+                    funnyScoreboard.classList.add('hidden');
+                    funnyScoreboard.style.display = 'none';
                 }
             }
         }
@@ -2000,14 +2209,15 @@
         }
 
         // Live Touch Selection Broadcasters
-        window.broadcastLiveTouch = function(wordStr) {
+        window.broadcastLiveTouch = function(wordStr, cells) {
             if (!mpActiveMode || !mpRoomId) return;
             const now = Date.now();
-            if (now - touchThrottleTimer < 70) return;
+            if (now - touchThrottleTimer < 45) return;
             touchThrottleTimer = now;
             sendMpEvent({
                 type: 'TOUCH',
-                word: wordStr
+                word: wordStr,
+                cells: cells || []
             });
         };
 
@@ -2018,47 +2228,26 @@
             });
         };
 
-        function startFunnyBattleMode(customWords, roomId, seed, isHost) {
+        function startFunnyBattleMode(customWords, roomId, seed, isHost, difficulty) {
             mpActiveMode = 'battle';
-            mpRoomId = roomId || ('battle_' + Math.random().toString(36).substring(2, 8));
+            mpRoomId = roomId || ('ws_b_' + Math.random().toString(36).substring(2, 8));
             activeMatchSeed = seed || Math.floor(Math.random() * 900000 + 100000);
             mpIsHost = isHost || false;
+            currentBattleDifficulty = difficulty || currentBattleDifficulty || 'normal';
             p1Score = 0;
             p2Score = 0;
 
-            const multiplayerBanner = document.getElementById('multiplayerBanner');
-            const mpModeIcon = document.getElementById('mpModeIcon');
-            const mpModeTitle = document.getElementById('mpModeTitle');
-            const mpModeSubtitle = document.getElementById('mpModeSubtitle');
-            const funnyScoreboard = document.getElementById('funnyScoreboard');
-            const p1LabelName = document.getElementById('p1LabelName');
-            const p2LabelName = document.getElementById('p2LabelName');
-
-            if (multiplayerBanner) {
-                multiplayerBanner.classList.remove('hidden');
-                multiplayerBanner.style.display = 'block';
-            }
-            if (mpModeIcon) mpModeIcon.textContent = '⚔️';
-            if (mpModeTitle) mpModeTitle.textContent = 'Funny Word Battle (2-Player)';
-            if (mpModeSubtitle) mpModeSubtitle.textContent = 'Race live! Whoever finds more words wins (+100 pts per word)';
-            if (funnyScoreboard) {
-                funnyScoreboard.classList.remove('hidden');
-                funnyScoreboard.style.display = 'flex';
-            }
-            if (p1LabelName) p1LabelName.textContent = mpIsHost ? 'You (P1)' : 'Host (P1)';
-            if (p2LabelName) p2LabelName.textContent = mpIsHost ? 'Partner (P2)' : 'You (P2)';
-
+            showBannerForMultiplayer();
             updateFunnyScoreUI();
             setPartnerStatus(false, 'Waiting for partner to connect...');
 
-            // Setup funny board
+            // Setup biblical board
             if (customWords && customWords.length >= 4) {
                 currentWords = [...customWords];
             } else {
-                const shuffled = [...funnyWordPool].sort(() => 0.5 - Math.random());
-                currentWords = shuffled.slice(0, 8);
+                currentWords = selectBiblicalWordsForDifficulty(currentBattleDifficulty, activeMatchSeed);
             }
-            stageThemeTitle.textContent = 'Random Funny Words Match';
+            stageThemeTitle.textContent = `Biblical Battle (${currentBattleDifficulty.toUpperCase()})`;
             stageNumTitle.textContent = 'VS Battle';
 
             foundWords.clear();
@@ -2066,7 +2255,8 @@
             gameActive = true;
             hideWinModal();
 
-            gridSize = 12;
+            // Grid size based on difficulty: Easy 10x10, Normal 12x12, Hard 14x14
+            gridSize = currentBattleDifficulty === 'easy' ? 10 : (currentBattleDifficulty === 'hard' ? 14 : 12);
             generateGridAndPlaceWords(activeMatchSeed);
             renderWordList();
             renderGrid();
@@ -2074,34 +2264,44 @@
             // Connect real-time
             connectMultiplayerRealTime(mpRoomId);
 
-            setTimeout(() => {
-                sendMpEvent({
-                    type: 'PLAYER_JOIN',
-                    senderId: myPlayerId,
-                    senderName: mpIsHost ? 'Player 1' : 'Player 2',
-                    isHost: mpIsHost,
-                    seed: activeMatchSeed,
-                    words: currentWords
-                });
-            }, 500);
+            // If guest, immediately send fast handshake pings
+            if (!isHost) {
+                let attempts = 0;
+                pingIntervalTimer = setInterval(() => {
+                    attempts++;
+                    sendMpEvent({
+                        type: 'PLAYER_JOIN',
+                        senderId: myPlayerId,
+                        senderName: 'Partner (Guest)',
+                        isHost: false,
+                        stage: currentStage,
+                        difficulty: currentBattleDifficulty
+                    });
+                    if (attempts >= 6) {
+                        clearInterval(pingIntervalTimer);
+                        pingIntervalTimer = null;
+                    }
+                }, 600);
+            }
         }
 
         window.hostStartFunnyBattleNow = function() {
             const modal = document.getElementById('multiplayerModal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) hideGameModal(modal);
             const battle = window.currentGeneratedBattle || {
-                room: 'battle_' + Math.random().toString(36).substring(2, 8),
+                room: 'ws_b_' + Math.random().toString(36).substring(2, 8),
                 seed: Math.floor(Math.random() * 900000 + 100000),
-                words: currentFunnyWords
+                diff: currentBattleDifficulty,
+                words: selectBiblicalWordsForDifficulty(currentBattleDifficulty)
             };
-            startFunnyBattleMode(battle.words, battle.room, battle.seed, true);
+            startFunnyBattleMode(battle.words, battle.room, battle.seed, true, battle.diff);
         };
 
         window.openMultiplayerModalAgain = function() {
             const modal = document.getElementById('multiplayerModal');
             if (modal) {
                 generateMultiplayerLinks();
-                modal.classList.remove('hidden');
+                showGameModal(modal);
             }
         };
 
@@ -2114,7 +2314,7 @@
 
         function checkBattleEnd() {
             if (foundWords.size >= currentWords.length) {
-                let winMsg = '🎉 Funny Word Battle Finished!\n\n';
+                let winMsg = '🎉 Biblical Word Battle Finished!\n\n';
                 if (p1Score > p2Score) {
                     winMsg += `🏆 Player 1 Wins with ${p1Score} pts! (Player 2: ${p2Score} pts)`;
                 } else if (p2Score > p1Score) {
@@ -2158,6 +2358,7 @@
             const room = params.get('room') || ('ws_' + (stage || 'battle') + '_' + Math.random().toString(36).substring(2, 6));
             const seed = params.get('seed') ? parseInt(params.get('seed')) : null;
             const wordsParam = params.get('words');
+            const diffParam = params.get('diff') || 'normal';
 
             if (mode === 'help' && stage) {
                 const targetStage = Math.max(1, Math.min(1000, parseInt(stage) || 1));
@@ -2166,25 +2367,8 @@
                 mpIsHost = false;
                 activeMatchSeed = seed;
 
-                const multiplayerBanner = document.getElementById('multiplayerBanner');
-                const funnyScoreboard = document.getElementById('funnyScoreboard');
-                const mpModeIcon = document.getElementById('mpModeIcon');
-                const mpModeTitle = document.getElementById('mpModeTitle');
-                const mpModeSubtitle = document.getElementById('mpModeSubtitle');
-
-                if (multiplayerBanner) {
-                    multiplayerBanner.classList.remove('hidden');
-                    multiplayerBanner.style.display = 'block';
-                }
-                if (funnyScoreboard) {
-                    funnyScoreboard.classList.add('hidden');
-                    funnyScoreboard.style.display = 'none';
-                }
-                if (mpModeIcon) mpModeIcon.textContent = '🤝';
-                if (mpModeTitle) mpModeTitle.textContent = `Co-op Support Mode (Stage ${targetStage})`;
-                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Assisting your friend to find words on their stage! Real-time sync active.';
-
-                setPartnerStatus(false, 'Connecting to partner...');
+                showBannerForMultiplayer();
+                setPartnerStatus(false, 'Connecting to host partner...');
                 loadStage(targetStage);
                 if (activeMatchSeed) {
                     generateGridAndPlaceWords(activeMatchSeed);
@@ -2193,7 +2377,11 @@
                 }
 
                 connectMultiplayerRealTime(mpRoomId);
-                setTimeout(() => {
+
+                // Send fast join pings so host immediately acknowledges
+                let attempts = 0;
+                pingIntervalTimer = setInterval(() => {
+                    attempts++;
                     sendMpEvent({
                         type: 'PLAYER_JOIN',
                         senderId: myPlayerId,
@@ -2202,7 +2390,11 @@
                         stage: targetStage,
                         seed: activeMatchSeed
                     });
-                }, 500);
+                    if (attempts >= 6) {
+                        clearInterval(pingIntervalTimer);
+                        pingIntervalTimer = null;
+                    }
+                }, 600);
 
             } else if (mode === 'funny' || mode === 'battle') {
                 let parsedWords = null;
@@ -2211,7 +2403,7 @@
                         parsedWords = decodeURIComponent(wordsParam).split(',').map(w => w.trim().toUpperCase()).filter(Boolean);
                     } catch(e) {}
                 }
-                startFunnyBattleMode(parsedWords, room, seed, false);
+                startFunnyBattleMode(parsedWords, room, seed, false, diffParam);
             }
         }
 
@@ -2352,7 +2544,6 @@
             if (multiplayerBtn) {
                 multiplayerBtn.addEventListener('click', () => {
                     generateMultiplayerLinks();
-                    generateMultiplayerLinks();
                     showGameModal(multiplayerModal);
                 });
             }
@@ -2413,6 +2604,7 @@
                     mpHelpContainer.style.display = 'block';
                     mpFunnyContainer.classList.add('hidden');
                     mpFunnyContainer.style.display = 'none';
+                    generateMultiplayerLinks();
                 });
 
                 tabMpFunny.addEventListener('click', () => {
@@ -2422,6 +2614,7 @@
                     mpFunnyContainer.style.display = 'block';
                     mpHelpContainer.classList.add('hidden');
                     mpHelpContainer.style.display = 'none';
+                    generateMultiplayerLinks();
                 });
             }
 
