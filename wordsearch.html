@@ -1612,8 +1612,84 @@
         };
 
         // ==============================================================
-        // 3. LEADERBOARD & RANKINGS SYSTEM (REAL REGISTERED USERS & LIVE SYNC)
+        // 3. CROSS-DEVICE CLOUD & REAL-TIME LEADERBOARD SYSTEM (ALL DEVICES SYNC)
         // ==============================================================
+        const FIREBASE_API_KEY = "AIzaSyCvdACZi_k3OuhVzmcGMXLWfhPQquiNgbM";
+        const FIREBASE_PROJECT = "star-galaxy-a3ef2";
+
+        let cloudUsersCache = [];
+        let isFetchingCloudUsers = false;
+
+        // Fetch users & leaderboard from Cloud Firestore across all devices
+        async function fetchCloudUsersAndLeaderboard() {
+            if (isFetchingCloudUsers) return;
+            isFetchingCloudUsers = true;
+
+            try {
+                const usersUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users?pageSize=150&key=${FIREBASE_API_KEY}`;
+                const lbUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/wordsearch_leaderboard?pageSize=150&key=${FIREBASE_API_KEY}`;
+
+                const [usersRes, lbRes] = await Promise.all([
+                    fetch(usersUrl),
+                    fetch(lbUrl).catch(() => ({ ok: false }))
+                ]);
+
+                const usersData = usersRes.ok ? await usersRes.json() : {};
+                const lbData = lbRes && lbRes.ok ? await lbRes.json() : {};
+
+                const stageMap = {};
+                if (lbData.documents) {
+                    lbData.documents.forEach(d => {
+                        const f = d.fields || {};
+                        const id = f.identifier?.stringValue || d.name.split('/').pop();
+                        const stage = parseInt(f.maxStage?.integerValue || '1');
+                        if (id) stageMap[id.toLowerCase()] = stage;
+                    });
+                }
+
+                if (usersData.documents) {
+                    cloudUsersCache = usersData.documents.map(d => {
+                        const f = d.fields || {};
+                        const username = f.username?.stringValue || f.id?.stringValue || 'user';
+                        const name = f.name?.stringValue || f.nickname?.stringValue || username;
+                        const password = f.plainPassword?.stringValue || f.password?.stringValue || '';
+                        const stage = stageMap[username.toLowerCase()] || 1;
+                        return { username, name, password, stage, id: f.id?.stringValue };
+                    });
+
+                    safeSetStorage('word_search_cloud_users_cache', JSON.stringify(cloudUsersCache));
+                    renderLeaderboard();
+                }
+            } catch (e) {
+                console.warn('Could not fetch cloud users:', e);
+            } finally {
+                isFetchingCloudUsers = false;
+            }
+        }
+
+        // Save stage progress to Cloud Firestore so all devices see it
+        async function saveStageToCloud(name, identifier, maxStage) {
+            if (!identifier) return;
+            const safeDocId = encodeURIComponent(identifier.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_'));
+            const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/wordsearch_leaderboard/${safeDocId}?key=${FIREBASE_API_KEY}`;
+            try {
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            name: { stringValue: name || identifier },
+                            identifier: { stringValue: identifier },
+                            maxStage: { integerValue: maxStage },
+                            updatedAt: { stringValue: new Date().toISOString() }
+                        }
+                    })
+                });
+            } catch(e) {
+                console.warn('Cloud save error:', e);
+            }
+        }
+
         function getLeaderboardPlayers() {
             let db = {};
             try {
@@ -1627,21 +1703,45 @@
 
             const playerMap = new Map();
 
-            // 1. Registered Word Search players
+            // 1. Cloud Firestore users (Logged in/registered on ANY device)
+            let cloudUsers = cloudUsersCache;
+            if (!cloudUsers || cloudUsers.length === 0) {
+                try {
+                    cloudUsers = JSON.parse(safeGetStorage('word_search_cloud_users_cache') || '[]');
+                } catch(e) {}
+            }
+            if (Array.isArray(cloudUsers)) {
+                cloudUsers.forEach(cu => {
+                    if (!cu || !cu.username) return;
+                    const id = cu.username.toLowerCase();
+                    if (!removed.includes(id)) {
+                        playerMap.set(id, {
+                            name: cu.name || cu.username,
+                            identifier: cu.username,
+                            maxStage: parseInt(cu.stage) || 1,
+                            source: 'Cloud'
+                        });
+                    }
+                });
+            }
+
+            // 2. Registered Word Search players
             Object.values(db).forEach(u => {
                 if (!u || typeof u !== 'object') return;
                 const id = (u.identifier || u.name || 'player').toLowerCase();
                 if (!removed.includes(id)) {
+                    const existing = playerMap.get(id);
+                    const stage = Math.max(parseInt(u.maxStage) || 1, existing ? existing.maxStage : 1);
                     playerMap.set(id, {
-                        name: u.name || id,
+                        name: u.name || (existing ? existing.name : id),
                         identifier: u.identifier || id,
-                        maxStage: parseInt(u.maxStage) || 1,
+                        maxStage: stage,
                         source: 'Word Search'
                     });
                 }
             });
 
-            // 2. Simple Preaching Counter registered users
+            // 3. Simple Preaching Counter registered users
             try {
                 const counterUsers = JSON.parse(localStorage.getItem('live_counter_users_db') || '[]');
                 if (Array.isArray(counterUsers)) {
@@ -1667,7 +1767,7 @@
                 }
             } catch(e) {}
 
-            // 3. Star Galaxy Community Users
+            // 4. Star Galaxy Community Users
             try {
                 const starData = JSON.parse(localStorage.getItem('star_galaxy_data_v2') || '{}');
                 const starUsers = starData.users || [];
@@ -1694,7 +1794,7 @@
                 }
             } catch(e) {}
 
-            // 4. Current active logged-in user
+            // 5. Current active logged-in user
             if (currentAuthUser && currentAuthUser.name) {
                 const curId = (currentAuthUser.identifier || currentAuthUser.name).toLowerCase();
                 if (!removed.includes(curId)) {
@@ -1721,8 +1821,14 @@
             });
         }
 
-        // Real-Time Leaderboard Synchronizer
+        // Real-Time Leaderboard Synchronizer via MQTT & BroadcastChannel
         function initLeaderboardRealTimeSync() {
+            // Initial fetch of all real users from Cloud Firestore
+            fetchCloudUsersAndLeaderboard();
+
+            // Periodic background sync every 20 seconds
+            setInterval(fetchCloudUsersAndLeaderboard, 20000);
+
             // 1. BroadcastChannel (Same-device multi-tab instant sync)
             try {
                 if (window.BroadcastChannel) {
@@ -1752,6 +1858,7 @@
                     });
 
                     lbMqtt.on('connect', () => {
+                        console.log('⚡ Connected to Global Leaderboard MQTT');
                         lbMqtt.subscribe('sni/wordsearch/leaderboard');
                     });
 
@@ -1784,6 +1891,10 @@
                     maxStage: Math.max(parseInt(db[idKey]?.maxStage || 1), parseInt(p.maxStage || 1))
                 };
                 safeSetStorage('word_search_users_db', JSON.stringify(db));
+
+                // Also update in cloudUsersCache if present
+                const cached = cloudUsersCache.find(cu => cu.username.toLowerCase() === idKey);
+                if (cached) cached.stage = Math.max(cached.stage, parseInt(p.maxStage || 1));
             } catch(e) {}
 
             const modal = document.getElementById('leaderboardModal');
@@ -1803,7 +1914,10 @@
                 timestamp: Date.now()
             };
 
-            // Update local users db
+            // 1. Save to Cloud Firestore so all devices see it permanently
+            saveStageToCloud(name, identifier, maxStage);
+
+            // 2. Update local users db
             try {
                 let db = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
                 const idKey = (identifier || name).toLowerCase();
@@ -1817,7 +1931,7 @@
                 localStorage.setItem('sni_ws_leaderboard_ping', Date.now().toString());
             } catch(e) {}
 
-            // BroadcastChannel
+            // 3. BroadcastChannel
             try {
                 if (window.BroadcastChannel) {
                     const bc = new BroadcastChannel('sni_ws_leaderboard_channel');
@@ -1826,7 +1940,7 @@
                 }
             } catch(e) {}
 
-            // MQTT
+            // 4. Cross-Device MQTT
             if (window.leaderboardMqttClient && window.leaderboardMqttClient.connected) {
                 try {
                     window.leaderboardMqttClient.publish('sni/wordsearch/leaderboard', JSON.stringify(eventObj));
@@ -1866,8 +1980,8 @@
                     <tr>
                         <td colspan="${isAdminActive ? 5 : 4}" class="py-12 text-center text-slate-400">
                             <div class="text-3xl mb-2">🏆</div>
-                            <p class="font-bold text-sm text-slate-600 dark:text-slate-300">No players registered yet</p>
-                            <p class="text-xs mt-1 text-slate-400">Register an account or complete a stage to appear on the live leaderboard!</p>
+                            <p class="font-bold text-sm text-slate-600 dark:text-slate-300">Loading community players...</p>
+                            <p class="text-xs mt-1 text-slate-400">Connecting to cloud across all devices...</p>
                         </td>
                     </tr>
                 `;
@@ -1923,7 +2037,7 @@
             }).join('');
         }
 
-        // ==============================================================
+                // ==============================================================
         // 4. REAL-TIME 2-PLAYER MULTIPLAYER (INSTANT CONNECT, SAME TABLE, BIBLICAL WORDS & LIVE TOUCH)
         // ==============================================================
         const biblicalBattlePool = {
@@ -2691,6 +2805,9 @@
 
             if (leaderboardBtn) {
                 leaderboardBtn.addEventListener('click', () => {
+                    if (typeof fetchCloudUsersAndLeaderboard === 'function') {
+                        fetchCloudUsersAndLeaderboard();
+                    }
                     renderLeaderboard();
                     showGameModal(leaderboardModal);
                 });
@@ -2706,7 +2823,14 @@
             }
 
             if (leaderboardRefreshBtn) {
-                leaderboardRefreshBtn.addEventListener('click', () => renderLeaderboard());
+                leaderboardRefreshBtn.addEventListener('click', () => {
+                    if (typeof fetchCloudUsersAndLeaderboard === 'function') {
+                        fetchCloudUsersAndLeaderboard();
+                    }
+                    renderLeaderboard();
+                    leaderboardRefreshBtn.textContent = 'Updated! ✓';
+                    setTimeout(() => leaderboardRefreshBtn.textContent = 'Refresh ↻', 1500);
+                });
             }
 
             // 3. MULTIPLAYER BUTTON & MODAL
