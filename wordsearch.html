@@ -884,8 +884,40 @@
             return null;
         }
 
-        // Auth Form Handler
-        authForm.addEventListener('submit', (e) => {
+        // Save user to Cloud Firestore so Star Galaxy, Counter, and Word Search all connect seamlessly
+        async function syncWordSearchUserToCloud(user) {
+            if (!user || !user.identifier) return;
+            const safeDocId = encodeURIComponent(user.identifier.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_'));
+            const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users/${safeDocId}?key=${FIREBASE_API_KEY}`;
+            try {
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            id: { stringValue: user.identifier },
+                            username: { stringValue: user.identifier },
+                            name: { stringValue: user.name || user.identifier },
+                            password: { stringValue: user.password },
+                            plainPassword: { stringValue: user.password },
+                            phone: { stringValue: user.identifier },
+                            contact: { stringValue: user.identifier },
+                            role: { stringValue: user.role === 'admin' ? 'admin' : 'member' },
+                            status: { stringValue: 'approved' },
+                            hasSetPersonalPin: { booleanValue: false },
+                            personalPin: { stringValue: '' },
+                            createdAt: { stringValue: new Date().toISOString().split('T')[0] }
+                        }
+                    })
+                });
+                console.log('✅ WordSearch user synced to Cloud Firestore!');
+            } catch(e) {
+                console.warn('Could not sync user to Firestore:', e);
+            }
+        }
+
+        // Unified Auth Form Handler with Cloud Firestore verification
+        authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideAuthError();
 
@@ -894,7 +926,7 @@
             const name = authName.value.trim();
 
             if (!identifier) {
-                showAuthError("Please enter your Player ID or Email.");
+                showAuthError("Please enter your Player ID, Username or Email.");
                 return;
             }
             if (!password) {
@@ -902,7 +934,6 @@
                 return;
             }
 
-            // Always reload latest database
             try {
                 usersDB = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
             } catch (err) {
@@ -912,7 +943,7 @@
             const cleanPass = password.trim();
             const cleanId = identifier.toLowerCase();
 
-            // CHECK ADMIN FIRST!
+            // 1. CHECK ADMIN FIRST
             if (isGlobalAdmin(identifier, password)) {
                 isAdminActive = true;
                 sessionStorage.setItem('word_search_admin_auth', 'true');
@@ -931,6 +962,14 @@
                 };
                 safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                 safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                try {
+                    localStorage.setItem('sni_unified_session', JSON.stringify({
+                        userId: 'surya11008',
+                        fullName: 'Surya (Admin)',
+                        role: 'admin',
+                        updatedAt: Date.now()
+                    }));
+                } catch(e) {}
                 maxUnlockedStage = 1000;
                 currentStage = 1;
                 updateUserUI();
@@ -942,33 +981,68 @@
                 return;
             }
 
-            if (isSignupMode) {
-                const existing = findUserRecord(usersDB, identifier);
-                if (existing) {
-                    existing.password = cleanPass;
-                    if (name) existing.name = name;
-                    safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+            // 2. CHECK CLOUD FIRESTORE FOR UNIFIED AUTH ACROSS ALL PAGES
+            if (!isSignupMode) {
+                // Check if user exists in cloud users cache or live Firestore
+                const cloudMatch = (cloudUsersCache || []).find(cu => 
+                    (cu.username && cu.username.toLowerCase() === cleanId) || 
+                    (cu.id && cu.id.toLowerCase() === cleanId)
+                );
+                if (cloudMatch && (cloudMatch.password === cleanPass || isGlobalAdmin(identifier, password))) {
                     currentAuthUser = {
-                        identifier: existing.identifier || identifier,
-                        name: existing.name || name || identifier,
-                        maxStage: existing.maxStage || 1
+                        name: cloudMatch.name,
+                        identifier: cloudMatch.username,
+                        maxStage: cloudMatch.stage || 1,
+                        role: cloudMatch.username === 'surya11008' ? 'admin' : 'member'
                     };
-                } else {
-                    const newUser = {
-                        name: name || identifier,
-                        identifier: identifier,
+                    usersDB[cleanId] = {
+                        name: cloudMatch.name,
+                        identifier: cloudMatch.username,
                         password: cleanPass,
-                        maxStage: 1
+                        maxStage: currentAuthUser.maxStage
                     };
-                    usersDB[cleanId] = newUser;
                     safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
-                    currentAuthUser = { identifier, name: newUser.name, maxStage: 1 };
+                    safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                    try {
+                        localStorage.setItem('sni_unified_session', JSON.stringify({
+                            userId: currentAuthUser.identifier,
+                            fullName: currentAuthUser.name,
+                            role: currentAuthUser.role || 'member',
+                            updatedAt: Date.now()
+                        }));
+                    } catch(e) {}
+                    maxUnlockedStage = currentAuthUser.maxStage;
+                    currentStage = maxUnlockedStage;
+                    updateUserUI();
+                    authModal.classList.add('hidden');
+                    authModal.style.display = 'none';
+                    switchToLoginMode();
+                    authForm.reset();
+                    loadStage(currentStage);
+                    renderLeaderboard();
+                    return;
                 }
+            }
+
+            if (isSignupMode) {
+                // Register: Save locally AND sync directly to Cloud Firestore!
+                const newUser = {
+                    name: name || identifier,
+                    identifier: identifier,
+                    password: cleanPass,
+                    maxStage: 1
+                };
+                usersDB[cleanId] = newUser;
+                safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                currentAuthUser = { identifier, name: newUser.name, maxStage: 1 };
+                
+                // Cloud Firestore write
+                await syncWordSearchUserToCloud(newUser);
             } else {
                 let userRecord = findUserRecord(usersDB, identifier);
 
                 if (!userRecord) {
-                    // Auto-register so user is NEVER blocked by "Account Not Found"!
+                    // Auto-register & sync to Cloud so login never fails
                     const autoName = name || identifier.split('@')[0];
                     const formattedName = autoName.charAt(0).toUpperCase() + autoName.slice(1);
                     userRecord = {
@@ -979,11 +1053,10 @@
                     };
                     usersDB[cleanId] = userRecord;
                     safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                    syncWordSearchUserToCloud(userRecord);
                 } else {
                     const storedPass = (userRecord.password || "").trim();
-                    // If entered password does not match stored password, auto-update if it's empty OR let them in while syncing new password
                     if (storedPass && storedPass !== cleanPass) {
-                        // Also auto-update password so user is never locked out!
                         userRecord.password = cleanPass;
                         safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                     }
@@ -997,6 +1070,14 @@
             }
 
             safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+            try {
+                localStorage.setItem('sni_unified_session', JSON.stringify({
+                    userId: currentAuthUser.identifier,
+                    fullName: currentAuthUser.name,
+                    role: 'member',
+                    updatedAt: Date.now()
+                }));
+            } catch(e) {}
             maxUnlockedStage = currentAuthUser.maxStage || 1;
             currentStage = maxUnlockedStage;
 
@@ -1006,6 +1087,10 @@
             switchToLoginMode();
             authForm.reset();
             loadStage(currentStage);
+            renderLeaderboard();
+            if (typeof broadcastLeaderboardUpdate === 'function') {
+                broadcastLeaderboardUpdate(currentAuthUser.name, currentAuthUser.identifier, currentAuthUser.maxStage);
+            }
         });
 
         if (guestPlayBtn) {
@@ -1094,6 +1179,21 @@
         function initAppSession() {
             try {
                 currentAuthUser = JSON.parse(safeGetStorage('word_search_current_user') || 'null');
+        // Unified Single Sign-On check across website
+        try {
+            if (!currentAuthUser) {
+                const unified = JSON.parse(localStorage.getItem('sni_unified_session') || 'null');
+                if (unified && unified.userId) {
+                    currentAuthUser = {
+                        name: unified.fullName || unified.userId,
+                        identifier: unified.userId,
+                        maxStage: 1,
+                        role: unified.role || 'member'
+                    };
+                    safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                }
+            }
+        } catch(e) {}
             } catch (e) {
                 currentAuthUser = null;
             }

@@ -1049,23 +1049,101 @@
             }
         };
 
-        // Authentication Submission
-        window.handleAuthSubmit = function(event) {
+        const FIREBASE_API_KEY = "AIzaSyCvdACZi_k3OuhVzmcGMXLWfhPQquiNgbM";
+        const FIREBASE_PROJECT = "star-galaxy-a3ef2";
+
+        // Query Cloud Firestore users so Star Galaxy, Counter & Word Search share 100% same accounts
+        async function authenticateUserWithCloud(userIdInput, passwordInput) {
+            const q = (userIdInput || '').trim().toLowerCase();
+            try {
+                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users?pageSize=150&key=${FIREBASE_API_KEY}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    for (const doc of (data.documents || [])) {
+                        const f = doc.fields || {};
+                        const uId = (f.username?.stringValue || f.id?.stringValue || '').toLowerCase();
+                        const uPhone = (f.phone?.stringValue || f.contact?.stringValue || '').toLowerCase();
+                        const uEmail = (f.email?.stringValue || '').toLowerCase();
+                        const uPass = f.plainPassword?.stringValue || f.password?.stringValue || f.personalPin?.stringValue || '';
+
+                        if (uId === q || uPhone === q || uEmail === q) {
+                            if (uPass === passwordInput || isUserAdmin(userIdInput, passwordInput)) {
+                                return {
+                                    userId: f.username?.stringValue || f.id?.stringValue || q,
+                                    fullName: f.name?.stringValue || f.nickname?.stringValue || userIdInput,
+                                    password: passwordInput,
+                                    role: (f.role?.stringValue === 'admin' || isUserAdmin(userIdInput, passwordInput)) ? 'admin' : (f.role?.stringValue === 'manager' ? 'manager' : 'user'),
+                                    createdAt: f.createdAt?.stringValue || new Date().toISOString()
+                                };
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn('Cloud auth check error:', e);
+            }
+            return null;
+        }
+
+        // Save new user to Cloud Firestore so Star Galaxy & Word Search have instant access
+        async function syncUserToCloudFirestore(user) {
+            if (!user || !user.userId) return;
+            const safeDocId = encodeURIComponent(user.userId.replace(/[^a-zA-Z0-9_-]/g, '_'));
+            const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users/${safeDocId}?key=${FIREBASE_API_KEY}`;
+            try {
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            id: { stringValue: user.userId },
+                            username: { stringValue: user.userId },
+                            name: { stringValue: user.fullName || user.userId },
+                            password: { stringValue: user.password },
+                            plainPassword: { stringValue: user.password },
+                            phone: { stringValue: user.phone || user.userId },
+                            contact: { stringValue: user.contact || user.userId },
+                            role: { stringValue: user.role === 'admin' ? 'admin' : 'member' },
+                            status: { stringValue: 'approved' },
+                            hasSetPersonalPin: { booleanValue: false },
+                            personalPin: { stringValue: '' },
+                            createdAt: { stringValue: new Date().toISOString().split('T')[0] }
+                        }
+                    })
+                });
+                console.log('✅ User created in Cloud Firestore successfully!');
+            } catch(e) {
+                console.warn('Could not write user to Cloud Firestore:', e);
+            }
+        }
+
+        // Unified Authentication Submission (Connects to Cloud Firestore)
+        window.handleAuthSubmit = async function(event) {
             event.preventDefault();
-            const userIdInput = document.getElementById('authUserId').value.trim().toLowerCase();
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Connecting to Cloud...';
+            }
+
+            const userIdInput = document.getElementById('authUserId').value.trim();
             const passwordInput = document.getElementById('authPassword').value;
             const fullNameInput = document.getElementById('authFullName').value.trim();
 
             if (!userIdInput || !passwordInput) {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
                 showToast('Please enter User ID and Password', 'error');
                 return;
             }
 
+            const cleanId = userIdInput.toLowerCase();
             let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
 
             // Check Admin FIRST
             if (isUserAdmin(userIdInput, passwordInput)) {
-                let adminUser = storedUsers.find(u => u.userId.toLowerCase() === userIdInput || u.userId.toLowerCase() === 'surya11008');
+                let adminUser = storedUsers.find(u => u.userId.toLowerCase() === cleanId || u.userId.toLowerCase() === 'surya11008');
                 if (!adminUser) {
                     adminUser = {
                         userId: 'surya11008',
@@ -1081,33 +1159,51 @@
                     adminUser.password = passwordInput;
                 }
                 localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
                 loginSuccess(adminUser);
                 return;
             }
 
             if (currentAuthMode === 'login') {
-                let user = storedUsers.find(u => u.userId.toLowerCase() === userIdInput);
-                if (!user) {
-                    // Auto-register on the fly so login never fails with "Not found"!
-                    user = {
-                        userId: userIdInput,
-                        fullName: fullNameInput || (userIdInput.charAt(0).toUpperCase() + userIdInput.slice(1)),
-                        password: passwordInput,
-                        role: 'user',
-                        count: 0,
-                        createdAt: new Date().toISOString()
-                    };
-                    storedUsers.push(user);
-                    localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
-                } else {
-                    if (user.password !== passwordInput && !isUserAdmin(userIdInput, passwordInput)) {
-                        user.password = passwordInput; // Auto update password so user is never locked out
-                        localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                // 1. Try Cloud Firestore login across devices
+                const cloudUser = await authenticateUserWithCloud(userIdInput, passwordInput);
+                if (cloudUser) {
+                    const existingIdx = storedUsers.findIndex(u => u.userId.toLowerCase() === cloudUser.userId.toLowerCase());
+                    if (existingIdx !== -1) {
+                        storedUsers[existingIdx] = cloudUser;
+                    } else {
+                        storedUsers.push(cloudUser);
                     }
+                    localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
+                    loginSuccess(cloudUser);
+                    return;
                 }
+
+                // 2. Check local users
+                let user = storedUsers.find(u => u.userId.toLowerCase() === cleanId);
+                if (user && (user.password === passwordInput || isUserAdmin(userIdInput, passwordInput))) {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
+                    loginSuccess(user);
+                    return;
+                }
+
+                // 3. Fallback: Auto-create & sync to Cloud so user is never locked out
+                user = {
+                    userId: userIdInput,
+                    fullName: fullNameInput || (userIdInput.charAt(0).toUpperCase() + userIdInput.slice(1)),
+                    password: passwordInput,
+                    role: 'user',
+                    count: 0,
+                    createdAt: new Date().toISOString()
+                };
+                storedUsers.push(user);
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                syncUserToCloudFirestore(user);
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
                 loginSuccess(user);
             } else {
-                // Register
+                // Registration
                 const isAdmin = isUserAdmin(userIdInput, passwordInput);
                 const newUser = {
                     userId: userIdInput,
@@ -1118,14 +1214,19 @@
                     createdAt: new Date().toISOString()
                 };
 
-                const existingIdx = storedUsers.findIndex(u => u.userId.toLowerCase() === userIdInput);
+                const existingIdx = storedUsers.findIndex(u => u.userId.toLowerCase() === cleanId);
                 if (existingIdx !== -1) {
                     storedUsers[existingIdx] = newUser;
                 } else {
                     storedUsers.push(newUser);
                 }
                 localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
-                showToast('Account ready! Welcome.');
+
+                // SYNC TO CLOUD FIRESTORE IMMEDIATELY
+                await syncUserToCloudFirestore(newUser);
+
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHtml; }
+                showToast('Account created & connected across Cloud!', 'success');
                 loginSuccess(newUser);
             }
         };
@@ -1133,10 +1234,20 @@
         function loginSuccess(userData) {
             currentUserState = userData;
             localStorage.setItem(STORAGE_CURRENT, JSON.stringify(userData));
+            
+            // Unified Single Sign-On session for entire website
+            try {
+                localStorage.setItem('sni_unified_session', JSON.stringify({
+                    userId: userData.userId,
+                    fullName: userData.fullName,
+                    role: userData.role,
+                    updatedAt: Date.now()
+                }));
+            } catch(e) {}
+
             renderInterface();
             showToast(`Welcome, ${userData.fullName}!`);
 
-            // Check if there was a pending counter join link
             if (pendingJoinData && pendingJoinData.counterId) {
                 const target = pendingJoinData;
                 pendingJoinData = null;
@@ -1148,6 +1259,7 @@
             currentUserState = null;
             activeCounterId = null;
             localStorage.removeItem(STORAGE_CURRENT);
+            try { localStorage.removeItem('sni_unified_session'); } catch(e) {}
             renderInterface();
             showToast('Logged out successfully');
         };
