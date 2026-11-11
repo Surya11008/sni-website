@@ -8,7 +8,9 @@ if (location.hash === "#videoSearch") {
 }
 
 if ("serviceWorker" in navigator && location.protocol !== "file:" && !isPortalPage) {
-    navigator.serviceWorker.register(`${rootPrefix}sw.js`).catch(error => {
+    navigator.serviceWorker.register(`${rootPrefix}sw.js`).then(reg => {
+        reg.update();
+    }).catch(error => {
         console.error("SNI app install support could not be enabled:", error);
     });
 }

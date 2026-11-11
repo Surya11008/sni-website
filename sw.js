@@ -1,4 +1,4 @@
-const CACHE_NAME = "sni-app-shell-v2";
+const CACHE_NAME = "sni-app-shell-v3";
 const APP_SHELL = [
     "/",
     "/index.html",
@@ -31,16 +31,31 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
     if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
 
+    // For HTML page navigations, ALWAYS fetch fresh from network to guarantee live updates
+    if (event.request.mode === "navigate" || event.request.destination === "document" || event.request.url.endsWith(".html")) {
+        event.respondWith(
+            fetch(event.request, { cache: "no-cache" }).then(response => {
+                if (response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                }
+                return response;
+            }).catch(async () => {
+                const cached = await caches.match(event.request);
+                if (cached) return cached;
+                return caches.match("/index.html");
+            })
+        );
+        return;
+    }
+
     event.respondWith(
         fetch(event.request).then(response => {
             if (response.ok && response.type === "basic") {
                 return caches.open(CACHE_NAME)
                     .then(cache => cache.put(event.request, response.clone()))
                     .then(() => response)
-                    .catch(error => {
-                        console.error("Could not cache an SNI page resource:", error);
-                        return response;
-                    });
+                    .catch(() => response);
             }
             return response;
         }).catch(async error => {
