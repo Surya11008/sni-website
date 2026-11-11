@@ -1,4 +1,4 @@
-const CACHE_NAME = "sni-app-shell-v4";
+const CACHE_NAME = "sni-app-shell-v5";
 const APP_SHELL = [
     "/",
     "/index.html",
@@ -11,14 +11,21 @@ const APP_SHELL = [
     "/Images/pwa-icon-512.png",
 ];
 
+// Pre-cache fresh assets from network (bypass disk cache)
 self.addEventListener("install", event => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(APP_SHELL))
-            .then(() => self.skipWaiting())
+        caches.open(CACHE_NAME).then(async cache => {
+            for (const url of APP_SHELL) {
+                try {
+                    const res = await fetch(url, { cache: "no-cache" });
+                    if (res.ok) await cache.put(url, res);
+                } catch(e) {}
+            }
+        }).then(() => self.skipWaiting())
     );
 });
 
+// Purge all legacy caches immediately and claim clients
 self.addEventListener("activate", event => {
     event.waitUntil(
         caches.keys().then(keys => Promise.all(
@@ -28,40 +35,33 @@ self.addEventListener("activate", event => {
     );
 });
 
+// Message listener to skip waiting immediately on update
+self.addEventListener("message", event => {
+    if (event.data && (event.data.type === "SKIP_WAITING" || event.data === "skipWaiting")) {
+        self.skipWaiting();
+    }
+});
+
+// Network-First for ALL requests to guarantee live updates for everyone
 self.addEventListener("fetch", event => {
     if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
 
-    // For HTML page navigations, ALWAYS fetch fresh from network to guarantee live updates
-    if (event.request.mode === "navigate" || event.request.destination === "document" || event.request.url.endsWith(".html")) {
-        event.respondWith(
-            fetch(event.request, { cache: "no-cache" }).then(response => {
-                if (response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                }
-                return response;
-            }).catch(async () => {
-                const cached = await caches.match(event.request);
-                if (cached) return cached;
-                return caches.match("/index.html");
-            })
-        );
-        return;
-    }
-
     event.respondWith(
-        fetch(event.request).then(response => {
+        fetch(event.request, { cache: "no-cache" }).then(response => {
             if (response.ok && response.type === "basic") {
-                return caches.open(CACHE_NAME)
-                    .then(cache => cache.put(event.request, response.clone()))
-                    .then(() => response)
-                    .catch(() => response);
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
             }
             return response;
-        }).catch(async error => {
+        }).catch(async () => {
+            // Offline fallback: retrieve from cache
             const cached = await caches.match(event.request);
             if (cached) return cached;
-            throw error;
+            if (event.request.mode === "navigate" || event.request.destination === "document" || event.request.url.endsWith(".html")) {
+                const indexCached = await caches.match("/index.html");
+                if (indexCached) return indexCached;
+            }
+            throw new Error("Offline asset not cached");
         })
     );
 });

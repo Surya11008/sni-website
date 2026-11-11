@@ -8,10 +8,45 @@ if (location.hash === "#videoSearch") {
 }
 
 if ("serviceWorker" in navigator && location.protocol !== "file:" && !isPortalPage) {
-    navigator.serviceWorker.register(`${rootPrefix}sw.js`).then(reg => {
-        reg.update();
+    navigator.serviceWorker.register(`${rootPrefix}sw.js`, { updateViaCache: "none" }).then(reg => {
+        // Immediate update check
+        reg.update().catch(() => {});
+
+        // Recheck when user returns to this tab
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                reg.update().catch(() => {});
+            }
+        });
+
+        // Periodic background update check every 60 seconds
+        setInterval(() => {
+            reg.update().catch(() => {});
+        }, 60000);
+
+        // When a new service worker is installing
+        reg.addEventListener("updatefound", () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+                newWorker.addEventListener("statechange", () => {
+                    if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                        // Immediately activate new worker
+                        newWorker.postMessage({ type: "SKIP_WAITING" });
+                    }
+                });
+            }
+        });
     }).catch(error => {
         console.error("SNI app install support could not be enabled:", error);
+    });
+
+    // Auto-refresh when new service worker takes control so users get live updates instantly
+    let isRefreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!isRefreshing) {
+            isRefreshing = true;
+            window.location.reload();
+        }
     });
 }
 
