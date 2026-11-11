@@ -73,12 +73,12 @@
         <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md">
+                    <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md">
                         <i class="fa-solid fa-book-open text-lg"></i>
                     </div>
                     <div>
                         <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-brand-600 to-emerald-500 bg-clip-text text-transparent">Simple Preaching Counter</h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400" id="navUserRole">Real-time Ministry Partner Sync</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="navUserRole">Multi-Session Group Counters &amp; QR Sync</p>
                     </div>
                 </div>
                 
@@ -109,7 +109,7 @@
                             <i class="fa-solid fa-hands-praying text-2xl"></i>
                         </div>
                         <h2 class="text-2xl font-bold" id="authTitle">Welcome Back</h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Login or register to sync preaching counts with partners</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Login or register to create preaching counters and connect with partners</p>
                     </div>
 
                     <!-- Tab Switcher -->
@@ -168,128 +168,145 @@
                 </div>
             </section>
 
-            <!-- 2. ADMIN DASHBOARD VIEW -->
-            <section id="adminView" class="hidden space-y-6">
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-full uppercase">Admin Control Panel</span>
-                        <h2 class="text-2xl font-bold mt-2">All Registered User Accounts</h2>
-                        <p class="text-slate-300 text-sm mt-1">Manage users, view total counts across system, and remove accounts.</p>
-                    </div>
-                    <button onclick="refreshAdminData()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-medium transition flex items-center space-x-2">
-                        <i class="fa-solid fa-rotate"></i> <span>Refresh Data</span>
-                    </button>
-                </div>
-
-                <!-- Admin Stats Overview -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
-                        <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total Users</p>
-                            <h3 id="adminTotalUsers" class="text-2xl font-bold">0</h3>
+            <!-- 2. COUNTERS DIRECTORY / HUB VIEW (LIST OF COUNTERS) -->
+            <section id="countersHubView" class="hidden space-y-6">
+                <!-- Welcome Banner & Add Counter Trigger -->
+                <div class="bg-gradient-to-r from-brand-700 to-emerald-800 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-1 text-center md:text-left">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold mb-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Live Preaching Sessions</span>
                         </div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
-                        <div class="p-3 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total System Counts</p>
-                            <h3 id="adminTotalCounts" class="text-2xl font-bold">0</h3>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
-                        <div class="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-xl"><i class="fa-solid fa-handshake text-xl"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Active Connections</p>
-                            <h3 id="adminActivePartners" class="text-2xl font-bold">0</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Users Table -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold text-sm flex items-center justify-between">
-                        <span>User Accounts Directory</span>
-                        <span class="text-xs text-slate-400">Click remove to delete user and their records</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
-                                    <th class="p-4">User ID / Name</th>
-                                    <th class="p-4">Role</th>
-                                    <th class="p-4">Partner Connected</th>
-                                    <th class="p-4">Current Count</th>
-                                    <th class="p-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminUsersTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. USER DASHBOARD & LIVE COUNTER VIEW -->
-            <section id="userDashboardView" class="hidden space-y-6">
-                
-                <!-- Top Status & Partner Bar -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 bg-brand-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-md" id="userAvatarLetter">U</div>
-                        <div>
-                            <h2 class="text-xl font-bold" id="welcomeUserTitle">Welcome, User</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">ID: <span id="displayUserId" class="font-mono font-semibold"></span></p>
-                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="hubWelcomeUser">Welcome, User</h2>
+                        <p class="text-emerald-100 text-sm max-w-xl">Create preaching counters with names, connect partners via QR code, track real-time counts, and mark sessions completed.</p>
                     </div>
 
-                    <!-- Partner Status Pill & Connect Action -->
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div id="partnerStatusPill" class="px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-amber-200 dark:border-amber-800">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                            <span id="partnerStatusText">No Partner Connected</span>
-                        </div>
-                        <button onclick="openPartnerModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-md transition flex items-center space-x-2">
-                            <i class="fa-solid fa-qrcode"></i>
-                            <span>Connect Partner / QR</span>
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <button onclick="openNewCounterModal()" class="px-5 py-3.5 bg-white hover:bg-emerald-50 text-brand-700 font-bold rounded-2xl shadow-lg transition transform active:scale-95 text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-plus-circle text-base"></i>
+                            <span>+ Add New Counter</span>
+                        </button>
+                        <button onclick="openJoinScannerModal()" class="px-4 py-3.5 bg-emerald-900/60 hover:bg-emerald-900 text-white font-semibold rounded-2xl shadow border border-emerald-500/30 transition text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-qrcode text-base"></i>
+                            <span>Scan to Join Counter</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- LIVE COUNTERS GRID (Self & Partners) -->
+                <!-- Stats Overview Ribbon -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-2xl"><i class="fa-solid fa-layer-group text-2xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Total Counters Created</p>
+                            <h3 id="statTotalCounters" class="text-2xl font-extrabold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl"><i class="fa-solid fa-users text-2xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Active Counter Sessions</p>
+                            <h3 id="statActiveCounters" class="text-2xl font-extrabold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-2xl"><i class="fa-solid fa-chart-simple text-2xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Your Total Preaching Counts</p>
+                            <h3 id="statUserLifetimeCount" class="text-2xl font-extrabold text-brand-600 dark:text-brand-400">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Counters List Grid -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-brand-600"></i>
+                                <span>Preaching Counters Directory</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Select any counter to open its live count workspace, view connected members, or inspect history</p>
+                        </div>
+                        <button onclick="renderCountersHub()" class="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-right"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div id="countersGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Populated dynamically with counter cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. ACTIVE COUNTER WORKSPACE VIEW (INDIVIDUAL COUNTER ROOM) -->
+            <section id="activeCounterView" class="hidden space-y-6">
+                
+                <!-- Counter Room Navigation Header -->
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="exitToCountersHub()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition" title="Back to All Counters">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xl font-extrabold text-slate-900 dark:text-white" id="roomCounterName">Counter Name</h2>
+                                <span id="roomStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Active</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                Created by <span id="roomCreatorName" class="font-semibold">User</span> &bull; 
+                                Session ID: <span id="roomCounterId" class="font-mono">ctr_xxx</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Room Actions -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openCounterInviteModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow">
+                            <i class="fa-solid fa-qrcode"></i>
+                            <span>+ Invite / QR for this Counter</span>
+                        </button>
+                        <!-- COMPLETE OPTION: leaves this counter -->
+                        <button onclick="completeCurrentCounterSession()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Complete &amp; Leave Counter</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LIVE COUNTER GRID (Self Controls & Live Group Split) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
-                    <!-- Main Increment Controller (Self) -->
-                    <div class="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between text-center relative overflow-hidden">
-                        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-500 to-emerald-400"></div>
+                    <!-- Self Increment Controller -->
+                    <div class="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between text-center relative overflow-hidden">
+                        <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-brand-500 to-emerald-400"></div>
                         <div class="w-full text-left mb-4">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Preaching Counter</span>
-                            <h3 class="font-bold text-lg" id="selfNameLabel">Self</h3>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Count in this Counter</span>
+                            <h3 class="font-bold text-lg" id="roomSelfName">You</h3>
                         </div>
 
                         <!-- Big Count Display -->
-                        <div class="my-6">
-                            <div id="selfCountDisplay" class="text-7xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">0</div>
-                            <p class="text-xs text-slate-400 mt-1">Tap '+' to increment preaching count instantly</p>
+                        <div class="my-4">
+                            <div id="roomSelfCountDisplay" class="text-7xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">0</div>
+                            <p class="text-xs text-slate-400 mt-1">Tap '+' to add preaching count to this counter</p>
                         </div>
 
                         <!-- Action Buttons -->
                         <div class="w-full space-y-3">
-                            <!-- Big Primary +1 Count Button -->
-                            <button onclick="incrementSelfCount(1)" class="w-full py-4 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
+                            <!-- Big Primary Add Button -->
+                            <button onclick="incrementRoomCount(1)" class="w-full py-4 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-plus text-2xl"></i>
                                 <span>+1 Count</span>
                             </button>
 
-                            <!-- Quick Preset Add (+) and Delete (-) Grid -->
+                            <!-- Quick Preset Add (+) & Delete (-) Grid -->
                             <div class="grid grid-cols-4 gap-2">
-                                <button onclick="incrementSelfCount(5)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 5 counts">+5</button>
-                                <button onclick="incrementSelfCount(10)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 10 counts">+10</button>
-                                <button onclick="decrementSelfCount(1)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 1 count">
+                                <button onclick="incrementRoomCount(5)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 5 counts">+5</button>
+                                <button onclick="incrementRoomCount(10)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 10 counts">+10</button>
+                                <button onclick="decrementRoomCount(1)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 1 count">
                                     <i class="fa-solid fa-minus text-[10px]"></i><span>1</span>
                                 </button>
-                                <button onclick="decrementSelfCount(5)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 5 counts">
+                                <button onclick="decrementRoomCount(5)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 5 counts">
                                     <i class="fa-solid fa-minus text-[10px]"></i><span>5</span>
                                 </button>
                             </div>
@@ -298,102 +315,94 @@
                             <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
                                 <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5 text-left">Add Custom Count (+)</label>
                                 <div class="flex gap-2">
-                                    <input type="number" id="customCountInput" min="1" max="9999" placeholder="Enter count..." class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-brand-500">
-                                    <button onclick="addCustomCount()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition whitespace-nowrap shadow">
+                                    <input type="number" id="roomCustomCountInput" min="1" max="9999" placeholder="Enter count..." class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <button onclick="addRoomCustomCount()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition whitespace-nowrap shadow">
                                         + Add
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Reset Counter Button -->
-                            <button onclick="resetSelfCount()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5 border border-slate-200 dark:border-slate-700">
-                                <i class="fa-solid fa-rotate-left text-xs"></i>
-                                <span>Reset Counter to 0</span>
+                            <button onclick="resetRoomSelfCount()" class="w-full py-2 bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1 border border-slate-200 dark:border-slate-700">
+                                <i class="fa-solid fa-rotate-left text-xs mr-1"></i>
+                                <span>Reset My Count in this Counter</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Live Summary & Split Calculation Box -->
-                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-6">
+                    <!-- Live Group Summary & Members in this Counter -->
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-6">
                         <div>
                             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
                                 <h3 class="font-bold text-lg flex items-center space-x-2">
                                     <i class="fa-solid fa-chart-pie text-brand-600"></i>
-                                    <span>Live Group Summary & Division</span>
+                                    <span>Live Group Summary &amp; Division</span>
                                 </h3>
-                                <span class="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold animate-pulse">Live Sync Active</span>
+                                <span class="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold animate-pulse">Live Connected Session</span>
                             </div>
 
                             <!-- Metrics Grid -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
                                     <span class="text-xs text-slate-400 font-semibold uppercase">Total Combined Count</span>
-                                    <h4 id="totalCombinedCount" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">0</h4>
+                                    <h4 id="roomTotalCombined" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">0</h4>
                                 </div>
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                                    <span class="text-xs text-slate-400 font-semibold uppercase">Connected Members</span>
-                                    <h4 id="totalMembersCount" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">1</h4>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
+                                    <span class="text-xs text-slate-400 font-semibold uppercase">Members in Counter</span>
+                                    <h4 id="roomTotalMembers" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">1</h4>
                                 </div>
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
                                     <span class="text-xs text-slate-400 font-semibold uppercase">Split / Share per Person</span>
-                                    <h4 id="splitPerPersonCount" class="text-3xl font-extrabold mt-1 text-brand-600 dark:text-brand-400">0.00</h4>
+                                    <h4 id="roomSplitPerPerson" class="text-3xl font-extrabold mt-1 text-brand-600 dark:text-brand-400">0.00</h4>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Connected Participants List -->
+                        <!-- Connected Members in THIS Counter -->
                         <div>
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Live Participants Breakdown</h4>
-                            <div id="liveParticipantsList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                <!-- Populated dynamically -->
-                                <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-sm text-slate-500 text-center">No partner connected yet. Scan QR, share link, or enter Partner ID.</div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    Members Added to this Counter (<span id="roomMembersCountLabel">1</span>)
+                                </h4>
+                                <button onclick="openCounterInviteModal()" class="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline">
+                                    + Add More Members via QR
+                                </button>
+                            </div>
+                            <div id="roomMembersList" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                                <!-- Members of this counter injected dynamically -->
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- HISTORY, CALENDAR & FILTER SECTION -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-6">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <!-- COUNTER HISTORY SECTION -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-700">
                         <div>
                             <h3 class="font-bold text-lg flex items-center space-x-2">
                                 <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
-                                <span>Count History & Date Reports</span>
+                                <span>History &amp; Logs for this Counter</span>
                             </h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filter past records by date ranges with self & partner contribution breakdown</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">All preaching counts recorded and members progress for this session</p>
                         </div>
-
-                        <!-- Filter Tabs -->
-                        <div class="flex flex-wrap items-center gap-2">
-                            <div class="flex flex-wrap bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
-                                <button onclick="setHistoryFilter('today')" id="filterTodayBtn" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition">Today</button>
-                                <button onclick="setHistoryFilter('daily')" id="filterDailyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Daily</button>
-                                <button onclick="setHistoryFilter('weekly')" id="filterWeeklyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Weekly</button>
-                                <button onclick="setHistoryFilter('monthly')" id="filterMonthlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Monthly</button>
-                                <button onclick="setHistoryFilter('yearly')" id="filterYearlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Yearly</button>
-                                <button onclick="setHistoryFilter('all')" id="filterAllBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">All</button>
-                            </div>
-                            <button onclick="clearAllMyHistory()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 font-semibold rounded-xl text-xs transition border border-rose-200 dark:border-rose-800 flex items-center space-x-1" title="Clear all history">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
-                                <span>Clear History</span>
-                            </button>
-                        </div>
+                        <button onclick="clearCurrentRoomHistory()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 font-semibold rounded-xl text-xs transition border border-rose-200 dark:border-rose-800">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Clear Room History
+                        </button>
                     </div>
 
-                    <!-- History Table / List -->
+                    <!-- History Table -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
-                                    <th class="p-3">Date & Time</th>
-                                    <th class="p-3">User (Self)</th>
-                                    <th class="p-3">Partner Name / ID</th>
+                                    <th class="p-3">Date &amp; Time</th>
+                                    <th class="p-3">Member Name</th>
                                     <th class="p-3">Count Change</th>
-                                    <th class="p-3">Self Total</th>
+                                    <th class="p-3">Member Total</th>
                                     <th class="p-3 text-right">Delete Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="historyTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody id="roomHistoryTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
                                 <!-- Populated dynamically -->
                             </tbody>
                         </table>
@@ -402,65 +411,205 @@
 
             </section>
 
+            <!-- 4. ADMIN DASHBOARD VIEW (ALL COUNTERS & ALL USERS) -->
+            <section id="adminView" class="hidden space-y-6">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-full uppercase">Admin Control Panel</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mt-2">All Preaching Counters &amp; Users Directory</h2>
+                        <p class="text-slate-300 text-sm mt-1">Supervise all preaching counters, joined members, total counts across sessions, and remove data.</p>
+                    </div>
+                    <button onclick="refreshAdminData()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-semibold transition flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate"></i> <span>Refresh All Data</span>
+                    </button>
+                </div>
+
+                <!-- Admin Metrics -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-xl"><i class="fa-solid fa-layer-group text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Total Counters</p>
+                            <h3 id="adminTotalCounters" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Total Users</p>
+                            <h3 id="adminTotalUsers" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Total Counts</p>
+                            <h3 id="adminTotalCounts" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-xl"><i class="fa-solid fa-circle-check text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">Completed Sessions</p>
+                            <h3 id="adminCompletedCounters" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin All Counters Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold text-sm flex items-center justify-between">
+                        <span>All Preaching Counter Sessions Directory</span>
+                        <span class="text-xs text-slate-400">Manage all sessions created by users</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                                    <th class="p-3.5">Counter Name</th>
+                                    <th class="p-3.5">Creator</th>
+                                    <th class="p-3.5">Members Joined</th>
+                                    <th class="p-3.5">Total Count</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminCountersTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Users Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold text-sm flex items-center justify-between">
+                        <span>Registered User Accounts Directory</span>
+                        <span class="text-xs text-slate-400">All registered system players</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                                    <th class="p-3.5">User ID / Name</th>
+                                    <th class="p-3.5">Role</th>
+                                    <th class="p-3.5">Lifetime Count</th>
+                                    <th class="p-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
-    <!-- PARTNER CONNECTION MODAL -->
-    <div id="partnerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 max-w-lg w-full rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
+    <!-- MODAL 1: ADD NEW COUNTER WITH NAME -->
+    <div id="newCounterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in duration-200 p-6 space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-brand-600"></i>
+                    <span>Create New Preaching Counter</span>
+                </h3>
+                <button onclick="closeNewCounterModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleCreateCounterSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Counter Name *</label>
+                    <input type="text" id="newCounterNameInput" required placeholder="e.g. Morning Ministry - Area 1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Starting Count (Optional)</label>
+                    <input type="number" id="newCounterInitialCount" min="0" value="0" placeholder="0" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-bold">
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeNewCounterModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 font-semibold rounded-xl text-sm transition">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
+                        Create &amp; Open ▶
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: INVITE MEMBERS TO THIS COUNTER (QR & SHARE) -->
+    <div id="counterInviteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-lg w-full rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
             <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <h3 class="font-bold text-lg flex items-center space-x-2">
                     <i class="fa-solid fa-qrcode text-brand-600"></i>
-                    <span>Connect Partner via QR or ID</span>
+                    <span>Invite Partners to This Counter</span>
                 </h3>
-                <button onclick="closePartnerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2">
+                <button onclick="closeCounterInviteModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- My QR Code Tab / Display -->
+                <!-- Counter QR Code Display -->
                 <div class="text-center bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Your Partner Connection QR & ID</p>
-                    <div id="myQRCodeContainer" class="inline-block bg-white p-3 rounded-xl shadow-md mb-3"></div>
-                    <p class="text-sm font-semibold">Your ID: <span id="modalDisplayUserId" class="font-mono text-brand-600"></span></p>
-                    <p class="text-xs text-slate-400 mt-1 mb-4">Ask your partner to scan this code with their phone camera or with the scanner below.</p>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Scan to Join This Specific Counter</span>
+                    <h4 id="inviteModalCounterTitle" class="text-base font-extrabold text-brand-600 dark:text-brand-400 mb-3">Counter Name</h4>
+                    <div id="counterQRCodeContainer" class="inline-block bg-white p-3 rounded-2xl shadow-md mb-3"></div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-4">When a partner scans this QR code, they will be automatically added to this counter. More members can scan one by one to connect!</p>
                     
                     <!-- Shareable link & WhatsApp buttons -->
                     <div class="flex gap-2 max-w-sm mx-auto mb-2">
-                        <input type="text" id="partnerShareLinkInput" readonly class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-600 dark:text-slate-300 font-mono select-all focus:outline-none">
-                        <button type="button" id="copyPartnerLinkBtn" onclick="copyPartnerInviteLink()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition whitespace-nowrap">
+                        <input type="text" id="counterShareLinkInput" readonly class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-600 dark:text-slate-300 font-mono select-all focus:outline-none">
+                        <button type="button" id="copyCounterLinkBtn" onclick="copyCounterInviteLink()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition whitespace-nowrap">
                             Copy Link
                         </button>
                     </div>
-                    <button type="button" onclick="sharePartnerWhatsApp()" class="w-full max-w-sm mx-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow">
+                    <button type="button" onclick="shareCounterWhatsApp()" class="w-full max-w-sm mx-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow">
                         <i class="fa-brands fa-whatsapp text-base"></i>
                         <span>Share Invite via WhatsApp</span>
                     </button>
                 </div>
 
-                <!-- Manual Partner ID Input -->
-                <div class="space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Connect by Partner User ID or Link</label>
+                <!-- Connect by typing ID -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Or Add Member by User ID</label>
                     <div class="flex space-x-2">
-                        <input type="text" id="partnerIdInput" placeholder="Enter partner User ID or paste invite link..." class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
-                        <button onclick="connectPartnerById()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-md">Connect</button>
+                        <input type="text" id="manualAddUserIdInput" placeholder="Enter partner User ID..." class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        <button onclick="manualAddMemberToCurrentCounter()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow">Add Member</button>
                     </div>
-                </div>
-
-                <!-- QR Scanner Section -->
-                <div class="space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Scan Partner's QR Code</label>
-                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"></div>
-                    <button id="startScannerBtn" onclick="startQrScanner()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold rounded-xl text-sm transition">
-                        <i class="fa-solid fa-camera mr-2"></i> Start Camera Scanner
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CUSTOM TOAST / NOTIFICATION MODAL -->
+    <!-- MODAL 3: SCAN QR TO JOIN ANY COUNTER -->
+    <div id="joinScannerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-brand-600"></i>
+                    <span>Scan Partner's Counter QR</span>
+                </h3>
+                <button onclick="closeJoinScannerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400">Point your camera at a partner's preaching counter QR code to join their session instantly.</p>
+            <div id="qr-reader" class="w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 min-h-[220px]"></div>
+            
+            <button id="startScannerBtn" onclick="startCameraScanner()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center space-x-2 shadow">
+                <i class="fa-solid fa-camera"></i>
+                <span>Start Camera Scanner</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOAST / NOTIFICATION -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none" style="z-index: 100000;"></div>
 
     <!-- SNI Official Footer Banner -->
@@ -471,14 +620,13 @@
 
     <!-- App Logic JavaScript -->
     <script>
-        // Data & Session Storage Keys
+        // Storage Keys
         const STORAGE_USERS = 'live_counter_local_users';
         const STORAGE_CURRENT = 'live_counter_current_user';
-        const STORAGE_HISTORY = 'live_counter_local_history';
+        const STORAGE_COUNTERS = 'live_counter_rooms_db';
 
         // Admin Credentials
         const ADMIN_IDS = ['surya11008', 'admin'];
-        // Accepts both Surya742766. and Suri742766. (with trailing dot) as well as admin
         const VALID_ADMIN_PASSWORDS = ['Surya742766.', 'Suri742766.', 'admin'];
 
         function isUserAdmin(userId, password) {
@@ -487,52 +635,47 @@
         }
 
         let currentUserState = null;
+        let activeCounterId = null;
         let currentAuthMode = 'login';
-        let currentHistoryFilter = 'today';
         let html5QrCode = null;
         let syncChannel = null;
 
+        // Initialize Cross-Tab & Multi-Window Sync
         try {
-            syncChannel = new BroadcastChannel('sni_counter_sync');
+            syncChannel = new BroadcastChannel('sni_counter_multi_sync');
             syncChannel.onmessage = (event) => {
-                if (!event.data || !currentUserState) return;
-                if (event.data.type === 'COUNT_UPDATE' || event.data.type === 'PARTNER_CONNECTED') {
-                    let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-                    const cur = storedUsers.find(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-                    if (cur) {
-                        currentUserState = cur;
-                        localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+                if (!event.data) return;
+                const type = event.data.type;
+                if (type === 'COUNTER_UPDATED' || type === 'MEMBER_JOINED' || type === 'COUNT_UPDATED') {
+                    if (activeCounterId && event.data.counterId === activeCounterId) {
+                        loadActiveCounterRoom(activeCounterId);
                     }
-                    updateSelfUI();
-                    fetchAndUpdateGroupData();
+                    if (!activeCounterId) {
+                        renderCountersHub();
+                    }
+                    if (currentUserState && currentUserState.role === 'admin') {
+                        refreshAdminData();
+                    }
                 }
             };
         } catch(e) {}
 
         window.addEventListener('storage', (e) => {
-            if (e.key === STORAGE_USERS || e.key === STORAGE_CURRENT) {
-                if (currentUserState) {
-                    let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-                    const cur = storedUsers.find(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-                    if (cur) {
-                        currentUserState = cur;
-                    }
-                    updateSelfUI();
-                    fetchAndUpdateGroupData();
-                }
+            if (e.key === STORAGE_COUNTERS) {
+                if (activeCounterId) loadActiveCounterRoom(activeCounterId);
+                else renderCountersHub();
             }
         });
 
-        // Seed initial demo users & admin accounts
+        // Initialize Seed Users & Default Counters
         function initSeedData() {
-            let stored = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             const seeds = [
                 {
                     userId: 'surya11008',
                     fullName: 'Surya (Admin)',
                     password: 'Surya742766.',
                     role: 'admin',
-                    partnerId: '',
                     count: 0,
                     createdAt: '2026-11-10T10:00:00.000Z'
                 },
@@ -541,7 +684,6 @@
                     fullName: 'System Administrator',
                     password: 'Surya742766.',
                     role: 'admin',
-                    partnerId: '',
                     count: 0,
                     createdAt: '2026-11-10T10:00:00.000Z'
                 },
@@ -550,7 +692,6 @@
                     fullName: 'Ramesh Kumar',
                     password: 'password123',
                     role: 'user',
-                    partnerId: 'priya_demo',
                     count: 14,
                     createdAt: '2026-11-10T11:00:00.000Z'
                 },
@@ -559,23 +700,46 @@
                     fullName: 'Priya Sharma',
                     password: 'password123',
                     role: 'user',
-                    partnerId: 'ramesh_demo',
                     count: 10,
                     createdAt: '2026-11-10T11:00:00.000Z'
                 }
             ];
 
             seeds.forEach(s => {
-                const existingIdx = stored.findIndex(u => u.userId.toLowerCase() === s.userId.toLowerCase());
-                if (existingIdx === -1) {
-                    stored.push(s);
+                const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === s.userId.toLowerCase());
+                if (idx === -1) {
+                    storedUsers.push(s);
                 } else if (s.role === 'admin') {
-                    // Ensure admin role and updated password
-                    stored[existingIdx].role = 'admin';
-                    stored[existingIdx].password = s.password;
+                    storedUsers[idx].role = 'admin';
+                    storedUsers[idx].password = s.password;
                 }
             });
-            localStorage.setItem(STORAGE_USERS, JSON.stringify(stored));
+            localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+
+            // Seed initial sample counters if empty
+            let storedCounters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            if (storedCounters.length === 0) {
+                const starterCounters = [
+                    {
+                        id: 'ctr_starter_1',
+                        name: 'Morning Ministry — Zone A',
+                        creatorId: 'ramesh_demo',
+                        creatorName: 'Ramesh Kumar',
+                        createdAt: '2026-11-11T07:30:00.000Z',
+                        status: 'active',
+                        members: [
+                            { userId: 'ramesh_demo', fullName: 'Ramesh Kumar', count: 14, status: 'active', joinedAt: '2026-11-11T07:30:00.000Z' },
+                            { userId: 'priya_demo', fullName: 'Priya Sharma', count: 10, status: 'active', joinedAt: '2026-11-11T07:35:00.000Z' }
+                        ],
+                        totalCount: 24,
+                        history: [
+                            { historyId: 'h_1', userId: 'ramesh_demo', userName: 'Ramesh Kumar', addedAmount: 14, currentCount: 14, timestamp: '2026-11-11T07:45:00.000Z' },
+                            { historyId: 'h_2', userId: 'priya_demo', userName: 'Priya Sharma', addedAmount: 10, currentCount: 10, timestamp: '2026-11-11T07:50:00.000Z' }
+                        ]
+                    }
+                ];
+                localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(starterCounters));
+            }
         }
 
         initSeedData();
@@ -590,7 +754,7 @@
             const container = document.getElementById('toastContainer');
             if (!container) return;
             const toast = document.createElement('div');
-            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold flex items-center space-x-2 transition transform translate-y-2 opacity-0 duration-300 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-semibold flex items-center space-x-2 transition transform translate-y-2 opacity-0 duration-300 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
             toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
@@ -600,7 +764,7 @@
             }, 3500);
         };
 
-        // Switch Auth Tab (Login vs Register)
+        // Auth Tabs
         window.switchAuthTab = function(mode) {
             currentAuthMode = mode;
             const loginBtn = document.getElementById('tabLoginBtn');
@@ -624,24 +788,20 @@
             }
         };
 
-        // Quick Demo Logins
+        // Quick Demos
         window.loginAsDemoUser = function() {
             let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             let user = storedUsers.find(u => u.userId === 'ramesh_demo');
-            if (user) {
-                loginSuccess(user);
-            }
+            if (user) loginSuccess(user);
         };
 
         window.loginAsDemoAdmin = function() {
             let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             let admin = storedUsers.find(u => u.userId === 'surya11008') || storedUsers.find(u => u.userId === 'admin');
-            if (admin) {
-                loginSuccess(admin);
-            }
+            if (admin) loginSuccess(admin);
         };
 
-        // Form Submit for Login & Register
+        // Authentication Submission
         window.handleAuthSubmit = function(event) {
             event.preventDefault();
             const userIdInput = document.getElementById('authUserId').value.trim().toLowerCase();
@@ -655,7 +815,7 @@
 
             let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
 
-            // Check Admin Credentials: surya11008 or admin with Surya742766. / Suri742766. / admin
+            // Check Admin
             if (isUserAdmin(userIdInput, passwordInput)) {
                 let adminUser = storedUsers.find(u => u.userId.toLowerCase() === userIdInput);
                 if (!adminUser) {
@@ -664,7 +824,6 @@
                         fullName: userIdInput === 'surya11008' ? 'Surya (Admin)' : 'System Administrator',
                         password: passwordInput,
                         role: 'admin',
-                        partnerId: '',
                         count: 0,
                         createdAt: new Date().toISOString()
                     };
@@ -689,7 +848,7 @@
                 }
                 loginSuccess(user);
             } else {
-                // Register mode
+                // Register
                 if (storedUsers.some(u => u.userId.toLowerCase() === userIdInput)) {
                     showToast('User ID already exists! Please choose another.', 'error');
                     return;
@@ -705,7 +864,6 @@
                     fullName: fullNameInput,
                     password: passwordInput,
                     role: isAdmin ? 'admin' : 'user',
-                    partnerId: '',
                     count: 0,
                     createdAt: new Date().toISOString()
                 };
@@ -723,16 +881,14 @@
             renderInterface();
             showToast(`Welcome, ${userData.fullName}!`);
 
-            // Check if there was a pending partner invite to connect
+            // Check if there was a pending counter join link
             try {
-                const pending = sessionStorage.getItem('pending_partner_connect');
-                if (pending) {
-                    sessionStorage.removeItem('pending_partner_connect');
-                    const parsed = JSON.parse(pending);
-                    if (parsed && parsed.partnerId) {
-                        setTimeout(() => {
-                            connectPartnerById(`${parsed.partnerId}&partnerName=${encodeURIComponent(parsed.partnerName || '')}&count=${parsed.count || 0}`);
-                        }, 300);
+                const pendingJoin = sessionStorage.getItem('pending_counter_join');
+                if (pendingJoin) {
+                    sessionStorage.removeItem('pending_counter_join');
+                    const parsed = JSON.parse(pendingJoin);
+                    if (parsed && parsed.counterId) {
+                        setTimeout(() => joinCounterRoom(parsed.counterId), 300);
                     }
                 }
             } catch(e) {}
@@ -740,16 +896,18 @@
 
         window.logoutUser = function() {
             currentUserState = null;
+            activeCounterId = null;
             localStorage.removeItem(STORAGE_CURRENT);
             renderInterface();
             showToast('Logged out successfully');
         };
 
-        // Render Views
+        // Master View Renderer
         window.renderInterface = function() {
             const authView = document.getElementById('authView');
+            const countersHubView = document.getElementById('countersHubView');
+            const activeCounterView = document.getElementById('activeCounterView');
             const adminView = document.getElementById('adminView');
-            const userDashboardView = document.getElementById('userDashboardView');
             const authNavArea = document.getElementById('authNavArea');
             const navUsername = document.getElementById('navUsername');
             const navUserRole = document.getElementById('navUserRole');
@@ -763,10 +921,11 @@
 
             if (!currentUserState) {
                 authView.classList.remove('hidden');
+                countersHubView.classList.add('hidden');
+                activeCounterView.classList.add('hidden');
                 adminView.classList.add('hidden');
-                userDashboardView.classList.add('hidden');
                 authNavArea.classList.add('hidden');
-                navUserRole.innerText = 'Real-time Ministry Partner Sync';
+                navUserRole.innerText = 'Multi-Session Group Counters & QR Sync';
                 return;
             }
 
@@ -776,355 +935,663 @@
 
             if (currentUserState.role === 'admin') {
                 adminView.classList.remove('hidden');
-                userDashboardView.classList.add('hidden');
-                navUserRole.innerText = 'Administrator';
+                countersHubView.classList.add('hidden');
+                activeCounterView.classList.add('hidden');
+                navUserRole.innerText = 'Administrator Oversight';
                 initAdminDashboard();
+            } else if (activeCounterId) {
+                adminView.classList.add('hidden');
+                countersHubView.classList.add('hidden');
+                activeCounterView.classList.remove('hidden');
+                navUserRole.innerText = 'In Active Counter Session';
+                loadActiveCounterRoom(activeCounterId);
             } else {
                 adminView.classList.add('hidden');
-                userDashboardView.classList.remove('hidden');
-                navUserRole.innerText = 'Partner Counter User';
-                initUserDashboard();
+                countersHubView.classList.remove('hidden');
+                activeCounterView.classList.add('hidden');
+                navUserRole.innerText = 'Counters Directory';
+                renderCountersHub();
             }
         };
 
-        // ================= USER DASHBOARD LOGIC =================
-        function initUserDashboard() {
-            document.getElementById('welcomeUserTitle').innerText = `Welcome, ${currentUserState.fullName}`;
-            document.getElementById('displayUserId').innerText = currentUserState.userId;
-            document.getElementById('selfNameLabel').innerText = currentUserState.fullName + ' (Self)';
-            document.getElementById('userAvatarLetter').innerText = (currentUserState.fullName.charAt(0) || 'U').toUpperCase();
+        // ==============================================================
+        // COUNTERS DIRECTORY (HUB) LOGIC
+        // ==============================================================
+        function renderCountersHub() {
+            document.getElementById('hubWelcomeUser').innerText = `Welcome, ${currentUserState.fullName}`;
+            
+            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            const statTotalCounters = document.getElementById('statTotalCounters');
+            const statActiveCounters = document.getElementById('statActiveCounters');
+            const statUserLifetimeCount = document.getElementById('statUserLifetimeCount');
 
-            updateSelfUI();
-            fetchAndUpdateGroupData();
-            generateQRCode(currentUserState.userId);
-            fetchHistoryData();
+            if (statTotalCounters) statTotalCounters.textContent = counters.length;
+            if (statActiveCounters) statActiveCounters.textContent = counters.filter(c => c.status === 'active').length;
+
+            // Calculate user's total preaching counts across all counters
+            let userTotal = 0;
+            const curId = currentUserState.userId.toLowerCase();
+            counters.forEach(c => {
+                const m = (c.members || []).find(x => x.userId.toLowerCase() === curId);
+                if (m) userTotal += (m.count || 0);
+            });
+            if (statUserLifetimeCount) statUserLifetimeCount.textContent = userTotal;
+
+            const grid = document.getElementById('countersGridContainer');
+            if (!grid) return;
+
+            if (counters.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-8 space-y-3">
+                        <div class="w-14 h-14 bg-brand-50 dark:bg-brand-900/40 text-brand-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <h4 class="font-bold text-lg">No Preaching Counters Created Yet</h4>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto">Click "+ Add New Counter" to create your first session, or scan a partner's QR code to join an existing session.</p>
+                        <button onclick="openNewCounterModal()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow">
+                            + Create First Counter
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render cards sorted by newest
+            const sortedCounters = [...counters].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            grid.innerHTML = sortedCounters.map(c => {
+                const members = c.members || [];
+                const isActive = c.status === 'active';
+                const isCreator = c.creatorId && c.creatorId.toLowerCase() === curId;
+                const userInCounter = members.find(m => m.userId.toLowerCase() === curId);
+                const userCountInCounter = userInCounter ? userInCounter.count : 0;
+                const formattedDate = new Date(c.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+
+                return `
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}">
+                                    ${isActive ? '🟢 Active' : '✓ Completed'}
+                                </span>
+                                <span class="text-[11px] text-slate-400 font-mono">${formattedDate}</span>
+                            </div>
+                            <h4 class="font-extrabold text-lg text-slate-900 dark:text-slate-100 leading-snug">${escapeHtml(c.name)}</h4>
+                            <p class="text-xs text-slate-400 mt-1">Creator: <span class="font-semibold text-slate-600 dark:text-slate-300">${escapeHtml(c.creatorName)}</span></p>
+                        </div>
+
+                        <!-- Stats Box -->
+                        <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Total Count</span>
+                                <span class="text-xl font-extrabold text-brand-600 dark:text-brand-400">${c.totalCount || 0}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Members</span>
+                                <span class="text-xl font-extrabold text-slate-700 dark:text-slate-200">${members.length}</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                            <button onclick="openCounterWorkspace('${c.id}')" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow">
+                                <span>Open Counter ▶</span>
+                            </button>
+                            ${(isCreator || (currentUserState && currentUserState.role === 'admin')) ? `
+                                <button onclick="deleteCounter('${c.id}')" class="p-2.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl text-xs transition border border-rose-200 dark:border-rose-800" title="Delete Counter">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function updateSelfUI() {
-            document.getElementById('selfCountDisplay').innerText = currentUserState.count || 0;
-            const pill = document.getElementById('partnerStatusPill');
-            const text = document.getElementById('partnerStatusText');
-            if (currentUserState.partnerId) {
-                pill.className = "px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-emerald-200 dark:border-emerald-800";
-                text.innerHTML = `Connected Partner: <span class="font-bold">${currentUserState.partnerId}</span>`;
-            } else {
-                pill.className = "px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-amber-200 dark:border-amber-800";
-                text.innerText = "No Partner Connected";
+        // ==============================================================
+        // CREATE NEW COUNTER MODAL & SUBMIT
+        // ==============================================================
+        window.openNewCounterModal = function() {
+            document.getElementById('newCounterModal').classList.remove('hidden');
+            const input = document.getElementById('newCounterNameInput');
+            if (input) {
+                input.value = '';
+                setTimeout(() => input.focus(), 100);
             }
-        }
+        };
 
-        // Increment Count (+)
-        window.incrementSelfCount = function(amt) {
-            amt = parseInt(amt) || 1;
-            const newCount = (currentUserState.count || 0) + amt;
-            currentUserState.count = newCount;
-            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+        window.closeNewCounterModal = function() {
+            document.getElementById('newCounterModal').classList.add('hidden');
+        };
 
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-            if (idx >= 0) {
-                storedUsers[idx].count = newCount;
-                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+        window.handleCreateCounterSubmit = function(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('newCounterNameInput').value.trim();
+            const initialCount = parseInt(document.getElementById('newCounterInitialCount').value) || 0;
+
+            if (!nameInput) {
+                showToast('Please enter a counter name', 'error');
+                return;
             }
 
-            updateSelfUI();
-            fetchAndUpdateGroupData();
-            recordHistoryEntry(amt);
+            const counterId = 'ctr_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+            const curId = currentUserState.userId;
+            const curName = currentUserState.fullName;
+
+            const newCounter = {
+                id: counterId,
+                name: nameInput,
+                creatorId: curId,
+                creatorName: curName,
+                createdAt: new Date().toISOString(),
+                status: 'active',
+                members: [
+                    {
+                        userId: curId,
+                        fullName: curName,
+                        count: initialCount,
+                        status: 'active',
+                        joinedAt: new Date().toISOString()
+                    }
+                ],
+                totalCount: initialCount,
+                history: initialCount > 0 ? [
+                    {
+                        historyId: 'h_' + Date.now(),
+                        userId: curId,
+                        userName: curName,
+                        addedAmount: initialCount,
+                        currentCount: initialCount,
+                        timestamp: new Date().toISOString()
+                    }
+                ] : []
+            };
+
+            let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            counters.unshift(newCounter);
+            localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+
+            closeNewCounterModal();
+            showToast(`Counter "${nameInput}" created successfully!`);
 
             if (syncChannel) {
-                syncChannel.postMessage({
-                    type: 'COUNT_UPDATE',
-                    userId: currentUserState.userId,
-                    count: newCount
-                });
+                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterId });
             }
+
+            // Immediately open the created counter room
+            openCounterWorkspace(counterId);
         };
 
-        // Decrement / Delete Count (-)
-        window.decrementSelfCount = function(amt) {
+        // Delete Counter
+        window.deleteCounter = function(counterId) {
+            if (!confirm('Are you sure you want to delete this preaching counter session and its history?')) return;
+            let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            counters = counters.filter(c => c.id !== counterId);
+            localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+
+            if (activeCounterId === counterId) {
+                exitToCountersHub();
+            } else {
+                renderCountersHub();
+            }
+
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterId });
+            }
+            showToast('Counter deleted successfully');
+        };
+
+        // ==============================================================
+        // ACTIVE COUNTER WORKSPACE (IN-ROOM LOGIC)
+        // ==============================================================
+        window.openCounterWorkspace = function(counterId) {
+            activeCounterId = counterId;
+            renderInterface();
+        };
+
+        window.exitToCountersHub = function() {
+            activeCounterId = null;
+            renderInterface();
+        };
+
+        function getActiveCounter() {
+            if (!activeCounterId) return null;
+            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            return counters.find(c => c.id === activeCounterId) || null;
+        }
+
+        function saveActiveCounter(counterObj) {
+            let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            const idx = counters.findIndex(c => c.id === counterObj.id);
+            if (idx >= 0) {
+                counters[idx] = counterObj;
+            } else {
+                counters.push(counterObj);
+            }
+            localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterObj.id });
+            }
+        }
+
+        function loadActiveCounterRoom(counterId) {
+            const counter = getActiveCounter();
+            if (!counter) {
+                showToast('Counter not found or deleted', 'error');
+                exitToCountersHub();
+                return;
+            }
+
+            // Ensure current user is in counter.members
+            const curId = currentUserState.userId.toLowerCase();
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) {
+                member = {
+                    userId: currentUserState.userId,
+                    fullName: currentUserState.fullName,
+                    count: 0,
+                    status: 'active',
+                    joinedAt: new Date().toISOString()
+                };
+                counter.members.push(member);
+                saveActiveCounter(counter);
+            }
+
+            // Header Elements
+            document.getElementById('roomCounterName').innerText = counter.name;
+            document.getElementById('roomCounterId').innerText = counter.id;
+            document.getElementById('roomCreatorName').innerText = counter.creatorName;
+            document.getElementById('roomSelfName').innerText = currentUserState.fullName + ' (You)';
+
+            const statusBadge = document.getElementById('roomStatusBadge');
+            if (counter.status === 'completed' || member.status === 'completed') {
+                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300";
+                statusBadge.innerText = member.status === 'completed' ? "Completed (Left Session)" : "Session Completed";
+            } else {
+                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300";
+                statusBadge.innerText = "Active Session";
+            }
+
+            // Display Self Count
+            document.getElementById('roomSelfCountDisplay').innerText = member.count || 0;
+
+            // Recalculate Group Totals & Split
+            let combinedTotal = 0;
+            counter.members.forEach(m => combinedTotal += (m.count || 0));
+            counter.totalCount = combinedTotal;
+
+            const activeMembers = counter.members.filter(m => m.status === 'active');
+            const totalMembers = counter.members.length;
+            const splitDivider = activeMembers.length > 0 ? activeMembers.length : (totalMembers || 1);
+            const splitPerPerson = (combinedTotal / splitDivider).toFixed(2);
+
+            document.getElementById('roomTotalCombined').innerText = combinedTotal;
+            document.getElementById('roomTotalMembers').innerText = totalMembers;
+            document.getElementById('roomSplitPerPerson').innerText = splitPerPerson;
+            document.getElementById('roomMembersCountLabel').innerText = totalMembers;
+
+            // Render Members Breakdown for THIS counter
+            const membersList = document.getElementById('roomMembersList');
+            membersList.innerHTML = counter.members.map(m => {
+                const isYou = m.userId.toLowerCase() === curId;
+                const isCompleted = m.status === 'completed';
+                return `
+                    <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-between text-sm border border-slate-100 dark:border-slate-800 ${isYou ? 'ring-2 ring-brand-500/30' : ''}">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-extrabold flex items-center justify-center text-sm shadow-xs">
+                                ${(m.fullName.charAt(0) || 'U').toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+                                    ${escapeHtml(m.fullName)}
+                                    ${isYou ? '<span class="text-[9px] bg-brand-600 text-white px-1.5 py-0.2 rounded-full font-bold">YOU</span>' : ''}
+                                    ${isCompleted ? '<span class="text-[9px] bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold">COMPLETED</span>' : ''}
+                                </p>
+                                <p class="text-[11px] text-slate-400 font-mono">ID: ${m.userId}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-extrabold text-brand-600 dark:text-brand-400 text-lg">${m.count || 0}</span>
+                            <span class="text-[10px] text-slate-400 block">counts</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render History for THIS counter
+            renderRoomHistory(counter);
+        }
+
+        // ==============================================================
+        // IN-ROOM INCREMENT, DECREMENT, CUSTOM ADD & COMPLETE
+        // ==============================================================
+        window.incrementRoomCount = function(amt) {
             amt = parseInt(amt) || 1;
-            const curCount = currentUserState.count || 0;
-            if (curCount <= 0) {
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            const curId = currentUserState.userId.toLowerCase();
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) return;
+
+            member.count = (member.count || 0) + amt;
+            member.status = 'active'; // activate if adding counts
+
+            // Add history entry
+            if (!counter.history) counter.history = [];
+            counter.history.unshift({
+                historyId: 'h_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3),
+                userId: currentUserState.userId,
+                userName: currentUserState.fullName,
+                addedAmount: amt,
+                currentCount: member.count,
+                timestamp: new Date().toISOString()
+            });
+
+            saveActiveCounter(counter);
+            loadActiveCounterRoom(activeCounterId);
+        };
+
+        window.decrementRoomCount = function(amt) {
+            amt = parseInt(amt) || 1;
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            const curId = currentUserState.userId.toLowerCase();
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) return;
+
+            if ((member.count || 0) <= 0) {
                 showToast('Count is already at 0', 'error');
                 return;
             }
-            const newCount = Math.max(0, curCount - amt);
-            const actualSubtracted = curCount - newCount;
-            currentUserState.count = newCount;
-            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
 
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-            if (idx >= 0) {
-                storedUsers[idx].count = newCount;
-                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
-            }
+            const actualSubtracted = Math.min(member.count, amt);
+            member.count -= actualSubtracted;
 
-            updateSelfUI();
-            fetchAndUpdateGroupData();
-            recordHistoryEntry(-actualSubtracted);
-            showToast(`Removed ${actualSubtracted} count (New Total: ${newCount})`);
+            if (!counter.history) counter.history = [];
+            counter.history.unshift({
+                historyId: 'h_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3),
+                userId: currentUserState.userId,
+                userName: currentUserState.fullName,
+                addedAmount: -actualSubtracted,
+                currentCount: member.count,
+                timestamp: new Date().toISOString()
+            });
 
-            if (syncChannel) {
-                syncChannel.postMessage({
-                    type: 'COUNT_UPDATE',
-                    userId: currentUserState.userId,
-                    count: newCount
-                });
-            }
+            saveActiveCounter(counter);
+            loadActiveCounterRoom(activeCounterId);
+            showToast(`Subtracted ${actualSubtracted} count (New: ${member.count})`);
         };
 
-        // Add Custom Count (+)
-        window.addCustomCount = function() {
-            const input = document.getElementById('customCountInput');
+        window.addRoomCustomCount = function() {
+            const input = document.getElementById('roomCustomCountInput');
             if (!input) return;
             const val = parseInt(input.value);
             if (isNaN(val) || val <= 0) {
                 showToast('Please enter a count number greater than 0', 'error');
                 return;
             }
-            incrementSelfCount(val);
+            incrementRoomCount(val);
             input.value = '';
-            showToast(`Added +${val} counts successfully!`);
+            showToast(`Added +${val} counts to this counter!`);
         };
 
-        // Reset Count (to 0)
-        window.resetSelfCount = function() {
-            if (!confirm('Are you sure you want to reset your preaching count to 0?')) return;
-            currentUserState.count = 0;
-            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+        window.resetRoomSelfCount = function() {
+            if (!confirm('Are you sure you want to reset your count to 0 in this counter?')) return;
+            const counter = getActiveCounter();
+            if (!counter) return;
 
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-            if (idx >= 0) {
-                storedUsers[idx].count = 0;
-                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+            const curId = currentUserState.userId.toLowerCase();
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) return;
+
+            const diff = -(member.count || 0);
+            member.count = 0;
+
+            if (diff !== 0) {
+                if (!counter.history) counter.history = [];
+                counter.history.unshift({
+                    historyId: 'h_' + Date.now(),
+                    userId: currentUserState.userId,
+                    userName: currentUserState.fullName,
+                    addedAmount: diff,
+                    currentCount: 0,
+                    timestamp: new Date().toISOString()
+                });
             }
 
-            updateSelfUI();
-            fetchAndUpdateGroupData();
-            showToast('Counter reset to 0');
+            saveActiveCounter(counter);
+            loadActiveCounterRoom(activeCounterId);
+            showToast('Your count reset to 0 in this counter');
+        };
 
-            if (syncChannel) {
-                syncChannel.postMessage({
-                    type: 'COUNT_UPDATE',
-                    userId: currentUserState.userId,
-                    count: 0
+        // ==============================================================
+        // COMPLETE OPTION: Mark completed & Leave this counter
+        // ==============================================================
+        window.completeCurrentCounterSession = function() {
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            const curId = currentUserState.userId.toLowerCase();
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) return;
+
+            if (!confirm(`Are you sure you want to complete your session in "${counter.name}"? You will mark your contribution (${member.count} counts) as completed and leave this counter.`)) {
+                return;
+            }
+
+            member.status = 'completed';
+
+            // Check if all members are completed
+            const allCompleted = counter.members.every(m => m.status === 'completed');
+            if (allCompleted) {
+                counter.status = 'completed';
+            }
+
+            // Log completion in room history
+            if (!counter.history) counter.history = [];
+            counter.history.unshift({
+                historyId: 'h_comp_' + Date.now(),
+                userId: currentUserState.userId,
+                userName: currentUserState.fullName,
+                addedAmount: 0,
+                currentCount: member.count,
+                note: 'Completed preaching session & left counter',
+                timestamp: new Date().toISOString()
+            });
+
+            saveActiveCounter(counter);
+            showToast(`Session completed! You have left "${counter.name}".`);
+
+            // Exit back to Counters Directory
+            exitToCountersHub();
+        };
+
+        // ==============================================================
+        // ROOM HISTORY RENDERING & RECORD DELETION
+        // ==============================================================
+        function renderRoomHistory(counter) {
+            const tbody = document.getElementById('roomHistoryTableBody');
+            if (!tbody) return;
+
+            const history = counter.history || [];
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No count history records recorded yet for this counter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = history.map(item => {
+                const dateObj = new Date(item.timestamp);
+                const formattedDate = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isPositive = (item.addedAmount || 0) >= 0;
+                let changeBadge = '';
+                if (item.note) {
+                    changeBadge = `<span class="px-2 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold text-xs">${escapeHtml(item.note)}</span>`;
+                } else if (isPositive) {
+                    changeBadge = `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs">+${item.addedAmount}</span>`;
+                } else {
+                    changeBadge = `<span class="px-2 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold text-xs">${item.addedAmount}</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                        <td class="p-3 text-xs text-slate-500 font-mono">${formattedDate}</td>
+                        <td class="p-3 font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(item.userName)}</td>
+                        <td class="p-3">${changeBadge}</td>
+                        <td class="p-3 font-bold text-brand-600 dark:text-brand-400">${item.currentCount}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteRoomHistoryRecord('${item.historyId}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 text-xs font-bold rounded-lg border border-rose-200 dark:border-rose-800 transition" title="Delete this entry">
+                                <i class="fa-solid fa-trash mr-1"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.deleteRoomHistoryRecord = function(historyId) {
+            if (!confirm('Are you sure you want to delete this count record? This will adjust the member count in this counter.')) return;
+            const counter = getActiveCounter();
+            if (!counter || !counter.history) return;
+
+            const idx = counter.history.findIndex(h => h.historyId === historyId);
+            if (idx === -1) return;
+
+            const record = counter.history[idx];
+            const changeAmt = record.addedAmount || 0;
+
+            if (changeAmt !== 0) {
+                const member = counter.members.find(m => m.userId.toLowerCase() === record.userId.toLowerCase());
+                if (member) {
+                    member.count = Math.max(0, (member.count || 0) - changeAmt);
+                }
+            }
+
+            counter.history.splice(idx, 1);
+            saveActiveCounter(counter);
+            loadActiveCounterRoom(activeCounterId);
+            showToast('Count entry deleted and counter adjusted!');
+        };
+
+        window.clearCurrentRoomHistory = function() {
+            if (!confirm('Are you sure you want to clear the entire history log for this counter?')) return;
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            counter.history = [];
+            saveActiveCounter(counter);
+            loadActiveCounterRoom(activeCounterId);
+            showToast('Room history cleared');
+        };
+
+        // ==============================================================
+        // DEDICATED QR & LINK SHARING FOR THIS SPECIFIC COUNTER
+        // ==============================================================
+        window.openCounterInviteModal = function() {
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            document.getElementById('counterInviteModal').classList.remove('hidden');
+            document.getElementById('inviteModalCounterTitle').innerText = counter.name;
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const inviteUrl = `${baseUrl}?joinCounter=${encodeURIComponent(counter.id)}&counterName=${encodeURIComponent(counter.name)}`;
+
+            const linkInput = document.getElementById('counterShareLinkInput');
+            if (linkInput) linkInput.value = inviteUrl;
+
+            const qrContainer = document.getElementById('counterQRCodeContainer');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: inviteUrl,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
             }
         };
 
-        function fetchAndUpdateGroupData() {
-            let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            if (!allUsers.some(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase())) {
-                allUsers.push(currentUserState);
-            }
-
-            let connectedGroup = [currentUserState];
-            if (currentUserState.partnerId) {
-                const partner = allUsers.find(u => u.userId.toLowerCase() === currentUserState.partnerId.toLowerCase());
-                if (partner && !connectedGroup.some(u => u.userId.toLowerCase() === partner.userId.toLowerCase())) {
-                    connectedGroup.push(partner);
-                }
-            }
-
-            allUsers.forEach(u => {
-                if (u.partnerId && u.partnerId.toLowerCase() === currentUserState.userId.toLowerCase() && !connectedGroup.some(item => item.userId.toLowerCase() === u.userId.toLowerCase())) {
-                    connectedGroup.push(u);
-                }
-            });
-
-            let totalCombined = 0;
-            connectedGroup.forEach(m => totalCombined += (m.count || 0));
-            let membersCount = connectedGroup.length;
-            let splitAmount = membersCount > 0 ? (totalCombined / membersCount).toFixed(2) : '0.00';
-
-            document.getElementById('totalCombinedCount').innerText = totalCombined;
-            document.getElementById('totalMembersCount').innerText = membersCount;
-            document.getElementById('splitPerPersonCount').innerText = splitAmount;
-
-            const listEl = document.getElementById('liveParticipantsList');
-            listEl.innerHTML = '';
-            connectedGroup.forEach(m => {
-                const item = document.createElement('div');
-                item.className = "p-3 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-between text-sm border border-slate-100 dark:border-slate-800";
-                item.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-900/40 text-brand-600 font-bold flex items-center justify-center text-xs">${(m.fullName.charAt(0) || 'U').toUpperCase()}</div>
-                        <div>
-                            <p class="font-semibold">${m.fullName} ${m.userId.toLowerCase() === currentUserState.userId.toLowerCase() ? '(You)' : ''}</p>
-                            <p class="text-xs text-slate-400">ID: ${m.userId}</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="font-extrabold text-brand-600 dark:text-brand-400 text-base">${m.count || 0}</span>
-                        <span class="text-xs text-slate-400 block">counts</span>
-                    </div>
-                `;
-                listEl.appendChild(item);
-            });
-        }
-
-        // ================= PARTNER CONNECTION & QR =================
-        window.openPartnerModal = function() {
-            document.getElementById('partnerModal').classList.remove('hidden');
-            document.getElementById('modalDisplayUserId').innerText = currentUserState.userId;
-            generateQRCode(currentUserState.userId);
+        window.closeCounterInviteModal = function() {
+            document.getElementById('counterInviteModal').classList.add('hidden');
         };
 
-        window.closePartnerModal = function() {
-            document.getElementById('partnerModal').classList.add('hidden');
+        window.copyCounterInviteLink = function() {
+            const linkInput = document.getElementById('counterShareLinkInput');
+            if (!linkInput) return;
+            navigator.clipboard.writeText(linkInput.value);
+            const btn = document.getElementById('copyCounterLinkBtn');
+            if (btn) {
+                btn.textContent = 'Copied! ✓';
+                setTimeout(() => btn.textContent = 'Copy Link', 2000);
+            }
+            showToast('Counter invite link copied!');
+        };
+
+        window.shareCounterWhatsApp = function() {
+            const counter = getActiveCounter();
+            const linkInput = document.getElementById('counterShareLinkInput');
+            if (!counter || !linkInput) return;
+            const text = `📖 Join my Preaching Counter: "${counter.name}"! Click link to connect and track preaching counts together: ${linkInput.value}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        };
+
+        // Manual Add Member by User ID
+        window.manualAddMemberToCurrentCounter = function() {
+            const input = document.getElementById('manualAddUserIdInput');
+            if (!input) return;
+            const targetId = input.value.trim().toLowerCase();
+            if (!targetId) {
+                showToast('Please enter a User ID', 'error');
+                return;
+            }
+
+            const counter = getActiveCounter();
+            if (!counter) return;
+
+            if (counter.members.some(m => m.userId.toLowerCase() === targetId)) {
+                showToast(`User ${targetId} is already in this counter`, 'error');
+                return;
+            }
+
+            let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let userObj = allUsers.find(u => u.userId.toLowerCase() === targetId);
+            const memberName = userObj ? userObj.fullName : (targetId.charAt(0).toUpperCase() + targetId.slice(1));
+
+            counter.members.push({
+                userId: targetId,
+                fullName: memberName,
+                count: 0,
+                status: 'active',
+                joinedAt: new Date().toISOString()
+            });
+
+            saveActiveCounter(counter);
+            input.value = '';
+            showToast(`Added ${memberName} to this counter!`);
+            closeCounterInviteModal();
+            loadActiveCounterRoom(activeCounterId);
+        };
+
+        // ==============================================================
+        // SCANNER TO JOIN ANY COUNTER (MULTI-MEMBER QR SCANNING)
+        // ==============================================================
+        window.openJoinScannerModal = function() {
+            document.getElementById('joinScannerModal').classList.remove('hidden');
+        };
+
+        window.closeJoinScannerModal = function() {
+            document.getElementById('joinScannerModal').classList.add('hidden');
             if (html5QrCode) {
                 html5QrCode.stop().catch(() => {});
             }
         };
 
-        function generateQRCode(userId) {
-            const container = document.getElementById('myQRCodeContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const inviteUrl = `${window.location.origin}${window.location.pathname}?partnerId=${encodeURIComponent(userId)}&partnerName=${encodeURIComponent(currentUserState.fullName || userId)}&count=${currentUserState.count || 0}`;
-
-            const linkInput = document.getElementById('partnerShareLinkInput');
-            if (linkInput) linkInput.value = inviteUrl;
-
-            new QRCode(container, {
-                text: inviteUrl,
-                width: 140,
-                height: 140,
-                colorDark: "#0f172a",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        }
-
-        window.copyPartnerInviteLink = function() {
-            const linkInput = document.getElementById('partnerShareLinkInput');
-            if (!linkInput) return;
-            navigator.clipboard.writeText(linkInput.value);
-            const btn = document.getElementById('copyPartnerLinkBtn');
-            if (btn) {
-                btn.textContent = 'Copied! ✓';
-                setTimeout(() => btn.textContent = 'Copy Link', 2000);
-            }
-            showToast('Partner invite link copied to clipboard!');
-        };
-
-        window.sharePartnerWhatsApp = function() {
-            const linkInput = document.getElementById('partnerShareLinkInput');
-            if (!linkInput) return;
-            const msg = `📖 Connect with me on Simple Preaching Counter! Click link to pair together: ${linkInput.value}`;
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        window.connectPartnerById = function(rawParam) {
-            let rawInput = (typeof rawParam === 'string' && rawParam.trim()) 
-                ? rawParam 
-                : (document.getElementById('partnerIdInput')?.value || '').trim();
-
-            if (!rawInput) {
-                showToast('Please enter a valid Partner User ID or Link', 'error');
-                return;
-            }
-
-            let partnerId = '';
-            let partnerName = '';
-            let partnerCount = 0;
-
-            // 1. If scanned as full URL or query parameters
-            if (rawInput.includes('partnerId=') || rawInput.includes('?')) {
-                try {
-                    const url = new URL(rawInput.startsWith('http') ? rawInput : window.location.origin + '/' + rawInput);
-                    partnerId = url.searchParams.get('partnerId') || '';
-                    partnerName = url.searchParams.get('partnerName') || '';
-                    partnerCount = parseInt(url.searchParams.get('count')) || 0;
-                } catch(e) {
-                    const m = rawInput.match(/partnerId=([^&]+)/);
-                    if (m) partnerId = decodeURIComponent(m[1]);
-                    const n = rawInput.match(/partnerName=([^&]+)/);
-                    if (n) partnerName = decodeURIComponent(n[1]);
-                }
-            } 
-            // 2. If scanned as JSON
-            else if (rawInput.startsWith('{') && rawInput.endsWith('}')) {
-                try {
-                    const parsed = JSON.parse(rawInput);
-                    partnerId = parsed.id || parsed.userId || '';
-                    partnerName = parsed.name || parsed.fullName || '';
-                    partnerCount = parseInt(parsed.count) || 0;
-                } catch(e) {}
-            } 
-            // 3. Raw user ID string
-            else {
-                partnerId = rawInput.trim();
-            }
-
-            partnerId = (partnerId || '').trim().toLowerCase();
-
-            if (!partnerId) {
-                showToast('Could not find a valid Partner User ID. Please try again.', 'error');
-                return;
-            }
-
-            if (!currentUserState) {
-                sessionStorage.setItem('pending_partner_connect', JSON.stringify({ partnerId, partnerName, count: partnerCount }));
-                showToast(`Partner ID saved. Please login or register to connect.`);
-                return;
-            }
-
-            if (partnerId === currentUserState.userId.toLowerCase()) {
-                showToast('You cannot connect as your own partner', 'error');
-                return;
-            }
-
-            let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            let partnerData = allUsers.find(u => u.userId.toLowerCase() === partnerId);
-
-            // CRITICAL FIX: If partner does not exist on this device yet, AUTOMATICALLY CREATE THEM!
-            // Never show "User ID not found" again!
-            if (!partnerData) {
-                partnerData = {
-                    userId: partnerId,
-                    fullName: partnerName || (partnerId.charAt(0).toUpperCase() + partnerId.slice(1)),
-                    password: '',
-                    role: 'user',
-                    partnerId: currentUserState.userId,
-                    count: partnerCount || 0,
-                    createdAt: new Date().toISOString()
-                };
-                allUsers.push(partnerData);
-            } else {
-                partnerData.partnerId = currentUserState.userId;
-                if (partnerCount > 0 && (!partnerData.count || partnerData.count < partnerCount)) {
-                    partnerData.count = partnerCount;
-                }
-            }
-
-            currentUserState.partnerId = partnerData.userId;
-            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
-
-            let idx = allUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-            if (idx >= 0) allUsers[idx].partnerId = partnerData.userId;
-            let pIdx = allUsers.findIndex(u => u.userId.toLowerCase() === partnerData.userId.toLowerCase());
-            if (pIdx >= 0) allUsers[pIdx].partnerId = currentUserState.userId;
-            localStorage.setItem(STORAGE_USERS, JSON.stringify(allUsers));
-
-            showToast(`Connected successfully with partner: ${partnerData.fullName}!`);
-            closePartnerModal();
-            updateSelfUI();
-            fetchAndUpdateGroupData();
-
-            if (syncChannel) {
-                syncChannel.postMessage({
-                    type: 'PARTNER_CONNECTED',
-                    userId: currentUserState.userId,
-                    partnerId: partnerData.userId
-                });
-            }
-        };
-
-        window.startQrScanner = function() {
+        window.startCameraScanner = function() {
             const scannerContainer = document.getElementById('qr-reader');
             scannerContainer.innerHTML = '';
             html5QrCode = new Html5Qrcode("qr-reader");
@@ -1133,8 +1600,8 @@
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 (decodedText) => {
                     html5QrCode.stop().catch(() => {});
-                    // Connect immediately using the scanned text/URL
-                    connectPartnerById(decodedText);
+                    closeJoinScannerModal();
+                    handleScannedJoinText(decodedText);
                 },
                 () => {}
             ).catch(() => {
@@ -1142,230 +1609,207 @@
             });
         };
 
-        // ================= HISTORY & DATE FILTERS =================
-        function recordHistoryEntry(addedAmt) {
-            const historyId = 'history_' + currentUserState.userId + '_' + Date.now();
-            const record = {
-                historyId: historyId,
-                userId: currentUserState.userId,
-                userName: currentUserState.fullName,
-                partnerId: currentUserState.partnerId || 'None',
-                selfCount: currentUserState.count,
-                addedAmount: addedAmt,
-                timestamp: new Date().toISOString()
-            };
+        function handleScannedJoinText(text) {
+            let targetCounterId = '';
+            let targetCounterName = '';
 
-            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
-            historyList.push(record);
-            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
-            fetchHistoryData();
-        }
-
-        window.setHistoryFilter = function(filter) {
-            currentHistoryFilter = filter;
-            ['today', 'daily', 'weekly', 'monthly', 'yearly', 'all'].forEach(f => {
-                const btn = document.getElementById(`filter${f.charAt(0).toUpperCase() + f.slice(1)}Btn`);
-                if (btn) {
-                    if (f === filter) {
-                        btn.className = "px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition";
-                    } else {
-                        btn.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition";
-                    }
+            if (text.includes('joinCounter=') || text.includes('?')) {
+                try {
+                    const url = new URL(text.startsWith('http') ? text : window.location.origin + '/' + text);
+                    targetCounterId = url.searchParams.get('joinCounter') || '';
+                    targetCounterName = url.searchParams.get('counterName') || '';
+                } catch(e) {
+                    const m = text.match(/joinCounter=([^&]+)/);
+                    if (m) targetCounterId = decodeURIComponent(m[1]);
                 }
-            });
-            fetchHistoryData();
-        };
+            } else {
+                targetCounterId = text.trim();
+            }
 
-        function fetchHistoryData() {
-            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
-            const curId = currentUserState.userId.toLowerCase();
-            historyList = historyList.filter(item => 
-                item.userId.toLowerCase() === curId || 
-                (item.partnerId && item.partnerId.toLowerCase() === curId)
-            );
-
-            historyList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-            const now = new Date();
-            historyList = historyList.filter(item => {
-                const itemDate = new Date(item.timestamp);
-                if (currentHistoryFilter === 'today') {
-                    return itemDate.toDateString() === now.toDateString();
-                } else if (currentHistoryFilter === 'weekly') {
-                    const diffTime = Math.abs(now - itemDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays <= 7;
-                } else if (currentHistoryFilter === 'monthly') {
-                    return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
-                } else if (currentHistoryFilter === 'yearly') {
-                    return itemDate.getFullYear() === now.getFullYear();
-                }
-                return true;
-            });
-
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-            if (historyList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No history records found for this filter.</td></tr>`;
+            if (!targetCounterId) {
+                showToast('Could not find a valid counter ID from QR', 'error');
                 return;
             }
 
-            historyList.forEach(item => {
-                const dateObj = new Date(item.timestamp);
-                const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const isPositive = (item.addedAmount || 0) >= 0;
-                const changeBadge = isPositive 
-                    ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs">+${item.addedAmount}</span>`
-                    : `<span class="px-2 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold text-xs">${item.addedAmount}</span>`;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3 text-xs text-slate-500 font-mono">${formattedDate}</td>
-                    <td class="p-3 font-semibold">${item.userName}</td>
-                    <td class="p-3 text-slate-500 text-xs font-mono">${item.partnerId || 'None'}</td>
-                    <td class="p-3">${changeBadge}</td>
-                    <td class="p-3 font-bold text-brand-600 dark:text-brand-400">${item.selfCount}</td>
-                    <td class="p-3 text-right">
-                        <button onclick="deleteHistoryRecord('${item.historyId}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 text-xs font-bold rounded-lg border border-rose-200 dark:border-rose-800 transition shadow-xs" title="Delete this count record">
-                            <i class="fa-solid fa-trash mr-1"></i> Delete
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            joinCounterRoom(targetCounterId, targetCounterName);
         }
 
-        // Delete a specific count entry from history and adjust counter
-        window.deleteHistoryRecord = function(historyId) {
-            if (!confirm('Are you sure you want to delete this count record? This will adjust your total count.')) return;
+        // Join Counter Room Function
+        window.joinCounterRoom = function(targetCounterId, targetCounterName) {
+            let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            let counter = counters.find(c => c.id === targetCounterId);
 
-            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
-            const recordIdx = historyList.findIndex(h => h.historyId === historyId);
-            if (recordIdx === -1) return;
-
-            const record = historyList[recordIdx];
-            const changeAmt = record.addedAmount || 0;
-
-            if (record.userId.toLowerCase() === currentUserState.userId.toLowerCase() && changeAmt !== 0) {
-                const newCount = Math.max(0, (currentUserState.count || 0) - changeAmt);
-                currentUserState.count = newCount;
-                localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
-
-                let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-                const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
-                if (idx >= 0) {
-                    storedUsers[idx].count = newCount;
-                    localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
-                }
-
-                updateSelfUI();
-                fetchAndUpdateGroupData();
-
-                if (syncChannel) {
-                    syncChannel.postMessage({
-                        type: 'COUNT_UPDATE',
-                        userId: currentUserState.userId,
-                        count: newCount
-                    });
-                }
+            // If counter doesn't exist locally on this phone yet, CREATE IT based on QR invite data!
+            if (!counter) {
+                counter = {
+                    id: targetCounterId,
+                    name: targetCounterName ? decodeURIComponent(targetCounterName) : 'Partner Preaching Counter',
+                    creatorId: 'partner',
+                    creatorName: 'Ministry Partner',
+                    createdAt: new Date().toISOString(),
+                    status: 'active',
+                    members: [],
+                    totalCount: 0,
+                    history: []
+                };
+                counters.push(counter);
             }
 
-            historyList.splice(recordIdx, 1);
-            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
-            fetchHistoryData();
-            showToast('Count record deleted successfully!');
-        };
+            if (!currentUserState) {
+                sessionStorage.setItem('pending_counter_join', JSON.stringify({ counterId: targetCounterId }));
+                showToast('Saved counter invite! Please login or register to enter.');
+                return;
+            }
 
-        // Clear all history records for current user
-        window.clearAllMyHistory = function() {
-            if (!confirm('Are you sure you want to clear your count history?')) return;
-            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+            // Add current user to counter if not already in
             const curId = currentUserState.userId.toLowerCase();
-            historyList = historyList.filter(h => h.userId.toLowerCase() !== curId);
-            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
-            fetchHistoryData();
-            showToast('Count history cleared');
+            let member = counter.members.find(m => m.userId.toLowerCase() === curId);
+            if (!member) {
+                counter.members.push({
+                    userId: currentUserState.userId,
+                    fullName: currentUserState.fullName,
+                    count: 0,
+                    status: 'active',
+                    joinedAt: new Date().toISOString()
+                });
+            } else {
+                member.status = 'active'; // re-activate if previously completed
+            }
+
+            localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'MEMBER_JOINED', counterId: targetCounterId });
+            }
+
+            showToast(`Joined counter: "${counter.name}"!`);
+            openCounterWorkspace(targetCounterId);
         };
 
-        // ================= ADMIN DASHBOARD LOGIC =================
+        // ==============================================================
+        // ADMIN DASHBOARD LOGIC (SURYA11008 & ADMIN)
+        // ==============================================================
         function initAdminDashboard() {
             refreshAdminData();
         }
 
         window.refreshAdminData = function() {
-            let users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            let totalCounts = 0;
-            let activePairs = 0;
-            users.forEach(u => {
-                totalCounts += (u.count || 0);
-                if (u.partnerId) activePairs++;
-            });
+            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
 
+            let totalCounts = 0;
+            counters.forEach(c => totalCounts += (c.totalCount || 0));
+            const completedCount = counters.filter(c => c.status === 'completed').length;
+
+            document.getElementById('adminTotalCounters').innerText = counters.length;
             document.getElementById('adminTotalUsers').innerText = users.length;
             document.getElementById('adminTotalCounts').innerText = totalCounts;
-            document.getElementById('adminActivePartners').innerText = activePairs;
+            document.getElementById('adminCompletedCounters').innerText = completedCount;
 
-            const tbody = document.getElementById('adminUsersTableBody');
-            tbody.innerHTML = '';
-            users.forEach(u => {
-                const isProtected = u.role === 'admin' || u.userId === 'admin' || u.userId === 'surya11008';
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
-                tr.innerHTML = `
-                    <td class="p-4">
-                        <p class="font-bold">${u.fullName}</p>
-                        <p class="text-xs text-slate-400 font-mono">${u.userId}</p>
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 text-xs font-bold rounded-full ${u.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
-                    </td>
-                    <td class="p-4 font-mono text-xs text-slate-500">${u.partnerId || 'None'}</td>
-                    <td class="p-4 font-bold text-brand-600">${u.count || 0}</td>
-                    <td class="p-4 text-right">
-                        ${!isProtected ? `<button onclick="adminRemoveUser('${u.userId}')" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> Remove</button>` : '<span class="text-xs text-slate-400">Protected</span>'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            showToast('Admin data refreshed');
+            // Render All Counters Table
+            const countersTbody = document.getElementById('adminCountersTableBody');
+            if (countersTbody) {
+                if (counters.length === 0) {
+                    countersTbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No counters created yet.</td></tr>`;
+                } else {
+                    countersTbody.innerHTML = counters.map(c => {
+                        const members = c.members || [];
+                        const memberNames = members.map(m => `${m.fullName} (${m.count})`).join(', ') || 'No members';
+                        const isActive = c.status === 'active';
+
+                        return `
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                <td class="p-3.5 font-bold text-slate-800 dark:text-slate-100">
+                                    ${escapeHtml(c.name)}
+                                    <span class="block text-[10px] text-slate-400 font-mono">${c.id}</span>
+                                </td>
+                                <td class="p-3.5 text-xs text-slate-600 dark:text-slate-300">${escapeHtml(c.creatorName)}</td>
+                                <td class="p-3.5 text-xs text-slate-500 max-w-xs truncate" title="${escapeHtml(memberNames)}">${escapeHtml(memberNames)}</td>
+                                <td class="p-3.5 font-extrabold text-brand-600 dark:text-brand-400">${c.totalCount || 0}</td>
+                                <td class="p-3.5">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}">
+                                        ${isActive ? 'Active' : 'Completed'}
+                                    </span>
+                                </td>
+                                <td class="p-3.5 text-right space-x-1">
+                                    <button onclick="adminInspectCounter('${c.id}')" class="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition">Open</button>
+                                    <button onclick="deleteCounter('${c.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Render Users Table
+            const usersTbody = document.getElementById('adminUsersTableBody');
+            if (usersTbody) {
+                usersTbody.innerHTML = users.map(u => {
+                    const isProtected = u.role === 'admin' || u.userId === 'admin' || u.userId === 'surya11008';
+                    return `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                            <td class="p-3.5">
+                                <p class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(u.fullName)}</p>
+                                <p class="text-xs text-slate-400 font-mono">${u.userId}</p>
+                            </td>
+                            <td class="p-3.5">
+                                <span class="px-2.5 py-1 text-xs font-bold rounded-full ${u.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
+                            </td>
+                            <td class="p-3.5 font-bold text-brand-600 dark:text-brand-400">${u.count || 0}</td>
+                            <td class="p-3.5 text-right">
+                                ${!isProtected ? `<button onclick="adminRemoveUser('${u.userId}')" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> Remove</button>` : '<span class="text-xs text-slate-400">Protected</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            showToast('Admin dashboard refreshed');
+        };
+
+        window.adminInspectCounter = function(counterId) {
+            activeCounterId = counterId;
+            const activeCounterView = document.getElementById('activeCounterView');
+            const adminView = document.getElementById('adminView');
+            adminView.classList.add('hidden');
+            activeCounterView.classList.remove('hidden');
+            loadActiveCounterRoom(counterId);
         };
 
         window.adminRemoveUser = function(userId) {
-            if (!confirm(`Are you sure you want to remove user "${userId}" from the system?`)) return;
+            if (!confirm(`Are you sure you want to remove user "${userId}"?`)) return;
             let users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             users = users.filter(u => u.userId.toLowerCase() !== userId.toLowerCase());
             localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-
             showToast(`User ${userId} removed successfully`);
             refreshAdminData();
         };
 
-        // Check URL parameters for partner invite links
-        function checkUrlPartnerParams() {
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Check URL Query Parameters for Counter Invite Links
+        function checkUrlCounterParams() {
             const params = new URLSearchParams(window.location.search);
-            const pId = params.get('partnerId');
-            if (pId) {
-                const pName = params.get('partnerName') || '';
-                const pCount = params.get('count') || '0';
-                
-                if (currentUserState) {
-                    connectPartnerById(`${pId}&partnerName=${encodeURIComponent(pName)}&count=${pCount}`);
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } else {
-                    sessionStorage.setItem('pending_partner_connect', JSON.stringify({
-                        partnerId: pId,
-                        partnerName: pName,
-                        count: parseInt(pCount) || 0
-                    }));
-                }
+            const counterId = params.get('joinCounter');
+            const counterName = params.get('counterName');
+
+            if (counterId) {
+                joinCounterRoom(counterId, counterName);
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
-        // Window onload initialization
+        // Initialize on load
         window.addEventListener('load', () => {
             renderInterface();
-            checkUrlPartnerParams();
+            checkUrlCounterParams();
         });
     </script>
 </body>
