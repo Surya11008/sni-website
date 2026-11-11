@@ -1209,6 +1209,20 @@
         // ==============================================================
         const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+        
+        // Helper: Filter counters for current user (Admins see all, regular users see only their sessions)
+        function getUserAccessibleCounters() {
+            const allCounters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            if (!currentUserState) return [];
+            if (currentUserState.role === 'admin') return allCounters;
+            const curId = (currentUserState.userId || '').toLowerCase();
+            return allCounters.filter(c => {
+                const isCreator = (c.creatorId || '').toLowerCase() === curId;
+                const isMember = (c.members || []).some(m => (m.userId || '').toLowerCase() === curId);
+                return isCreator || isMember;
+            });
+        }
+
         function renderCalendarWidget() {
             const grid = document.getElementById('calendarDaysGrid');
             const title = document.getElementById('calendarMonthTitle');
@@ -1216,8 +1230,8 @@
 
             title.innerText = `${MONTH_NAMES[currentCalendarMonth]} ${currentCalendarYear}`;
 
-            // Get counters to mark days with counters
-            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            // Get counters to mark days with counters (isolated per user, all for admin)
+            const counters = getUserAccessibleCounters();
             const counterDateCounts = {};
             counters.forEach(c => {
                 const dateKey = c.date || (c.createdAt ? c.createdAt.split('T')[0] : '');
@@ -1319,7 +1333,8 @@
             if (!currentUserState) return;
             document.getElementById('hubWelcomeUser').innerText = `Welcome, ${currentUserState.fullName}`;
             
-            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            // Isolated per user (new user gets clean empty list, admin sees all)
+            const counters = getUserAccessibleCounters();
             const statTotalCounters = document.getElementById('statTotalCounters');
             const statActiveCounters = document.getElementById('statActiveCounters');
             const statUserLifetimeCount = document.getElementById('statUserLifetimeCount');

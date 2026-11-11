@@ -479,7 +479,7 @@
                 <button type="button" id="closeMultiplayerModalBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">&times;</button>
             </div>
 
-            <!-- Mode Selection Tabs: 1. Help Support, 2. Funny Battle, 3. Scan QR to Join -->
+            <!-- Mode Selection Tabs: 1. Help Support, 2. Funny Battle -->
             <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700">
                 <button type="button" id="tabMpHelp" onclick="switchMpTab('help')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-teal-600 text-white shadow transition">
                     🤝 1. Help Support
@@ -487,23 +487,20 @@
                 <button type="button" id="tabMpFunny" onclick="switchMpTab('funny')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
                     ⚔️ 2. Funny Battle
                 </button>
-                <button type="button" id="tabMpScan" onclick="switchMpTab('scan')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
-                    📷 3. Scan QR
-                </button>
             </div>
 
             <!-- Tab 1: Help Support Content -->
             <div id="mpHelpContainer" class="space-y-4">
                 <div class="bg-teal-50 dark:bg-teal-950/40 p-3 rounded-2xl border border-teal-200 dark:border-teal-800/60 text-xs text-teal-900 dark:text-teal-200 leading-relaxed">
-                    <strong>🤝 Co-op Support Mode:</strong> Stuck on your stage? Show this QR code or share the link. When your partner scans, you both connect live! As soon as anyone finds a word, it highlights instantly on both screens!
+                    <strong>🤝 Co-op Support Mode:</strong> Stuck on your stage? Show this QR code or share the link. When your partner scans with their phone camera or clicks the link, you both connect live! As soon as anyone finds a word, it highlights instantly on both screens!
                 </div>
 
                 <div class="text-center">
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                        Scan to Join Stage <span id="mpHelpStageNum" class="text-teal-600 dark:text-teal-400 font-extrabold text-sm">1</span> (Live Co-op)
+                        Scan with Phone Camera to Join Stage <span id="mpHelpStageNum" class="text-teal-600 dark:text-teal-400 font-extrabold text-sm">1</span> (Live Co-op)
                     </span>
                     <div class="inline-block p-3 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                        <div id="mpHelpQrDiv" class="w-44 h-44 mx-auto flex items-center justify-center"></div>
+                        <div id="mpHelpQrDiv" class="w-48 h-48 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpHelpQrImg" src="" alt="Help Support QR Code" class="w-full h-full object-contain rounded-xl" /></div>
                     </div>
                 </div>
 
@@ -526,15 +523,15 @@
             <!-- Tab 2: Funny Battle Content -->
             <div id="mpFunnyContainer" class="hidden space-y-4">
                 <div class="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-2xl border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 leading-relaxed">
-                    <strong>⚔️ Live Funny Battle (Versus):</strong> Challenge your partner in real-time! Both players play simultaneously on the same board. <strong>Whoever finds more words wins!</strong> Scores update live (+100 pts per word).
+                    <strong>⚔️ Live Funny Battle (Versus):</strong> Challenge your partner in real-time! Both players play simultaneously on the same board with live updates. <strong>Whoever finds more words wins!</strong> Scores update live (+100 pts per word).
                 </div>
 
                 <div class="text-center">
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                        Scan to Join Live Battle Match
+                        Scan with Phone Camera to Join Live Battle Match
                     </span>
                     <div class="inline-block p-3 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                        <div id="mpFunnyQrDiv" class="w-44 h-44 mx-auto flex items-center justify-center"></div>
+                        <div id="mpFunnyQrDiv" class="w-48 h-48 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpFunnyQrImg" src="" alt="Funny Battle QR Code" class="w-full h-full object-contain rounded-xl" /></div>
                     </div>
                 </div>
 
@@ -556,31 +553,6 @@
                         <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>WhatsApp</span>
                     </button>
-                </div>
-            </div>
-
-            <!-- Tab 3: Scan QR to Join Partner -->
-            <div id="mpScanContainer" class="hidden space-y-4">
-                <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-2xl border border-blue-200 dark:border-blue-800/60 text-xs text-blue-900 dark:text-blue-200 leading-relaxed">
-                    <strong>📷 Connect via Camera Scan:</strong> Point your camera at your partner's QR code on their screen to connect to their live match instantly!
-                </div>
-
-                <div id="mp-camera-reader" class="w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 min-h-[200px]"></div>
-
-                <div class="flex gap-2">
-                    <button type="button" onclick="startMpCameraScanner()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow">
-                        <i class="fa-solid fa-camera"></i>
-                        <span>Start Camera Scanner</span>
-                    </button>
-                </div>
-
-                <!-- Fallback Paste Link -->
-                <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Or Paste Match Link Here:</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="manualMpPasteInput" placeholder="Paste sni.org.in/wordsearch.html?... link" class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono focus:outline-none">
-                        <button type="button" onclick="connectFromManualMpInput()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition">Connect</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1142,10 +1114,23 @@
             renderGrid();
         }
 
+        // PRNG generator for 100% deterministic multiplayer grid across devices
+        function createSeededRNG(seed) {
+            let s = (parseInt(seed) || 123456) >>> 0;
+            return function() {
+                s |= 0; s = s + 0x6D2B79F5 | 0;
+                let t = Math.imul(s ^ s >>> 15, 1 | s);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
         // Automatic Word Placement (Horizontal Right & Vertical Down only)
-        function generateGridAndPlaceWords() {
+        function generateGridAndPlaceWords(forcedSeed) {
             let success = false;
             let attempts = 0;
+            const useSeed = (forcedSeed !== undefined && forcedSeed !== null) ? forcedSeed : ((mpActiveMode && activeMatchSeed) ? activeMatchSeed : null);
+            const rng = useSeed ? createSeededRNG(useSeed) : Math.random;
 
             while (!success && attempts < 100) {
                 attempts++;
@@ -1161,9 +1146,9 @@
 
                     while (!wordPlaced && wordAttempts < 100) {
                         wordAttempts++;
-                        const dir = directions[Math.floor(Math.random() * directions.length)];
-                        const row = Math.floor(Math.random() * gridSize);
-                        const col = Math.floor(Math.random() * gridSize);
+                        const dir = directions[Math.floor(rng() * directions.length)];
+                        const row = Math.floor(rng() * gridSize);
+                        const col = Math.floor(rng() * gridSize);
 
                         if (canPlaceWord(word, row, col, dir)) {
                             placeWord(word, row, col, dir);
@@ -1185,7 +1170,7 @@
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
                     if (grid[r][c] === '') {
-                        grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+                        grid[r][c] = letters[Math.floor(rng() * letters.length)];
                     }
                 }
             }
@@ -1324,7 +1309,7 @@
                     playSound('success');
                     foundWords.add(matchedWord);
                     if (window.onWordFoundMultiplayer) {
-                        window.onWordFoundMultiplayer(matchedWord);
+                        window.onWordFoundMultiplayer(matchedWord, currentSelectedCells);
                     }
                     currentSelectedCells.forEach(cell => {
                         solvedCellMap.set(`${cell.r},${cell.c}`, matchedWord);
@@ -1723,7 +1708,7 @@
         }
 
         // ==============================================================
-        // 4. 2-PLAYER MULTIPLAYER (QR CODE & LINK SHARING)
+        // 4. REAL-TIME 2-PLAYER MULTIPLAYER (MQTT & LIVE CROSS-DEVICE SYNC)
         // ==============================================================
         const funnyWordPool = [
             "BANANA", "MONKEY", "GIGGLE", "POPCORN", "TICKLE",
@@ -1734,48 +1719,320 @@
         ];
 
         let mpActiveMode = null; // null, 'help', or 'battle'
+        let mpRoomId = null;
+        let mpIsHost = false;
+        let myPlayerId = 'p_' + Math.random().toString(36).substring(2, 9);
+        let myPlayerName = 'Player 1';
+        let partnerPlayerId = null;
+        let partnerPlayerName = 'Partner';
         let p1Score = 0;
         let p2Score = 0;
-        let activeTurn = 1; // 1 or 2
         let currentFunnyWords = [];
+        let activeMatchSeed = null;
+
+        let wsMqttClient = null;
+        let wsBroadcastChannel = null;
+        let touchThrottleTimer = 0;
+
+        // Render QR Code helper (supports QRCode canvas and API fallback)
+        function renderQr(containerId, imgId, url) {
+            const container = document.getElementById(containerId);
+            const img = document.getElementById(imgId);
+            if (!url) return;
+
+            let success = false;
+            if (typeof QRCode !== 'undefined' && container) {
+                try {
+                    container.innerHTML = '';
+                    new QRCode(container, {
+                        text: url,
+                        width: 190,
+                        height: 190,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                    success = true;
+                } catch(e) {
+                    console.warn('QRCode JS error:', e);
+                }
+            }
+
+            if (!success) {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+                if (container) {
+                    container.innerHTML = `<img src="${qrUrl}" alt="QR Code" class="w-48 h-48 object-contain rounded-xl mx-auto shadow-xs" />`;
+                } else if (img) {
+                    img.src = qrUrl;
+                }
+            }
+        }
 
         function generateMultiplayerLinks() {
             const baseUrl = window.location.origin + window.location.pathname;
 
             // 1. Help Support Link (Current Stage)
+            const helpRoom = 'help_s' + currentStage + '_' + Math.random().toString(36).substring(2, 7);
+            const matchSeed = Math.floor(Math.random() * 900000 + 100000);
+            const helpLink = `${baseUrl}?mode=help&stage=${currentStage}&room=${helpRoom}&seed=${matchSeed}`;
+
             const mpHelpStageNum = document.getElementById('mpHelpStageNum');
             const mpHelpLinkInput = document.getElementById('mpHelpLinkInput');
-            const mpHelpQrImg = document.getElementById('mpHelpQrImg');
             if (mpHelpStageNum) mpHelpStageNum.textContent = currentStage;
-            const helpLink = `${baseUrl}?mode=help&stage=${currentStage}`;
             if (mpHelpLinkInput) mpHelpLinkInput.value = helpLink;
-            if (mpHelpQrImg) {
-                mpHelpQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(helpLink)}`;
-            }
 
-            // 2. Funny Battle Link (8 pre-selected funny words in URL)
+            renderQr('mpHelpQrDiv', 'mpHelpQrImg', helpLink);
+
+            // 2. Funny Battle Link (8 pre-selected funny words)
             const shuffled = [...funnyWordPool].sort(() => 0.5 - Math.random());
             currentFunnyWords = shuffled.slice(0, 8);
-            const funnyLink = `${baseUrl}?mode=funny&words=${encodeURIComponent(currentFunnyWords.join(','))}`;
+            const battleRoom = 'battle_' + Math.random().toString(36).substring(2, 8);
+            const funnyLink = `${baseUrl}?mode=funny&room=${battleRoom}&seed=${matchSeed}&words=${encodeURIComponent(currentFunnyWords.join(','))}`;
+
             const mpFunnyLinkInput = document.getElementById('mpFunnyLinkInput');
-            const mpFunnyQrImg = document.getElementById('mpFunnyQrImg');
             if (mpFunnyLinkInput) mpFunnyLinkInput.value = funnyLink;
-            if (mpFunnyQrImg) {
-                mpFunnyQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(funnyLink)}`;
+
+            renderQr('mpFunnyQrDiv', 'mpFunnyQrImg', funnyLink);
+
+            window.currentGeneratedHelp = { room: helpRoom, seed: matchSeed, link: helpLink };
+            window.currentGeneratedBattle = { room: battleRoom, seed: matchSeed, link: funnyLink, words: currentFunnyWords };
+        }
+
+        // Live Multiplayer Real-Time Connection
+        function connectMultiplayerRealTime(roomId) {
+            const topic = `sni/wordsearch/room/${roomId}`;
+
+            // Local BroadcastChannel for same-device multi-tab sync
+            try {
+                if (window.BroadcastChannel) {
+                    if (wsBroadcastChannel) wsBroadcastChannel.close();
+                    wsBroadcastChannel = new BroadcastChannel(`sni_ws_${roomId}`);
+                    wsBroadcastChannel.onmessage = (e) => handleMpMessage(e.data);
+                }
+            } catch (e) {
+                console.warn('BroadcastChannel error:', e);
+            }
+
+            // Cross-device MQTT via HiveMQ Public Broker
+            if (window.mqtt) {
+                try {
+                    if (wsMqttClient) {
+                        try { wsMqttClient.end(true); } catch(e){}
+                    }
+                    wsMqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                        clientId: 'sni_ws_' + myPlayerId,
+                        clean: true,
+                        reconnectPeriod: 2500
+                    });
+
+                    wsMqttClient.on('connect', () => {
+                        console.log('WordSearch MQTT connected to room:', roomId);
+                        wsMqttClient.subscribe(topic);
+                    });
+
+                    wsMqttClient.on('message', (t, payload) => {
+                        try {
+                            const data = JSON.parse(payload.toString());
+                            handleMpMessage(data);
+                        } catch(e){}
+                    });
+
+                    wsMqttClient.on('error', (err) => console.warn('MQTT err:', err));
+                } catch (e) {
+                    console.warn('MQTT error:', e);
+                }
             }
         }
 
-        function startFunnyBattleMode(customWords) {
+        function sendMpEvent(eventObj) {
+            if (!mpRoomId) return;
+            eventObj.roomId = mpRoomId;
+            eventObj.senderId = myPlayerId;
+            eventObj.timestamp = Date.now();
+
+            if (wsBroadcastChannel) {
+                try { wsBroadcastChannel.postMessage(eventObj); } catch(e){}
+            }
+            if (wsMqttClient && wsMqttClient.connected) {
+                try {
+                    wsMqttClient.publish(`sni/wordsearch/room/${mpRoomId}`, JSON.stringify(eventObj));
+                } catch(e){}
+            }
+        }
+
+        function setPartnerStatus(connected, text) {
+            const statusContainer = document.getElementById('mpLivePartnerStatus');
+            const statusText = document.getElementById('mpLivePartnerStatusText');
+            if (statusText) statusText.textContent = text || (connected ? '🟢 Partner Connected' : 'Waiting for partner...');
+            if (statusContainer) {
+                if (connected) {
+                    statusContainer.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse";
+                } else {
+                    statusContainer.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                }
+            }
+        }
+
+        function handleMpMessage(data) {
+            if (!data || data.senderId === myPlayerId) return;
+
+            // 1. Partner Join
+            if (data.type === 'PLAYER_JOIN') {
+                partnerPlayerId = data.senderId;
+                partnerPlayerName = data.senderName || 'Partner';
+                setPartnerStatus(true, `🟢 ${partnerPlayerName} Connected`);
+
+                if (mpIsHost) {
+                    sendMpEvent({
+                        type: 'SYNC_STATE',
+                        seed: activeMatchSeed,
+                        stage: currentStage,
+                        words: currentWords,
+                        foundWords: Array.from(foundWords),
+                        p1Score: p1Score,
+                        p2Score: p2Score
+                    });
+                }
+            }
+
+            // 2. Sync State from Host
+            if (data.type === 'SYNC_STATE') {
+                setPartnerStatus(true, '🟢 Partner Connected');
+                if (data.foundWords && Array.isArray(data.foundWords)) {
+                    data.foundWords.forEach(w => {
+                        foundWords.add(w);
+                        markWordOnBoard(w);
+                    });
+                    renderWordList();
+                    renderGrid();
+                }
+                if (typeof data.p1Score === 'number') p1Score = data.p1Score;
+                if (typeof data.p2Score === 'number') p2Score = data.p2Score;
+                updateFunnyScoreUI();
+            }
+
+            // 3. Live Touch Selection from Partner
+            if (data.type === 'TOUCH') {
+                const touchBar = document.getElementById('mpLiveTouchBar');
+                const touchText = document.getElementById('mpLiveTouchText');
+                if (touchBar && touchText) {
+                    touchBar.classList.remove('hidden');
+                    touchBar.style.display = 'flex';
+                    touchText.textContent = `Partner is touching: ${data.word || '...'}`;
+                }
+            }
+
+            if (data.type === 'TOUCH_END') {
+                const touchBar = document.getElementById('mpLiveTouchBar');
+                if (touchBar) {
+                    setTimeout(() => {
+                        touchBar.classList.add('hidden');
+                        touchBar.style.display = 'none';
+                    }, 600);
+                }
+            }
+
+            // 4. Word Found by Partner
+            if (data.type === 'WORD_FOUND') {
+                const word = data.word;
+                if (word && !foundWords.has(word)) {
+                    foundWords.add(word);
+                    markWordOnBoard(word, data.cells);
+                    renderWordList();
+                    renderGrid();
+                    playSound('success');
+
+                    selectionStatusEl.textContent = `🎉 Partner found "${word}"!`;
+                    selectionStatusEl.classList.add('text-teal-500', 'font-bold');
+                    setTimeout(() => {
+                        selectionStatusEl.classList.remove('text-teal-500', 'font-bold');
+                        selectionStatusEl.textContent = 'Keep searching!';
+                    }, 2200);
+
+                    if (mpActiveMode === 'battle') {
+                        if (data.isHost) {
+                            p1Score += 100;
+                        } else {
+                            p2Score += 100;
+                        }
+                        updateFunnyScoreUI();
+                        checkBattleEnd();
+                    } else if (mpActiveMode === 'help') {
+                        if (foundWords.size >= currentWords.length) {
+                            setTimeout(() => {
+                                alert(`🎉 Stage ${currentStage} Completed Together!`);
+                            }, 500);
+                        }
+                    }
+                }
+            }
+        }
+
+        function markWordOnBoard(word, cells) {
+            if (cells && Array.isArray(cells) && cells.length > 0) {
+                cells.forEach(c => solvedCellMap.set(`${c.r},${c.c}`, word));
+                return;
+            }
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (c + word.length <= gridSize) {
+                        let match = true;
+                        for (let i = 0; i < word.length; i++) {
+                            if (grid[r][c + i] !== word[i]) { match = false; break; }
+                        }
+                        if (match) {
+                            for (let i = 0; i < word.length; i++) solvedCellMap.set(`${r},${c + i}`, word);
+                            return;
+                        }
+                    }
+                    if (r + word.length <= gridSize) {
+                        let match = true;
+                        for (let i = 0; i < word.length; i++) {
+                            if (grid[r + i][c] !== word[i]) { match = false; break; }
+                        }
+                        if (match) {
+                            for (let i = 0; i < word.length; i++) solvedCellMap.set(`${r + i},${c}`, word);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Live Touch Selection Broadcasters
+        window.broadcastLiveTouch = function(wordStr) {
+            if (!mpActiveMode || !mpRoomId) return;
+            const now = Date.now();
+            if (now - touchThrottleTimer < 70) return;
+            touchThrottleTimer = now;
+            sendMpEvent({
+                type: 'TOUCH',
+                word: wordStr
+            });
+        };
+
+        window.broadcastLiveTouchEnd = function() {
+            if (!mpActiveMode || !mpRoomId) return;
+            sendMpEvent({
+                type: 'TOUCH_END'
+            });
+        };
+
+        function startFunnyBattleMode(customWords, roomId, seed, isHost) {
             mpActiveMode = 'battle';
+            mpRoomId = roomId || ('battle_' + Math.random().toString(36).substring(2, 8));
+            activeMatchSeed = seed || Math.floor(Math.random() * 900000 + 100000);
+            mpIsHost = isHost || false;
             p1Score = 0;
             p2Score = 0;
-            activeTurn = 1;
 
             const multiplayerBanner = document.getElementById('multiplayerBanner');
             const mpModeIcon = document.getElementById('mpModeIcon');
             const mpModeTitle = document.getElementById('mpModeTitle');
             const mpModeSubtitle = document.getElementById('mpModeSubtitle');
             const funnyScoreboard = document.getElementById('funnyScoreboard');
+            const p1LabelName = document.getElementById('p1LabelName');
+            const p2LabelName = document.getElementById('p2LabelName');
 
             if (multiplayerBanner) {
                 multiplayerBanner.classList.remove('hidden');
@@ -1783,13 +2040,16 @@
             }
             if (mpModeIcon) mpModeIcon.textContent = '⚔️';
             if (mpModeTitle) mpModeTitle.textContent = 'Funny Word Battle (2-Player)';
-            if (mpModeSubtitle) mpModeSubtitle.textContent = 'Take turns finding funny words. Each word gives +100 points!';
+            if (mpModeSubtitle) mpModeSubtitle.textContent = 'Race live! Whoever finds more words wins (+100 pts per word)';
             if (funnyScoreboard) {
                 funnyScoreboard.classList.remove('hidden');
                 funnyScoreboard.style.display = 'flex';
             }
+            if (p1LabelName) p1LabelName.textContent = mpIsHost ? 'You (P1)' : 'Host (P1)';
+            if (p2LabelName) p2LabelName.textContent = mpIsHost ? 'Partner (P2)' : 'You (P2)';
 
-            updateTurnUI();
+            updateFunnyScoreUI();
+            setPartnerStatus(false, 'Waiting for partner to connect...');
 
             // Setup funny board
             if (customWords && customWords.length >= 4) {
@@ -1807,55 +2067,86 @@
             hideWinModal();
 
             gridSize = 12;
-            generateGridAndPlaceWords();
+            generateGridAndPlaceWords(activeMatchSeed);
             renderWordList();
             renderGrid();
+
+            // Connect real-time
+            connectMultiplayerRealTime(mpRoomId);
+
+            setTimeout(() => {
+                sendMpEvent({
+                    type: 'PLAYER_JOIN',
+                    senderId: myPlayerId,
+                    senderName: mpIsHost ? 'Player 1' : 'Player 2',
+                    isHost: mpIsHost,
+                    seed: activeMatchSeed,
+                    words: currentWords
+                });
+            }, 500);
         }
 
-        function updateTurnUI() {
+        window.hostStartFunnyBattleNow = function() {
+            const modal = document.getElementById('multiplayerModal');
+            if (modal) modal.classList.add('hidden');
+            const battle = window.currentGeneratedBattle || {
+                room: 'battle_' + Math.random().toString(36).substring(2, 8),
+                seed: Math.floor(Math.random() * 900000 + 100000),
+                words: currentFunnyWords
+            };
+            startFunnyBattleMode(battle.words, battle.room, battle.seed, true);
+        };
+
+        window.openMultiplayerModalAgain = function() {
+            const modal = document.getElementById('multiplayerModal');
+            if (modal) {
+                generateMultiplayerLinks();
+                modal.classList.remove('hidden');
+            }
+        };
+
+        function updateFunnyScoreUI() {
             const p1ScoreEl = document.getElementById('p1Score');
             const p2ScoreEl = document.getElementById('p2Score');
-            const p1ScoreBox = document.getElementById('p1ScoreBox');
-            const p2ScoreBox = document.getElementById('p2ScoreBox');
-
             if (p1ScoreEl) p1ScoreEl.textContent = `${p1Score} pts`;
             if (p2ScoreEl) p2ScoreEl.textContent = `${p2Score} pts`;
+        }
 
-            if (p1ScoreBox && p2ScoreBox) {
-                if (activeTurn === 1) {
-                    p1ScoreBox.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white text-center ring-2 ring-amber-300 shadow-md font-bold";
-                    p2ScoreBox.className = "px-3 py-1.5 rounded-lg bg-purple-600 text-white text-center opacity-60";
+        function checkBattleEnd() {
+            if (foundWords.size >= currentWords.length) {
+                let winMsg = '🎉 Funny Word Battle Finished!\n\n';
+                if (p1Score > p2Score) {
+                    winMsg += `🏆 Player 1 Wins with ${p1Score} pts! (Player 2: ${p2Score} pts)`;
+                } else if (p2Score > p1Score) {
+                    winMsg += `🏆 Player 2 Wins with ${p2Score} pts! (Player 1: ${p1Score} pts)`;
                 } else {
-                    p2ScoreBox.className = "px-3 py-1.5 rounded-lg bg-purple-600 text-white text-center ring-2 ring-amber-300 shadow-md font-bold";
-                    p1ScoreBox.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white text-center opacity-60";
+                    winMsg += `🤝 It is a Tie! Both scored ${p1Score} pts!`;
                 }
+                setTimeout(() => alert(winMsg), 400);
             }
         }
 
-        window.onWordFoundMultiplayer = function(word) {
-            if (mpActiveMode === 'battle') {
-                if (activeTurn === 1) {
-                    p1Score += 100;
-                } else {
-                    p2Score += 100;
-                }
-                updateTurnUI();
-                
-                selectionStatusEl.textContent = `🎯 +100 Points to Player ${activeTurn}! (${word})`;
-                selectionStatusEl.classList.add('text-amber-500', 'font-bold');
+        window.onWordFoundMultiplayer = function(word, cells) {
+            if (mpActiveMode && mpRoomId) {
+                sendMpEvent({
+                    type: 'WORD_FOUND',
+                    word: word,
+                    isHost: mpIsHost,
+                    cells: cells || []
+                });
 
-                if (foundWords.size >= currentWords.length) {
-                    let winMsg = '🎉 Match Finished! ';
-                    if (p1Score > p2Score) winMsg += `Player 1 Wins with ${p1Score} pts!`;
-                    else if (p2Score > p1Score) winMsg += `Player 2 Wins with ${p2Score} pts!`;
-                    else winMsg += `It is a Tie with ${p1Score} pts each!`;
-                    
-                    alert(winMsg);
-                } else {
-                    setTimeout(() => {
-                        activeTurn = activeTurn === 1 ? 2 : 1;
-                        updateTurnUI();
-                    }, 1200);
+                if (mpActiveMode === 'battle') {
+                    if (mpIsHost) {
+                        p1Score += 100;
+                    } else {
+                        p2Score += 100;
+                    }
+                    updateFunnyScoreUI();
+                    checkBattleEnd();
+                } else if (mpActiveMode === 'help') {
+                    if (foundWords.size >= currentWords.length) {
+                        setTimeout(() => alert(`🎉 Stage ${currentStage} Completed Together!`), 400);
+                    }
                 }
             }
         };
@@ -1864,11 +2155,17 @@
             const params = new URLSearchParams(window.location.search);
             const mode = params.get('mode');
             const stage = params.get('stage');
+            const room = params.get('room') || ('ws_' + (stage || 'battle') + '_' + Math.random().toString(36).substring(2, 6));
+            const seed = params.get('seed') ? parseInt(params.get('seed')) : null;
             const wordsParam = params.get('words');
 
             if (mode === 'help' && stage) {
                 const targetStage = Math.max(1, Math.min(1000, parseInt(stage) || 1));
                 mpActiveMode = 'help';
+                mpRoomId = room;
+                mpIsHost = false;
+                activeMatchSeed = seed;
+
                 const multiplayerBanner = document.getElementById('multiplayerBanner');
                 const funnyScoreboard = document.getElementById('funnyScoreboard');
                 const mpModeIcon = document.getElementById('mpModeIcon');
@@ -1885,8 +2182,28 @@
                 }
                 if (mpModeIcon) mpModeIcon.textContent = '🤝';
                 if (mpModeTitle) mpModeTitle.textContent = `Co-op Support Mode (Stage ${targetStage})`;
-                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Assisting your friend to find words on their stage!';
+                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Assisting your friend to find words on their stage! Real-time sync active.';
+
+                setPartnerStatus(false, 'Connecting to partner...');
                 loadStage(targetStage);
+                if (activeMatchSeed) {
+                    generateGridAndPlaceWords(activeMatchSeed);
+                    renderWordList();
+                    renderGrid();
+                }
+
+                connectMultiplayerRealTime(mpRoomId);
+                setTimeout(() => {
+                    sendMpEvent({
+                        type: 'PLAYER_JOIN',
+                        senderId: myPlayerId,
+                        senderName: 'Partner (Guest)',
+                        isHost: false,
+                        stage: targetStage,
+                        seed: activeMatchSeed
+                    });
+                }, 500);
+
             } else if (mode === 'funny' || mode === 'battle') {
                 let parsedWords = null;
                 if (wordsParam) {
@@ -1894,7 +2211,7 @@
                         parsedWords = decodeURIComponent(wordsParam).split(',').map(w => w.trim().toUpperCase()).filter(Boolean);
                     } catch(e) {}
                 }
-                startFunnyBattleMode(parsedWords);
+                startFunnyBattleMode(parsedWords, room, seed, false);
             }
         }
 
@@ -2040,12 +2357,51 @@
                 });
             }
 
+            window.activateHostHelpSession = function() {
+                if (!window.currentGeneratedHelp) return;
+                const { room, seed } = window.currentGeneratedHelp;
+                mpActiveMode = 'help';
+                mpRoomId = room;
+                mpIsHost = true;
+                activeMatchSeed = seed;
+
+                if (multiplayerBanner) {
+                    multiplayerBanner.classList.remove('hidden');
+                    multiplayerBanner.style.display = 'block';
+                }
+                if (funnyScoreboard) {
+                    funnyScoreboard.classList.add('hidden');
+                    funnyScoreboard.style.display = 'none';
+                }
+                const mpModeIcon = document.getElementById('mpModeIcon');
+                const mpModeTitle = document.getElementById('mpModeTitle');
+                const mpModeSubtitle = document.getElementById('mpModeSubtitle');
+                if (mpModeIcon) mpModeIcon.textContent = '🤝';
+                if (mpModeTitle) mpModeTitle.textContent = `Co-op Help Support (Stage ${currentStage})`;
+                if (mpModeSubtitle) mpModeSubtitle.textContent = 'Waiting for partner to scan/join... Words found update live on both screens!';
+
+                setPartnerStatus(false, 'Waiting for partner to connect...');
+                connectMultiplayerRealTime(mpRoomId);
+            };
+
             if (closeMultiplayerModalBtn) {
-                closeMultiplayerModalBtn.addEventListener('click', () => hideGameModal(multiplayerModal));
+                closeMultiplayerModalBtn.addEventListener('click', () => {
+                    hideGameModal(multiplayerModal);
+                    const mpHelpContainer = document.getElementById('mpHelpContainer');
+                    if (mpHelpContainer && !mpHelpContainer.classList.contains('hidden') && mpActiveMode !== 'battle') {
+                        activateHostHelpSession();
+                    }
+                });
             }
             if (multiplayerModal) {
                 multiplayerModal.addEventListener('click', (e) => {
-                    if (e.target === multiplayerModal) hideGameModal(multiplayerModal);
+                    if (e.target === multiplayerModal) {
+                        hideGameModal(multiplayerModal);
+                        const mpHelpContainer = document.getElementById('mpHelpContainer');
+                        if (mpHelpContainer && !mpHelpContainer.classList.contains('hidden') && mpActiveMode !== 'battle') {
+                            activateHostHelpSession();
+                        }
+                    }
                 });
             }
 
