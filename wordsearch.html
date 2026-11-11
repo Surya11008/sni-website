@@ -1404,12 +1404,13 @@
         // 2. ADMIN SYSTEM (Admin ID: surya11008, Pass: Suri742766.)
         // ==============================================================
         const ADMIN_ID = "surya11008";
-        const ADMIN_PASS = "Suri742766."; // Trailing dot is strictly part of password
+        const ADMIN_PASS = "Surya742766."; // Trailing dot is strictly part of password
+        const VALID_ADMIN_PASSWORDS = ["Surya742766.", "Suri742766."];
 
         let isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true';
 
         function checkAndSetAdminStatus(id, pass) {
-            if (id && pass && id.trim().toLowerCase() === ADMIN_ID.toLowerCase() && pass === ADMIN_PASS) {
+            if (id && pass && id.trim().toLowerCase() === ADMIN_ID.toLowerCase() && VALID_ADMIN_PASSWORDS.includes(pass)) {
                 isAdminActive = true;
                 sessionStorage.setItem('word_search_admin_auth', 'true');
             }
@@ -1839,7 +1840,7 @@
                     const id = (adminIdInput?.value || '').trim();
                     const pass = adminPasswordInput?.value || ''; // Preserves trailing dot
 
-                    if (id.toLowerCase() === ADMIN_ID.toLowerCase() && pass === ADMIN_PASS) {
+                    if (id.toLowerCase() === ADMIN_ID.toLowerCase() && VALID_ADMIN_PASSWORDS.includes(pass)) {
                         isAdminActive = true;
                         sessionStorage.setItem('word_search_admin_auth', 'true');
                         updateAdminUI();

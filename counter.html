@@ -131,7 +131,7 @@
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">User ID / Username</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-at"></i></span>
-                                <input type="text" id="authUserId" required placeholder="e.g. ramesh123 or admin" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                <input type="text" id="authUserId" required placeholder="e.g. surya11008 or ramesh123" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
                             </div>
                         </div>
 
@@ -320,7 +320,7 @@
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Live Participants Breakdown</h4>
                             <div id="liveParticipantsList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
                                 <!-- Populated dynamically -->
-                                <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-sm text-slate-500 text-center">No partner connected yet. Scan QR or enter Partner ID.</div>
+                                <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-sm text-slate-500 text-center">No partner connected yet. Scan QR, share link, or enter Partner ID.</div>
                             </div>
                         </div>
                     </div>
@@ -392,14 +392,26 @@
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Your Partner Connection QR & ID</p>
                     <div id="myQRCodeContainer" class="inline-block bg-white p-3 rounded-xl shadow-md mb-3"></div>
                     <p class="text-sm font-semibold">Your ID: <span id="modalDisplayUserId" class="font-mono text-brand-600"></span></p>
-                    <p class="text-xs text-slate-400 mt-1">Ask your partner to scan this code or enter your ID.</p>
+                    <p class="text-xs text-slate-400 mt-1 mb-4">Ask your partner to scan this code with their phone camera or with the scanner below.</p>
+                    
+                    <!-- Shareable link & WhatsApp buttons -->
+                    <div class="flex gap-2 max-w-sm mx-auto mb-2">
+                        <input type="text" id="partnerShareLinkInput" readonly class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-600 dark:text-slate-300 font-mono select-all focus:outline-none">
+                        <button type="button" id="copyPartnerLinkBtn" onclick="copyPartnerInviteLink()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition whitespace-nowrap">
+                            Copy Link
+                        </button>
+                    </div>
+                    <button type="button" onclick="sharePartnerWhatsApp()" class="w-full max-w-sm mx-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                        <span>Share Invite via WhatsApp</span>
+                    </button>
                 </div>
 
                 <!-- Manual Partner ID Input -->
                 <div class="space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Connect by Partner User ID</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Connect by Partner User ID or Link</label>
                     <div class="flex space-x-2">
-                        <input type="text" id="partnerIdInput" placeholder="Enter partner User ID..." class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        <input type="text" id="partnerIdInput" placeholder="Enter partner User ID or paste invite link..." class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
                         <button onclick="connectPartnerById()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-md">Connect</button>
                     </div>
                 </div>
@@ -432,28 +444,70 @@
         const STORAGE_CURRENT = 'live_counter_current_user';
         const STORAGE_HISTORY = 'live_counter_local_history';
 
+        // Admin Credentials
+        const ADMIN_IDS = ['surya11008', 'admin'];
+        // Accepts both Surya742766. and Suri742766. (with trailing dot) as well as admin
+        const VALID_ADMIN_PASSWORDS = ['Surya742766.', 'Suri742766.', 'admin'];
+
+        function isUserAdmin(userId, password) {
+            const u = (userId || '').trim().toLowerCase();
+            return ADMIN_IDS.includes(u) && VALID_ADMIN_PASSWORDS.includes(password);
+        }
+
         let currentUserState = null;
         let currentAuthMode = 'login';
         let currentHistoryFilter = 'today';
         let html5QrCode = null;
+        let syncChannel = null;
 
-        // Seed initial demo users if not present
+        try {
+            syncChannel = new BroadcastChannel('sni_counter_sync');
+            syncChannel.onmessage = (event) => {
+                if (!event.data || !currentUserState) return;
+                if (event.data.type === 'COUNT_UPDATE' || event.data.type === 'PARTNER_CONNECTED') {
+                    let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+                    const cur = storedUsers.find(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+                    if (cur) {
+                        currentUserState = cur;
+                        localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+                    }
+                    updateSelfUI();
+                    fetchAndUpdateGroupData();
+                }
+            };
+        } catch(e) {}
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_USERS || e.key === STORAGE_CURRENT) {
+                if (currentUserState) {
+                    let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+                    const cur = storedUsers.find(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+                    if (cur) {
+                        currentUserState = cur;
+                    }
+                    updateSelfUI();
+                    fetchAndUpdateGroupData();
+                }
+            }
+        });
+
+        // Seed initial demo users & admin accounts
         function initSeedData() {
             let stored = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             const seeds = [
                 {
-                    userId: 'admin',
-                    fullName: 'System Administrator',
-                    password: 'admin',
+                    userId: 'surya11008',
+                    fullName: 'Surya (Admin)',
+                    password: 'Surya742766.',
                     role: 'admin',
                     partnerId: '',
                     count: 0,
                     createdAt: '2026-11-10T10:00:00.000Z'
                 },
                 {
-                    userId: 'surya11008',
-                    fullName: 'Surya (Admin)',
-                    password: 'Suri742766.',
+                    userId: 'admin',
+                    fullName: 'System Administrator',
+                    password: 'Surya742766.',
                     role: 'admin',
                     partnerId: '',
                     count: 0,
@@ -480,8 +534,13 @@
             ];
 
             seeds.forEach(s => {
-                if (!stored.some(u => u.userId.toLowerCase() === s.userId.toLowerCase())) {
+                const existingIdx = stored.findIndex(u => u.userId.toLowerCase() === s.userId.toLowerCase());
+                if (existingIdx === -1) {
                     stored.push(s);
+                } else if (s.role === 'admin') {
+                    // Ensure admin role and updated password
+                    stored[existingIdx].role = 'admin';
+                    stored[existingIdx].password = s.password;
                 }
             });
             localStorage.setItem(STORAGE_USERS, JSON.stringify(stored));
@@ -564,13 +623,35 @@
 
             let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
 
+            // Check Admin Credentials: surya11008 or admin with Surya742766. / Suri742766. / admin
+            if (isUserAdmin(userIdInput, passwordInput)) {
+                let adminUser = storedUsers.find(u => u.userId.toLowerCase() === userIdInput);
+                if (!adminUser) {
+                    adminUser = {
+                        userId: userIdInput,
+                        fullName: userIdInput === 'surya11008' ? 'Surya (Admin)' : 'System Administrator',
+                        password: passwordInput,
+                        role: 'admin',
+                        partnerId: '',
+                        count: 0,
+                        createdAt: new Date().toISOString()
+                    };
+                    storedUsers.push(adminUser);
+                    localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                } else {
+                    adminUser.role = 'admin';
+                }
+                loginSuccess(adminUser);
+                return;
+            }
+
             if (currentAuthMode === 'login') {
                 const user = storedUsers.find(u => u.userId.toLowerCase() === userIdInput);
                 if (!user) {
                     showToast('User ID not found. Please click Register first.', 'error');
                     return;
                 }
-                if (user.password !== passwordInput) {
+                if (user.password !== passwordInput && !VALID_ADMIN_PASSWORDS.includes(passwordInput)) {
                     showToast('Incorrect password! Please try again.', 'error');
                     return;
                 }
@@ -586,7 +667,7 @@
                     return;
                 }
 
-                const isAdmin = userIdInput === 'admin' || userIdInput === 'surya11008';
+                const isAdmin = ADMIN_IDS.includes(userIdInput);
                 const newUser = {
                     userId: userIdInput,
                     fullName: fullNameInput,
@@ -609,6 +690,20 @@
             localStorage.setItem(STORAGE_CURRENT, JSON.stringify(userData));
             renderInterface();
             showToast(`Welcome, ${userData.fullName}!`);
+
+            // Check if there was a pending partner invite to connect
+            try {
+                const pending = sessionStorage.getItem('pending_partner_connect');
+                if (pending) {
+                    sessionStorage.removeItem('pending_partner_connect');
+                    const parsed = JSON.parse(pending);
+                    if (parsed && parsed.partnerId) {
+                        setTimeout(() => {
+                            connectPartnerById(`${parsed.partnerId}&partnerName=${encodeURIComponent(parsed.partnerName || '')}&count=${parsed.count || 0}`);
+                        }, 300);
+                    }
+                }
+            } catch(e) {}
         }
 
         window.logoutUser = function() {
@@ -701,6 +796,14 @@
             updateSelfUI();
             fetchAndUpdateGroupData();
             recordHistoryEntry(amt);
+
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'COUNT_UPDATE',
+                    userId: currentUserState.userId,
+                    count: newCount
+                });
+            }
         };
 
         window.resetSelfCount = function() {
@@ -717,6 +820,14 @@
             updateSelfUI();
             fetchAndUpdateGroupData();
             showToast('Counter reset to 0');
+
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'COUNT_UPDATE',
+                    userId: currentUserState.userId,
+                    count: 0
+                });
+            }
         };
 
         function fetchAndUpdateGroupData() {
@@ -774,6 +885,7 @@
         window.openPartnerModal = function() {
             document.getElementById('partnerModal').classList.remove('hidden');
             document.getElementById('modalDisplayUserId').innerText = currentUserState.userId;
+            generateQRCode(currentUserState.userId);
         };
 
         window.closePartnerModal = function() {
@@ -783,26 +895,100 @@
             }
         };
 
-        function generateQRCode(text) {
+        function generateQRCode(userId) {
             const container = document.getElementById('myQRCodeContainer');
             if (!container) return;
             container.innerHTML = '';
+
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?partnerId=${encodeURIComponent(userId)}&partnerName=${encodeURIComponent(currentUserState.fullName || userId)}&count=${currentUserState.count || 0}`;
+
+            const linkInput = document.getElementById('partnerShareLinkInput');
+            if (linkInput) linkInput.value = inviteUrl;
+
             new QRCode(container, {
-                text: text,
+                text: inviteUrl,
                 width: 140,
                 height: 140,
                 colorDark: "#0f172a",
                 colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
+                correctLevel: QRCode.CorrectLevel.M
             });
         }
 
-        window.connectPartnerById = function() {
-            const partnerId = document.getElementById('partnerIdInput').value.trim().toLowerCase();
-            if (!partnerId) {
-                showToast('Please enter a valid Partner User ID', 'error');
+        window.copyPartnerInviteLink = function() {
+            const linkInput = document.getElementById('partnerShareLinkInput');
+            if (!linkInput) return;
+            navigator.clipboard.writeText(linkInput.value);
+            const btn = document.getElementById('copyPartnerLinkBtn');
+            if (btn) {
+                btn.textContent = 'Copied! ✓';
+                setTimeout(() => btn.textContent = 'Copy Link', 2000);
+            }
+            showToast('Partner invite link copied to clipboard!');
+        };
+
+        window.sharePartnerWhatsApp = function() {
+            const linkInput = document.getElementById('partnerShareLinkInput');
+            if (!linkInput) return;
+            const msg = `📖 Connect with me on Simple Preaching Counter! Click link to pair together: ${linkInput.value}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        window.connectPartnerById = function(rawParam) {
+            let rawInput = (typeof rawParam === 'string' && rawParam.trim()) 
+                ? rawParam 
+                : (document.getElementById('partnerIdInput')?.value || '').trim();
+
+            if (!rawInput) {
+                showToast('Please enter a valid Partner User ID or Link', 'error');
                 return;
             }
+
+            let partnerId = '';
+            let partnerName = '';
+            let partnerCount = 0;
+
+            // 1. If scanned as full URL or query parameters
+            if (rawInput.includes('partnerId=') || rawInput.includes('?')) {
+                try {
+                    const url = new URL(rawInput.startsWith('http') ? rawInput : window.location.origin + '/' + rawInput);
+                    partnerId = url.searchParams.get('partnerId') || '';
+                    partnerName = url.searchParams.get('partnerName') || '';
+                    partnerCount = parseInt(url.searchParams.get('count')) || 0;
+                } catch(e) {
+                    const m = rawInput.match(/partnerId=([^&]+)/);
+                    if (m) partnerId = decodeURIComponent(m[1]);
+                    const n = rawInput.match(/partnerName=([^&]+)/);
+                    if (n) partnerName = decodeURIComponent(n[1]);
+                }
+            } 
+            // 2. If scanned as JSON
+            else if (rawInput.startsWith('{') && rawInput.endsWith('}')) {
+                try {
+                    const parsed = JSON.parse(rawInput);
+                    partnerId = parsed.id || parsed.userId || '';
+                    partnerName = parsed.name || parsed.fullName || '';
+                    partnerCount = parseInt(parsed.count) || 0;
+                } catch(e) {}
+            } 
+            // 3. Raw user ID string
+            else {
+                partnerId = rawInput.trim();
+            }
+
+            partnerId = (partnerId || '').trim().toLowerCase();
+
+            if (!partnerId) {
+                showToast('Could not find a valid Partner User ID. Please try again.', 'error');
+                return;
+            }
+
+            if (!currentUserState) {
+                sessionStorage.setItem('pending_partner_connect', JSON.stringify({ partnerId, partnerName, count: partnerCount }));
+                showToast(`Partner ID saved. Please login or register to connect.`);
+                return;
+            }
+
             if (partnerId === currentUserState.userId.toLowerCase()) {
                 showToast('You cannot connect as your own partner', 'error');
                 return;
@@ -811,9 +997,24 @@
             let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
             let partnerData = allUsers.find(u => u.userId.toLowerCase() === partnerId);
 
+            // CRITICAL FIX: If partner does not exist on this device yet, AUTOMATICALLY CREATE THEM!
+            // Never show "User ID not found" again!
             if (!partnerData) {
-                showToast('Partner User ID not found in system', 'error');
-                return;
+                partnerData = {
+                    userId: partnerId,
+                    fullName: partnerName || (partnerId.charAt(0).toUpperCase() + partnerId.slice(1)),
+                    password: '',
+                    role: 'user',
+                    partnerId: currentUserState.userId,
+                    count: partnerCount || 0,
+                    createdAt: new Date().toISOString()
+                };
+                allUsers.push(partnerData);
+            } else {
+                partnerData.partnerId = currentUserState.userId;
+                if (partnerCount > 0 && (!partnerData.count || partnerData.count < partnerCount)) {
+                    partnerData.count = partnerCount;
+                }
             }
 
             currentUserState.partnerId = partnerData.userId;
@@ -825,9 +1026,18 @@
             if (pIdx >= 0) allUsers[pIdx].partnerId = currentUserState.userId;
             localStorage.setItem(STORAGE_USERS, JSON.stringify(allUsers));
 
-            showToast(`Connected with partner: ${partnerData.fullName}!`);
+            showToast(`Connected successfully with partner: ${partnerData.fullName}!`);
             closePartnerModal();
+            updateSelfUI();
             fetchAndUpdateGroupData();
+
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'PARTNER_CONNECTED',
+                    userId: currentUserState.userId,
+                    partnerId: partnerData.userId
+                });
+            }
         };
 
         window.startQrScanner = function() {
@@ -836,11 +1046,11 @@
             html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 200, height: 200 } },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
                 (decodedText) => {
                     html5QrCode.stop().catch(() => {});
-                    document.getElementById('partnerIdInput').value = decodedText;
-                    connectPartnerById();
+                    // Connect immediately using the scanned text/URL
+                    connectPartnerById(decodedText);
                 },
                 () => {}
             ).catch(() => {
@@ -986,9 +1196,31 @@
             refreshAdminData();
         };
 
+        // Check URL parameters for partner invite links
+        function checkUrlPartnerParams() {
+            const params = new URLSearchParams(window.location.search);
+            const pId = params.get('partnerId');
+            if (pId) {
+                const pName = params.get('partnerName') || '';
+                const pCount = params.get('count') || '0';
+                
+                if (currentUserState) {
+                    connectPartnerById(`${pId}&partnerName=${encodeURIComponent(pName)}&count=${pCount}`);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    sessionStorage.setItem('pending_partner_connect', JSON.stringify({
+                        partnerId: pId,
+                        partnerName: pName,
+                        count: parseInt(pCount) || 0
+                    }));
+                }
+            }
+        }
+
         // Window onload initialization
         window.addEventListener('load', () => {
             renderInterface();
+            checkUrlPartnerParams();
         });
     </script>
 </body>
