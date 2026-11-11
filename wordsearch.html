@@ -253,6 +253,62 @@
         </div>
     </div>
 
+    <!-- Main Game Area -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow flex flex-col lg:flex-row gap-6 items-start justify-center">
+        
+        <!-- Left Panel: Stage Info & Word List -->
+        <div class="w-full lg:w-80 bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-xl border border-blue-500/20 flex flex-col gap-4 transition-colors duration-300">
+            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Stage <span id="stageNumTitle">1</span> / 1000</span>
+                    <h2 id="stageThemeTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100">Creation &amp; Genesis</h2>
+                </div>
+                <div class="flex gap-1">
+                    <button id="prevStageBtn" class="p-2 bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition text-xs font-bold" title="Previous Stage">&lt;</button>
+                    <button id="nextStageBtn" class="p-2 bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition text-xs font-bold" title="Next Stage">&gt;</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="restartBtn" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2 px-3 rounded-xl shadow-xs transition text-xs flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                    Reset Stage ↻
+                </button>
+            </div>
+
+            <hr class="border-slate-200 dark:border-slate-800">
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wide">Words to Find:</h3>
+                    <span id="wordsRemaining" class="text-xs bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-medium px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">0 remaining</span>
+                </div>
+                <div id="wordListContainer" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1">
+                    <!-- Word list items injected dynamically -->
+                </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <span class="font-bold text-blue-600 dark:text-blue-400">Rule:</span> Drag or click across letters horizontally (Right) or vertically (Down). No diagonals or crosses!
+            </div>
+        </div>
+
+        <!-- Right Panel: Puzzle Grid -->
+        <div class="flex-1 flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-blue-500/20 w-full overflow-hidden transition-colors duration-300">
+            
+            <!-- Selection Status / Feedback -->
+            <div id="selectionStatus" class="mb-4 h-9 flex items-center justify-center text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner w-full max-w-md text-center">
+                Ready! Drag or click letters to find words.
+            </div>
+
+            <!-- Puzzle Grid Container -->
+            <div id="puzzleContainer" class="relative overflow-auto max-w-full p-2 flex justify-center">
+                <div id="puzzleGrid" class="grid gap-1.5 bg-slate-100 dark:bg-slate-800 p-3 rounded-xl shadow-inner select-none border border-slate-200 dark:border-slate-700">
+                    <!-- Grid generated dynamically -->
+                </div>
+            </div>
+
+        </div>
+
     </main>
 
     <!-- Stage Map Modal (1000 Stages) -->
