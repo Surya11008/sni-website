@@ -276,14 +276,40 @@
 
                         <!-- Action Buttons -->
                         <div class="w-full space-y-3">
-                            <button onclick="incrementSelfCount(1)" class="w-full py-5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-2xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-plus"></i>
+                            <!-- Big Primary +1 Count Button -->
+                            <button onclick="incrementSelfCount(1)" class="w-full py-4 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-plus text-2xl"></i>
                                 <span>+1 Count</span>
                             </button>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="incrementSelfCount(5)" class="py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold rounded-xl text-sm transition">+5</button>
-                                <button onclick="resetSelfCount()" class="py-2.5 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 font-semibold rounded-xl text-sm transition">Reset</button>
+
+                            <!-- Quick Preset Add (+) and Delete (-) Grid -->
+                            <div class="grid grid-cols-4 gap-2">
+                                <button onclick="incrementSelfCount(5)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 5 counts">+5</button>
+                                <button onclick="incrementSelfCount(10)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 10 counts">+10</button>
+                                <button onclick="decrementSelfCount(1)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 1 count">
+                                    <i class="fa-solid fa-minus text-[10px]"></i><span>1</span>
+                                </button>
+                                <button onclick="decrementSelfCount(5)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 5 counts">
+                                    <i class="fa-solid fa-minus text-[10px]"></i><span>5</span>
+                                </button>
                             </div>
+
+                            <!-- Custom Add Count Input & Button -->
+                            <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5 text-left">Add Custom Count (+)</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="customCountInput" min="1" max="9999" placeholder="Enter count..." class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <button onclick="addCustomCount()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition whitespace-nowrap shadow">
+                                        + Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Reset Counter Button -->
+                            <button onclick="resetSelfCount()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5 border border-slate-200 dark:border-slate-700">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                                <span>Reset Counter to 0</span>
+                            </button>
                         </div>
                     </div>
 
@@ -338,13 +364,19 @@
                         </div>
 
                         <!-- Filter Tabs -->
-                        <div class="flex flex-wrap bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
-                            <button onclick="setHistoryFilter('today')" id="filterTodayBtn" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition">Today</button>
-                            <button onclick="setHistoryFilter('daily')" id="filterDailyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Daily</button>
-                            <button onclick="setHistoryFilter('weekly')" id="filterWeeklyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Weekly</button>
-                            <button onclick="setHistoryFilter('monthly')" id="filterMonthlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Monthly</button>
-                            <button onclick="setHistoryFilter('yearly')" id="filterYearlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Yearly</button>
-                            <button onclick="setHistoryFilter('all')" id="filterAllBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">All</button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex flex-wrap bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
+                                <button onclick="setHistoryFilter('today')" id="filterTodayBtn" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition">Today</button>
+                                <button onclick="setHistoryFilter('daily')" id="filterDailyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Daily</button>
+                                <button onclick="setHistoryFilter('weekly')" id="filterWeeklyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Weekly</button>
+                                <button onclick="setHistoryFilter('monthly')" id="filterMonthlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Monthly</button>
+                                <button onclick="setHistoryFilter('yearly')" id="filterYearlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Yearly</button>
+                                <button onclick="setHistoryFilter('all')" id="filterAllBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">All</button>
+                            </div>
+                            <button onclick="clearAllMyHistory()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 font-semibold rounded-xl text-xs transition border border-rose-200 dark:border-rose-800 flex items-center space-x-1" title="Clear all history">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                <span>Clear History</span>
+                            </button>
                         </div>
                     </div>
 
@@ -356,9 +388,9 @@
                                     <th class="p-3">Date & Time</th>
                                     <th class="p-3">User (Self)</th>
                                     <th class="p-3">Partner Name / ID</th>
-                                    <th class="p-3">Self Count</th>
-                                    <th class="p-3">Partner Count</th>
-                                    <th class="p-3">Total / Split</th>
+                                    <th class="p-3">Count Change</th>
+                                    <th class="p-3">Self Total</th>
+                                    <th class="p-3 text-right">Delete Action</th>
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -781,7 +813,9 @@
             }
         }
 
+        // Increment Count (+)
         window.incrementSelfCount = function(amt) {
+            amt = parseInt(amt) || 1;
             const newCount = (currentUserState.count || 0) + amt;
             currentUserState.count = newCount;
             localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
@@ -806,7 +840,57 @@
             }
         };
 
+        // Decrement / Delete Count (-)
+        window.decrementSelfCount = function(amt) {
+            amt = parseInt(amt) || 1;
+            const curCount = currentUserState.count || 0;
+            if (curCount <= 0) {
+                showToast('Count is already at 0', 'error');
+                return;
+            }
+            const newCount = Math.max(0, curCount - amt);
+            const actualSubtracted = curCount - newCount;
+            currentUserState.count = newCount;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+            if (idx >= 0) {
+                storedUsers[idx].count = newCount;
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+            }
+
+            updateSelfUI();
+            fetchAndUpdateGroupData();
+            recordHistoryEntry(-actualSubtracted);
+            showToast(`Removed ${actualSubtracted} count (New Total: ${newCount})`);
+
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'COUNT_UPDATE',
+                    userId: currentUserState.userId,
+                    count: newCount
+                });
+            }
+        };
+
+        // Add Custom Count (+)
+        window.addCustomCount = function() {
+            const input = document.getElementById('customCountInput');
+            if (!input) return;
+            const val = parseInt(input.value);
+            if (isNaN(val) || val <= 0) {
+                showToast('Please enter a count number greater than 0', 'error');
+                return;
+            }
+            incrementSelfCount(val);
+            input.value = '';
+            showToast(`Added +${val} counts successfully!`);
+        };
+
+        // Reset Count (to 0)
         window.resetSelfCount = function() {
+            if (!confirm('Are you sure you want to reset your preaching count to 0?')) return;
             currentUserState.count = 0;
             localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
 
@@ -1129,19 +1213,80 @@
             historyList.forEach(item => {
                 const dateObj = new Date(item.timestamp);
                 const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isPositive = (item.addedAmount || 0) >= 0;
+                const changeBadge = isPositive 
+                    ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs">+${item.addedAmount}</span>`
+                    : `<span class="px-2 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold text-xs">${item.addedAmount}</span>`;
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
                 tr.innerHTML = `
                     <td class="p-3 text-xs text-slate-500 font-mono">${formattedDate}</td>
                     <td class="p-3 font-semibold">${item.userName}</td>
-                    <td class="p-3 text-slate-500">${item.partnerId}</td>
-                    <td class="p-3 font-bold text-brand-600">+${item.addedAmount} (Total: ${item.selfCount})</td>
-                    <td class="p-3 text-slate-400">Partner Sync</td>
-                    <td class="p-3 font-mono text-xs">Split Ready</td>
+                    <td class="p-3 text-slate-500 text-xs font-mono">${item.partnerId || 'None'}</td>
+                    <td class="p-3">${changeBadge}</td>
+                    <td class="p-3 font-bold text-brand-600 dark:text-brand-400">${item.selfCount}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteHistoryRecord('${item.historyId}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 text-xs font-bold rounded-lg border border-rose-200 dark:border-rose-800 transition shadow-xs" title="Delete this count record">
+                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
+
+        // Delete a specific count entry from history and adjust counter
+        window.deleteHistoryRecord = function(historyId) {
+            if (!confirm('Are you sure you want to delete this count record? This will adjust your total count.')) return;
+
+            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+            const recordIdx = historyList.findIndex(h => h.historyId === historyId);
+            if (recordIdx === -1) return;
+
+            const record = historyList[recordIdx];
+            const changeAmt = record.addedAmount || 0;
+
+            if (record.userId.toLowerCase() === currentUserState.userId.toLowerCase() && changeAmt !== 0) {
+                const newCount = Math.max(0, (currentUserState.count || 0) - changeAmt);
+                currentUserState.count = newCount;
+                localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+
+                let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+                const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+                if (idx >= 0) {
+                    storedUsers[idx].count = newCount;
+                    localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                }
+
+                updateSelfUI();
+                fetchAndUpdateGroupData();
+
+                if (syncChannel) {
+                    syncChannel.postMessage({
+                        type: 'COUNT_UPDATE',
+                        userId: currentUserState.userId,
+                        count: newCount
+                    });
+                }
+            }
+
+            historyList.splice(recordIdx, 1);
+            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
+            fetchHistoryData();
+            showToast('Count record deleted successfully!');
+        };
+
+        // Clear all history records for current user
+        window.clearAllMyHistory = function() {
+            if (!confirm('Are you sure you want to clear your count history?')) return;
+            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+            const curId = currentUserState.userId.toLowerCase();
+            historyList = historyList.filter(h => h.userId.toLowerCase() !== curId);
+            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
+            fetchHistoryData();
+            showToast('Count history cleared');
+        };
 
         // ================= ADMIN DASHBOARD LOGIC =================
         function initAdminDashboard() {
