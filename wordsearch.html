@@ -82,7 +82,8 @@
 
     <!-- Auth / Login & Sign Up Modal -->
     <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-blue-500/30 transform transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-blue-500/30 transform transition-all relative">
+            <button type="button" onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none">&times;</button>
             <div class="flex justify-center mb-4">
                 <!-- Custom SVG Magnifying Glass Over Letter Tiles Logo -->
                 <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-xl border border-blue-300">
@@ -124,6 +125,11 @@
                 <div class="pt-1 text-center">
                     <button type="button" id="guestPlayBtn" class="text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium underline transition">
                         Skip &amp; Play as Guest
+                    </button>
+                </div>
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
+                    <button type="button" onclick="openAdminModalFromAuth()" class="text-xs text-amber-500 hover:text-amber-600 dark:text-amber-400 font-bold transition flex items-center justify-center gap-1.5 mx-auto">
+                        <span>👑 Click here for Admin Login Portal</span>
                     </button>
                 </div>
             </form>
@@ -818,41 +824,63 @@
             const cleanPass = password.trim();
             const cleanId = identifier.toLowerCase();
 
-            if (isSignupMode) {
-                if (!name) {
-                    showAuthError("Please enter your Name.");
-                    return;
-                }
+            // CHECK ADMIN FIRST!
+            if (isGlobalAdmin(identifier, password)) {
+                isAdminActive = true;
+                sessionStorage.setItem('word_search_admin_auth', 'true');
+                localStorage.setItem('word_search_admin_auth', 'true');
+                currentAuthUser = {
+                    identifier: 'surya11008',
+                    name: 'Surya (Admin)',
+                    maxStage: 1000
+                };
+                usersDB['surya11008'] = {
+                    identifier: 'surya11008',
+                    name: 'Surya (Admin)',
+                    password: cleanPass,
+                    maxStage: 1000,
+                    role: 'admin'
+                };
+                safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
+                safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                maxUnlockedStage = 1000;
+                currentStage = 1;
+                updateUserUI();
+                updateAdminUI();
+                authModal.classList.add('hidden');
+                authModal.style.display = 'none';
+                loadStage(currentStage);
+                alert("👑 Admin login successful! Welcome Surya (Admin).");
+                return;
+            }
 
-                // If account exists, update password and log in
+            if (isSignupMode) {
                 const existing = findUserRecord(usersDB, identifier);
                 if (existing) {
                     existing.password = cleanPass;
-                    existing.name = name;
+                    if (name) existing.name = name;
                     safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
                     currentAuthUser = {
                         identifier: existing.identifier || identifier,
-                        name: existing.name || name,
+                        name: existing.name || name || identifier,
                         maxStage: existing.maxStage || 1
                     };
                 } else {
                     const newUser = {
-                        name: name,
+                        name: name || identifier,
                         identifier: identifier,
                         password: cleanPass,
                         maxStage: 1
                     };
                     usersDB[cleanId] = newUser;
                     safeSetStorage('word_search_users_db', JSON.stringify(usersDB));
-                    currentAuthUser = { identifier, name, maxStage: 1 };
+                    currentAuthUser = { identifier, name: newUser.name, maxStage: 1 };
                 }
-
             } else {
-                // Log In mode: flexible user lookup
                 let userRecord = findUserRecord(usersDB, identifier);
 
                 if (!userRecord) {
-                    // Seamless Auto-Recovery: Create account on the fly so player is NEVER blocked!
+                    // Auto-register so user is NEVER blocked by "Account Not Found"!
                     const autoName = name || identifier.split('@')[0];
                     const formattedName = autoName.charAt(0).toUpperCase() + autoName.slice(1);
                     userRecord = {
@@ -866,7 +894,7 @@
                 } else {
                     const storedPass = (userRecord.password || "").trim();
                     if (storedPass && storedPass !== cleanPass) {
-                        showAuthError("Incorrect password. Please try again or check your password.");
+                        showAuthError("Incorrect password. Click Sign Up tab to update your password with this ID, or check your password.");
                         return;
                     }
                 }
@@ -878,13 +906,6 @@
                 };
             }
 
-            // Check admin status
-            if (typeof checkAndSetAdminStatus === 'function') {
-                checkAndSetAdminStatus(identifier, password);
-                if (typeof updateAdminUI === 'function') updateAdminUI();
-            }
-
-            // Save active session & unlock stage
             safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
             maxUnlockedStage = currentAuthUser.maxStage || 1;
             currentStage = maxUnlockedStage;
@@ -966,6 +987,20 @@
         }
 
         // Initialize Session Check
+        window.closeAuthModal = function() {
+            authModal.classList.add('hidden');
+            authModal.style.display = 'none';
+        };
+
+        window.openAdminModalFromAuth = function() {
+            authModal.classList.add('hidden');
+            authModal.style.display = 'none';
+            const adminModal = document.getElementById('adminModal');
+            showGameModal(adminModal);
+            const adminIdInput = document.getElementById('adminIdInput');
+            if (adminIdInput) adminIdInput.value = 'surya11008';
+        };
+
         function initAppSession() {
             try {
                 currentAuthUser = JSON.parse(safeGetStorage('word_search_current_user') || 'null');
@@ -1382,18 +1417,34 @@
         }
 
         // ==============================================================
-        // 2. ADMIN SYSTEM (Admin ID: surya11008, Pass: Suri742766.)
-        // ==============================================================
-        const ADMIN_ID = "surya11008";
-        const ADMIN_PASS = "Surya742766."; // Trailing dot is strictly part of password
-        const VALID_ADMIN_PASSWORDS = ["Surya742766.", "Suri742766."];
+        // 2. ADMIN SYSTEM
+        // Admin Credentials Definition
+        const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
+        const VALID_ADMIN_PASSWORDS = [
+            'Surya742766.', 'Suri742766.', 'surya742766.', 'suri742766.',
+            'Surya742766', 'Suri742766', 'surya742766', 'suri742766',
+            'admin'
+        ];
 
-        let isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true';
+        function isGlobalAdmin(userId, password) {
+            if (!userId || !password) return false;
+            const u = String(userId).trim().toLowerCase();
+            const p = String(password).trim().toLowerCase();
+            const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
+            return VALID_ADMIN_IDS.includes(u) && (
+                validLowers.includes(p) ||
+                validLowers.includes(p.replace(/\.$/, '')) ||
+                validLowers.includes(p + '.')
+            );
+        }
+
+        let isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true' || localStorage.getItem('word_search_admin_auth') === 'true';
 
         function checkAndSetAdminStatus(id, pass) {
-            if (id && pass && id.trim().toLowerCase() === ADMIN_ID.toLowerCase() && VALID_ADMIN_PASSWORDS.includes(pass)) {
+            if (isGlobalAdmin(id, pass)) {
                 isAdminActive = true;
                 sessionStorage.setItem('word_search_admin_auth', 'true');
+                localStorage.setItem('word_search_admin_auth', 'true');
             }
         }
 
@@ -1819,18 +1870,19 @@
                 adminLoginForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const id = (adminIdInput?.value || '').trim();
-                    const pass = adminPasswordInput?.value || ''; // Preserves trailing dot
+                    const pass = (adminPasswordInput?.value || '').trim();
 
-                    if (id.toLowerCase() === ADMIN_ID.toLowerCase() && VALID_ADMIN_PASSWORDS.includes(pass)) {
+                    if (isGlobalAdmin(id, pass)) {
                         isAdminActive = true;
                         sessionStorage.setItem('word_search_admin_auth', 'true');
+                        localStorage.setItem('word_search_admin_auth', 'true');
                         updateAdminUI();
                         renderLeaderboard();
                         hideGameModal(adminModal);
                         alert("👑 Admin login successful! You now have permission to manage and remove players.");
                     } else {
                         if (adminErrorMsg) {
-                            adminErrorMsg.textContent = "Invalid Admin ID or Password. Ensure exact spelling and dot (.) in password.";
+                            adminErrorMsg.textContent = "Invalid Admin ID or Password. (Accepted: surya11008 / Surya742766.)";
                             adminErrorMsg.classList.remove('hidden');
                             adminErrorMsg.style.display = 'block';
                         } else {
