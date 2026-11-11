@@ -108,11 +108,11 @@
             <form id="authForm" class="space-y-4">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Name</label>
-                    <input type="text" id="authName" placeholder="e.g., David John" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="authName" placeholder="e.g., Your Full Name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Player ID / Email</label>
-                    <input type="text" id="authIdentifier" required placeholder="e.g., david@gmail.com or UserID" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="authIdentifier" required placeholder="e.g., UserID or email@example.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
@@ -1473,6 +1473,9 @@
                         }
                     } catch (e) {}
                     safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                    if (typeof broadcastLeaderboardUpdate === 'function') {
+                        broadcastLeaderboardUpdate(currentAuthUser.name, currentAuthUser.identifier, maxUnlockedStage);
+                    }
                 }
             }
 
@@ -1609,7 +1612,7 @@
         };
 
         // ==============================================================
-        // 3. LEADERBOARD & RANKINGS SYSTEM
+        // 3. LEADERBOARD & RANKINGS SYSTEM (REAL REGISTERED USERS & LIVE SYNC)
         // ==============================================================
         function getLeaderboardPlayers() {
             let db = {};
@@ -1622,46 +1625,217 @@
                 removed = JSON.parse(safeGetStorage('word_search_removed_players') || '[]');
             } catch(e) {}
 
-            // Inspiring starter community players if database is fresh
-            const seedPlayers = [
-                { name: 'David John', identifier: 'david.j@sni.org', maxStage: 85 },
-                { name: 'Grace M.', identifier: 'grace.m@sni.org', maxStage: 64 },
-                { name: 'Samuel K.', identifier: 'samuel.k@sni.org', maxStage: 42 }
-            ];
-
             const playerMap = new Map();
-            seedPlayers.forEach(p => {
-                if (!removed.includes(p.identifier.toLowerCase())) {
-                    playerMap.set(p.identifier.toLowerCase(), p);
-                }
-            });
 
-            // Actual registered players
+            // 1. Registered Word Search players
             Object.values(db).forEach(u => {
                 if (!u || typeof u !== 'object') return;
-                const id = u.identifier || u.name || 'player';
-                if (!removed.includes(id.toLowerCase())) {
-                    playerMap.set(id.toLowerCase(), {
+                const id = (u.identifier || u.name || 'player').toLowerCase();
+                if (!removed.includes(id)) {
+                    playerMap.set(id, {
                         name: u.name || id,
-                        identifier: id,
-                        maxStage: parseInt(u.maxStage) || 1
+                        identifier: u.identifier || id,
+                        maxStage: parseInt(u.maxStage) || 1,
+                        source: 'Word Search'
                     });
                 }
             });
 
-            // Ensure current active user is reflected
-            if (currentAuthUser && currentAuthUser.name) {
-                const curId = currentAuthUser.identifier || 'current';
-                if (!removed.includes(curId.toLowerCase())) {
-                    playerMap.set(curId.toLowerCase(), {
-                        name: currentAuthUser.name,
-                        identifier: curId,
-                        maxStage: maxUnlockedStage || 1
+            // 2. Simple Preaching Counter registered users
+            try {
+                const counterUsers = JSON.parse(localStorage.getItem('live_counter_users_db') || '[]');
+                if (Array.isArray(counterUsers)) {
+                    counterUsers.forEach(cu => {
+                        if (!cu || !cu.userId) return;
+                        const id = cu.userId.toLowerCase();
+                        if (!removed.includes(id)) {
+                            if (playerMap.has(id)) {
+                                const existing = playerMap.get(id);
+                                if (cu.fullName && (!existing.name || existing.name === id)) {
+                                    existing.name = cu.fullName;
+                                }
+                            } else {
+                                playerMap.set(id, {
+                                    name: cu.fullName || cu.userId,
+                                    identifier: cu.userId,
+                                    maxStage: 1,
+                                    source: 'Preaching Counter'
+                                });
+                            }
+                        }
                     });
+                }
+            } catch(e) {}
+
+            // 3. Star Galaxy Community Users
+            try {
+                const starData = JSON.parse(localStorage.getItem('star_galaxy_data_v2') || '{}');
+                const starUsers = starData.users || [];
+                if (Array.isArray(starUsers)) {
+                    starUsers.forEach(su => {
+                        if (!su || (!su.id && !su.username && !su.name)) return;
+                        const id = (su.username || su.email || su.id || su.name).toLowerCase();
+                        if (!removed.includes(id)) {
+                            if (playerMap.has(id)) {
+                                const existing = playerMap.get(id);
+                                if (su.name && (!existing.name || existing.name === id)) {
+                                    existing.name = su.name;
+                                }
+                            } else {
+                                playerMap.set(id, {
+                                    name: su.name || su.username || id,
+                                    identifier: su.username || su.email || id,
+                                    maxStage: 1,
+                                    source: 'Star Galaxy'
+                                });
+                            }
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            // 4. Current active logged-in user
+            if (currentAuthUser && currentAuthUser.name) {
+                const curId = (currentAuthUser.identifier || currentAuthUser.name).toLowerCase();
+                if (!removed.includes(curId)) {
+                    const currentStageVal = Math.max(maxUnlockedStage || 1, currentStage || 1);
+                    if (playerMap.has(curId)) {
+                        const existing = playerMap.get(curId);
+                        existing.maxStage = Math.max(existing.maxStage, currentStageVal);
+                        if (currentAuthUser.name) existing.name = currentAuthUser.name;
+                    } else {
+                        playerMap.set(curId, {
+                            name: currentAuthUser.name,
+                            identifier: currentAuthUser.identifier || curId,
+                            maxStage: currentStageVal,
+                            source: 'Current Session'
+                        });
+                    }
                 }
             }
 
-            return Array.from(playerMap.values()).sort((a, b) => b.maxStage - a.maxStage);
+            // Return players sorted strictly by maxStage descending, then name alphabetically
+            return Array.from(playerMap.values()).sort((a, b) => {
+                if (b.maxStage !== a.maxStage) return b.maxStage - a.maxStage;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
+        // Real-Time Leaderboard Synchronizer
+        function initLeaderboardRealTimeSync() {
+            // 1. BroadcastChannel (Same-device multi-tab instant sync)
+            try {
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('sni_ws_leaderboard_channel');
+                    bc.onmessage = (e) => {
+                        if (e.data && e.data.type === 'LEADERBOARD_UPDATE') {
+                            handleLeaderboardSyncMessage(e.data);
+                        }
+                    };
+                }
+            } catch(e) {}
+
+            // 2. Storage Event (Instant cross-tab storage change sync)
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'word_search_users_db' || e.key === 'live_counter_users_db' || e.key === 'sni_ws_leaderboard_ping') {
+                    renderLeaderboard();
+                }
+            });
+
+            // 3. HiveMQ MQTT Broker (Real-time cross-device sync)
+            if (window.mqtt) {
+                try {
+                    const lbMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                        clientId: 'sni_lb_' + Math.random().toString(36).substring(2, 9),
+                        clean: true,
+                        keepalive: 45
+                    });
+
+                    lbMqtt.on('connect', () => {
+                        lbMqtt.subscribe('sni/wordsearch/leaderboard');
+                    });
+
+                    lbMqtt.on('message', (topic, payload) => {
+                        try {
+                            const data = JSON.parse(payload.toString());
+                            if (data && data.type === 'LEADERBOARD_UPDATE') {
+                                handleLeaderboardSyncMessage(data);
+                            }
+                        } catch(e) {}
+                    });
+
+                    window.leaderboardMqttClient = lbMqtt;
+                } catch(e) {
+                    console.warn('Leaderboard MQTT sync init error:', e);
+                }
+            }
+        }
+
+        function handleLeaderboardSyncMessage(data) {
+            if (!data || !data.player) return;
+            const p = data.player;
+            try {
+                let db = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
+                const idKey = (p.identifier || p.name).toLowerCase();
+                db[idKey] = {
+                    ...(db[idKey] || {}),
+                    name: p.name,
+                    identifier: p.identifier,
+                    maxStage: Math.max(parseInt(db[idKey]?.maxStage || 1), parseInt(p.maxStage || 1))
+                };
+                safeSetStorage('word_search_users_db', JSON.stringify(db));
+            } catch(e) {}
+
+            const modal = document.getElementById('leaderboardModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                renderLeaderboard();
+            }
+        }
+
+        function broadcastLeaderboardUpdate(name, identifier, maxStage) {
+            const eventObj = {
+                type: 'LEADERBOARD_UPDATE',
+                player: {
+                    name: name,
+                    identifier: identifier,
+                    maxStage: maxStage || 1
+                },
+                timestamp: Date.now()
+            };
+
+            // Update local users db
+            try {
+                let db = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
+                const idKey = (identifier || name).toLowerCase();
+                db[idKey] = {
+                    ...(db[idKey] || {}),
+                    name: name,
+                    identifier: identifier,
+                    maxStage: Math.max(parseInt(db[idKey]?.maxStage || 1), parseInt(maxStage || 1))
+                };
+                safeSetStorage('word_search_users_db', JSON.stringify(db));
+                localStorage.setItem('sni_ws_leaderboard_ping', Date.now().toString());
+            } catch(e) {}
+
+            // BroadcastChannel
+            try {
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('sni_ws_leaderboard_channel');
+                    bc.postMessage(eventObj);
+                    setTimeout(() => bc.close(), 1000);
+                }
+            } catch(e) {}
+
+            // MQTT
+            if (window.leaderboardMqttClient && window.leaderboardMqttClient.connected) {
+                try {
+                    window.leaderboardMqttClient.publish('sni/wordsearch/leaderboard', JSON.stringify(eventObj));
+                } catch(e) {}
+            } else if (wsMqttClient && wsMqttClient.connected) {
+                try {
+                    wsMqttClient.publish('sni/wordsearch/leaderboard', JSON.stringify(eventObj));
+                } catch(e) {}
+            }
         }
 
         function renderLeaderboard() {
@@ -1681,11 +1855,24 @@
             if (currentAuthUser) {
                 const idx = players.findIndex(p => 
                     p.identifier.toLowerCase() === (currentAuthUser.identifier || '').toLowerCase() || 
-                    p.name.toLowerCase() === currentAuthUser.name.toLowerCase()
+                    p.name.toLowerCase() === (currentAuthUser.name || '').toLowerCase()
                 );
                 if (idx !== -1) yourRank = `#${idx + 1}`;
             }
             if (statYourRank) statYourRank.textContent = yourRank;
+
+            if (players.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="${isAdminActive ? 5 : 4}" class="py-12 text-center text-slate-400">
+                            <div class="text-3xl mb-2">🏆</div>
+                            <p class="font-bold text-sm text-slate-600 dark:text-slate-300">No players registered yet</p>
+                            <p class="text-xs mt-1 text-slate-400">Register an account or complete a stage to appear on the live leaderboard!</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
             tbody.innerHTML = players.map((p, idx) => {
                 const rank = idx + 1;
@@ -1696,7 +1883,7 @@
 
                 const isCurrent = currentAuthUser && (
                     p.identifier.toLowerCase() === (currentAuthUser.identifier || '').toLowerCase() || 
-                    p.name.toLowerCase() === currentAuthUser.name.toLowerCase()
+                    p.name.toLowerCase() === (currentAuthUser.name || '').toLowerCase()
                 );
                 const progressPct = Math.min(100, Math.max(1, Math.round((p.maxStage / 1000) * 100)));
 
@@ -2412,6 +2599,9 @@
         // ==============================================================
         function initWordSearchFeatures() {
             updateAdminUI();
+            if (typeof initLeaderboardRealTimeSync === 'function') {
+                initLeaderboardRealTimeSync();
+            }
 
             // Modals references
             const adminModal = document.getElementById('adminModal');
