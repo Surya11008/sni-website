@@ -36,11 +36,18 @@
     <!-- QRCode Generator & Scanner Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- MQTT Real-time Cross-Device WebSocket Sync -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- SNI App Shell Stylesheet -->
     <link rel="stylesheet" href="site-pages.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 2px;
+        }
     </style>
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col justify-between">
@@ -78,12 +85,17 @@
                     </div>
                     <div>
                         <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-brand-600 to-emerald-500 bg-clip-text text-transparent">Simple Preaching Counter</h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400" id="navUserRole">Multi-Session Group Counters &amp; QR Sync</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="navUserRole">Multi-Session Group Counters, Calendar &amp; Live QR Sync</p>
                     </div>
                 </div>
                 
                 <!-- Nav Actions -->
                 <div class="flex items-center space-x-3">
+                    <span id="mqttStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span id="mqttStatusText">Connecting Sync...</span>
+                    </span>
+
                     <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
                         <i class="fa-solid fa-moon dark:hidden"></i>
                         <i class="fa-solid fa-sun hidden dark:block"></i>
@@ -147,30 +159,13 @@
                             <span>Login to Dashboard</span>
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
-
-                        <div class="relative flex py-2 items-center">
-                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                            <span class="flex-shrink mx-4 text-xs text-slate-400 uppercase font-semibold">Or Quick Demo Preview</span>
-                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="loginAsDemoUser()" class="py-2.5 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-100 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
-                                <i class="fa-solid fa-user-check"></i>
-                                <span>Demo User View</span>
-                            </button>
-                            <button type="button" onclick="loginAsDemoAdmin()" class="py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                <span>Admin Panel View</span>
-                            </button>
-                        </div>
                     </form>
                 </div>
             </section>
 
-            <!-- 2. COUNTERS DIRECTORY / HUB VIEW (LIST OF COUNTERS) -->
+            <!-- 2. COUNTERS DIRECTORY / HUB VIEW (LIST OF COUNTERS & CALENDAR) -->
             <section id="countersHubView" class="hidden space-y-6">
-                <!-- Welcome Banner & Add Counter Trigger -->
+                <!-- Welcome Banner & Actions -->
                 <div class="bg-gradient-to-r from-brand-700 to-emerald-800 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                     <div class="space-y-1 text-center md:text-left">
                         <div class="inline-flex items-center space-x-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold mb-2">
@@ -178,7 +173,7 @@
                             <span>Live Preaching Sessions</span>
                         </div>
                         <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="hubWelcomeUser">Welcome, User</h2>
-                        <p class="text-emerald-100 text-sm max-w-xl">Create preaching counters with names, connect partners via QR code, track real-time counts, and mark sessions completed.</p>
+                        <p class="text-emerald-100 text-sm max-w-xl">Create preaching counters with dates &amp; names, connect partners via QR code, track real-time counts, and mark sessions completed.</p>
                     </div>
 
                     <div class="flex flex-wrap items-center justify-center gap-3">
@@ -218,6 +213,69 @@
                     </div>
                 </div>
 
+                <!-- INTERACTIVE CALENDAR SECTION FOR COUNTERS -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-xl">
+                                <i class="fa-solid fa-calendar-days text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                    <span>Preaching Calendar &amp; Dates</span>
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Click any date to see the preaching counters recorded for that day</p>
+                            </div>
+                        </div>
+
+                        <!-- Date Quick Filter Buttons -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="calBtnAllDates" onclick="selectCalendarDate(null)" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition">
+                                📅 All Dates
+                            </button>
+                            <button id="calBtnToday" onclick="selectCalendarDate(getTodayDateStr())" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition">
+                                🟢 Today
+                            </button>
+                            <div class="flex items-center gap-1">
+                                <input type="date" id="calCustomDateInput" onchange="selectCalendarDate(this.value)" class="text-xs px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Calendar Widget -->
+                    <div class="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <button onclick="navigateCalendarMonth(-1)" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <span id="calendarMonthTitle" class="font-extrabold text-sm text-slate-800 dark:text-slate-200">November 2026</span>
+                            <button onclick="navigateCalendarMonth(1)" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Days of Week -->
+                        <div class="calendar-grid text-center font-bold text-[11px] text-slate-400 uppercase pb-2">
+                            <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                        </div>
+                        <!-- Calendar Days Grid -->
+                        <div id="calendarDaysGrid" class="calendar-grid text-center text-xs">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Active Filter Display Badge -->
+                    <div id="calendarActiveFilterBar" class="hidden flex items-center justify-between p-3 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 rounded-xl text-xs">
+                        <span class="font-semibold text-brand-800 dark:text-brand-300 flex items-center gap-2">
+                            <i class="fa-solid fa-filter"></i>
+                            <span id="calendarFilterLabelText">Filtered by Date</span>
+                        </span>
+                        <button onclick="selectCalendarDate(null)" class="text-brand-700 dark:text-brand-300 font-bold hover:underline">
+                            ✕ Show All Dates
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Counters List Grid -->
                 <div class="space-y-4">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
@@ -249,123 +307,109 @@
                             <i class="fa-solid fa-arrow-left"></i>
                         </button>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xl font-extrabold text-slate-900 dark:text-white" id="roomCounterName">Counter Name</h2>
-                                <span id="roomStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Active</span>
+                            <div class="flex items-center space-x-2">
+                                <h2 id="roomCounterName" class="text-xl font-bold text-slate-900 dark:text-slate-100">Counter Name</h2>
+                                <span id="roomStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Active</span>
+                                <span id="roomDateBadge" class="px-2 py-0.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"></span>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400">
-                                Created by <span id="roomCreatorName" class="font-semibold">User</span> &bull; 
-                                Session ID: <span id="roomCounterId" class="font-mono">ctr_xxx</span>
+                                Created by <strong id="roomCreatorName">You</strong> • <span id="roomLiveStatusText" class="text-emerald-600 dark:text-emerald-400 font-semibold">● Live Sync Active</span>
                             </p>
                         </div>
                     </div>
 
-                    <!-- Room Actions -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="openCounterInviteModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow">
-                            <i class="fa-solid fa-qrcode"></i>
-                            <span>+ Invite / QR for this Counter</span>
+                    <!-- Room Header Actions -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openCounterInviteModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md">
+                            <i class="fa-solid fa-qrcode text-sm"></i>
+                            <span>Invite Partners (QR)</span>
                         </button>
-                        <!-- COMPLETE OPTION: leaves this counter -->
-                        <button onclick="completeCurrentCounterSession()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow">
+                        <!-- COMPLETE OPTION -->
+                        <button onclick="completeCurrentCounterSession()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md" title="Complete ministry & exit counter">
                             <i class="fa-solid fa-circle-check"></i>
-                            <span>Complete &amp; Leave Counter</span>
+                            <span>✓ Complete &amp; Leave</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- LIVE COUNTER GRID (Self Controls & Live Group Split) -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- MAIN WORKSPACE: Active Counter Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
-                    <!-- Self Increment Controller -->
-                    <div class="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between text-center relative overflow-hidden">
-                        <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-brand-500 to-emerald-400"></div>
-                        <div class="w-full text-left mb-4">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Count in this Counter</span>
-                            <h3 class="font-bold text-lg" id="roomSelfName">You</h3>
-                        </div>
-
-                        <!-- Big Count Display -->
-                        <div class="my-4">
-                            <div id="roomSelfCountDisplay" class="text-7xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">0</div>
-                            <p class="text-xs text-slate-400 mt-1">Tap '+' to add preaching count to this counter</p>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="w-full space-y-3">
-                            <!-- Big Primary Add Button -->
-                            <button onclick="incrementRoomCount(1)" class="w-full py-4 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-plus text-2xl"></i>
-                                <span>+1 Count</span>
-                            </button>
-
-                            <!-- Quick Preset Add (+) & Delete (-) Grid -->
-                            <div class="grid grid-cols-4 gap-2">
-                                <button onclick="incrementRoomCount(5)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 5 counts">+5</button>
-                                <button onclick="incrementRoomCount(10)" class="py-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs transition" title="Add 10 counts">+10</button>
-                                <button onclick="decrementRoomCount(1)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 1 count">
-                                    <i class="fa-solid fa-minus text-[10px]"></i><span>1</span>
-                                </button>
-                                <button onclick="decrementRoomCount(5)" class="py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1" title="Delete 5 counts">
-                                    <i class="fa-solid fa-minus text-[10px]"></i><span>5</span>
+                    <!-- Left: Big Counter Action Widget -->
+                    <div class="lg:col-span-7 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-6">
+                        
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Current Count in this Session</span>
+                                <button onclick="resetRoomSelfCount()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset to 0
                                 </button>
                             </div>
-
-                            <!-- Custom Add Count Input & Button -->
-                            <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
-                                <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5 text-left">Add Custom Count (+)</label>
-                                <div class="flex gap-2">
-                                    <input type="number" id="roomCustomCountInput" min="1" max="9999" placeholder="Enter count..." class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-brand-500">
-                                    <button onclick="addRoomCustomCount()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition whitespace-nowrap shadow">
-                                        + Add
-                                    </button>
-                                </div>
+                            
+                            <!-- Big Display -->
+                            <div class="text-center py-6">
+                                <h3 id="roomUserCurrentCount" class="text-7xl sm:text-8xl font-black text-brand-600 dark:text-brand-400 tracking-tight select-none">0</h3>
+                                <p class="text-xs text-slate-400 mt-2">Recorded by you in this counter</p>
                             </div>
+                        </div>
 
-                            <!-- Reset Counter Button -->
-                            <button onclick="resetRoomSelfCount()" class="w-full py-2 bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1 border border-slate-200 dark:border-slate-700">
-                                <i class="fa-solid fa-rotate-left text-xs mr-1"></i>
-                                <span>Reset My Count in this Counter</span>
+                        <!-- Main Big Tap Increment Button -->
+                        <button onclick="incrementRoomCount(1)" class="w-full py-6 sm:py-7 bg-brand-600 hover:bg-brand-700 active:scale-98 text-white rounded-2xl shadow-xl shadow-brand-600/30 transition text-2xl font-black flex items-center justify-center space-x-3">
+                            <i class="fa-solid fa-plus text-3xl"></i>
+                            <span>Count +1</span>
+                        </button>
+
+                        <!-- Quick Presets -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="incrementRoomCount(5)" class="py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl font-bold text-sm transition">+5</button>
+                            <button onclick="incrementRoomCount(10)" class="py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl font-bold text-sm transition">+10</button>
+                            <button onclick="decrementRoomCount(1)" class="py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl font-bold text-sm transition text-rose-500">-1</button>
+                            <button onclick="decrementRoomCount(5)" class="py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl font-bold text-sm transition text-rose-500">-5</button>
+                        </div>
+
+                        <!-- Custom Count Addition Input -->
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-700 flex space-x-2">
+                            <input type="number" id="roomCustomCountInput" min="1" placeholder="Enter custom count (e.g. 25)..." class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            <button onclick="addRoomCustomCount()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow">
+                                + Add Count
                             </button>
                         </div>
                     </div>
 
-                    <!-- Live Group Summary & Members in this Counter -->
-                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-6">
-                        <div>
-                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                                <h3 class="font-bold text-lg flex items-center space-x-2">
-                                    <i class="fa-solid fa-chart-pie text-brand-600"></i>
-                                    <span>Live Group Summary &amp; Division</span>
-                                </h3>
-                                <span class="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold animate-pulse">Live Connected Session</span>
+                    <!-- Right: Group Combined Metrics & Members in THIS Counter -->
+                    <div class="lg:col-span-5 space-y-6">
+                        
+                        <!-- Combined Group Metric Card -->
+                        <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-lg border border-slate-700">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-700/60">
+                                <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">This Counter's Live Total</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">All Members</span>
+                            </div>
+                            <div class="my-4 text-center">
+                                <h3 id="roomTotalCountDisplay" class="text-5xl font-black text-emerald-400 tracking-tight">0</h3>
+                                <p class="text-xs text-slate-400 mt-1">Combined total preaching count for this session</p>
                             </div>
 
-                            <!-- Metrics Grid -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
-                                    <span class="text-xs text-slate-400 font-semibold uppercase">Total Combined Count</span>
-                                    <h4 id="roomTotalCombined" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">0</h4>
+                            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700/60">
+                                <div class="bg-slate-800/80 p-3 rounded-2xl text-center">
+                                    <span class="text-[11px] text-slate-400 block uppercase font-bold">Members Joined</span>
+                                    <h4 id="roomTotalMembers" class="text-2xl font-extrabold mt-1 text-white">1</h4>
                                 </div>
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
-                                    <span class="text-xs text-slate-400 font-semibold uppercase">Members in Counter</span>
-                                    <h4 id="roomTotalMembers" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">1</h4>
-                                </div>
-                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center sm:text-left">
-                                    <span class="text-xs text-slate-400 font-semibold uppercase">Split / Share per Person</span>
-                                    <h4 id="roomSplitPerPerson" class="text-3xl font-extrabold mt-1 text-brand-600 dark:text-brand-400">0.00</h4>
+                                <div class="bg-slate-800/80 p-3 rounded-2xl text-center">
+                                    <span class="text-[11px] text-slate-400 block uppercase font-bold">Split Per Person</span>
+                                    <h4 id="roomSplitPerPerson" class="text-2xl font-extrabold mt-1 text-emerald-400">0.00</h4>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Connected Members in THIS Counter -->
-                        <div>
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
                             <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                    Members Added to this Counter (<span id="roomMembersCountLabel">1</span>)
+                                    Members in this Counter (<span id="roomMembersCountLabel">1</span>)
                                 </h4>
                                 <button onclick="openCounterInviteModal()" class="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline">
-                                    + Add More Members via QR
+                                    + Add Partner via QR
                                 </button>
                             </div>
                             <div id="roomMembersList" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
@@ -411,13 +455,13 @@
 
             </section>
 
-            <!-- 4. ADMIN DASHBOARD VIEW (ALL COUNTERS & ALL USERS) -->
+            <!-- 4. ADMIN DASHBOARD VIEW (CALENDAR, SEARCH ICON & ALL FILTERS) -->
             <section id="adminView" class="hidden space-y-6">
                 <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <span class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-full uppercase">Admin Control Panel</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold mt-2">All Preaching Counters &amp; Users Directory</h2>
-                        <p class="text-slate-300 text-sm mt-1">Supervise all preaching counters, joined members, total counts across sessions, and remove data.</p>
+                        <p class="text-slate-300 text-sm mt-1">Supervise all preaching counters, joined members, total counts across sessions with full calendar &amp; filters.</p>
                     </div>
                     <button onclick="refreshAdminData()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-semibold transition flex items-center space-x-2">
                         <i class="fa-solid fa-rotate"></i> <span>Refresh All Data</span>
@@ -456,6 +500,107 @@
                     </div>
                 </div>
 
+                <!-- ADMIN CALENDAR & COMPREHENSIVE FILTER BAR -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-5">
+                    
+                    <!-- Admin Calendar Header -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-xl">
+                                <i class="fa-solid fa-calendar-check text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">Admin Calendar Filter</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Select dates to view preaching records for that specific period</p>
+                            </div>
+                        </div>
+
+                        <!-- Date Quick Presets -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="adminCalBtnAll" onclick="setAdminDateFilter('all')" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition">
+                                All Dates
+                            </button>
+                            <button id="adminCalBtnToday" onclick="setAdminDateFilter('today')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition">
+                                Today
+                            </button>
+                            <button id="adminCalBtnYesterday" onclick="setAdminDateFilter('yesterday')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition">
+                                Yesterday
+                            </button>
+                            <input type="date" id="adminCalSpecificDate" onchange="setAdminDateFilter(this.value)" class="text-xs px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+                        </div>
+                    </div>
+
+                    <!-- SEARCH BAR & MULTI-FILTERS: USER, PARTNER, COUNT, STATUS -->
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                            
+                            <!-- Search Input with Search Icon -->
+                            <div class="md:col-span-4 relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                                </span>
+                                <input type="text" id="adminSearchInput" oninput="applyAdminFilters()" placeholder="Search counter, user, partner..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+
+                            <!-- Filter by User / Creator -->
+                            <div class="md:col-span-2">
+                                <select id="adminFilterCreator" onchange="applyAdminFilters()" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="all">👤 All Users / Creators</option>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Filter by Partner -->
+                            <div class="md:col-span-2">
+                                <select id="adminFilterPartner" onchange="applyAdminFilters()" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="all">🤝 All Partners</option>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Filter by Count -->
+                            <div class="md:col-span-2">
+                                <select id="adminFilterCount" onchange="applyAdminFilters()" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="all">🔢 All Counts</option>
+                                    <option value="high">50+ Counts (High)</option>
+                                    <option value="med">20 - 49 Counts (Medium)</option>
+                                    <option value="low">1 - 19 Counts (Low)</option>
+                                    <option value="zero">0 Counts</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter by Status & Sort -->
+                            <div class="md:col-span-2 flex gap-2">
+                                <select id="adminFilterStatus" onchange="applyAdminFilters()" class="flex-1 px-2.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="all">All Status</option>
+                                    <option value="active">🟢 Active</option>
+                                    <option value="completed">✓ Completed</option>
+                                </select>
+                                <button onclick="resetAdminFilters()" class="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" title="Reset All Filters">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- Active Results Summary -->
+                        <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
+                            <div>
+                                Showing <strong id="adminFilterMatchCount" class="text-brand-600 dark:text-brand-400">0</strong> counters matching filters
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400">Sort by:</span>
+                                <select id="adminSortBy" onchange="applyAdminFilters()" class="text-xs bg-transparent border-0 font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer">
+                                    <option value="newest">Date: Newest First</option>
+                                    <option value="oldest">Date: Oldest First</option>
+                                    <option value="highest">Count: High to Low</option>
+                                    <option value="lowest">Count: Low to High</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Admin All Counters Table -->
                 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold text-sm flex items-center justify-between">
@@ -466,9 +611,10 @@
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                                    <th class="p-3.5">Date</th>
                                     <th class="p-3.5">Counter Name</th>
-                                    <th class="p-3.5">Creator</th>
-                                    <th class="p-3.5">Members Joined</th>
+                                    <th class="p-3.5">Creator (User)</th>
+                                    <th class="p-3.5">Partners / Members</th>
                                     <th class="p-3.5">Total Count</th>
                                     <th class="p-3.5">Status</th>
                                     <th class="p-3.5 text-right">Actions</th>
@@ -508,7 +654,7 @@
         </main>
     </div>
 
-    <!-- MODAL 1: ADD NEW COUNTER WITH NAME -->
+    <!-- MODAL 1: ADD NEW COUNTER WITH NAME & DATE -->
     <div id="newCounterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in duration-200 p-6 space-y-5">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
@@ -525,6 +671,10 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Counter Name *</label>
                     <input type="text" id="newCounterNameInput" required placeholder="e.g. Morning Ministry - Area 1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Counter Date *</label>
+                    <input type="date" id="newCounterDateInput" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Starting Count (Optional)</label>
@@ -559,7 +709,7 @@
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Scan to Join This Specific Counter</span>
                     <h4 id="inviteModalCounterTitle" class="text-base font-extrabold text-brand-600 dark:text-brand-400 mb-3">Counter Name</h4>
                     <div id="counterQRCodeContainer" class="inline-block bg-white p-3 rounded-2xl shadow-md mb-3"></div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-4">When a partner scans this QR code, they will be automatically added to this counter. More members can scan one by one to connect!</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-4">When a partner scans this QR code with their camera or phone, they connect immediately! 2nd, 3rd, and more partners can scan to join.</p>
                     
                     <!-- Shareable link & WhatsApp buttons -->
                     <div class="flex gap-2 max-w-sm mx-auto mb-2">
@@ -602,10 +752,48 @@
             <p class="text-xs text-slate-500 dark:text-slate-400">Point your camera at a partner's preaching counter QR code to join their session instantly.</p>
             <div id="qr-reader" class="w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 min-h-[220px]"></div>
             
-            <button id="startScannerBtn" onclick="startCameraScanner()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center space-x-2 shadow">
-                <i class="fa-solid fa-camera"></i>
-                <span>Start Camera Scanner</span>
-            </button>
+            <div class="flex gap-2">
+                <button id="startScannerBtn" onclick="startCameraScanner()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Start Camera</span>
+                </button>
+                <button onclick="switchCameraFacing()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs transition" title="Flip Camera">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+            </div>
+
+            <!-- Manual Link/ID Fallback -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-1.5">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Or Paste Counter Link / ID</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="manualScanTextInput" placeholder="Paste counter link or ctr_..." class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="connectFromManualInput()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition">Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: QUICK GUEST JOIN FOR SCANNED QR LINKS -->
+    <div id="quickJoinModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-sm w-full rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 p-6 space-y-4 text-center">
+            <div class="w-14 h-14 bg-brand-50 dark:bg-brand-900/40 text-brand-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+                <i class="fa-solid fa-handshake"></i>
+            </div>
+            <div>
+                <h3 class="font-extrabold text-lg text-slate-900 dark:text-slate-100">You're Invited to Join!</h3>
+                <p class="text-xs text-brand-600 dark:text-brand-400 font-bold mt-1" id="quickJoinCounterTitle">Preaching Counter</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter your name to connect with your partner and count together.</p>
+            </div>
+
+            <form onsubmit="handleQuickJoinSubmit(event)" class="space-y-3">
+                <input type="text" id="quickJoinNameInput" required placeholder="Enter Your Name..." class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
+                    Join Counter Room ▶
+                </button>
+            </form>
+            <p class="text-[11px] text-slate-400">
+                Already registered? <button onclick="closeQuickJoinAndLogin()" class="text-brand-600 dark:text-brand-400 font-bold hover:underline">Login here</button>
+            </p>
         </div>
     </div>
 
@@ -638,116 +826,178 @@
         let activeCounterId = null;
         let currentAuthMode = 'login';
         let html5QrCode = null;
+        let currentCameraFacing = "environment";
         let syncChannel = null;
+        let mqttClient = null;
+        let pendingJoinData = null;
 
-        // Initialize Cross-Tab & Multi-Window Sync
-        try {
-            syncChannel = new BroadcastChannel('sni_counter_multi_sync');
-            syncChannel.onmessage = (event) => {
-                if (!event.data) return;
-                const type = event.data.type;
-                if (type === 'COUNTER_UPDATED' || type === 'MEMBER_JOINED' || type === 'COUNT_UPDATED') {
-                    if (activeCounterId && event.data.counterId === activeCounterId) {
-                        loadActiveCounterRoom(activeCounterId);
-                    }
-                    if (!activeCounterId) {
-                        renderCountersHub();
-                    }
-                    if (currentUserState && currentUserState.role === 'admin') {
-                        refreshAdminData();
-                    }
+        // Calendar State
+        let currentCalendarYear = new Date().getFullYear();
+        let currentCalendarMonth = new Date().getMonth(); // 0-indexed
+        let selectedCalendarDate = null; // 'YYYY-MM-DD' or null for all
+
+        // Admin Filter State
+        let adminDateFilter = 'all'; // 'all', 'today', 'yesterday', or 'YYYY-MM-DD'
+
+        // Helpers for Dates
+        function getTodayDateStr() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getYesterdayDateStr() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
                 }
-            };
-        } catch(e) {}
-
-        window.addEventListener('storage', (e) => {
-            if (e.key === STORAGE_COUNTERS) {
-                if (activeCounterId) loadActiveCounterRoom(activeCounterId);
-                else renderCountersHub();
-            }
-        });
-
-        // Initialize Seed Users & Default Counters
-        function initSeedData() {
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            const seeds = [
-                {
-                    userId: 'surya11008',
-                    fullName: 'Surya (Admin)',
-                    password: 'Surya742766.',
-                    role: 'admin',
-                    count: 0,
-                    createdAt: '2026-11-10T10:00:00.000Z'
-                },
-                {
-                    userId: 'admin',
-                    fullName: 'System Administrator',
-                    password: 'Surya742766.',
-                    role: 'admin',
-                    count: 0,
-                    createdAt: '2026-11-10T10:00:00.000Z'
-                },
-                {
-                    userId: 'ramesh_demo',
-                    fullName: 'Ramesh Kumar',
-                    password: 'password123',
-                    role: 'user',
-                    count: 14,
-                    createdAt: '2026-11-10T11:00:00.000Z'
-                },
-                {
-                    userId: 'priya_demo',
-                    fullName: 'Priya Sharma',
-                    password: 'password123',
-                    role: 'user',
-                    count: 10,
-                    createdAt: '2026-11-10T11:00:00.000Z'
-                }
-            ];
-
-            seeds.forEach(s => {
-                const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === s.userId.toLowerCase());
-                if (idx === -1) {
-                    storedUsers.push(s);
-                } else if (s.role === 'admin') {
-                    storedUsers[idx].role = 'admin';
-                    storedUsers[idx].password = s.password;
-                }
-            });
-            localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
-
-            // Seed initial sample counters if empty
-            let storedCounters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
-            if (storedCounters.length === 0) {
-                const starterCounters = [
-                    {
-                        id: 'ctr_starter_1',
-                        name: 'Morning Ministry — Zone A',
-                        creatorId: 'ramesh_demo',
-                        creatorName: 'Ramesh Kumar',
-                        createdAt: '2026-11-11T07:30:00.000Z',
-                        status: 'active',
-                        members: [
-                            { userId: 'ramesh_demo', fullName: 'Ramesh Kumar', count: 14, status: 'active', joinedAt: '2026-11-11T07:30:00.000Z' },
-                            { userId: 'priya_demo', fullName: 'Priya Sharma', count: 10, status: 'active', joinedAt: '2026-11-11T07:35:00.000Z' }
-                        ],
-                        totalCount: 24,
-                        history: [
-                            { historyId: 'h_1', userId: 'ramesh_demo', userName: 'Ramesh Kumar', addedAmount: 14, currentCount: 14, timestamp: '2026-11-11T07:45:00.000Z' },
-                            { historyId: 'h_2', userId: 'priya_demo', userName: 'Priya Sharma', addedAmount: 10, currentCount: 10, timestamp: '2026-11-11T07:50:00.000Z' }
-                        ]
-                    }
-                ];
-                localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(starterCounters));
+                const d = new Date(dateStr);
+                return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch(e) {
+                return dateStr;
             }
         }
 
-        initSeedData();
+        // ==============================================================
+        // REAL-TIME CROSS-DEVICE SYNC VIA MQTT & WEBSOCKETS
+        // ==============================================================
+        function initRealtimeSync() {
+            try {
+                syncChannel = new BroadcastChannel('sni_counter_multi_sync');
+                syncChannel.onmessage = (event) => {
+                    if (!event.data) return;
+                    handleSyncEvent(event.data);
+                };
+            } catch(e) {}
 
-        // Dark Mode Toggle
-        window.toggleDarkMode = function() {
-            document.documentElement.classList.toggle('dark');
-        };
+            // Connect to HiveMQ Public WebSocket MQTT Broker
+            if (window.mqtt) {
+                try {
+                    const clientId = 'sni_' + Math.random().toString(16).substr(2, 8);
+                    mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                        clientId: clientId,
+                        clean: true,
+                        connectTimeout: 5000,
+                        reconnectPeriod: 3000
+                    });
+
+                    mqttClient.on('connect', () => {
+                        updateMqttBadge(true);
+                        // Subscribe to admin feed and active counter if open
+                        mqttClient.subscribe('sni/preaching/admin_feed');
+                        if (activeCounterId) {
+                            mqttClient.subscribe(`sni/preaching/counter/${activeCounterId}`);
+                        }
+                    });
+
+                    mqttClient.on('message', (topic, message) => {
+                        try {
+                            const data = JSON.parse(message.toString());
+                            handleSyncEvent(data);
+                        } catch(e) {}
+                    });
+
+                    mqttClient.on('error', () => updateMqttBadge(false));
+                    mqttClient.on('close', () => updateMqttBadge(false));
+                } catch(e) {
+                    updateMqttBadge(false);
+                }
+            }
+        }
+
+        function updateMqttBadge(isOnline) {
+            const badge = document.getElementById('mqttStatusBadge');
+            const text = document.getElementById('mqttStatusText');
+            if (!badge || !text) return;
+            badge.classList.remove('hidden');
+            if (isOnline) {
+                badge.className = "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+                text.innerText = "● Live Sync Connected";
+            } else {
+                badge.className = "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
+                text.innerText = "Sync Standby";
+            }
+        }
+
+        function broadcastSyncEvent(eventObj) {
+            if (syncChannel) {
+                try { syncChannel.postMessage(eventObj); } catch(e){}
+            }
+            if (mqttClient && mqttClient.connected) {
+                try {
+                    const topic = eventObj.counterId ? `sni/preaching/counter/${eventObj.counterId}` : 'sni/preaching/admin_feed';
+                    mqttClient.publish(topic, JSON.stringify(eventObj));
+                    mqttClient.publish('sni/preaching/admin_feed', JSON.stringify(eventObj));
+                } catch(e){}
+            }
+        }
+
+        function handleSyncEvent(data) {
+            if (!data) return;
+            const type = data.type;
+
+            // When a new partner joins or requests sync
+            if (type === 'PARTNER_JOINED' && data.counterId) {
+                let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+                let c = counters.find(x => x.id === data.counterId);
+                if (c && data.member) {
+                    const exists = (c.members || []).some(m => m.userId.toLowerCase() === data.member.userId.toLowerCase());
+                    if (!exists) {
+                        c.members.push(data.member);
+                        localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+                    }
+                    if (activeCounterId === data.counterId) {
+                        loadActiveCounterRoom(data.counterId);
+                        showToast(`${data.member.fullName} joined this counter! 🎉`);
+                    }
+                }
+            }
+
+            // Full counter state update broadcast (e.g. from count changes)
+            if (type === 'COUNTER_STATE_SYNC' && data.counter) {
+                let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+                const idx = counters.findIndex(x => x.id === data.counter.id);
+                if (idx !== -1) {
+                    counters[idx] = data.counter;
+                } else {
+                    counters.unshift(data.counter);
+                }
+                localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
+
+                if (activeCounterId === data.counter.id) {
+                    loadActiveCounterRoom(activeCounterId);
+                    if (data.sourceUser && (!currentUserState || data.sourceUser.toLowerCase() !== currentUserState.userId.toLowerCase())) {
+                        showToast(`Count updated by partner (${data.counter.totalCount})`);
+                    }
+                } else {
+                    renderCountersHub();
+                }
+
+                if (currentUserState && currentUserState.role === 'admin') {
+                    refreshAdminData();
+                }
+            }
+
+            if (type === 'ADMIN_TRIGGER') {
+                if (currentUserState && currentUserState.role === 'admin') {
+                    refreshAdminData();
+                }
+            }
+        }
 
         // Toast Notification Helper
         window.showToast = function(message, type = 'success') {
@@ -786,19 +1036,6 @@
                 submitBtn.innerHTML = '<span>Create Account</span><i class="fa-solid fa-user-plus ml-2"></i>';
                 title.innerText = 'Create Account';
             }
-        };
-
-        // Quick Demos
-        window.loginAsDemoUser = function() {
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            let user = storedUsers.find(u => u.userId === 'ramesh_demo');
-            if (user) loginSuccess(user);
-        };
-
-        window.loginAsDemoAdmin = function() {
-            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
-            let admin = storedUsers.find(u => u.userId === 'surya11008') || storedUsers.find(u => u.userId === 'admin');
-            if (admin) loginSuccess(admin);
         };
 
         // Authentication Submission
@@ -882,16 +1119,11 @@
             showToast(`Welcome, ${userData.fullName}!`);
 
             // Check if there was a pending counter join link
-            try {
-                const pendingJoin = sessionStorage.getItem('pending_counter_join');
-                if (pendingJoin) {
-                    sessionStorage.removeItem('pending_counter_join');
-                    const parsed = JSON.parse(pendingJoin);
-                    if (parsed && parsed.counterId) {
-                        setTimeout(() => joinCounterRoom(parsed.counterId), 300);
-                    }
-                }
-            } catch(e) {}
+            if (pendingJoinData && pendingJoinData.counterId) {
+                const target = pendingJoinData;
+                pendingJoinData = null;
+                setTimeout(() => joinCounterRoom(target.counterId, target.counterName, target.counterDate), 200);
+            }
         }
 
         window.logoutUser = function() {
@@ -949,15 +1181,124 @@
                 adminView.classList.add('hidden');
                 countersHubView.classList.remove('hidden');
                 activeCounterView.classList.add('hidden');
-                navUserRole.innerText = 'Counters Directory';
+                navUserRole.innerText = 'Counters Directory & Calendar';
                 renderCountersHub();
             }
+        };
+
+        // ==============================================================
+        // CALENDAR RENDERING & LOGIC
+        // ==============================================================
+        const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function renderCalendarWidget() {
+            const grid = document.getElementById('calendarDaysGrid');
+            const title = document.getElementById('calendarMonthTitle');
+            if (!grid || !title) return;
+
+            title.innerText = `${MONTH_NAMES[currentCalendarMonth]} ${currentCalendarYear}`;
+
+            // Get counters to mark days with counters
+            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            const counterDateCounts = {};
+            counters.forEach(c => {
+                const dateKey = c.date || (c.createdAt ? c.createdAt.split('T')[0] : '');
+                if (dateKey) {
+                    counterDateCounts[dateKey] = (counterDateCounts[dateKey] || 0) + 1;
+                }
+            });
+
+            grid.innerHTML = '';
+
+            const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
+            const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
+
+            // Pad blank cells before day 1
+            for (let i = 0; i < firstDay; i++) {
+                const blank = document.createElement('div');
+                blank.className = "py-2 text-transparent";
+                blank.innerText = "-";
+                grid.appendChild(blank);
+            }
+
+            const todayStr = getTodayDateStr();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const monthStr = String(currentCalendarMonth + 1).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                const dateKey = `${currentCalendarYear}-${monthStr}-${dayStr}`;
+
+                const isToday = dateKey === todayStr;
+                const isSelected = selectedCalendarDate === dateKey;
+                const sessionsCount = counterDateCounts[dateKey] || 0;
+
+                const dayBtn = document.createElement('button');
+                dayBtn.type = "button";
+                dayBtn.onclick = () => selectCalendarDate(dateKey);
+
+                let baseClass = "relative py-2 rounded-xl transition flex flex-col items-center justify-center font-semibold text-xs ";
+                if (isSelected) {
+                    baseClass += "bg-brand-600 text-white shadow-md font-bold";
+                } else if (isToday) {
+                    baseClass += "border-2 border-brand-500 text-brand-700 dark:text-brand-300 bg-brand-50/50 dark:bg-brand-950/40";
+                } else if (sessionsCount > 0) {
+                    baseClass += "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 font-bold";
+                } else {
+                    baseClass += "hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300";
+                }
+
+                dayBtn.className = baseClass;
+                dayBtn.innerHTML = `
+                    <span>${day}</span>
+                    ${sessionsCount > 0 ? `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-brand-600'} mt-0.5"></span>` : ''}
+                `;
+
+                grid.appendChild(dayBtn);
+            }
+        }
+
+        window.navigateCalendarMonth = function(delta) {
+            currentCalendarMonth += delta;
+            if (currentCalendarMonth < 0) {
+                currentCalendarMonth = 11;
+                currentCalendarYear -= 1;
+            } else if (currentCalendarMonth > 11) {
+                currentCalendarMonth = 0;
+                currentCalendarYear += 1;
+            }
+            renderCalendarWidget();
+        };
+
+        window.selectCalendarDate = function(dateStr) {
+            selectedCalendarDate = dateStr;
+            const filterBar = document.getElementById('calendarActiveFilterBar');
+            const filterLabel = document.getElementById('calendarFilterLabelText');
+            const allBtn = document.getElementById('calBtnAllDates');
+            const todayBtn = document.getElementById('calBtnToday');
+
+            if (allBtn) {
+                allBtn.className = !selectedCalendarDate ? "px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition" : "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition";
+            }
+            if (todayBtn) {
+                todayBtn.className = (selectedCalendarDate === getTodayDateStr()) ? "px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition" : "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition";
+            }
+
+            if (selectedCalendarDate) {
+                if (filterBar) filterBar.classList.remove('hidden');
+                if (filterLabel) filterLabel.innerText = `Showing Preaching Counters for ${formatDisplayDate(selectedCalendarDate)}`;
+            } else {
+                if (filterBar) filterBar.classList.add('hidden');
+            }
+
+            renderCalendarWidget();
+            renderCountersHub();
         };
 
         // ==============================================================
         // COUNTERS DIRECTORY (HUB) LOGIC
         // ==============================================================
         function renderCountersHub() {
+            if (!currentUserState) return;
             document.getElementById('hubWelcomeUser').innerText = `Welcome, ${currentUserState.fullName}`;
             
             const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
@@ -977,35 +1318,49 @@
             });
             if (statUserLifetimeCount) statUserLifetimeCount.textContent = userTotal;
 
+            // Render calendar widget
+            renderCalendarWidget();
+
             const grid = document.getElementById('countersGridContainer');
             if (!grid) return;
 
-            if (counters.length === 0) {
+            // Filter counters by selected calendar date if active
+            let displayCounters = counters;
+            if (selectedCalendarDate) {
+                displayCounters = counters.filter(c => {
+                    const cDate = c.date || (c.createdAt ? c.createdAt.split('T')[0] : '');
+                    return cDate === selectedCalendarDate;
+                });
+            }
+
+            if (displayCounters.length === 0) {
                 grid.innerHTML = `
                     <div class="col-span-full py-12 text-center bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-8 space-y-3">
                         <div class="w-14 h-14 bg-brand-50 dark:bg-brand-900/40 text-brand-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
-                            <i class="fa-solid fa-plus"></i>
+                            <i class="fa-solid fa-calendar-xmark"></i>
                         </div>
-                        <h4 class="font-bold text-lg">No Preaching Counters Created Yet</h4>
-                        <p class="text-xs text-slate-400 max-w-sm mx-auto">Click "+ Add New Counter" to create your first session, or scan a partner's QR code to join an existing session.</p>
-                        <button onclick="openNewCounterModal()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow">
-                            + Create First Counter
-                        </button>
+                        <h4 class="font-bold text-lg">${selectedCalendarDate ? `No Counters on ${formatDisplayDate(selectedCalendarDate)}` : 'No Preaching Counters Created Yet'}</h4>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto">${selectedCalendarDate ? 'Try selecting another date on the calendar, or create a new counter for this day.' : 'Click "+ Add New Counter" to create your first session, or scan a partner\'s QR code to join an existing session.'}</p>
+                        <div class="pt-2 flex justify-center gap-2">
+                            ${selectedCalendarDate ? `<button onclick="selectCalendarDate(null)" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Show All Dates</button>` : ''}
+                            <button onclick="openNewCounterModal()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow">
+                                + Create New Counter
+                            </button>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
-            // Render cards sorted by newest
-            const sortedCounters = [...counters].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            // Render cards sorted by newest date/createdAt
+            const sortedCounters = [...displayCounters].sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
 
             grid.innerHTML = sortedCounters.map(c => {
                 const members = c.members || [];
                 const isActive = c.status === 'active';
                 const isCreator = c.creatorId && c.creatorId.toLowerCase() === curId;
                 const userInCounter = members.find(m => m.userId.toLowerCase() === curId);
-                const userCountInCounter = userInCounter ? userInCounter.count : 0;
-                const formattedDate = new Date(c.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                const displayDate = formatDisplayDate(c.date || (c.createdAt ? c.createdAt.split('T')[0] : ''));
 
                 return `
                     <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition flex flex-col justify-between space-y-4">
@@ -1014,7 +1369,10 @@
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}">
                                     ${isActive ? '🟢 Active' : '✓ Completed'}
                                 </span>
-                                <span class="text-[11px] text-slate-400 font-mono">${formattedDate}</span>
+                                <span class="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">
+                                    <i class="fa-regular fa-calendar text-[10px]"></i>
+                                    <span>${displayDate}</span>
+                                </span>
                             </div>
                             <h4 class="font-extrabold text-lg text-slate-900 dark:text-slate-100 leading-snug">${escapeHtml(c.name)}</h4>
                             <p class="text-xs text-slate-400 mt-1">Creator: <span class="font-semibold text-slate-600 dark:text-slate-300">${escapeHtml(c.creatorName)}</span></p>
@@ -1053,10 +1411,14 @@
         // ==============================================================
         window.openNewCounterModal = function() {
             document.getElementById('newCounterModal').classList.remove('hidden');
-            const input = document.getElementById('newCounterNameInput');
-            if (input) {
-                input.value = '';
-                setTimeout(() => input.focus(), 100);
+            const nameInput = document.getElementById('newCounterNameInput');
+            const dateInput = document.getElementById('newCounterDateInput');
+            if (nameInput) {
+                nameInput.value = '';
+                setTimeout(() => nameInput.focus(), 100);
+            }
+            if (dateInput) {
+                dateInput.value = selectedCalendarDate || getTodayDateStr();
             }
         };
 
@@ -1067,6 +1429,7 @@
         window.handleCreateCounterSubmit = function(event) {
             event.preventDefault();
             const nameInput = document.getElementById('newCounterNameInput').value.trim();
+            const dateInput = document.getElementById('newCounterDateInput').value || getTodayDateStr();
             const initialCount = parseInt(document.getElementById('newCounterInitialCount').value) || 0;
 
             if (!nameInput) {
@@ -1081,6 +1444,7 @@
             const newCounter = {
                 id: counterId,
                 name: nameInput,
+                date: dateInput,
                 creatorId: curId,
                 creatorName: curName,
                 createdAt: new Date().toISOString(),
@@ -1114,9 +1478,7 @@
             closeNewCounterModal();
             showToast(`Counter "${nameInput}" created successfully!`);
 
-            if (syncChannel) {
-                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterId });
-            }
+            broadcastSyncEvent({ type: 'COUNTER_STATE_SYNC', counter: newCounter });
 
             // Immediately open the created counter room
             openCounterWorkspace(counterId);
@@ -1135,9 +1497,7 @@
                 renderCountersHub();
             }
 
-            if (syncChannel) {
-                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterId });
-            }
+            broadcastSyncEvent({ type: 'ADMIN_TRIGGER', counterId: counterId });
             showToast('Counter deleted successfully');
         };
 
@@ -1146,6 +1506,9 @@
         // ==============================================================
         window.openCounterWorkspace = function(counterId) {
             activeCounterId = counterId;
+            if (mqttClient && mqttClient.connected) {
+                mqttClient.subscribe(`sni/preaching/counter/${counterId}`);
+            }
             renderInterface();
         };
 
@@ -1163,27 +1526,47 @@
         function saveActiveCounter(counterObj) {
             let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
             const idx = counters.findIndex(c => c.id === counterObj.id);
-            if (idx >= 0) {
+            
+            // Recalculate combined total from all members
+            counterObj.totalCount = (counterObj.members || []).reduce((acc, m) => acc + (m.count || 0), 0);
+
+            if (idx !== -1) {
                 counters[idx] = counterObj;
             } else {
                 counters.push(counterObj);
             }
             localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
 
-            if (syncChannel) {
-                syncChannel.postMessage({ type: 'COUNTER_UPDATED', counterId: counterObj.id });
-            }
+            // Sync with other tabs and devices
+            broadcastSyncEvent({
+                type: 'COUNTER_STATE_SYNC',
+                counter: counterObj,
+                sourceUser: currentUserState ? currentUserState.userId : ''
+            });
         }
 
         function loadActiveCounterRoom(counterId) {
             const counter = getActiveCounter();
             if (!counter) {
-                showToast('Counter not found or deleted', 'error');
                 exitToCountersHub();
                 return;
             }
 
-            // Ensure current user is in counter.members
+            // Fill header info
+            document.getElementById('roomCounterName').innerText = counter.name;
+            const statusBadge = document.getElementById('roomStatusBadge');
+            if (statusBadge) {
+                statusBadge.innerText = counter.status === 'active' ? 'Active' : 'Completed';
+                statusBadge.className = counter.status === 'active' ? 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700' : 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600';
+            }
+            const dateBadge = document.getElementById('roomDateBadge');
+            if (dateBadge) {
+                dateBadge.innerText = formatDisplayDate(counter.date || (counter.createdAt ? counter.createdAt.split('T')[0] : ''));
+            }
+
+            document.getElementById('roomCreatorName').innerText = counter.creatorName;
+
+            // Ensure current user is in members list
             const curId = currentUserState.userId.toLowerCase();
             let member = counter.members.find(m => m.userId.toLowerCase() === curId);
             if (!member) {
@@ -1198,76 +1581,51 @@
                 saveActiveCounter(counter);
             }
 
-            // Header Elements
-            document.getElementById('roomCounterName').innerText = counter.name;
-            document.getElementById('roomCounterId').innerText = counter.id;
-            document.getElementById('roomCreatorName').innerText = counter.creatorName;
-            document.getElementById('roomSelfName').innerText = currentUserState.fullName + ' (You)';
+            // Self count
+            const roomUserCurrentCount = document.getElementById('roomUserCurrentCount');
+            if (roomUserCurrentCount) roomUserCurrentCount.innerText = member.count || 0;
 
-            const statusBadge = document.getElementById('roomStatusBadge');
-            if (counter.status === 'completed' || member.status === 'completed') {
-                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300";
-                statusBadge.innerText = member.status === 'completed' ? "Completed (Left Session)" : "Session Completed";
-            } else {
-                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300";
-                statusBadge.innerText = "Active Session";
+            // Group Total
+            const total = counter.members.reduce((acc, m) => acc + (m.count || 0), 0);
+            document.getElementById('roomTotalCountDisplay').innerText = total;
+
+            const memCount = counter.members.length;
+            document.getElementById('roomTotalMembers').innerText = memCount;
+            document.getElementById('roomMembersCountLabel').innerText = memCount;
+            document.getElementById('roomSplitPerPerson').innerText = memCount > 0 ? (total / memCount).toFixed(2) : "0.00";
+
+            // Render Members List
+            const membersList = document.getElementById('roomMembersList');
+            if (membersList) {
+                membersList.innerHTML = counter.members.map(m => {
+                    const isSelf = m.userId.toLowerCase() === curId;
+                    const isCompleted = m.status === 'completed';
+                    return `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-bold flex items-center justify-center text-xs">
+                                    ${m.fullName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">${escapeHtml(m.fullName)}</span>
+                                    ${isSelf ? '<span class="ml-1 text-[10px] text-brand-600 font-semibold">(You)</span>' : ''}
+                                    ${isCompleted ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold">Done</span>' : ''}
+                                </div>
+                            </div>
+                            <span class="font-extrabold text-sm text-brand-600 dark:text-brand-400 font-mono">${m.count || 0}</span>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            // Display Self Count
-            document.getElementById('roomSelfCountDisplay').innerText = member.count || 0;
-
-            // Recalculate Group Totals & Split
-            let combinedTotal = 0;
-            counter.members.forEach(m => combinedTotal += (m.count || 0));
-            counter.totalCount = combinedTotal;
-
-            const activeMembers = counter.members.filter(m => m.status === 'active');
-            const totalMembers = counter.members.length;
-            const splitDivider = activeMembers.length > 0 ? activeMembers.length : (totalMembers || 1);
-            const splitPerPerson = (combinedTotal / splitDivider).toFixed(2);
-
-            document.getElementById('roomTotalCombined').innerText = combinedTotal;
-            document.getElementById('roomTotalMembers').innerText = totalMembers;
-            document.getElementById('roomSplitPerPerson').innerText = splitPerPerson;
-            document.getElementById('roomMembersCountLabel').innerText = totalMembers;
-
-            // Render Members Breakdown for THIS counter
-            const membersList = document.getElementById('roomMembersList');
-            membersList.innerHTML = counter.members.map(m => {
-                const isYou = m.userId.toLowerCase() === curId;
-                const isCompleted = m.status === 'completed';
-                return `
-                    <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-between text-sm border border-slate-100 dark:border-slate-800 ${isYou ? 'ring-2 ring-brand-500/30' : ''}">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-extrabold flex items-center justify-center text-sm shadow-xs">
-                                ${(m.fullName.charAt(0) || 'U').toUpperCase()}
-                            </div>
-                            <div>
-                                <p class="font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
-                                    ${escapeHtml(m.fullName)}
-                                    ${isYou ? '<span class="text-[9px] bg-brand-600 text-white px-1.5 py-0.2 rounded-full font-bold">YOU</span>' : ''}
-                                    ${isCompleted ? '<span class="text-[9px] bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold">COMPLETED</span>' : ''}
-                                </p>
-                                <p class="text-[11px] text-slate-400 font-mono">ID: ${m.userId}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-extrabold text-brand-600 dark:text-brand-400 text-lg">${m.count || 0}</span>
-                            <span class="text-[10px] text-slate-400 block">counts</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // Render History for THIS counter
+            // Render History
             renderRoomHistory(counter);
         }
 
         // ==============================================================
-        // IN-ROOM INCREMENT, DECREMENT, CUSTOM ADD & COMPLETE
+        // IN-ROOM COUNT ACTIONS (+1, +5, -1, Custom, Reset)
         // ==============================================================
-        window.incrementRoomCount = function(amt) {
-            amt = parseInt(amt) || 1;
+        window.incrementRoomCount = function(amt = 1) {
             const counter = getActiveCounter();
             if (!counter) return;
 
@@ -1276,9 +1634,8 @@
             if (!member) return;
 
             member.count = (member.count || 0) + amt;
-            member.status = 'active'; // activate if adding counts
 
-            // Add history entry
+            // Add history record
             if (!counter.history) counter.history = [];
             counter.history.unshift({
                 historyId: 'h_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3),
@@ -1293,8 +1650,7 @@
             loadActiveCounterRoom(activeCounterId);
         };
 
-        window.decrementRoomCount = function(amt) {
-            amt = parseInt(amt) || 1;
+        window.decrementRoomCount = function(amt = 1) {
             const counter = getActiveCounter();
             if (!counter) return;
 
@@ -1497,7 +1853,8 @@
             document.getElementById('inviteModalCounterTitle').innerText = counter.name;
 
             const baseUrl = window.location.origin + window.location.pathname;
-            const inviteUrl = `${baseUrl}?joinCounter=${encodeURIComponent(counter.id)}&counterName=${encodeURIComponent(counter.name)}`;
+            const dateParam = counter.date || (counter.createdAt ? counter.createdAt.split('T')[0] : '');
+            const inviteUrl = `${baseUrl}?joinCounter=${encodeURIComponent(counter.id)}&counterName=${encodeURIComponent(counter.name)}&counterDate=${encodeURIComponent(dateParam)}`;
 
             const linkInput = document.getElementById('counterShareLinkInput');
             if (linkInput) linkInput.value = inviteUrl;
@@ -1562,13 +1919,14 @@
             let userObj = allUsers.find(u => u.userId.toLowerCase() === targetId);
             const memberName = userObj ? userObj.fullName : (targetId.charAt(0).toUpperCase() + targetId.slice(1));
 
-            counter.members.push({
+            const newMember = {
                 userId: targetId,
                 fullName: memberName,
                 count: 0,
                 status: 'active',
                 joinedAt: new Date().toISOString()
-            });
+            };
+            counter.members.push(newMember);
 
             saveActiveCounter(counter);
             input.value = '';
@@ -1582,6 +1940,7 @@
         // ==============================================================
         window.openJoinScannerModal = function() {
             document.getElementById('joinScannerModal').classList.remove('hidden');
+            setTimeout(() => startCameraScanner(), 200);
         };
 
         window.closeJoinScannerModal = function() {
@@ -1591,12 +1950,23 @@
             }
         };
 
+        window.switchCameraFacing = function() {
+            currentCameraFacing = currentCameraFacing === "environment" ? "user" : "environment";
+            startCameraScanner();
+        };
+
         window.startCameraScanner = function() {
             const scannerContainer = document.getElementById('qr-reader');
+            if (!scannerContainer) return;
             scannerContainer.innerHTML = '';
+
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => {});
+            }
+
             html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
-                { facingMode: "environment" },
+                { facingMode: currentCameraFacing },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 (decodedText) => {
                     html5QrCode.stop().catch(() => {});
@@ -1605,22 +1975,36 @@
                 },
                 () => {}
             ).catch(() => {
-                showToast('Camera access permission needed or unsupported', 'error');
+                showToast('Camera permission needed. You can also paste the link below.', 'error');
             });
+        };
+
+        window.connectFromManualInput = function() {
+            const input = document.getElementById('manualScanTextInput');
+            if (!input || !input.value.trim()) {
+                showToast('Please paste a link or counter ID', 'error');
+                return;
+            }
+            closeJoinScannerModal();
+            handleScannedJoinText(input.value.trim());
         };
 
         function handleScannedJoinText(text) {
             let targetCounterId = '';
             let targetCounterName = '';
+            let targetCounterDate = '';
 
             if (text.includes('joinCounter=') || text.includes('?')) {
                 try {
                     const url = new URL(text.startsWith('http') ? text : window.location.origin + '/' + text);
                     targetCounterId = url.searchParams.get('joinCounter') || '';
                     targetCounterName = url.searchParams.get('counterName') || '';
+                    targetCounterDate = url.searchParams.get('counterDate') || '';
                 } catch(e) {
-                    const m = text.match(/joinCounter=([^&]+)/);
-                    if (m) targetCounterId = decodeURIComponent(m[1]);
+                    const m1 = text.match(/joinCounter=([^&]+)/);
+                    if (m1) targetCounterId = decodeURIComponent(m1[1]);
+                    const m2 = text.match(/counterName=([^&]+)/);
+                    if (m2) targetCounterName = decodeURIComponent(m2[1]);
                 }
             } else {
                 targetCounterId = text.trim();
@@ -1631,19 +2015,78 @@
                 return;
             }
 
-            joinCounterRoom(targetCounterId, targetCounterName);
+            joinCounterRoom(targetCounterId, targetCounterName, targetCounterDate);
         }
 
+        // Quick Guest Join Modal
+        function showQuickJoinModal(counterId, counterName, counterDate) {
+            pendingJoinData = { counterId, counterName, counterDate };
+            const modal = document.getElementById('quickJoinModal');
+            const title = document.getElementById('quickJoinCounterTitle');
+            if (modal) modal.classList.remove('hidden');
+            if (title) title.innerText = counterName ? decodeURIComponent(counterName) : 'Partner Preaching Counter';
+            const input = document.getElementById('quickJoinNameInput');
+            if (input) {
+                input.value = '';
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        window.handleQuickJoinSubmit = function(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('quickJoinNameInput').value.trim();
+            if (!nameInput) {
+                showToast('Please enter your name to connect', 'error');
+                return;
+            }
+
+            const guestUserId = 'guest_' + Date.now().toString(36);
+            const newUser = {
+                userId: guestUserId,
+                fullName: nameInput,
+                password: 'guest',
+                role: 'user',
+                count: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            storedUsers.push(newUser);
+            localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+
+            currentUserState = newUser;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(newUser));
+
+            document.getElementById('quickJoinModal').classList.add('hidden');
+
+            if (pendingJoinData) {
+                joinCounterRoom(pendingJoinData.counterId, pendingJoinData.counterName, pendingJoinData.counterDate);
+                pendingJoinData = null;
+            }
+        };
+
+        window.closeQuickJoinAndLogin = function() {
+            document.getElementById('quickJoinModal').classList.add('hidden');
+            renderInterface();
+        };
+
         // Join Counter Room Function
-        window.joinCounterRoom = function(targetCounterId, targetCounterName) {
+        window.joinCounterRoom = function(targetCounterId, targetCounterName, targetCounterDate) {
             let counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
             let counter = counters.find(c => c.id === targetCounterId);
 
-            // If counter doesn't exist locally on this phone yet, CREATE IT based on QR invite data!
+            // If user is not logged in on this device yet, prompt quick join!
+            if (!currentUserState) {
+                showQuickJoinModal(targetCounterId, targetCounterName, targetCounterDate);
+                return;
+            }
+
+            // If counter doesn't exist locally on this phone yet, create it from invite params
             if (!counter) {
                 counter = {
                     id: targetCounterId,
                     name: targetCounterName ? decodeURIComponent(targetCounterName) : 'Partner Preaching Counter',
+                    date: targetCounterDate ? decodeURIComponent(targetCounterDate) : getTodayDateStr(),
                     creatorId: 'partner',
                     creatorName: 'Ministry Partner',
                     createdAt: new Date().toISOString(),
@@ -1655,43 +2098,109 @@
                 counters.push(counter);
             }
 
-            if (!currentUserState) {
-                sessionStorage.setItem('pending_counter_join', JSON.stringify({ counterId: targetCounterId }));
-                showToast('Saved counter invite! Please login or register to enter.');
-                return;
-            }
-
             // Add current user to counter if not already in
             const curId = currentUserState.userId.toLowerCase();
             let member = counter.members.find(m => m.userId.toLowerCase() === curId);
             if (!member) {
-                counter.members.push({
+                member = {
                     userId: currentUserState.userId,
                     fullName: currentUserState.fullName,
                     count: 0,
                     status: 'active',
                     joinedAt: new Date().toISOString()
-                });
+                };
+                counter.members.push(member);
             } else {
                 member.status = 'active'; // re-activate if previously completed
             }
 
             localStorage.setItem(STORAGE_COUNTERS, JSON.stringify(counters));
 
-            if (syncChannel) {
-                syncChannel.postMessage({ type: 'MEMBER_JOINED', counterId: targetCounterId });
-            }
+            // Broadcast join event so the host's screen instantly shows the partner!
+            broadcastSyncEvent({
+                type: 'PARTNER_JOINED',
+                counterId: targetCounterId,
+                member: member
+            });
 
-            showToast(`Joined counter: "${counter.name}"!`);
+            broadcastSyncEvent({
+                type: 'COUNTER_STATE_SYNC',
+                counter: counter,
+                sourceUser: currentUserState.userId
+            });
+
+            showToast(`Connected to counter: "${counter.name}"! 🎉`);
             openCounterWorkspace(targetCounterId);
         };
 
         // ==============================================================
-        // ADMIN DASHBOARD LOGIC (SURYA11008 & ADMIN)
+        // ADMIN DASHBOARD & ADVANCED FILTERS WITH SEARCH ICON
         // ==============================================================
         function initAdminDashboard() {
+            populateAdminDropdownFilters();
             refreshAdminData();
         }
+
+        window.setAdminDateFilter = function(filterVal) {
+            adminDateFilter = filterVal;
+            const btnAll = document.getElementById('adminCalBtnAll');
+            const btnToday = document.getElementById('adminCalBtnToday');
+            const btnYest = document.getElementById('adminCalBtnYesterday');
+            const dateInput = document.getElementById('adminCalSpecificDate');
+
+            if (btnAll) btnAll.className = filterVal === 'all' ? "px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition" : "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition";
+            if (btnToday) btnToday.className = filterVal === 'today' ? "px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition" : "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition";
+            if (btnYest) btnYest.className = filterVal === 'yesterday' ? "px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition" : "px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition";
+
+            if (filterVal !== 'all' && filterVal !== 'today' && filterVal !== 'yesterday' && dateInput) {
+                dateInput.value = filterVal;
+            }
+
+            applyAdminFilters();
+        };
+
+        function populateAdminDropdownFilters() {
+            const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
+            const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+
+            // Populate Creators Dropdown
+            const creatorSelect = document.getElementById('adminFilterCreator');
+            if (creatorSelect) {
+                const creators = new Set();
+                counters.forEach(c => {
+                    if (c.creatorName) creators.add(c.creatorName);
+                });
+                creatorSelect.innerHTML = '<option value="all">👤 All Creators</option>' + 
+                    [...creators].sort().map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+            }
+
+            // Populate Partners Dropdown
+            const partnerSelect = document.getElementById('adminFilterPartner');
+            if (partnerSelect) {
+                const partners = new Set();
+                counters.forEach(c => {
+                    (c.members || []).forEach(m => {
+                        if (m.fullName) partners.add(m.fullName);
+                    });
+                });
+                partnerSelect.innerHTML = '<option value="all">🤝 All Partners</option>' + 
+                    [...partners].sort().map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+            }
+        }
+
+        window.resetAdminFilters = function() {
+            document.getElementById('adminSearchInput').value = '';
+            document.getElementById('adminFilterCreator').value = 'all';
+            document.getElementById('adminFilterPartner').value = 'all';
+            document.getElementById('adminFilterCount').value = 'all';
+            document.getElementById('adminFilterStatus').value = 'all';
+            document.getElementById('adminSortBy').value = 'newest';
+            setAdminDateFilter('all');
+        };
+
+        window.applyAdminFilters = function() {
+            refreshAdminData();
+        };
 
         window.refreshAdminData = function() {
             const counters = JSON.parse(localStorage.getItem(STORAGE_COUNTERS) || '[]');
@@ -1706,19 +2215,88 @@
             document.getElementById('adminTotalCounts').innerText = totalCounts;
             document.getElementById('adminCompletedCounters').innerText = completedCount;
 
+            // Apply Filters to Counters
+            const searchVal = (document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value : '').trim().toLowerCase();
+            const creatorVal = document.getElementById('adminFilterCreator') ? document.getElementById('adminFilterCreator').value : 'all';
+            const partnerVal = document.getElementById('adminFilterPartner') ? document.getElementById('adminFilterPartner').value : 'all';
+            const countRangeVal = document.getElementById('adminFilterCount') ? document.getElementById('adminFilterCount').value : 'all';
+            const statusVal = document.getElementById('adminFilterStatus') ? document.getElementById('adminFilterStatus').value : 'all';
+            const sortBy = document.getElementById('adminSortBy') ? document.getElementById('adminSortBy').value : 'newest';
+
+            let filteredCounters = counters.filter(c => {
+                // 1. Calendar Date Filter
+                const cDate = c.date || (c.createdAt ? c.createdAt.split('T')[0] : '');
+                if (adminDateFilter === 'today') {
+                    if (cDate !== getTodayDateStr()) return false;
+                } else if (adminDateFilter === 'yesterday') {
+                    if (cDate !== getYesterdayDateStr()) return false;
+                } else if (adminDateFilter !== 'all') {
+                    if (cDate !== adminDateFilter) return false;
+                }
+
+                // 2. Search Text
+                if (searchVal) {
+                    const matchName = (c.name || '').toLowerCase().includes(searchVal);
+                    const matchId = (c.id || '').toLowerCase().includes(searchVal);
+                    const matchCreator = (c.creatorName || '').toLowerCase().includes(searchVal) || (c.creatorId || '').toLowerCase().includes(searchVal);
+                    const matchPartners = (c.members || []).some(m => (m.fullName || '').toLowerCase().includes(searchVal) || (m.userId || '').toLowerCase().includes(searchVal));
+                    if (!matchName && !matchId && !matchCreator && !matchPartners) return false;
+                }
+
+                // 3. Creator Filter
+                if (creatorVal !== 'all') {
+                    if (c.creatorName !== creatorVal) return false;
+                }
+
+                // 4. Partner Filter
+                if (partnerVal !== 'all') {
+                    const hasPartner = (c.members || []).some(m => m.fullName === partnerVal);
+                    if (!hasPartner) return false;
+                }
+
+                // 5. Count Range Filter
+                const cnt = c.totalCount || 0;
+                if (countRangeVal === 'high' && cnt < 50) return false;
+                if (countRangeVal === 'med' && (cnt < 20 || cnt >= 50)) return false;
+                if (countRangeVal === 'low' && (cnt < 1 || cnt >= 20)) return false;
+                if (countRangeVal === 'zero' && cnt !== 0) return false;
+
+                // 6. Status Filter
+                if (statusVal !== 'all') {
+                    if (c.status !== statusVal) return false;
+                }
+
+                return true;
+            });
+
+            // Sorting
+            filteredCounters.sort((a, b) => {
+                if (sortBy === 'highest') return (b.totalCount || 0) - (a.totalCount || 0);
+                if (sortBy === 'lowest') return (a.totalCount || 0) - (b.totalCount || 0);
+                if (sortBy === 'oldest') return new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt);
+                return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+            });
+
+            const matchCountBadge = document.getElementById('adminFilterMatchCount');
+            if (matchCountBadge) matchCountBadge.innerText = filteredCounters.length;
+
             // Render All Counters Table
             const countersTbody = document.getElementById('adminCountersTableBody');
             if (countersTbody) {
-                if (counters.length === 0) {
-                    countersTbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No counters created yet.</td></tr>`;
+                if (filteredCounters.length === 0) {
+                    countersTbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">No preaching counter sessions match the selected filters or date.</td></tr>`;
                 } else {
-                    countersTbody.innerHTML = counters.map(c => {
+                    countersTbody.innerHTML = filteredCounters.map(c => {
                         const members = c.members || [];
                         const memberNames = members.map(m => `${m.fullName} (${m.count})`).join(', ') || 'No members';
                         const isActive = c.status === 'active';
+                        const displayDate = formatDisplayDate(c.date || (c.createdAt ? c.createdAt.split('T')[0] : ''));
 
                         return `
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                <td class="p-3.5 text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                    <i class="fa-regular fa-calendar text-[10px] text-slate-400 mr-1"></i>${displayDate}
+                                </td>
                                 <td class="p-3.5 font-bold text-slate-800 dark:text-slate-100">
                                     ${escapeHtml(c.name)}
                                     <span class="block text-[10px] text-slate-400 font-mono">${c.id}</span>
@@ -1763,8 +2341,6 @@
                     `;
                 }).join('');
             }
-
-            showToast('Admin dashboard refreshed');
         };
 
         window.adminInspectCounter = function(counterId) {
@@ -1799,15 +2375,17 @@
             const params = new URLSearchParams(window.location.search);
             const counterId = params.get('joinCounter');
             const counterName = params.get('counterName');
+            const counterDate = params.get('counterDate');
 
             if (counterId) {
-                joinCounterRoom(counterId, counterName);
+                joinCounterRoom(counterId, counterName, counterDate);
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
         // Initialize on load
         window.addEventListener('load', () => {
+            initRealtimeSync();
             renderInterface();
             checkUrlCounterParams();
         });
