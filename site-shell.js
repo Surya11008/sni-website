@@ -169,6 +169,15 @@ if (installButton) {
             url: `${rootPrefix}wordsearch.html`,
             keywords: "word search 1000 stages puzzle game bible words vocabulary quest levels letters"
         },
+        {
+            title: "Simple Preaching Counter",
+            desc: "Real-time ministry counter with partner sync via QR code, group split calculations, and date report history.",
+            category: "Portals",
+            categorySlug: "counter",
+            icon: "📖",
+            url: `${rootPrefix}counter.html`,
+            keywords: "counter preaching counter ministry partner sync qr code preaching report tracking split live"
+        },
 
         // --- HOMEPAGE SECTIONS ---
         {

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#16a34a">
+    <link rel="manifest" href="manifest.webmanifest">
+    <title>Simple Preaching Counter | SNI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode Generator & Scanner Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- SNI App Shell Stylesheet -->
+    <link rel="stylesheet" href="site-pages.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col justify-between">
+
+    <!-- SNI Official Header -->
+    <header class="site-header" id="sni-site-header">
+        <a class="site-logo" href="index.html#home">
+            <img src="Images/sni-logo.png" alt="SNI Logo">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#notices">Notices</a>
+            <a href="index.html#new-arrivals">New Arrivals</a>
+            <a href="wordsearch.html">Word Search</a>
+            <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </button>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install SNI as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Root Application Container -->
+    <div id="app" class="flex-1 flex flex-col">
+        
+        <!-- Navbar -->
+        <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md">
+                        <i class="fa-solid fa-book-open text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-brand-600 to-emerald-500 bg-clip-text text-transparent">Simple Preaching Counter</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="navUserRole">Real-time Ministry Partner Sync</p>
+                    </div>
+                </div>
+                
+                <!-- Nav Actions -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+                    <div id="authNavArea" class="hidden flex items-center space-x-3">
+                        <span id="navUsername" class="text-sm font-semibold px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full"></span>
+                        <button onclick="logoutUser()" class="px-3 py-1.5 text-sm bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg font-medium hover:bg-rose-100 transition">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+            <!-- 1. AUTHENTICATION VIEW -->
+            <section id="authView" class="max-w-md mx-auto mt-6">
+                <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex p-3 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-2xl mb-3">
+                            <i class="fa-solid fa-hands-praying text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold" id="authTitle">Welcome Back</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Login or register to sync preaching counts with partners</p>
+                    </div>
+
+                    <!-- Tab Switcher -->
+                    <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl mb-6">
+                        <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-600 shadow-sm transition">Login</button>
+                        <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Register</button>
+                    </div>
+
+                    <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                        <div id="nameFieldGroup" class="hidden">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Full Name</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="authFullName" placeholder="e.g. Ramesh Kumar" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">User ID / Username</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-at"></i></span>
+                                <input type="text" id="authUserId" required placeholder="e.g. ramesh123 or admin" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="authPassword" required placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/20 transition flex items-center justify-center space-x-2">
+                            <span>Login to Dashboard</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+
+                        <div class="relative flex py-2 items-center">
+                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                            <span class="flex-shrink mx-4 text-xs text-slate-400 uppercase font-semibold">Or Quick Demo Preview</span>
+                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="loginAsDemoUser()" class="py-2.5 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-100 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-user-check"></i>
+                                <span>Demo User View</span>
+                            </button>
+                            <button type="button" onclick="loginAsDemoAdmin()" class="py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Admin Panel View</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 2. ADMIN DASHBOARD VIEW -->
+            <section id="adminView" class="hidden space-y-6">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-full uppercase">Admin Control Panel</span>
+                        <h2 class="text-2xl font-bold mt-2">All Registered User Accounts</h2>
+                        <p class="text-slate-300 text-sm mt-1">Manage users, view total counts across system, and remove accounts.</p>
+                    </div>
+                    <button onclick="refreshAdminData()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-medium transition flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate"></i> <span>Refresh Data</span>
+                    </button>
+                </div>
+
+                <!-- Admin Stats Overview -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total Users</p>
+                            <h3 id="adminTotalUsers" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total System Counts</p>
+                            <h3 id="adminTotalCounts" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                        <div class="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-xl"><i class="fa-solid fa-handshake text-xl"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Active Connections</p>
+                            <h3 id="adminActivePartners" class="text-2xl font-bold">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold text-sm flex items-center justify-between">
+                        <span>User Accounts Directory</span>
+                        <span class="text-xs text-slate-400">Click remove to delete user and their records</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                                    <th class="p-4">User ID / Name</th>
+                                    <th class="p-4">Role</th>
+                                    <th class="p-4">Partner Connected</th>
+                                    <th class="p-4">Current Count</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. USER DASHBOARD & LIVE COUNTER VIEW -->
+            <section id="userDashboardView" class="hidden space-y-6">
+                
+                <!-- Top Status & Partner Bar -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-brand-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-md" id="userAvatarLetter">U</div>
+                        <div>
+                            <h2 class="text-xl font-bold" id="welcomeUserTitle">Welcome, User</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ID: <span id="displayUserId" class="font-mono font-semibold"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Partner Status Pill & Connect Action -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div id="partnerStatusPill" class="px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-amber-200 dark:border-amber-800">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span id="partnerStatusText">No Partner Connected</span>
+                        </div>
+                        <button onclick="openPartnerModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-md transition flex items-center space-x-2">
+                            <i class="fa-solid fa-qrcode"></i>
+                            <span>Connect Partner / QR</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LIVE COUNTERS GRID (Self & Partners) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Main Increment Controller (Self) -->
+                    <div class="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between text-center relative overflow-hidden">
+                        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-500 to-emerald-400"></div>
+                        <div class="w-full text-left mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Preaching Counter</span>
+                            <h3 class="font-bold text-lg" id="selfNameLabel">Self</h3>
+                        </div>
+
+                        <!-- Big Count Display -->
+                        <div class="my-6">
+                            <div id="selfCountDisplay" class="text-7xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">0</div>
+                            <p class="text-xs text-slate-400 mt-1">Tap '+' to increment preaching count instantly</p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="w-full space-y-3">
+                            <button onclick="incrementSelfCount(1)" class="w-full py-5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-2xl rounded-2xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>+1 Count</span>
+                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="incrementSelfCount(5)" class="py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold rounded-xl text-sm transition">+5</button>
+                                <button onclick="resetSelfCount()" class="py-2.5 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 font-semibold rounded-xl text-sm transition">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Summary & Split Calculation Box -->
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-6">
+                        <div>
+                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                                <h3 class="font-bold text-lg flex items-center space-x-2">
+                                    <i class="fa-solid fa-chart-pie text-brand-600"></i>
+                                    <span>Live Group Summary & Division</span>
+                                </h3>
+                                <span class="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold animate-pulse">Live Sync Active</span>
+                            </div>
+
+                            <!-- Metrics Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs text-slate-400 font-semibold uppercase">Total Combined Count</span>
+                                    <h4 id="totalCombinedCount" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">0</h4>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs text-slate-400 font-semibold uppercase">Connected Members</span>
+                                    <h4 id="totalMembersCount" class="text-3xl font-extrabold mt-1 text-slate-800 dark:text-white">1</h4>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs text-slate-400 font-semibold uppercase">Split / Share per Person</span>
+                                    <h4 id="splitPerPersonCount" class="text-3xl font-extrabold mt-1 text-brand-600 dark:text-brand-400">0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connected Participants List -->
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Live Participants Breakdown</h4>
+                            <div id="liveParticipantsList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                                <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-sm text-slate-500 text-center">No partner connected yet. Scan QR or enter Partner ID.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY, CALENDAR & FILTER SECTION -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+                        <div>
+                            <h3 class="font-bold text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                                <span>Count History & Date Reports</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filter past records by date ranges with self & partner contribution breakdown</p>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="flex flex-wrap bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
+                            <button onclick="setHistoryFilter('today')" id="filterTodayBtn" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition">Today</button>
+                            <button onclick="setHistoryFilter('daily')" id="filterDailyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Daily</button>
+                            <button onclick="setHistoryFilter('weekly')" id="filterWeeklyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Weekly</button>
+                            <button onclick="setHistoryFilter('monthly')" id="filterMonthlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Monthly</button>
+                            <button onclick="setHistoryFilter('yearly')" id="filterYearlyBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Yearly</button>
+                            <button onclick="setHistoryFilter('all')" id="filterAllBtn" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">All</button>
+                        </div>
+                    </div>
+
+                    <!-- History Table / List -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                                    <th class="p-3">Date & Time</th>
+                                    <th class="p-3">User (Self)</th>
+                                    <th class="p-3">Partner Name / ID</th>
+                                    <th class="p-3">Self Count</th>
+                                    <th class="p-3">Partner Count</th>
+                                    <th class="p-3">Total / Split</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- PARTNER CONNECTION MODAL -->
+    <div id="partnerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-lg w-full rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-qrcode text-brand-600"></i>
+                    <span>Connect Partner via QR or ID</span>
+                </h3>
+                <button onclick="closePartnerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- My QR Code Tab / Display -->
+                <div class="text-center bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Your Partner Connection QR & ID</p>
+                    <div id="myQRCodeContainer" class="inline-block bg-white p-3 rounded-xl shadow-md mb-3"></div>
+                    <p class="text-sm font-semibold">Your ID: <span id="modalDisplayUserId" class="font-mono text-brand-600"></span></p>
+                    <p class="text-xs text-slate-400 mt-1">Ask your partner to scan this code or enter your ID.</p>
+                </div>
+
+                <!-- Manual Partner ID Input -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Connect by Partner User ID</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="partnerIdInput" placeholder="Enter partner User ID..." class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        <button onclick="connectPartnerById()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-md">Connect</button>
+                    </div>
+                </div>
+
+                <!-- QR Scanner Section -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Scan Partner's QR Code</label>
+                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"></div>
+                    <button id="startScannerBtn" onclick="startQrScanner()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold rounded-xl text-sm transition">
+                        <i class="fa-solid fa-camera mr-2"></i> Start Camera Scanner
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOAST / NOTIFICATION MODAL -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none" style="z-index: 100000;"></div>
+
+    <!-- SNI Official Footer Banner -->
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="index.html">Home</a></footer>
+
+    <!-- Universal Site Shell (Global Search & App Shell) -->
+    <script src="site-shell.js"></script>
+
+    <!-- App Logic JavaScript -->
+    <script>
+        // Data & Session Storage Keys
+        const STORAGE_USERS = 'live_counter_local_users';
+        const STORAGE_CURRENT = 'live_counter_current_user';
+        const STORAGE_HISTORY = 'live_counter_local_history';
+
+        let currentUserState = null;
+        let currentAuthMode = 'login';
+        let currentHistoryFilter = 'today';
+        let html5QrCode = null;
+
+        // Seed initial demo users if not present
+        function initSeedData() {
+            let stored = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            const seeds = [
+                {
+                    userId: 'admin',
+                    fullName: 'System Administrator',
+                    password: 'admin',
+                    role: 'admin',
+                    partnerId: '',
+                    count: 0,
+                    createdAt: '2026-11-10T10:00:00.000Z'
+                },
+                {
+                    userId: 'surya11008',
+                    fullName: 'Surya (Admin)',
+                    password: 'Suri742766.',
+                    role: 'admin',
+                    partnerId: '',
+                    count: 0,
+                    createdAt: '2026-11-10T10:00:00.000Z'
+                },
+                {
+                    userId: 'ramesh_demo',
+                    fullName: 'Ramesh Kumar',
+                    password: 'password123',
+                    role: 'user',
+                    partnerId: 'priya_demo',
+                    count: 14,
+                    createdAt: '2026-11-10T11:00:00.000Z'
+                },
+                {
+                    userId: 'priya_demo',
+                    fullName: 'Priya Sharma',
+                    password: 'password123',
+                    role: 'user',
+                    partnerId: 'ramesh_demo',
+                    count: 10,
+                    createdAt: '2026-11-10T11:00:00.000Z'
+                }
+            ];
+
+            seeds.forEach(s => {
+                if (!stored.some(u => u.userId.toLowerCase() === s.userId.toLowerCase())) {
+                    stored.push(s);
+                }
+            });
+            localStorage.setItem(STORAGE_USERS, JSON.stringify(stored));
+        }
+
+        initSeedData();
+
+        // Dark Mode Toggle
+        window.toggleDarkMode = function() {
+            document.documentElement.classList.toggle('dark');
+        };
+
+        // Toast Notification Helper
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold flex items-center space-x-2 transition transform translate-y-2 opacity-0 duration-300 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        // Switch Auth Tab (Login vs Register)
+        window.switchAuthTab = function(mode) {
+            currentAuthMode = mode;
+            const loginBtn = document.getElementById('tabLoginBtn');
+            const registerBtn = document.getElementById('tabRegisterBtn');
+            const nameGroup = document.getElementById('nameFieldGroup');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const title = document.getElementById('authTitle');
+
+            if (mode === 'login') {
+                loginBtn.className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-600 shadow-sm transition";
+                registerBtn.className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition";
+                nameGroup.classList.add('hidden');
+                submitBtn.innerHTML = '<span>Login to Dashboard</span><i class="fa-solid fa-arrow-right ml-2"></i>';
+                title.innerText = 'Welcome Back';
+            } else {
+                registerBtn.className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-600 shadow-sm transition";
+                loginBtn.className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition";
+                nameGroup.classList.remove('hidden');
+                submitBtn.innerHTML = '<span>Create Account</span><i class="fa-solid fa-user-plus ml-2"></i>';
+                title.innerText = 'Create Account';
+            }
+        };
+
+        // Quick Demo Logins
+        window.loginAsDemoUser = function() {
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let user = storedUsers.find(u => u.userId === 'ramesh_demo');
+            if (user) {
+                loginSuccess(user);
+            }
+        };
+
+        window.loginAsDemoAdmin = function() {
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let admin = storedUsers.find(u => u.userId === 'surya11008') || storedUsers.find(u => u.userId === 'admin');
+            if (admin) {
+                loginSuccess(admin);
+            }
+        };
+
+        // Form Submit for Login & Register
+        window.handleAuthSubmit = function(event) {
+            event.preventDefault();
+            const userIdInput = document.getElementById('authUserId').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('authPassword').value;
+            const fullNameInput = document.getElementById('authFullName').value.trim();
+
+            if (!userIdInput || !passwordInput) {
+                showToast('Please enter User ID and Password', 'error');
+                return;
+            }
+
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+
+            if (currentAuthMode === 'login') {
+                const user = storedUsers.find(u => u.userId.toLowerCase() === userIdInput);
+                if (!user) {
+                    showToast('User ID not found. Please click Register first.', 'error');
+                    return;
+                }
+                if (user.password !== passwordInput) {
+                    showToast('Incorrect password! Please try again.', 'error');
+                    return;
+                }
+                loginSuccess(user);
+            } else {
+                // Register mode
+                if (storedUsers.some(u => u.userId.toLowerCase() === userIdInput)) {
+                    showToast('User ID already exists! Please choose another.', 'error');
+                    return;
+                }
+                if (!fullNameInput) {
+                    showToast('Please enter your full name', 'error');
+                    return;
+                }
+
+                const isAdmin = userIdInput === 'admin' || userIdInput === 'surya11008';
+                const newUser = {
+                    userId: userIdInput,
+                    fullName: fullNameInput,
+                    password: passwordInput,
+                    role: isAdmin ? 'admin' : 'user',
+                    partnerId: '',
+                    count: 0,
+                    createdAt: new Date().toISOString()
+                };
+
+                storedUsers.push(newUser);
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+                showToast('Account created successfully!');
+                loginSuccess(newUser);
+            }
+        };
+
+        function loginSuccess(userData) {
+            currentUserState = userData;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(userData));
+            renderInterface();
+            showToast(`Welcome, ${userData.fullName}!`);
+        }
+
+        window.logoutUser = function() {
+            currentUserState = null;
+            localStorage.removeItem(STORAGE_CURRENT);
+            renderInterface();
+            showToast('Logged out successfully');
+        };
+
+        // Render Views
+        window.renderInterface = function() {
+            const authView = document.getElementById('authView');
+            const adminView = document.getElementById('adminView');
+            const userDashboardView = document.getElementById('userDashboardView');
+            const authNavArea = document.getElementById('authNavArea');
+            const navUsername = document.getElementById('navUsername');
+            const navUserRole = document.getElementById('navUserRole');
+
+            if (!currentUserState) {
+                const saved = localStorage.getItem(STORAGE_CURRENT);
+                if (saved) {
+                    try { currentUserState = JSON.parse(saved); } catch(e){}
+                }
+            }
+
+            if (!currentUserState) {
+                authView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                userDashboardView.classList.add('hidden');
+                authNavArea.classList.add('hidden');
+                navUserRole.innerText = 'Real-time Ministry Partner Sync';
+                return;
+            }
+
+            authView.classList.add('hidden');
+            authNavArea.classList.remove('hidden');
+            navUsername.innerText = currentUserState.fullName;
+
+            if (currentUserState.role === 'admin') {
+                adminView.classList.remove('hidden');
+                userDashboardView.classList.add('hidden');
+                navUserRole.innerText = 'Administrator';
+                initAdminDashboard();
+            } else {
+                adminView.classList.add('hidden');
+                userDashboardView.classList.remove('hidden');
+                navUserRole.innerText = 'Partner Counter User';
+                initUserDashboard();
+            }
+        };
+
+        // ================= USER DASHBOARD LOGIC =================
+        function initUserDashboard() {
+            document.getElementById('welcomeUserTitle').innerText = `Welcome, ${currentUserState.fullName}`;
+            document.getElementById('displayUserId').innerText = currentUserState.userId;
+            document.getElementById('selfNameLabel').innerText = currentUserState.fullName + ' (Self)';
+            document.getElementById('userAvatarLetter').innerText = (currentUserState.fullName.charAt(0) || 'U').toUpperCase();
+
+            updateSelfUI();
+            fetchAndUpdateGroupData();
+            generateQRCode(currentUserState.userId);
+            fetchHistoryData();
+        }
+
+        function updateSelfUI() {
+            document.getElementById('selfCountDisplay').innerText = currentUserState.count || 0;
+            const pill = document.getElementById('partnerStatusPill');
+            const text = document.getElementById('partnerStatusText');
+            if (currentUserState.partnerId) {
+                pill.className = "px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-emerald-200 dark:border-emerald-800";
+                text.innerHTML = `Connected Partner: <span class="font-bold">${currentUserState.partnerId}</span>`;
+            } else {
+                pill.className = "px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl text-sm font-semibold flex items-center space-x-2 border border-amber-200 dark:border-amber-800";
+                text.innerText = "No Partner Connected";
+            }
+        }
+
+        window.incrementSelfCount = function(amt) {
+            const newCount = (currentUserState.count || 0) + amt;
+            currentUserState.count = newCount;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+            if (idx >= 0) {
+                storedUsers[idx].count = newCount;
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+            }
+
+            updateSelfUI();
+            fetchAndUpdateGroupData();
+            recordHistoryEntry(amt);
+        };
+
+        window.resetSelfCount = function() {
+            currentUserState.count = 0;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+
+            let storedUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            const idx = storedUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+            if (idx >= 0) {
+                storedUsers[idx].count = 0;
+                localStorage.setItem(STORAGE_USERS, JSON.stringify(storedUsers));
+            }
+
+            updateSelfUI();
+            fetchAndUpdateGroupData();
+            showToast('Counter reset to 0');
+        };
+
+        function fetchAndUpdateGroupData() {
+            let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            if (!allUsers.some(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase())) {
+                allUsers.push(currentUserState);
+            }
+
+            let connectedGroup = [currentUserState];
+            if (currentUserState.partnerId) {
+                const partner = allUsers.find(u => u.userId.toLowerCase() === currentUserState.partnerId.toLowerCase());
+                if (partner && !connectedGroup.some(u => u.userId.toLowerCase() === partner.userId.toLowerCase())) {
+                    connectedGroup.push(partner);
+                }
+            }
+
+            allUsers.forEach(u => {
+                if (u.partnerId && u.partnerId.toLowerCase() === currentUserState.userId.toLowerCase() && !connectedGroup.some(item => item.userId.toLowerCase() === u.userId.toLowerCase())) {
+                    connectedGroup.push(u);
+                }
+            });
+
+            let totalCombined = 0;
+            connectedGroup.forEach(m => totalCombined += (m.count || 0));
+            let membersCount = connectedGroup.length;
+            let splitAmount = membersCount > 0 ? (totalCombined / membersCount).toFixed(2) : '0.00';
+
+            document.getElementById('totalCombinedCount').innerText = totalCombined;
+            document.getElementById('totalMembersCount').innerText = membersCount;
+            document.getElementById('splitPerPersonCount').innerText = splitAmount;
+
+            const listEl = document.getElementById('liveParticipantsList');
+            listEl.innerHTML = '';
+            connectedGroup.forEach(m => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-between text-sm border border-slate-100 dark:border-slate-800";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-900/40 text-brand-600 font-bold flex items-center justify-center text-xs">${(m.fullName.charAt(0) || 'U').toUpperCase()}</div>
+                        <div>
+                            <p class="font-semibold">${m.fullName} ${m.userId.toLowerCase() === currentUserState.userId.toLowerCase() ? '(You)' : ''}</p>
+                            <p class="text-xs text-slate-400">ID: ${m.userId}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-extrabold text-brand-600 dark:text-brand-400 text-base">${m.count || 0}</span>
+                        <span class="text-xs text-slate-400 block">counts</span>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        // ================= PARTNER CONNECTION & QR =================
+        window.openPartnerModal = function() {
+            document.getElementById('partnerModal').classList.remove('hidden');
+            document.getElementById('modalDisplayUserId').innerText = currentUserState.userId;
+        };
+
+        window.closePartnerModal = function() {
+            document.getElementById('partnerModal').classList.add('hidden');
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => {});
+            }
+        };
+
+        function generateQRCode(text) {
+            const container = document.getElementById('myQRCodeContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: text,
+                width: 140,
+                height: 140,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        window.connectPartnerById = function() {
+            const partnerId = document.getElementById('partnerIdInput').value.trim().toLowerCase();
+            if (!partnerId) {
+                showToast('Please enter a valid Partner User ID', 'error');
+                return;
+            }
+            if (partnerId === currentUserState.userId.toLowerCase()) {
+                showToast('You cannot connect as your own partner', 'error');
+                return;
+            }
+
+            let allUsers = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let partnerData = allUsers.find(u => u.userId.toLowerCase() === partnerId);
+
+            if (!partnerData) {
+                showToast('Partner User ID not found in system', 'error');
+                return;
+            }
+
+            currentUserState.partnerId = partnerData.userId;
+            localStorage.setItem(STORAGE_CURRENT, JSON.stringify(currentUserState));
+
+            let idx = allUsers.findIndex(u => u.userId.toLowerCase() === currentUserState.userId.toLowerCase());
+            if (idx >= 0) allUsers[idx].partnerId = partnerData.userId;
+            let pIdx = allUsers.findIndex(u => u.userId.toLowerCase() === partnerData.userId.toLowerCase());
+            if (pIdx >= 0) allUsers[pIdx].partnerId = currentUserState.userId;
+            localStorage.setItem(STORAGE_USERS, JSON.stringify(allUsers));
+
+            showToast(`Connected with partner: ${partnerData.fullName}!`);
+            closePartnerModal();
+            fetchAndUpdateGroupData();
+        };
+
+        window.startQrScanner = function() {
+            const scannerContainer = document.getElementById('qr-reader');
+            scannerContainer.innerHTML = '';
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 200, height: 200 } },
+                (decodedText) => {
+                    html5QrCode.stop().catch(() => {});
+                    document.getElementById('partnerIdInput').value = decodedText;
+                    connectPartnerById();
+                },
+                () => {}
+            ).catch(() => {
+                showToast('Camera access permission needed or unsupported', 'error');
+            });
+        };
+
+        // ================= HISTORY & DATE FILTERS =================
+        function recordHistoryEntry(addedAmt) {
+            const historyId = 'history_' + currentUserState.userId + '_' + Date.now();
+            const record = {
+                historyId: historyId,
+                userId: currentUserState.userId,
+                userName: currentUserState.fullName,
+                partnerId: currentUserState.partnerId || 'None',
+                selfCount: currentUserState.count,
+                addedAmount: addedAmt,
+                timestamp: new Date().toISOString()
+            };
+
+            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+            historyList.push(record);
+            localStorage.setItem(STORAGE_HISTORY, JSON.stringify(historyList));
+            fetchHistoryData();
+        }
+
+        window.setHistoryFilter = function(filter) {
+            currentHistoryFilter = filter;
+            ['today', 'daily', 'weekly', 'monthly', 'yearly', 'all'].forEach(f => {
+                const btn = document.getElementById(`filter${f.charAt(0).toUpperCase() + f.slice(1)}Btn`);
+                if (btn) {
+                    if (f === filter) {
+                        btn.className = "px-3 py-1.5 rounded-lg bg-white dark:bg-slate-600 shadow-sm transition";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition";
+                    }
+                }
+            });
+            fetchHistoryData();
+        };
+
+        function fetchHistoryData() {
+            let historyList = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+            const curId = currentUserState.userId.toLowerCase();
+            historyList = historyList.filter(item => 
+                item.userId.toLowerCase() === curId || 
+                (item.partnerId && item.partnerId.toLowerCase() === curId)
+            );
+
+            historyList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const now = new Date();
+            historyList = historyList.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                if (currentHistoryFilter === 'today') {
+                    return itemDate.toDateString() === now.toDateString();
+                } else if (currentHistoryFilter === 'weekly') {
+                    const diffTime = Math.abs(now - itemDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 7;
+                } else if (currentHistoryFilter === 'monthly') {
+                    return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+                } else if (currentHistoryFilter === 'yearly') {
+                    return itemDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            if (historyList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No history records found for this filter.</td></tr>`;
+                return;
+            }
+
+            historyList.forEach(item => {
+                const dateObj = new Date(item.timestamp);
+                const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-xs text-slate-500 font-mono">${formattedDate}</td>
+                    <td class="p-3 font-semibold">${item.userName}</td>
+                    <td class="p-3 text-slate-500">${item.partnerId}</td>
+                    <td class="p-3 font-bold text-brand-600">+${item.addedAmount} (Total: ${item.selfCount})</td>
+                    <td class="p-3 text-slate-400">Partner Sync</td>
+                    <td class="p-3 font-mono text-xs">Split Ready</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ================= ADMIN DASHBOARD LOGIC =================
+        function initAdminDashboard() {
+            refreshAdminData();
+        }
+
+        window.refreshAdminData = function() {
+            let users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            let totalCounts = 0;
+            let activePairs = 0;
+            users.forEach(u => {
+                totalCounts += (u.count || 0);
+                if (u.partnerId) activePairs++;
+            });
+
+            document.getElementById('adminTotalUsers').innerText = users.length;
+            document.getElementById('adminTotalCounts').innerText = totalCounts;
+            document.getElementById('adminActivePartners').innerText = activePairs;
+
+            const tbody = document.getElementById('adminUsersTableBody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const isProtected = u.role === 'admin' || u.userId === 'admin' || u.userId === 'surya11008';
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition";
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <p class="font-bold">${u.fullName}</p>
+                        <p class="text-xs text-slate-400 font-mono">${u.userId}</p>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-full ${u.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${u.role}</span>
+                    </td>
+                    <td class="p-4 font-mono text-xs text-slate-500">${u.partnerId || 'None'}</td>
+                    <td class="p-4 font-bold text-brand-600">${u.count || 0}</td>
+                    <td class="p-4 text-right">
+                        ${!isProtected ? `<button onclick="adminRemoveUser('${u.userId}')" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> Remove</button>` : '<span class="text-xs text-slate-400">Protected</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            showToast('Admin data refreshed');
+        };
+
+        window.adminRemoveUser = function(userId) {
+            if (!confirm(`Are you sure you want to remove user "${userId}" from the system?`)) return;
+            let users = JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]');
+            users = users.filter(u => u.userId.toLowerCase() !== userId.toLowerCase());
+            localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
+
+            showToast(`User ${userId} removed successfully`);
+            refreshAdminData();
+        };
+
+        // Window onload initialization
+        window.addEventListener('load', () => {
+            renderInterface();
+        });
+    </script>
+</body>
+</html>

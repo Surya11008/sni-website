@@ -965,10 +965,10 @@ footer span:hover {
 
     <nav>
         <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#services">Services</a>
         <a href="#notices">Notices</a>
         <a href="#new-arrivals">New Arrivals</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
         <a href="#why">Why SNI</a>
         <a href="#contact">Contact</a>
         <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
@@ -1021,6 +1021,14 @@ footer span:hover {
             <span>
                 <span class="site-card-name">Word Search</span>
                 <span class="site-card-url">1000 Stages Puzzle</span>
+            </span>
+        </a>
+
+        <a class="site-card" href="counter.html">
+            <span class="site-card-logo" aria-hidden="true" style="background: linear-gradient(135deg, #16a34a, #059669); color: white;">📖</span>
+            <span>
+                <span class="site-card-name">Counter</span>
+                <span class="site-card-url">Preaching Counter &amp; Sync</span>
             </span>
         </a>
     </div>
@@ -1274,6 +1282,14 @@ footer span:hover {
     // Initial Default Notices (Official Site Notices - Always live for everyone)
     const defaultNotices = [
         {
+            id: 'not-live-2',
+            title: 'Simple Preaching Counter Live with Partner Sync & QR',
+            date: '2026-11-11',
+            details: 'Track personal and group preaching counts in real time, pair with partners via QR code, split calculations, and view full date report history.',
+            link: 'counter.html',
+            fileData: null
+        },
+        {
             id: 'not-live-1',
             title: 'Word Search — 2-Player & Player Rankings Live Now!',
             date: '2026-11-11',
@@ -1309,6 +1325,14 @@ footer span:hover {
 
     // Initial Default New Arrivals (Official Site Arrivals - Always live for everyone)
     const defaultArrivals = [
+        {
+            id: 'arr-live-2',
+            title: 'Simple Preaching Counter — Partner Sync & QR',
+            date: '2026-11-11',
+            link: 'counter.html',
+            fileData: null,
+            symbol: '📖'
+        },
         {
             id: 'arr-live-1',
             title: 'Word Search — 2-Player & Rankings Update',
