@@ -162,12 +162,61 @@
                     <button id="logoutBtn" class="ml-2 text-[10px] bg-slate-200 dark:bg-slate-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-slate-700 dark:text-slate-300 px-2 py-1 rounded transition" title="Log Out">Logout</button>
                 </div>
 
+                <!-- 2-Player Button -->
+                <button id="multiplayerBtn" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5" title="Play with a friend via QR code or Link">
+                    <span>🎮 2-Player</span>
+                </button>
+
+                <!-- Leaderboard / Rankings Button -->
+                <button id="leaderboardBtn" class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5" title="View player rankings & stages">
+                    <span>🏆 Rankings</span>
+                </button>
+
+                <!-- Admin Button -->
+                <button id="adminBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5" title="Admin Portal">
+                    <span id="adminBtnLabel">👑 Admin</span>
+                </button>
+
                 <button id="stageMapBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
                     Stages (<span id="currentStageBadge">1</span>/1000)
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- Main Game Area -->
+    <!-- Multiplayer Live Banner (Active in Help or Funny Battle Mode) -->
+    <div id="multiplayerBanner" class="max-w-6xl mx-auto px-4 pt-4 w-full hidden">
+        <div id="multiplayerBannerCard" class="bg-gradient-to-r from-indigo-900/90 to-blue-900/90 border border-indigo-500/40 text-white p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span id="mpModeIcon" class="text-3xl">🤝</span>
+                <div>
+                    <h3 id="mpModeTitle" class="text-sm font-extrabold text-amber-300">Co-op Support Mode</h3>
+                    <p id="mpModeSubtitle" class="text-xs text-indigo-200">Playing together on Stage 1</p>
+                </div>
+            </div>
+            
+            <!-- Funny Battle Scoreboard (Visible only in Battle Mode) -->
+            <div id="funnyScoreboard" class="hidden flex items-center gap-3 bg-slate-950/60 p-2 rounded-xl border border-indigo-400/30">
+                <div id="p1ScoreBox" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-center ring-2 ring-blue-300">
+                    <span class="block text-[10px] font-bold uppercase">Player 1</span>
+                    <span id="p1Score" class="text-base font-extrabold">0 pts</span>
+                </div>
+                <div class="text-xs font-bold text-amber-400">VS</div>
+                <div id="p2ScoreBox" class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-center opacity-70">
+                    <span class="block text-[10px] font-bold uppercase">Player 2</span>
+                    <span id="p2Score" class="text-base font-extrabold">0 pts</span>
+                </div>
+                <button type="button" id="switchTurnBtn" class="ml-2 text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-1.5 rounded-lg shadow transition">
+                    Switch Turn 🔄
+                </button>
+            </div>
+
+            <button type="button" id="exitMultiplayerBtn" class="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl font-bold transition">
+                Exit Mode ✕
+            </button>
+        </div>
+    </div>
 
     <!-- Main Game Area -->
     <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow flex flex-col lg:flex-row gap-6 items-start justify-center">
@@ -628,6 +677,12 @@
                 };
             }
 
+            // Check admin status
+            if (typeof checkAndSetAdminStatus === 'function') {
+                checkAndSetAdminStatus(identifier, password);
+                if (typeof updateAdminUI === 'function') updateAdminUI();
+            }
+
             // Save active session & unlock stage
             safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
             maxUnlockedStage = currentAuthUser.maxStage || 1;
@@ -934,6 +989,9 @@
                 if (matchedWord) {
                     playSound('success');
                     foundWords.add(matchedWord);
+                    if (window.onWordFoundMultiplayer) {
+                        window.onWordFoundMultiplayer(matchedWord);
+                    }
                     currentSelectedCells.forEach(cell => {
                         solvedCellMap.set(`${cell.r},${cell.c}`, matchedWord);
                     });
@@ -1121,7 +1179,721 @@
             initAppSession();
         }
         window.addEventListener('load', initAppSession);
+
+        // ==============================================================
+        // 1. ADMIN SYSTEM (Admin ID: surya11008, Pass: Suri742766.)
+        // ==============================================================
+        const ADMIN_ID = "surya11008";
+        const ADMIN_PASS = "Suri742766."; // Dot is part of Password
+
+        let isAdminActive = sessionStorage.getItem('word_search_admin_auth') === 'true';
+
+        // Check if current user is admin on login
+        function checkAndSetAdminStatus(id, pass) {
+            if (id && pass && id.trim().toLowerCase() === ADMIN_ID.toLowerCase() && pass === ADMIN_PASS) {
+                isAdminActive = true;
+                sessionStorage.setItem('word_search_admin_auth', 'true');
+            }
+        }
+
+        function updateAdminUI() {
+            const adminBtnLabel = document.getElementById('adminBtnLabel');
+            const adminBadgeOnBoard = document.getElementById('adminBadgeOnBoard');
+            const adminActionHeader = document.getElementById('adminActionHeader');
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            const adminActivePanel = document.getElementById('adminActivePanel');
+
+            if (isAdminActive) {
+                if (adminBtnLabel) adminBtnLabel.textContent = '👑 Admin (Active)';
+                if (adminBadgeOnBoard) adminBadgeOnBoard.classList.remove('hidden');
+                if (adminActionHeader) adminActionHeader.classList.remove('hidden');
+                if (adminLoginForm) adminLoginForm.classList.add('hidden');
+                if (adminActivePanel) adminActivePanel.classList.remove('hidden');
+            } else {
+                if (adminBtnLabel) adminBtnLabel.textContent = '👑 Admin';
+                if (adminBadgeOnBoard) adminBadgeOnBoard.classList.add('hidden');
+                if (adminActionHeader) adminActionHeader.classList.add('hidden');
+                if (adminLoginForm) adminLoginForm.classList.remove('hidden');
+                if (adminActivePanel) adminActivePanel.classList.add('hidden');
+            }
+        }
+
+        const adminBtn = document.getElementById('adminBtn');
+        const adminModal = document.getElementById('adminModal');
+        const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const adminIdInput = document.getElementById('adminIdInput');
+        const adminPasswordInput = document.getElementById('adminPasswordInput');
+        const adminErrorMsg = document.getElementById('adminErrorMsg');
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        const adminOpenRankingsBtn = document.getElementById('adminOpenRankingsBtn');
+
+        if (adminBtn && adminModal) {
+            adminBtn.addEventListener('click', () => {
+                updateAdminUI();
+                adminModal.classList.remove('hidden');
+                if (!isAdminActive) {
+                    adminIdInput.value = '';
+                    adminPasswordInput.value = '';
+                    if (adminErrorMsg) adminErrorMsg.classList.add('hidden');
+                }
+            });
+
+            closeAdminModalBtn.addEventListener('click', () => {
+                adminModal.classList.add('hidden');
+            });
+
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = adminIdInput.value.trim();
+                const pass = adminPasswordInput.value; // Password must keep dot
+
+                if (id.toLowerCase() === ADMIN_ID.toLowerCase() && pass === ADMIN_PASS) {
+                    isAdminActive = true;
+                    sessionStorage.setItem('word_search_admin_auth', 'true');
+                    updateAdminUI();
+                    renderLeaderboard();
+                    adminModal.classList.add('hidden');
+                    alert("👑 Admin authorization successful! You now have permission to manage and remove players.");
+                } else {
+                    if (adminErrorMsg) {
+                        adminErrorMsg.textContent = "Invalid Admin ID or Password. Ensure exact spelling and dot (.) in password.";
+                        adminErrorMsg.classList.remove('hidden');
+                    } else {
+                        alert("Invalid Admin ID or Password.");
+                    }
+                }
+            });
+
+            adminLogoutBtn.addEventListener('click', () => {
+                isAdminActive = false;
+                sessionStorage.removeItem('word_search_admin_auth');
+                updateAdminUI();
+                renderLeaderboard();
+                adminModal.classList.add('hidden');
+                alert("Signed out from Admin mode.");
+            });
+
+            if (adminOpenRankingsBtn) {
+                adminOpenRankingsBtn.addEventListener('click', () => {
+                    adminModal.classList.add('hidden');
+                    renderLeaderboard();
+                    document.getElementById('leaderboardModal')?.classList.remove('hidden');
+                });
+            }
+        }
+
+        // ==============================================================
+        // 2. LEADERBOARD & RANKINGS SYSTEM
+        // ==============================================================
+        const leaderboardBtn = document.getElementById('leaderboardBtn');
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+        const leaderboardRefreshBtn = document.getElementById('leaderboardRefreshBtn');
+
+        function getLeaderboardPlayers() {
+            let db = {};
+            try {
+                db = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
+            } catch(e) {}
+
+            // Inspiring starter community players if database is small
+            const seedPlayers = [
+                { name: 'David John', identifier: 'david.j@sni.org', maxStage: 85 },
+                { name: 'Grace M.', identifier: 'grace.m@sni.org', maxStage: 64 },
+                { name: 'Samuel K.', identifier: 'samuel.k@sni.org', maxStage: 42 }
+            ];
+
+            const playerMap = new Map();
+            seedPlayers.forEach(p => playerMap.set(p.identifier.toLowerCase(), p));
+
+            // Actual registered players
+            Object.values(db).forEach(u => {
+                if (!u || typeof u !== 'object') return;
+                const id = u.identifier || u.name || 'player';
+                playerMap.set(id.toLowerCase(), {
+                    name: u.name || id,
+                    identifier: id,
+                    maxStage: parseInt(u.maxStage) || 1
+                });
+            });
+
+            // Ensure current active user is up to date
+            if (currentAuthUser && currentAuthUser.name) {
+                const curId = currentAuthUser.identifier || 'current';
+                playerMap.set(curId.toLowerCase(), {
+                    name: currentAuthUser.name,
+                    identifier: curId,
+                    maxStage: maxUnlockedStage || 1
+                });
+            }
+
+            return Array.from(playerMap.values()).sort((a, b) => b.maxStage - a.maxStage);
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            if (!tbody) return;
+
+            updateAdminUI();
+            const players = getLeaderboardPlayers();
+            const statTotalPlayers = document.getElementById('statTotalPlayers');
+            const statTopStage = document.getElementById('statTopStage');
+            const statYourRank = document.getElementById('statYourRank');
+
+            if (statTotalPlayers) statTotalPlayers.textContent = players.length;
+            if (statTopStage) statTopStage.textContent = players.length > 0 ? players[0].maxStage : 1;
+
+            let yourRank = '-';
+            if (currentAuthUser) {
+                const idx = players.findIndex(p => 
+                    p.identifier.toLowerCase() === (currentAuthUser.identifier || '').toLowerCase() || 
+                    p.name.toLowerCase() === currentAuthUser.name.toLowerCase()
+                );
+                if (idx !== -1) yourRank = `#${idx + 1}`;
+            }
+            if (statYourRank) statYourRank.textContent = yourRank;
+
+            tbody.innerHTML = players.map((p, idx) => {
+                const rank = idx + 1;
+                let rankBadge = `#${rank}`;
+                if (rank === 1) rankBadge = '🥇 #1';
+                else if (rank === 2) rankBadge = '🥈 #2';
+                else if (rank === 3) rankBadge = '🥉 #3';
+
+                const isCurrent = currentAuthUser && (
+                    p.identifier.toLowerCase() === (currentAuthUser.identifier || '').toLowerCase() || 
+                    p.name.toLowerCase() === currentAuthUser.name.toLowerCase()
+                );
+                const progressPct = Math.min(100, Math.max(1, Math.round((p.maxStage / 1000) * 100)));
+
+                let deleteBtn = '';
+                if (isAdminActive) {
+                    deleteBtn = `
+                        <td class="py-2.5 px-3 text-center">
+                            <button type="button" onclick="adminRemovePlayer('${p.identifier}', '${p.name}')" class="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 px-2 py-1 rounded-lg text-[10px] font-bold border border-rose-200 dark:border-rose-800 transition shadow-xs" title="Admin: Remove Player">
+                                🗑️ Remove
+                            </button>
+                        </td>
+                    `;
+                }
+
+                return `
+                    <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isCurrent ? 'bg-blue-50/70 dark:bg-blue-950/40 font-semibold' : ''}">
+                        <td class="py-2.5 px-3 text-center font-bold text-xs whitespace-nowrap">${rankBadge}</td>
+                        <td class="py-2.5 px-3">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                ${p.name}
+                                ${isCurrent ? '<span class="text-[9px] bg-blue-500 text-white px-1.5 py-0.2 rounded-full font-bold">YOU</span>' : ''}
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono">${p.identifier}</span>
+                        </td>
+                        <td class="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                            Stage ${p.maxStage} <span class="text-[10px] text-slate-400 font-normal">/ 1000</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-center">
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full" style="width: ${progressPct}%"></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400">${progressPct}% (${p.maxStage}/1000)</span>
+                        </td>
+                        ${deleteBtn}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.adminRemovePlayer = function(identifier, name) {
+            if (!isAdminActive) {
+                alert("Administrator access required to delete players.");
+                return;
+            }
+            if (!confirm(`Are you sure you want to remove player "${name}" (${identifier}) from the game database?`)) {
+                return;
+            }
+
+            try {
+                let db = JSON.parse(safeGetStorage('word_search_users_db') || '{}');
+                const q = (identifier || '').trim().toLowerCase();
+                let deleted = false;
+
+                for (const k of Object.keys(db)) {
+                    const u = db[k];
+                    if (k.toLowerCase() === q || 
+                        (u && u.identifier && u.identifier.toLowerCase() === q) || 
+                        (u && u.name && u.name.toLowerCase() === q)) {
+                        delete db[k];
+                        deleted = true;
+                    }
+                }
+
+                safeSetStorage('word_search_users_db', JSON.stringify(db));
+                renderLeaderboard();
+                alert(`Player "${name}" has been removed.`);
+            } catch(e) {
+                alert("Error removing player: " + e.message);
+            }
+        };
+
+        if (leaderboardBtn && leaderboardModal) {
+            leaderboardBtn.addEventListener('click', () => {
+                renderLeaderboard();
+                leaderboardModal.classList.remove('hidden');
+            });
+            closeLeaderboardBtn.addEventListener('click', () => {
+                leaderboardModal.classList.add('hidden');
+            });
+            if (leaderboardRefreshBtn) {
+                leaderboardRefreshBtn.addEventListener('click', () => renderLeaderboard());
+            }
+        }
+
+        // ==============================================================
+        // 3. 2-PLAYER MULTIPLAYER (QR CODE & LINK SHARING)
+        // ==============================================================
+        const funnyWordPool = [
+            "BANANA", "MONKEY", "GIGGLE", "POPCORN", "TICKLE",
+            "BOING", "JOKER", "NINJA", "SNEAKY", "CHUCKLE",
+            "ROBOT", "PIZZA", "MAGIC", "ROCKET", "COOKIE",
+            "BUBBLE", "ZOOM", "WOBBLE", "DISCO", "PENGUIN",
+            "CUPCAKE", "WIZARD", "PUPPY", "SUPERSTAR"
+        ];
+
+        let mpActiveMode = null; // null, 'help', or 'battle'
+        let p1Score = 0;
+        let p2Score = 0;
+        let activeTurn = 1; // 1 or 2
+
+        const multiplayerBtn = document.getElementById('multiplayerBtn');
+        const multiplayerModal = document.getElementById('multiplayerModal');
+        const closeMultiplayerModalBtn = document.getElementById('closeMultiplayerModalBtn');
+        const tabMpHelp = document.getElementById('tabMpHelp');
+        const tabMpFunny = document.getElementById('tabMpFunny');
+        const mpHelpContainer = document.getElementById('mpHelpContainer');
+        const mpFunnyContainer = document.getElementById('mpFunnyContainer');
+
+        const mpHelpStageNum = document.getElementById('mpHelpStageNum');
+        const mpHelpQrImg = document.getElementById('mpHelpQrImg');
+        const mpHelpLinkInput = document.getElementById('mpHelpLinkInput');
+        const copyHelpLinkBtn = document.getElementById('copyHelpLinkBtn');
+        const shareHelpWhatsAppBtn = document.getElementById('shareHelpWhatsAppBtn');
+
+        const mpFunnyQrImg = document.getElementById('mpFunnyQrImg');
+        const mpFunnyLinkInput = document.getElementById('mpFunnyLinkInput');
+        const copyFunnyLinkBtn = document.getElementById('copyFunnyLinkBtn');
+        const startFunnyPlayNowBtn = document.getElementById('startFunnyPlayNowBtn');
+        const shareFunnyWhatsAppBtn = document.getElementById('shareFunnyWhatsAppBtn');
+
+        const multiplayerBanner = document.getElementById('multiplayerBanner');
+        const mpModeIcon = document.getElementById('mpModeIcon');
+        const mpModeTitle = document.getElementById('mpModeTitle');
+        const mpModeSubtitle = document.getElementById('mpModeSubtitle');
+        const funnyScoreboard = document.getElementById('funnyScoreboard');
+        const p1ScoreEl = document.getElementById('p1Score');
+        const p2ScoreEl = document.getElementById('p2Score');
+        const p1ScoreBox = document.getElementById('p1ScoreBox');
+        const p2ScoreBox = document.getElementById('p2ScoreBox');
+        const switchTurnBtn = document.getElementById('switchTurnBtn');
+        const exitMultiplayerBtn = document.getElementById('exitMultiplayerBtn');
+
+        function generateMultiplayerLinks() {
+            const baseUrl = window.location.origin + window.location.pathname;
+
+            // 1. Help Support Link (Current Stage)
+            if (mpHelpStageNum) mpHelpStageNum.textContent = currentStage;
+            const helpLink = `${baseUrl}?mode=help&stage=${currentStage}`;
+            if (mpHelpLinkInput) mpHelpLinkInput.value = helpLink;
+            if (mpHelpQrImg) {
+                mpHelpQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(helpLink)}`;
+            }
+
+            // 2. Funny Battle Link
+            const funnySeed = Date.now().toString(36);
+            const funnyLink = `${baseUrl}?mode=funny&room=${funnySeed}`;
+            if (mpFunnyLinkInput) mpFunnyLinkInput.value = funnyLink;
+            if (mpFunnyQrImg) {
+                mpFunnyQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(funnyLink)}`;
+            }
+        }
+
+        if (multiplayerBtn && multiplayerModal) {
+            multiplayerBtn.addEventListener('click', () => {
+                generateMultiplayerLinks();
+                multiplayerModal.classList.remove('hidden');
+            });
+
+            closeMultiplayerModalBtn.addEventListener('click', () => {
+                multiplayerModal.classList.add('hidden');
+            });
+
+            // Tabs Switch
+            tabMpHelp.addEventListener('click', () => {
+                tabMpHelp.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-teal-600 text-white shadow transition";
+                tabMpFunny.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+                mpHelpContainer.classList.remove('hidden');
+                mpFunnyContainer.classList.add('hidden');
+            });
+
+            tabMpFunny.addEventListener('click', () => {
+                tabMpFunny.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-purple-600 text-white shadow transition";
+                tabMpHelp.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+                mpFunnyContainer.classList.remove('hidden');
+                mpHelpContainer.classList.add('hidden');
+            });
+
+            // Copy & WhatsApp Handlers
+            copyHelpLinkBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(mpHelpLinkInput.value);
+                copyHelpLinkBtn.textContent = 'Copied! ✓';
+                setTimeout(() => copyHelpLinkBtn.textContent = 'Copy Link', 2000);
+            });
+
+            shareHelpWhatsAppBtn.addEventListener('click', () => {
+                const text = `🤝 Help me on Word Search Stage ${currentStage}! Click link to join and find words together: ${mpHelpLinkInput.value}`;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+            });
+
+            copyFunnyLinkBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(mpFunnyLinkInput.value);
+                copyFunnyLinkBtn.textContent = 'Copied! ✓';
+                setTimeout(() => copyFunnyLinkBtn.textContent = 'Copy Link', 2000);
+            });
+
+            shareFunnyWhatsAppBtn.addEventListener('click', () => {
+                const text = `⚔️ Challenge me in Word Search 2-Player Battle! Click link to play together: ${mpFunnyLinkInput.value}`;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+            });
+
+            startFunnyPlayNowBtn.addEventListener('click', () => {
+                multiplayerModal.classList.add('hidden');
+                startFunnyBattleMode();
+            });
+        }
+
+        // Funny Battle Mode Controller
+        function startFunnyBattleMode() {
+            mpActiveMode = 'battle';
+            p1Score = 0;
+            p2Score = 0;
+            activeTurn = 1;
+
+            if (multiplayerBanner) multiplayerBanner.classList.remove('hidden');
+            if (mpModeIcon) mpModeIcon.textContent = '⚔️';
+            if (mpModeTitle) mpModeTitle.textContent = 'Funny Word Battle (2-Player)';
+            if (mpModeSubtitle) mpModeSubtitle.textContent = 'Take turns finding funny words. Each word gives +100 points!';
+            if (funnyScoreboard) funnyScoreboard.classList.remove('hidden');
+
+            updateTurnUI();
+
+            // Setup funny board
+            currentWords = [];
+            const shuffled = [...funnyWordPool].sort(() => 0.5 - Math.random());
+            currentWords = shuffled.slice(0, 8); // 8 quirky words
+            stageThemeTitle.textContent = 'Random Funny Words Match';
+            stageNumTitle.textContent = 'VS Battle';
+
+            foundWords.clear();
+            solvedCellMap.clear();
+            gameActive = true;
+            hideWinModal();
+
+            gridSize = 12;
+            generateGridAndPlaceWords();
+            renderWordList();
+            renderGrid();
+        }
+
+        function updateTurnUI() {
+            if (p1ScoreEl) p1ScoreEl.textContent = `${p1Score} pts`;
+            if (p2ScoreEl) p2ScoreEl.textContent = `${p2Score} pts`;
+
+            if (activeTurn === 1) {
+                p1ScoreBox.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white text-center ring-2 ring-amber-300 shadow-md";
+                p2ScoreBox.className = "px-3 py-1.5 rounded-lg bg-purple-600 text-white text-center opacity-60";
+            } else {
+                p2ScoreBox.className = "px-3 py-1.5 rounded-lg bg-purple-600 text-white text-center ring-2 ring-amber-300 shadow-md";
+                p1ScoreBox.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white text-center opacity-60";
+            }
+        }
+
+        if (switchTurnBtn) {
+            switchTurnBtn.addEventListener('click', () => {
+                activeTurn = activeTurn === 1 ? 2 : 1;
+                updateTurnUI();
+            });
+        }
+
+        if (exitMultiplayerBtn) {
+            exitMultiplayerBtn.addEventListener('click', () => {
+                mpActiveMode = null;
+                multiplayerBanner.classList.add('hidden');
+                funnyScoreboard.classList.add('hidden');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadStage(currentStage);
+            });
+        }
+
+        // Hook on word found in multiplayer
+        window.onWordFoundMultiplayer = function(word) {
+            if (mpActiveMode === 'battle') {
+                if (activeTurn === 1) {
+                    p1Score += 100;
+                } else {
+                    p2Score += 100;
+                }
+                updateTurnUI();
+                
+                // Announce point gain
+                selectionStatusEl.textContent = `🎯 +100 Points to Player ${activeTurn}! (${word})`;
+                selectionStatusEl.classList.add('text-amber-500', 'font-bold');
+
+                // Check if all words found in battle
+                if (foundWords.size >= currentWords.length) {
+                    let winMsg = '🎉 Match Finished! ';
+                    if (p1Score > p2Score) winMsg += `Player 1 Wins with ${p1Score} pts!`;
+                    else if (p2Score > p1Score) winMsg += `Player 2 Wins with ${p2Score} pts!`;
+                    else winMsg += `It is a Tie with ${p1Score} pts each!`;
+                    
+                    alert(winMsg);
+                } else {
+                    // Switch turn automatically for next word
+                    setTimeout(() => {
+                        activeTurn = activeTurn === 1 ? 2 : 1;
+                        updateTurnUI();
+                    }, 1200);
+                }
+            }
+        };
+
+        // URL Query Params Check for Joined Players
+        function checkUrlMultiplayerParams() {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            const stage = params.get('stage');
+
+            if (mode === 'help' && stage) {
+                const targetStage = Math.max(1, Math.min(1000, parseInt(stage) || 1));
+                mpActiveMode = 'help';
+                multiplayerBanner.classList.remove('hidden');
+                funnyScoreboard.classList.add('hidden');
+                mpModeIcon.textContent = '🤝';
+                mpModeTitle.textContent = `Co-op Support Mode (Stage ${targetStage})`;
+                mpModeSubtitle.textContent = 'Assisting your friend to find words on their stage!';
+                loadStage(targetStage);
+            } else if (mode === 'funny' || mode === 'battle') {
+                startFunnyBattleMode();
+            }
+        }
+
+        // Initialize admin UI and check query params on load
+        setTimeout(() => {
+            updateAdminUI();
+            checkUrlMultiplayerParams();
+        }, 100);
+
     </script>
+
+
+    <!-- Leaderboard / Rankings Modal -->
+    <div id="leaderboardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden" style="z-index: 100000;">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-2xl w-full max-h-[85vh] flex flex-col border border-amber-500/30">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-xl font-extrabold border border-amber-500/30">
+                        🏆
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            Player Rankings
+                            <span id="adminBadgeOnBoard" class="hidden text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-bold">ADMIN ACTIVE</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">All players sorted by highest stage reached</p>
+                    </div>
+                </div>
+                <button type="button" id="closeLeaderboardBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition border border-slate-200 dark:border-slate-700">&times;</button>
+            </div>
+
+            <!-- Leaderboard Stats Ribbon -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Total Players</span>
+                    <span id="statTotalPlayers" class="text-base font-extrabold text-blue-600 dark:text-blue-400">0</span>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Top Stage</span>
+                    <span id="statTopStage" class="text-base font-extrabold text-amber-600 dark:text-amber-400">1</span>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Your Rank</span>
+                    <span id="statYourRank" class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">#1</span>
+                </div>
+            </div>
+
+            <!-- Rankings Table -->
+            <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-200 dark:border-slate-800">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 uppercase sticky top-0 font-bold border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="py-3 px-3 w-14 text-center">Rank</th>
+                            <th class="py-3 px-3">Player</th>
+                            <th class="py-3 px-3">Stage</th>
+                            <th class="py-3 px-3 w-28 text-center">Progress</th>
+                            <th id="adminActionHeader" class="py-3 px-3 w-20 text-center hidden">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody" class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
+                        <!-- Injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <span>Rankings update automatically upon completing each stage.</span>
+                <button type="button" id="leaderboardRefreshBtn" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">Refresh ↻</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Portal Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden" style="z-index: 100000;">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-md w-full border border-rose-500/40">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">👑</span>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Administrator Portal</h2>
+                </div>
+                <button type="button" id="closeAdminModalBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">&times;</button>
+            </div>
+
+            <!-- Admin Login Form (Visible when not authenticated) -->
+            <form id="adminLoginForm" class="space-y-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Sign in with official administrator credentials to manage and remove players.</p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Admin ID</label>
+                    <input type="text" id="adminIdInput" required placeholder="surya11008" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="adminPasswordInput" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+                <div id="adminErrorMsg" class="hidden text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs p-2.5 rounded-xl text-center font-medium"></div>
+                <button type="submit" class="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">
+                    Verify Admin
+                </button>
+            </form>
+
+            <!-- Admin Active Panel (Visible when authenticated) -->
+            <div id="adminActivePanel" class="hidden space-y-4">
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">✅</span>
+                    <div>
+                        <span class="block text-xs font-bold text-emerald-800 dark:text-emerald-300">Admin Mode Active</span>
+                        <span class="text-[11px] text-emerald-600 dark:text-emerald-400">Signed in as surya11008</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <button type="button" id="adminOpenRankingsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
+                        <span>🏆 Open Rankings to Remove Players</span>
+                    </button>
+                    <button type="button" id="adminLogoutBtn" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs transition border border-slate-300 dark:border-slate-700">
+                        Sign Out from Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Player Multiplayer Modal (QR & Link Sharing) -->
+    <div id="multiplayerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden" style="z-index: 100000;">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-lg w-full border border-teal-500/40 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎮</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">2-Player Multiplayer</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Play together with a friend via QR code or Link</p>
+                    </div>
+                </div>
+                <button type="button" id="closeMultiplayerModalBtn" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">&times;</button>
+            </div>
+
+            <!-- Mode Selection Tabs -->
+            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-4 border border-slate-200 dark:border-slate-700">
+                <button type="button" id="tabMpHelp" class="flex-1 py-2 text-xs font-bold rounded-lg bg-teal-600 text-white shadow transition">
+                    🤝 1. Help Support
+                </button>
+                <button type="button" id="tabMpFunny" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                    ⚔️ 2. Funny Battle
+                </button>
+            </div>
+
+            <!-- Tab 1: Help Support Content -->
+            <div id="mpHelpContainer" class="space-y-4">
+                <div class="bg-teal-50 dark:bg-teal-950/40 p-3 rounded-2xl border border-teal-200 dark:border-teal-800/60 text-xs text-teal-900 dark:text-teal-200 leading-relaxed">
+                    <strong>🤝 Co-op Support Mode:</strong> Stuck on a difficult stage? Share this QR code or link with a friend. They will join your exact stage and help you discover all the hidden words together!
+                </div>
+
+                <div class="text-center">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        Scan to Join Stage <span id="mpHelpStageNum" class="text-teal-600 dark:text-teal-400 font-extrabold text-sm">1</span>
+                    </span>
+                    <div class="inline-block p-2 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <img id="mpHelpQrImg" src="" alt="QR Code" class="w-44 h-44 rounded-xl object-contain mx-auto">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Shareable Link</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="mpHelpLinkInput" readonly class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all focus:outline-none">
+                        <button type="button" id="copyHelpLinkBtn" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition whitespace-nowrap">
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" id="shareHelpWhatsAppBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-2">
+                    <span>📲 Share on WhatsApp</span>
+                </button>
+            </div>
+
+            <!-- Tab 2: Funny Battle Content -->
+            <div id="mpFunnyContainer" class="hidden space-y-4">
+                <div class="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-2xl border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 leading-relaxed">
+                    <strong>⚔️ Random Funny Play (Versus):</strong> Challenge your friend in a funny word battle! You both get the same random funny words. Compete to find words, take turns, and earn <strong>+100 points</strong> for every word found!
+                </div>
+
+                <div class="text-center">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        Scan to Join Funny Battle Match
+                    </span>
+                    <div class="inline-block p-2 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <img id="mpFunnyQrImg" src="" alt="QR Code" class="w-44 h-44 rounded-xl object-contain mx-auto">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Battle Invite Link</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="mpFunnyLinkInput" readonly class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-mono select-all focus:outline-none">
+                        <button type="button" id="copyFunnyLinkBtn" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition whitespace-nowrap">
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" id="startFunnyPlayNowBtn" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow transition text-xs">
+                        Start Battle On This Device ▶
+                    </button>
+                    <button type="button" id="shareFunnyWhatsAppBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
+                        <span>📲 WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- SNI Official Footer Banner -->
     <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="index.html">Home</a></footer>
