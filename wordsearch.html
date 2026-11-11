@@ -529,7 +529,7 @@
             <!-- Tab 2: Biblical Battle Content -->
             <div id="mpFunnyContainer" class="hidden space-y-4">
                 <div class="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-2xl border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 leading-relaxed">
-                    <strong>⚔️ Biblical Word Battle (Versus):</strong> Challenge your partner in real-time! Both players play on the <strong>exact same table with the exact same biblical words</strong>. Whoever finds more words wins (+100 pts per word). Live touch updates show on both screens!
+                    <strong>⚔️ Biblical Word Battle (Versus):</strong> Challenge your partner in real-time! Both players play on the <strong>exact same table with diagonals & crosses</strong>. Chinna word (<=5 letters) = <strong>5 pts</strong>, Big word (6+ letters) = <strong>10 pts</strong>. Real-time live updates on both screens!
                 </div>
 
                 <!-- Difficulty Selector for Battle -->
@@ -537,13 +537,13 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Battle Difficulty</label>
                     <div class="grid grid-cols-3 gap-2">
                         <button type="button" id="diffEasyBtn" onclick="selectBattleDifficulty('easy')" class="py-2 px-2 text-xs font-bold rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition">
-                            🟢 Easy
+                            🟢 Easy (5-7 Words)
                         </button>
                         <button type="button" id="diffNormalBtn" onclick="selectBattleDifficulty('normal')" class="py-2 px-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white shadow-sm transition">
-                            🟡 Normal
+                            🟡 Normal (10-14 Words)
                         </button>
                         <button type="button" id="diffHardBtn" onclick="selectBattleDifficulty('hard')" class="py-2 px-2 text-xs font-bold rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition">
-                            🔴 Hard
+                            🔴 Hard (20-30 Words)
                         </button>
                     </div>
                 </div>
@@ -582,7 +582,7 @@
 
     <!-- Footer -->
     <footer class="text-center py-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 transition-colors duration-300">
-        Word Search &bull; 1000 Stages &bull; No Diagonals or Crosses
+        Word Search &bull; 1000 Stages &bull; Horizontal, Vertical &amp; Diagonals with Word Crosses
     </footer>
 
     <!-- Game Logic JavaScript -->
@@ -704,10 +704,16 @@
         let currentSelectedCells = [];
         let gameActive = true;
 
-        // ONLY Horizontal Right and Vertical Down (No diagonals, no crosses)
+        // All 8 Directions: Horizontal, Vertical, and Diagonals with Word Crosses
         const directions = [
-            [0, 1],   // Horizontal Right
-            [1, 0]    // Vertical Down
+            [0, 1],   // Horizontal Right ->
+            [0, -1],  // Horizontal Left <-
+            [1, 0],   // Vertical Down v
+            [-1, 0],  // Vertical Up ^
+            [1, 1],   // Diagonal Down-Right \
+            [-1, -1], // Diagonal Up-Left \
+            [1, -1],  // Diagonal Down-Left /
+            [-1, 1]   // Diagonal Up-Right /
         ];
 
         // DOM Elements
@@ -1354,7 +1360,8 @@
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
                     const cell = document.createElement('div');
-                    cell.className = `w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-all duration-100 grid-cell border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs text-slate-800 dark:text-slate-200`;
+                    const cellSize = gridSize >= 16 ? 'w-5 h-5 sm:w-7 sm:h-7 text-[9px] sm:text-xs' : (gridSize >= 13 ? 'w-6 h-6 sm:w-8 sm:h-8 text-[11px] sm:text-xs' : 'w-7 h-7 sm:w-9 sm:h-9 text-xs sm:text-sm');
+                    cell.className = `${cellSize} flex items-center justify-center font-bold rounded-lg cursor-pointer transition-all duration-100 grid-cell border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs text-slate-800 dark:text-slate-200`;
                     cell.dataset.row = r;
                     cell.dataset.col = c;
                     cell.textContent = grid[r][c];
@@ -1421,10 +1428,13 @@
 
             if (currentSelectedCells.length > 0) {
                 const selectedWord = currentSelectedCells.map(cell => grid[cell.r][cell.c]).join('');
+                const reversedWord = selectedWord.split('').reverse().join('');
                 
                 let matchedWord = null;
                 if (currentWords.includes(selectedWord) && !foundWords.has(selectedWord)) {
                     matchedWord = selectedWord;
+                } else if (currentWords.includes(reversedWord) && !foundWords.has(reversedWord)) {
+                    matchedWord = reversedWord;
                 }
 
                 if (matchedWord) {
@@ -1459,24 +1469,34 @@
             renderGrid();
         }
 
-        // Strict Horizontal & Vertical Line Selection Helper
+        // Strict Horizontal, Vertical & Diagonal Line Selection Helper
         function getStrictLineCells(r1, c1, r2, c2) {
             const cells = [];
+            const dr = r2 - r1;
+            const dc = c2 - c1;
+            const absDr = Math.abs(dr);
+            const absDc = Math.abs(dc);
+
+            // 1. Horizontal
             if (r1 === r2) {
-                const startC = Math.min(c1, c2);
-                const endC = Math.max(c1, c2);
-                if (c1 <= c2) {
-                    for (let c = startC; c <= endC; c++) cells.push({ r: r1, c });
-                } else {
-                    for (let c = endC; c >= startC; c--) cells.push({ r: r1, c });
+                const step = dc > 0 ? 1 : -1;
+                for (let i = 0; i <= absDc; i++) {
+                    cells.push({ r: r1, c: c1 + i * step });
                 }
-            } else if (c1 === c2) {
-                const startR = Math.min(r1, r2);
-                const endR = Math.max(r1, r2);
-                if (r1 <= r2) {
-                    for (let r = startR; r <= endR; r++) cells.push({ r, c: c1 });
-                } else {
-                    for (let r = endR; r >= startR; r--) cells.push({ r, c: c1 });
+            }
+            // 2. Vertical
+            else if (c1 === c2) {
+                const step = dr > 0 ? 1 : -1;
+                for (let i = 0; i <= absDr; i++) {
+                    cells.push({ r: r1 + i * step, c: c1 });
+                }
+            }
+            // 3. Diagonals (both 45-degree diagonal directions)
+            else if (absDr === absDc) {
+                const stepR = dr > 0 ? 1 : -1;
+                const stepC = dc > 0 ? 1 : -1;
+                for (let i = 0; i <= absDr; i++) {
+                    cells.push({ r: r1 + i * stepR, c: c1 + i * stepC });
                 }
             }
             return cells;
@@ -2144,19 +2164,31 @@
             easy: [
                 "FAITH", "GRACE", "JESUS", "DAVID", "MOSES", "CROSS", "BIBLE", "PEACE",
                 "PRAY", "GLORY", "ANGEL", "SAINT", "LIGHT", "TRUTH", "MERCY", "HEAVEN",
-                "EDEN", "ARK", "ZION", "LOVE", "HOPE", "NOAH", "PETER", "PAUL", "MARY", "JOHN"
+                "EDEN", "ARK", "ZION", "LOVE", "HOPE", "NOAH", "PETER", "PAUL", "MARY", "JOHN",
+                "LUKE", "MARK", "AARON", "ELIJAH", "SARAH", "ISAAC", "JACOB", "RUTH", "ESTHER"
             ],
             normal: [
                 "APOSTLE", "PROPHET", "GOSPEL", "BLESSED", "MIRACLE", "BAPTISM", "WORSHIP",
                 "SAVIOR", "DISCIPLE", "GENESIS", "EXODUS", "SALVATION", "KINGDOM", "PARABLE",
-                "BELIEVE", "COVENANT", "ISRAEL", "SOLOMON", "ABRAHAM", "JERUSALEM", "BETHLEHEM"
+                "BELIEVE", "COVENANT", "ISRAEL", "SOLOMON", "ABRAHAM", "JERUSALEM", "BETHLEHEM",
+                "MATTHEW", "CORINTH", "GALATIA", "EPHESUS", "PHILIPPI", "COLOSSAE", "SAMARIA",
+                "NAZARETH", "GALILEE", "JERICHO", "HEZEKIAH", "JOSIAH", "NEHEMIAH", "MALACHI"
             ],
             hard: [
                 "RESURRECTION", "RIGHTEOUSNESS", "COMMANDMENT", "REVELATION", "COMPASSION",
                 "TABERNACLE", "FELLOWSHIP", "FORGIVENESS", "SANCTUARY", "EVERLASTING",
-                "PENTECOST", "DELIVERANCE", "TESTAMENT", "TRANSFIGURATION"
+                "PENTECOST", "DELIVERANCE", "TESTAMENT", "TRANSFIGURATION", "REDEEMER",
+                "INTERCESSION", "SANCTIFICATION", "PROPITIATION", "CORNERSTONE", "OMNIPOTENT",
+                "JUSTIFICATION", "RECONCILIATION", "BENEDICTION", "RESPLENDENT", "SOVEREIGNTY",
+                "TRANSGRESSION", "MEDITATION", "LONGSUFFERING", "PERSEVERANCE", "PURIFICATION",
+                "REGENERATION", "PREDESTINATION", "COMMISSION", "STEWARDSHIP", "EXHORTATION"
             ]
         };
+
+        // Scoring rules: Chinna word (<= 5 letters) = 5 points, Big word (>= 6 letters) = 10 points
+        function calculateWordPoints(word) {
+            return (word && word.length >= 6) ? 10 : 5;
+        }
 
         let currentBattleDifficulty = 'normal'; // 'easy', 'normal', 'hard'
         let mpActiveMode = null; // null, 'help', or 'battle'
@@ -2228,7 +2260,10 @@
             const pool = biblicalBattlePool[diff] || biblicalBattlePool.normal;
             const rng = seed ? createSeededRNG(seed) : Math.random;
             const shuffled = [...pool].sort(() => 0.5 - rng());
-            const count = diff === 'easy' ? 6 : (diff === 'hard' ? 10 : 8);
+            // Easy: 6 words (5 to 7), Normal: 12 words (10 to 14), Hard: 22 words (20 to 30)
+            let count = 12;
+            if (diff === 'easy') count = 6;
+            else if (diff === 'hard') count = 22;
             return shuffled.slice(0, count);
         }
 
@@ -2525,10 +2560,11 @@
                     }, 2200);
 
                     if (mpActiveMode === 'battle') {
+                        const pts = data.points || calculateWordPoints(word);
                         if (data.isHost) {
-                            p1Score += 100;
+                            p1Score += pts;
                         } else {
-                            p2Score += 100;
+                            p2Score += pts;
                         }
                         updateFunnyScoreUI();
                         checkBattleEnd();
@@ -2583,26 +2619,26 @@
                 cells.forEach(c => solvedCellMap.set(`${c.r},${c.c}`, word));
                 return;
             }
+            const len = word.length;
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
-                    if (c + word.length <= gridSize) {
-                        let match = true;
-                        for (let i = 0; i < word.length; i++) {
-                            if (grid[r][c + i] !== word[i]) { match = false; break; }
-                        }
-                        if (match) {
-                            for (let i = 0; i < word.length; i++) solvedCellMap.set(`${r},${c + i}`, word);
-                            return;
-                        }
-                    }
-                    if (r + word.length <= gridSize) {
-                        let match = true;
-                        for (let i = 0; i < word.length; i++) {
-                            if (grid[r + i][c] !== word[i]) { match = false; break; }
-                        }
-                        if (match) {
-                            for (let i = 0; i < word.length; i++) solvedCellMap.set(`${r + i},${c}`, word);
-                            return;
+                    for (let [dr, dc] of directions) {
+                        const endR = r + (len - 1) * dr;
+                        const endC = c + (len - 1) * dc;
+                        if (endR >= 0 && endR < gridSize && endC >= 0 && endC < gridSize) {
+                            let match = true;
+                            for (let i = 0; i < len; i++) {
+                                if (grid[r + i * dr][c + i * dc] !== word[i]) {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                for (let i = 0; i < len; i++) {
+                                    solvedCellMap.set(`${r + i * dr},${c + i * dc}`, word);
+                                }
+                                return;
+                            }
                         }
                     }
                 }
@@ -2656,8 +2692,8 @@
             gameActive = true;
             hideWinModal();
 
-            // Grid size based on difficulty: Easy 10x10, Normal 12x12, Hard 14x14
-            gridSize = currentBattleDifficulty === 'easy' ? 10 : (currentBattleDifficulty === 'hard' ? 14 : 12);
+            // Grid size based on difficulty: Easy 10x10 (5-7 words), Normal 13x13 (10-14 words), Hard 18x18 (20-30 words)
+            gridSize = currentBattleDifficulty === 'easy' ? 10 : (currentBattleDifficulty === 'hard' ? 18 : 13);
             generateGridAndPlaceWords(activeMatchSeed);
             renderWordList();
             renderGrid();
@@ -2729,21 +2765,27 @@
 
         window.onWordFoundMultiplayer = function(word, cells) {
             if (mpActiveMode && mpRoomId) {
+                const pts = calculateWordPoints(word);
                 sendMpEvent({
                     type: 'WORD_FOUND',
                     word: word,
+                    points: pts,
                     isHost: mpIsHost,
                     cells: cells || []
                 });
 
                 if (mpActiveMode === 'battle') {
                     if (mpIsHost) {
-                        p1Score += 100;
+                        p1Score += pts;
                     } else {
-                        p2Score += 100;
+                        p2Score += pts;
                     }
                     updateFunnyScoreUI();
                     checkBattleEnd();
+
+                    const wordType = word.length >= 6 ? 'Big Word (10 pts)' : 'Small Word (5 pts)';
+                    selectionStatusEl.textContent = `🎯 +${pts} Pts (${wordType})! [${word}]`;
+                    selectionStatusEl.classList.add('text-amber-500', 'font-bold');
                 } else if (mpActiveMode === 'help') {
                     if (foundWords.size >= currentWords.length) {
                         setTimeout(() => alert(`🎉 Stage ${currentStage} Completed Together!`), 400);
