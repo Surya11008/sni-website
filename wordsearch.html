@@ -2528,19 +2528,18 @@
             connectMultiplayerRealTime(mpRoomId);
         }
 
-        // Live Multiplayer Real-Time Connection with Multi-Broker Resilient Fast Connect
-        const MQTT_BROKERS = [
+        // Live Multiplayer Real-Time Connection with Dual-Active Instant Handshake
+        const MQTT_BROKER_LIST = [
             'wss://broker.hivemq.com:8884/mqtt',
-            'wss://broker.emqx.io:8084/mqtt',
-            'wss://test.mosquitto.org:8081'
+            'wss://broker.emqx.io:8084/mqtt'
         ];
-        let currentBrokerIndex = 0;
+        let activeMqttClients = [];
 
         function connectMultiplayerRealTime(roomId) {
             if (!roomId) return;
             const topic = `sni/wordsearch/room/${roomId}`;
 
-            // 1. BroadcastChannel (Instant 0ms sync across tabs/windows)
+            // 1. BroadcastChannel (Instant 0ms sync for same device/tabs)
             try {
                 if (window.BroadcastChannel) {
                     if (wsBroadcastChannel) wsBroadcastChannel.close();
@@ -2559,53 +2558,56 @@
                 }
             });
 
-            // 3. Ultra-Fast Resilient Multi-Broker MQTT Connection
+            // 3. Connect to multiple high-speed brokers SIMULTANEOUSLY for instant <1 sec response
             if (window.mqtt) {
-                try {
-                    if (wsMqttClient) {
-                        try { wsMqttClient.end(true); } catch(e){}
-                        wsMqttClient = null;
-                    }
-                    const brokerUrl = MQTT_BROKERS[currentBrokerIndex % MQTT_BROKERS.length];
-                    wsMqttClient = mqtt.connect(brokerUrl, {
-                        clientId: 'sni_ws_' + myPlayerId + '_' + Math.random().toString(36).substring(2, 7),
-                        clean: true,
-                        keepalive: 15,
-                        connectTimeout: 3500,
-                        reconnectPeriod: 1500
-                    });
+                // Close existing clients
+                activeMqttClients.forEach(c => {
+                    try { c.end(true); } catch(e){}
+                });
+                activeMqttClients = [];
 
-                    wsMqttClient.on('connect', () => {
-                        console.log('⚡ Connected to Word Search Room:', roomId, 'via', brokerUrl);
-                        wsMqttClient.subscribe(topic, { qos: 0 });
-
-                        // Announce immediate join
-                        sendMpEvent({
-                            type: 'PLAYER_JOIN',
-                            senderId: myPlayerId,
-                            senderName: getMyPlayerName(),
-                            isHost: mpIsHost,
-                            stage: currentStage,
-                            difficulty: mpActiveMode === 'group' ? currentGroupDifficulty : currentBattleDifficulty,
-                            mode: mpActiveMode
+                MQTT_BROKER_LIST.forEach((brokerUrl) => {
+                    try {
+                        const client = mqtt.connect(brokerUrl, {
+                            clientId: 'sni_ws_' + myPlayerId + '_' + Math.random().toString(36).substring(2, 6),
+                            clean: true,
+                            keepalive: 15,
+                            connectTimeout: 3000,
+                            reconnectPeriod: 2000
                         });
-                    });
 
-                    wsMqttClient.on('message', (t, payload) => {
-                        try {
-                            const data = JSON.parse(payload.toString());
-                            handleMpMessage(data);
-                        } catch(e){}
-                    });
+                        client.on('connect', () => {
+                            console.log('⚡ Connected via', brokerUrl, 'to room:', roomId);
+                            client.subscribe(topic, { qos: 0 });
 
-                    wsMqttClient.on('error', (err) => {
-                        console.warn('MQTT err on', brokerUrl, err);
-                        // Try next broker on failure
-                        currentBrokerIndex++;
-                    });
-                } catch (e) {
-                    console.warn('MQTT error:', e);
-                }
+                            // Immediately send handshake join
+                            sendMpEvent({
+                                type: 'PLAYER_JOIN',
+                                senderId: myPlayerId,
+                                senderName: getMyPlayerName(),
+                                isHost: mpIsHost,
+                                stage: currentStage,
+                                difficulty: mpActiveMode === 'group' ? currentGroupDifficulty : currentBattleDifficulty,
+                                mode: mpActiveMode
+                            });
+                        });
+
+                        client.on('message', (t, payload) => {
+                            try {
+                                const data = JSON.parse(payload.toString());
+                                handleMpMessage(data);
+                            } catch(e){}
+                        });
+
+                        client.on('error', (err) => {
+                            console.warn('MQTT err on', brokerUrl, err);
+                        });
+
+                        activeMqttClients.push(client);
+                    } catch(e){
+                        console.warn('MQTT init error:', e);
+                    }
+                });
             }
         }
 
@@ -2624,10 +2626,14 @@
                 localStorage.setItem('sni_ws_msg_' + mpRoomId, jsonStr);
             } catch(e){}
 
-            if (wsMqttClient && wsMqttClient.connected) {
-                try {
-                    wsMqttClient.publish(`sni/wordsearch/room/${mpRoomId}`, jsonStr, { qos: 0 });
-                } catch(e){}
+            if (Array.isArray(activeMqttClients) && activeMqttClients.length > 0) {
+                activeMqttClients.forEach(client => {
+                    if (client && client.connected) {
+                        try {
+                            client.publish(`sni/wordsearch/room/${mpRoomId}`, jsonStr, { qos: 0 });
+                        } catch(e){}
+                    }
+                });
             }
         }
 
@@ -2637,15 +2643,24 @@
             const modalStatusText = document.getElementById('mpModalStatusText');
             const modalStatusPill = document.getElementById('mpModalStatusPill');
 
-            if (statusText) statusText.textContent = text || (connected ? '🟢 Partner Connected' : 'Waiting for partner...');
-            if (modalStatusText) modalStatusText.textContent = text || (connected ? '🟢 Partner Connected! Opening game...' : 'Waiting for partner to scan QR...');
+            // Compute partner info if connected
+            let partnerSummary = text;
+            if (connected && !text) {
+                const partnerObj = partnerPlayerId && connectedPlayers[partnerPlayerId] ? connectedPlayers[partnerPlayerId] : null;
+                const pName = partnerObj ? partnerObj.name : (partnerPlayerName || 'Partner');
+                const pWords = partnerObj ? (partnerObj.wordCount || 0) : 0;
+                partnerSummary = `🟢 ${pName}: ${pWords} words found`;
+            }
+
+            if (statusText) statusText.textContent = partnerSummary || (connected ? '🟢 Partner Connected' : 'Waiting for partner...');
+            if (modalStatusText) modalStatusText.textContent = partnerSummary || (connected ? '🟢 Partner Connected! Opening game...' : 'Waiting for partner to scan QR...');
 
             if (connected) {
                 if (statusContainer) {
-                    statusContainer.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 animate-pulse";
+                    statusContainer.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm";
                 }
                 if (modalStatusPill) {
-                    modalStatusPill.className = "flex items-center justify-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-2xl text-xs font-bold animate-pulse mb-3";
+                    modalStatusPill.className = "flex items-center justify-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-2xl text-xs font-bold shadow-sm mb-3";
                 }
             } else {
                 if (statusContainer) {
@@ -2826,6 +2841,9 @@
                     }
                     connectedPlayers[finderId].wordCount = data.totalWords || (connectedPlayers[finderId].wordCount + 1);
                     connectedPlayers[finderId].points = data.totalPoints || (connectedPlayers[finderId].points + pts);
+
+                    // Live status update on header
+                    setPartnerStatus(true, `🟢 ${finderName}: ${connectedPlayers[finderId].wordCount} words found`);
 
                     if (mpActiveMode === 'battle' || mpActiveMode === 'group') {
                         updateParticipantsScoreUI();
@@ -3058,7 +3076,7 @@ function startFunnyBattleMode(customWords, roomId, seed, isHost, difficulty) {
             // Connect real-time
             connectMultiplayerRealTime(mpRoomId);
 
-            // If guest, immediately send fast handshake pings
+            // If guest, immediately send rapid handshake bursts
             if (!isHost) {
                 let attempts = 0;
                 pingIntervalTimer = setInterval(() => {
@@ -3066,16 +3084,17 @@ function startFunnyBattleMode(customWords, roomId, seed, isHost, difficulty) {
                     sendMpEvent({
                         type: 'PLAYER_JOIN',
                         senderId: myPlayerId,
-                        senderName: 'Partner (Guest)',
+                        senderName: getMyPlayerName(),
                         isHost: false,
                         stage: currentStage,
-                        difficulty: currentBattleDifficulty
+                        difficulty: currentBattleDifficulty,
+                        mode: 'battle'
                     });
-                    if (attempts >= 6) {
+                    if (attempts >= 12) {
                         clearInterval(pingIntervalTimer);
                         pingIntervalTimer = null;
                     }
-                }, 600);
+                }, 250);
             }
         }
 
@@ -3137,7 +3156,7 @@ function startFunnyBattleMode(customWords, roomId, seed, isHost, difficulty) {
             // Connect real-time
             connectMultiplayerRealTime(mpRoomId);
 
-            // Announce join
+            // Announce join with rapid bursts
             let attempts = 0;
             pingIntervalTimer = setInterval(() => {
                 attempts++;
@@ -3150,11 +3169,11 @@ function startFunnyBattleMode(customWords, roomId, seed, isHost, difficulty) {
                     difficulty: currentGroupDifficulty,
                     seed: activeMatchSeed
                 });
-                if (attempts >= 6) {
+                if (attempts >= 12) {
                     clearInterval(pingIntervalTimer);
                     pingIntervalTimer = null;
                 }
-            }, 600);
+            }, 250);
         };
 
 window.hostStartFunnyBattleNow = function() {
@@ -3270,23 +3289,24 @@ window.hostStartFunnyBattleNow = function() {
 
                 connectMultiplayerRealTime(mpRoomId);
 
-                // Send fast join pings so host immediately acknowledges
+                // Send rapid join bursts so host acknowledges in < 500ms
                 let attempts = 0;
                 pingIntervalTimer = setInterval(() => {
                     attempts++;
                     sendMpEvent({
                         type: 'PLAYER_JOIN',
                         senderId: myPlayerId,
-                        senderName: 'Partner (Guest)',
+                        senderName: getMyPlayerName(),
                         isHost: false,
                         stage: targetStage,
-                        seed: activeMatchSeed
+                        seed: activeMatchSeed,
+                        mode: 'help'
                     });
-                    if (attempts >= 6) {
+                    if (attempts >= 12) {
                         clearInterval(pingIntervalTimer);
                         pingIntervalTimer = null;
                     }
-                }, 600);
+                }, 250);
 
             } else if (mode === 'funny' || mode === 'battle') {
                 let parsedWords = null;
