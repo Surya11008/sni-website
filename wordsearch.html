@@ -2488,12 +2488,19 @@
             connectMultiplayerRealTime(mpRoomId);
         }
 
-        // Live Multiplayer Real-Time Connection
+        // Live Multiplayer Real-Time Connection with Multi-Broker Resilient Fast Connect
+        const MQTT_BROKERS = [
+            'wss://broker.hivemq.com:8884/mqtt',
+            'wss://broker.emqx.io:8084/mqtt',
+            'wss://test.mosquitto.org:8081'
+        ];
+        let currentBrokerIndex = 0;
+
         function connectMultiplayerRealTime(roomId) {
             if (!roomId) return;
             const topic = `sni/wordsearch/room/${roomId}`;
 
-            // 1. BroadcastChannel (Instant sync across tabs/windows)
+            // 1. BroadcastChannel (Instant 0ms sync across tabs/windows)
             try {
                 if (window.BroadcastChannel) {
                     if (wsBroadcastChannel) wsBroadcastChannel.close();
@@ -2512,32 +2519,35 @@
                 }
             });
 
-            // 3. HiveMQ Public MQTT WebSocket Broker (Instant cross-device sync)
+            // 3. Ultra-Fast Resilient Multi-Broker MQTT Connection
             if (window.mqtt) {
                 try {
                     if (wsMqttClient) {
                         try { wsMqttClient.end(true); } catch(e){}
+                        wsMqttClient = null;
                     }
-                    wsMqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-                        clientId: 'sni_ws_' + myPlayerId + '_' + Math.random().toString(16).substring(2, 6),
+                    const brokerUrl = MQTT_BROKERS[currentBrokerIndex % MQTT_BROKERS.length];
+                    wsMqttClient = mqtt.connect(brokerUrl, {
+                        clientId: 'sni_ws_' + myPlayerId + '_' + Math.random().toString(36).substring(2, 7),
                         clean: true,
-                        keepalive: 30,
-                        connectTimeout: 5000,
-                        reconnectPeriod: 2000
+                        keepalive: 15,
+                        connectTimeout: 3500,
+                        reconnectPeriod: 1500
                     });
 
                     wsMqttClient.on('connect', () => {
-                        console.log('⚡ Connected to Word Search Room:', roomId);
-                        wsMqttClient.subscribe(topic, { qos: 1 });
+                        console.log('⚡ Connected to Word Search Room:', roomId, 'via', brokerUrl);
+                        wsMqttClient.subscribe(topic, { qos: 0 });
 
                         // Announce immediate join
                         sendMpEvent({
                             type: 'PLAYER_JOIN',
                             senderId: myPlayerId,
-                            senderName: mpIsHost ? 'Host' : 'Partner',
+                            senderName: getMyPlayerName(),
                             isHost: mpIsHost,
                             stage: currentStage,
-                            difficulty: currentBattleDifficulty
+                            difficulty: mpActiveMode === 'group' ? currentGroupDifficulty : currentBattleDifficulty,
+                            mode: mpActiveMode
                         });
                     });
 
@@ -2548,7 +2558,11 @@
                         } catch(e){}
                     });
 
-                    wsMqttClient.on('error', (err) => console.warn('MQTT err:', err));
+                    wsMqttClient.on('error', (err) => {
+                        console.warn('MQTT err on', brokerUrl, err);
+                        // Try next broker on failure
+                        currentBrokerIndex++;
+                    });
                 } catch (e) {
                     console.warn('MQTT error:', e);
                 }
@@ -3515,6 +3529,30 @@ function initWordSearchFeatures() {
                 if (mpGroupContainer) {
                     mpGroupContainer.classList.toggle('hidden', mode !== 'group');
                     mpGroupContainer.style.display = mode === 'group' ? 'block' : 'none';
+                }
+
+                // Update active mode and room immediately so host is already listening on the active tab's room
+                if (mode === 'help') {
+                    if (window.currentGeneratedHelp) {
+                        mpActiveMode = 'help';
+                        mpRoomId = window.currentGeneratedHelp.room;
+                        mpIsHost = true;
+                        connectMultiplayerRealTime(mpRoomId);
+                    }
+                } else if (mode === 'funny' || mode === 'battle') {
+                    if (window.currentGeneratedBattle) {
+                        mpActiveMode = 'battle';
+                        mpRoomId = window.currentGeneratedBattle.room;
+                        mpIsHost = true;
+                        connectMultiplayerRealTime(mpRoomId);
+                    }
+                } else if (mode === 'group') {
+                    if (window.currentGeneratedGroup) {
+                        mpActiveMode = 'group';
+                        mpRoomId = window.currentGeneratedGroup.room;
+                        mpIsHost = true;
+                        connectMultiplayerRealTime(mpRoomId);
+                    }
                 }
 
                 generateMultiplayerLinks();
