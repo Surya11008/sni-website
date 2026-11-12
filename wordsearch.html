@@ -536,8 +536,8 @@
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                         Scan with Phone Camera to Join Stage <span id="mpHelpStageNum" class="text-teal-600 dark:text-teal-400 font-extrabold text-sm">1</span> (Live Co-op)
                     </span>
-                    <div class="inline-block p-3 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                        <div id="mpHelpQrDiv" class="w-36 h-36 sm:w-44 sm:h-44 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpHelpQrImg" src="" alt="Help Support QR Code" class="w-full h-full object-contain rounded-xl" /></div>
+                    <div class="inline-block bg-white p-4 sm:p-5 rounded-2xl shadow-md my-1">
+                        <div id="mpHelpQrDiv" class="flex items-center justify-center mx-auto bg-white min-w-[200px] min-h-[200px]"></div>
                     </div>
                 </div>
 
@@ -589,8 +589,8 @@
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                         Scan with Phone Camera to Join Biblical Battle
                     </span>
-                    <div class="inline-block p-3 bg-white rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                        <div id="mpFunnyQrDiv" class="w-36 h-36 sm:w-44 sm:h-44 mx-auto flex items-center justify-center p-1 bg-white rounded-xl shadow-xs overflow-hidden"><img id="mpFunnyQrImg" src="" alt="Biblical Battle QR Code" class="w-full h-full object-contain rounded-xl" /></div>
+                    <div class="inline-block bg-white p-4 sm:p-5 rounded-2xl shadow-md my-1">
+                        <div id="mpFunnyQrDiv" class="flex items-center justify-center mx-auto bg-white min-w-[200px] min-h-[200px]"></div>
                     </div>
                 </div>
 
@@ -2244,23 +2244,40 @@
         let touchThrottleTimer = 0;
         let pingIntervalTimer = null;
 
-        // Render QR Code helper (dual canvas + immediate image API)
+        // Render QR Code helper (Free, borderless, high-contrast & spacious quiet zone)
         function renderQr(containerId, imgId, url) {
             const container = document.getElementById(containerId);
-            const img = document.getElementById(imgId);
-            if (!url) return;
+            if (!url || !container) return;
+
+            // Free open size with clear quiet zone (no limit box, no borders)
+            const isMobile = window.innerWidth < 420;
+            const qrSize = isMobile ? 200 : 220;
 
             let success = false;
-            if (typeof QRCode !== 'undefined' && container) {
+            if (typeof QRCode !== 'undefined') {
                 try {
                     container.innerHTML = '';
                     new QRCode(container, {
                         text: url,
-                        width: 192,
-                        height: 192,
-                        colorDark: "#0f172a",
+                        width: qrSize,
+                        height: qrSize,
+                        colorDark: "#000000",
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.M
+                    });
+
+                    // Ensure canvas and img have ZERO borders, ZERO border-radius and maximum scanning clarity
+                    const canvas = container.querySelector('canvas');
+                    const img = container.querySelector('img');
+                    [canvas, img].forEach(el => {
+                        if (el) {
+                            el.style.display = 'block';
+                            el.style.margin = '0 auto';
+                            el.style.border = 'none';
+                            el.style.borderRadius = '0px';
+                            el.style.maxWidth = '100%';
+                            el.style.height = 'auto';
+                        }
                     });
                     success = true;
                 } catch(e) {
@@ -2269,12 +2286,8 @@
             }
 
             if (!success) {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
-                if (container) {
-                    container.innerHTML = `<img src="${qrUrl}" alt="QR Code" class="w-48 h-48 object-contain rounded-xl mx-auto shadow-xs" />`;
-                } else if (img) {
-                    img.src = qrUrl;
-                }
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&margin=2&data=${encodeURIComponent(url)}`;
+                container.innerHTML = `<img src="${qrUrl}" alt="QR Code" class="block mx-auto max-w-full h-auto" style="width:${qrSize}px; height:${qrSize}px; border:none; border-radius:0px;" />`;
             }
         }
 
