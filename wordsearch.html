@@ -1284,25 +1284,38 @@
         };
 
         function initAppSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isMultiplayerGuest = urlParams.has('mode') && (urlParams.get('mode') === 'help' || urlParams.get('mode') === 'battle' || urlParams.get('mode') === 'group');
+
             try {
                 currentAuthUser = JSON.parse(safeGetStorage('word_search_current_user') || 'null');
-        // Unified Single Sign-On check across website
-        try {
-            if (!currentAuthUser) {
-                const unified = JSON.parse(localStorage.getItem('sni_unified_session') || 'null');
-                if (unified && unified.userId) {
-                    currentAuthUser = {
-                        name: unified.fullName || unified.userId,
-                        identifier: unified.userId,
-                        maxStage: 1,
-                        role: unified.role || 'member'
-                    };
-                    safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
-                }
-            }
-        } catch(e) {}
+                // Unified Single Sign-On check across website
+                try {
+                    if (!currentAuthUser) {
+                        const unified = JSON.parse(localStorage.getItem('sni_unified_session') || 'null');
+                        if (unified && unified.userId) {
+                            currentAuthUser = {
+                                name: unified.fullName || unified.userId,
+                                identifier: unified.userId,
+                                maxStage: 1,
+                                role: unified.role || 'member'
+                            };
+                            safeSetStorage('word_search_current_user', JSON.stringify(currentAuthUser));
+                        }
+                    }
+                } catch(e) {}
             } catch (e) {
                 currentAuthUser = null;
+            }
+
+            // If partner joined via QR scan or share link, NEVER block with login modal!
+            if (!currentAuthUser && isMultiplayerGuest) {
+                currentAuthUser = {
+                    name: 'Guest Player ' + myPlayerId.substring(2, 6),
+                    identifier: myPlayerId,
+                    maxStage: 1,
+                    role: 'guest'
+                };
             }
 
             if (currentAuthUser && currentAuthUser.name) {
@@ -1311,7 +1324,10 @@
                 updateUserUI();
                 authModal.classList.add('hidden');
                 authModal.style.display = 'none';
-                loadStage(currentStage);
+                // Only load default stage if NOT joining a multiplayer link (checkUrlMultiplayerParams handles multiplayer init)
+                if (!isMultiplayerGuest) {
+                    loadStage(currentStage);
+                }
             } else {
                 switchToLoginMode();
                 authModal.classList.remove('hidden');
@@ -2465,7 +2481,7 @@
             const battleRoom = window.currentGeneratedBattle?.room || ('ws_b_' + Math.random().toString(36).substring(2, 8));
             const battleSeed = window.currentGeneratedBattle?.seed || Math.floor(Math.random() * 900000 + 100000);
             const battleWords = selectBiblicalWordsForDifficulty(currentBattleDifficulty, battleSeed);
-            const battleLink = `${baseUrl}?mode=battle&room=${battleRoom}&diff=${currentBattleDifficulty}&seed=${battleSeed}&words=${encodeURIComponent(battleWords.join(','))}`;
+            const battleLink = `${baseUrl}?mode=battle&room=${battleRoom}&diff=${currentBattleDifficulty}&seed=${battleSeed}`;
             
             window.currentGeneratedBattle = {
                 room: battleRoom,
@@ -2491,7 +2507,7 @@
             const groupRoom = window.currentGeneratedGroup?.room || ('ws_g_' + Math.random().toString(36).substring(2, 8));
             const groupSeed = window.currentGeneratedGroup?.seed || Math.floor(Math.random() * 900000 + 100000);
             const groupWords = selectBiblicalWordsForDifficulty(currentGroupDifficulty, groupSeed);
-            const groupLink = `${baseUrl}?mode=group&room=${groupRoom}&diff=${currentGroupDifficulty}&seed=${groupSeed}&words=${encodeURIComponent(groupWords.join(','))}`;
+            const groupLink = `${baseUrl}?mode=group&room=${groupRoom}&diff=${currentGroupDifficulty}&seed=${groupSeed}`;
 
             window.currentGeneratedGroup = {
                 room: groupRoom,
@@ -3314,7 +3330,11 @@ window.hostStartFunnyBattleNow = function() {
                     try {
                         parsedWords = decodeURIComponent(wordsParam).split(',').map(w => w.trim().toUpperCase()).filter(Boolean);
                     } catch(e) {}
+                } else if (seed) {
+                    parsedWords = selectBiblicalWordsForDifficulty(diffParam, seed);
                 }
+                const authEl = document.getElementById('authModal');
+                if (authEl) { authEl.classList.add('hidden'); authEl.style.display = 'none'; }
                 startFunnyBattleMode(parsedWords, room, seed, false, diffParam);
             } else if (mode === 'group') {
                 let parsedWords = null;
@@ -3322,7 +3342,11 @@ window.hostStartFunnyBattleNow = function() {
                     try {
                         parsedWords = decodeURIComponent(wordsParam).split(',').map(w => w.trim().toUpperCase()).filter(Boolean);
                     } catch(e) {}
+                } else if (seed) {
+                    parsedWords = selectBiblicalWordsForDifficulty(diffParam, seed);
                 }
+                const authEl = document.getElementById('authModal');
+                if (authEl) { authEl.classList.add('hidden'); authEl.style.display = 'none'; }
                 startGroupPlayMode(parsedWords, room, seed, false, diffParam);
             }
         }
@@ -3696,6 +3720,11 @@ function initWordSearchFeatures() {
 
             // Check if user came from a share link
             checkUrlMultiplayerParams();
+        }
+
+        // Run checkUrlMultiplayerParams immediately so guest connects within 0 seconds
+        if (new URLSearchParams(window.location.search).has('mode')) {
+            try { checkUrlMultiplayerParams(); } catch(e){}
         }
 
         // Initialize features once DOM is ready and window loads
