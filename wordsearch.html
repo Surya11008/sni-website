@@ -612,6 +612,8 @@
                         <span>WhatsApp</span>
                     </button>
                 </div>
+            </div>
+
             <!-- Tab 3: Group Play Content Container -->
             <div id="mpGroupContainer" class="hidden space-y-4">
                 <div class="bg-indigo-50 dark:bg-indigo-950/40 p-3 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
@@ -665,7 +667,6 @@
                         <span>WhatsApp</span>
                     </button>
                 </div>
-            </div>
             </div>
         </div>
     </div>
@@ -3517,6 +3518,17 @@ function initWordSearchFeatures() {
                 }
 
                 generateMultiplayerLinks();
+
+                // Explicit re-render of QR when tab switches to ensure canvas is painted when container is fully visible
+                setTimeout(() => {
+                    if (mode === 'help' && window.currentGeneratedHelp) {
+                        renderQr('mpHelpQrDiv', 'mpHelpQrImg', window.currentGeneratedHelp.link);
+                    } else if ((mode === 'funny' || mode === 'battle') && window.currentGeneratedBattle) {
+                        renderQr('mpFunnyQrDiv', 'mpFunnyQrImg', window.currentGeneratedBattle.link);
+                    } else if (mode === 'group' && window.currentGeneratedGroup) {
+                        renderQr('mpGroupQrDiv', 'mpGroupQrImg', window.currentGeneratedGroup.link);
+                    }
+                }, 50);
             };
 
             const tabMpGroup = document.getElementById('tabMpGroup');
