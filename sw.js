@@ -1,4 +1,4 @@
-const CACHE_NAME = "sni-app-shell-v31";
+const CACHE_NAME = "sni-app-shell-v32";
 const APP_SHELL = [
     "/",
     "/index.html",

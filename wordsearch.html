@@ -492,7 +492,7 @@
                 <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">💬 Player Chat History</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">📁 Room Chat Folders (Surveillance)</span>
                             <span id="adminChatTotalCount" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-extrabold border border-indigo-500/30">0</span>
                         </div>
                         <div class="flex items-center gap-2">
@@ -500,7 +500,7 @@
                             <button type="button" onclick="confirmClearAllAdminChatHistory()" class="text-[10px] text-rose-500 hover:text-rose-600 font-bold px-2 py-0.5 bg-rose-500/10 rounded-lg transition">Clear All</button>
                         </div>
                     </div>
-                    <div id="adminChatHistoryList" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-2.5 max-h-52 overflow-y-auto space-y-2">
+                    <div id="adminChatHistoryList" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-2.5 max-h-64 overflow-y-auto space-y-2">
                         <p class="text-xs text-slate-400 text-center py-4">No chat history recorded yet.</p>
                     </div>
                 </div>
@@ -715,8 +715,8 @@
         </div>
 
         <!-- Chat Messages Container -->
-        <div id="mpChatMessagesList" class="flex-grow p-3 overflow-y-auto space-y-2.5 bg-slate-50 dark:bg-slate-950/70 text-xs">
-            <div class="text-center text-slate-400 text-[11px] py-2">
+        <div id="mpChatMessages" class="flex-grow p-3 overflow-y-auto space-y-2.5 bg-slate-50 dark:bg-slate-950/70 text-xs">
+            <div id="mpChatEmptyNotice" class="text-center text-slate-400 text-[11px] py-2">
                 🤝 Say hi to your game partner with messages & emojis!
             </div>
         </div>
@@ -3978,9 +3978,24 @@ window.hostStartFunnyBattleNow = function() {
             }
         };
 
+        window.confirmDeleteAdminRoomFolder = function(roomId) {
+            if (!isAdminActive) return;
+            if (!confirm(`Are you sure you want to delete all chat history for room "${roomId}"?`)) {
+                return;
+            }
+            try {
+                let chats = getAllAdminChatHistory();
+                chats = chats.filter(c => (c.roomId || 'lobby') !== roomId);
+                localStorage.setItem(ADMIN_CHATS_STORAGE_KEY, JSON.stringify(chats));
+                renderAdminChatHistoryList();
+            } catch(e) {
+                alert('Error deleting room folder: ' + e.message);
+            }
+        };
+
         window.confirmClearAllAdminChatHistory = function() {
             if (!isAdminActive) return;
-            if (!confirm('Are you sure you want to PERMANENTLY CLEAR all multiplayer player chat history? This cannot be undone.')) {
+            if (!confirm('Are you sure you want to PERMANENTLY CLEAR all multiplayer player chat history across all rooms? This cannot be undone.')) {
                 return;
             }
             try {
@@ -4003,43 +4018,113 @@ window.hostStartFunnyBattleNow = function() {
             if (chats.length === 0) {
                 listEl.innerHTML = `
                     <div class="p-6 text-center text-slate-400 dark:text-slate-500">
-                        <div class="text-2xl mb-1">💬</div>
+                        <div class="text-2xl mb-1">📁</div>
                         <p class="text-xs font-semibold">No multiplayer chat history recorded yet.</p>
-                        <p class="text-[10px] mt-0.5">Player chats will appear here in real-time for administrative review.</p>
+                        <p class="text-[10px] mt-0.5">Player chats will be organized here room-by-room like folders for administrative surveillance.</p>
                     </div>
                 `;
                 return;
             }
 
-            listEl.innerHTML = chats.map(msg => {
-                const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
-                const dateStr = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
-                const safeName = (msg.senderName || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                const safeText = (msg.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                const safeRoom = (msg.roomId || 'lobby').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                const safeMode = (msg.mode || 'game').toUpperCase();
+            // Group chats by roomId (Folder view)
+            const roomMap = {};
+            chats.forEach(c => {
+                const rId = c.roomId || 'lobby';
+                if (!roomMap[rId]) {
+                    roomMap[rId] = {
+                        roomId: rId,
+                        mode: c.mode || 'game',
+                        messages: [],
+                        lastTimestamp: c.timestamp || 0,
+                        players: new Set()
+                    };
+                }
+                roomMap[rId].messages.push(c);
+                if (c.timestamp && c.timestamp > roomMap[rId].lastTimestamp) {
+                    roomMap[rId].lastTimestamp = c.timestamp;
+                }
+                if (c.senderName) roomMap[rId].players.add(c.senderName);
+            });
+
+            const rooms = Object.values(roomMap).sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+
+            listEl.innerHTML = rooms.map(room => {
+                const lastTimeStr = room.lastTimestamp ? new Date(room.lastTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                const lastDateStr = room.lastTimestamp ? new Date(room.lastTimestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+                const playersArray = Array.from(room.players);
+                const playersStr = playersArray.slice(0, 3).join(', ') + (playersArray.length > 3 ? ` +${playersArray.length - 3}` : '');
+                const safeRoomId = room.roomId.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeMode = (room.mode || 'game').toUpperCase();
+
+                const messagesHtml = room.messages.map(msg => {
+                    const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const safeName = (msg.senderName || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeText = (msg.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return `
+                        <div class="py-1 px-1.5 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded flex items-start justify-between gap-1 text-[11px] border-b border-slate-200/50 dark:border-slate-700/40 last:border-0">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1">
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">${safeName}</span>
+                                    <span class="text-[9px] font-mono text-slate-400">${timeStr}</span>
+                                </div>
+                                <div class="text-slate-700 dark:text-slate-300 break-words font-medium text-[11px] mt-0.5">
+                                    ${safeText}
+                                </div>
+                            </div>
+                            <button type="button" onclick="deleteAdminChatMessage('${msg.id}')" class="shrink-0 p-1 text-rose-500 hover:text-rose-700 transition" title="Delete message">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+                }).join('');
 
                 return `
-                    <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition flex items-start justify-between gap-2 text-xs">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-bold text-slate-800 dark:text-slate-200">${safeName}</span>
-                                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">${msg.senderId ? msg.senderId.substring(0, 8) : ''}</span>
-                                <span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">${safeMode}</span>
-                                <span class="text-[9px] text-slate-400 font-mono">Room: ${safeRoom}</span>
-                                <span class="text-[9px] text-slate-400 ml-auto whitespace-nowrap">${dateStr} ${timeStr}</span>
+                    <details class="group bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xs">
+                        <summary class="cursor-pointer p-2.5 flex items-center justify-between gap-2 select-none hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-base group-open:rotate-90 transition-transform">📁</span>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-xs text-slate-900 dark:text-slate-100 font-mono">${safeRoomId}</span>
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">${safeMode}</span>
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">${room.messages.length} msgs</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 truncate mt-0.5">
+                                        👥 ${playersStr || 'No player name'} &bull; ${lastDateStr} ${lastTimeStr}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mt-1 text-slate-700 dark:text-slate-300 break-words font-medium">
-                                ${safeText}
+                            <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+                                <button type="button" onclick="confirmDeleteAdminRoomFolder('${room.roomId}')" class="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[10px] font-bold" title="Delete Room Folder">
+                                    🗑️ Folder
+                                </button>
                             </div>
+                        </summary>
+                        <div class="p-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/60 space-y-1 max-h-48 overflow-y-auto">
+                            ${messagesHtml}
                         </div>
-                        <button type="button" onclick="deleteAdminChatMessage('${msg.id}')" class="shrink-0 p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition" title="Delete message">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                    </div>
+                    </details>
                 `;
             }).join('');
         }
+
+        // Clear player live chat when game exits so players retain NO chat history outside gameplay
+        window.clearMultiplayerChatSession = function() {
+            const container = document.getElementById('mpChatMessages');
+            if (container) {
+                container.innerHTML = `
+                    <div id="mpChatEmptyNotice" class="text-center text-slate-400 text-[11px] py-2">
+                        🤝 Say hi to your game partner with messages & emojis!
+                    </div>
+                `;
+            }
+            unreadChatCount = 0;
+            updateChatUnreadBadge();
+            const drawer = document.getElementById('mpChatDrawer');
+            if (drawer) {
+                drawer.classList.add('hidden');
+            }
+        };
 
         window.toggleMultiplayerChat = function(forceState) {
             const drawer = document.getElementById('mpChatDrawer');
@@ -4488,6 +4573,9 @@ function initWordSearchFeatures() {
             if (exitMultiplayerBtn) {
                 exitMultiplayerBtn.addEventListener('click', () => {
                     mpActiveMode = null;
+                    if (typeof clearMultiplayerChatSession === 'function') {
+                        clearMultiplayerChatSession();
+                    }
                     if (multiplayerBanner) {
                         multiplayerBanner.classList.add('hidden');
                         multiplayerBanner.style.display = 'none';
