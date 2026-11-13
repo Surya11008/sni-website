@@ -3430,7 +3430,17 @@
 
             // 4. In-Game Real-Time Chat & Emoji Reactions
             if (data.type === 'CHAT_MESSAGE') {
-                if (data.msgObj) {
+                if (data.msgObj && data.msgObj.id) {
+                    if (window.__seenChatMessageIds && window.__seenChatMessageIds.has(data.msgObj.id)) {
+                        return; // Ignore duplicate message from multi-broker delivery
+                    }
+                    if (!window.__seenChatMessageIds) window.__seenChatMessageIds = new Set();
+                    window.__seenChatMessageIds.add(data.msgObj.id);
+                    if (window.__seenChatMessageIds.size > 500) {
+                        const firstVal = window.__seenChatMessageIds.values().next().value;
+                        window.__seenChatMessageIds.delete(firstVal);
+                    }
+
                     appendChatMessageToUI(data.msgObj, false);
                     saveChatMessageForAdmin(data.msgObj);
                     playSound('pop');
@@ -4181,8 +4191,9 @@ window.hostStartFunnyBattleNow = function() {
 
         function sendMultiplayerChatMessage(text) {
             if (!text) return;
+            const msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
             const msgObj = {
-                id: 'm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                id: msgId,
                 senderId: myPlayerId,
                 senderName: getMyPlayerName(),
                 text: text,
@@ -4190,6 +4201,9 @@ window.hostStartFunnyBattleNow = function() {
                 roomId: mpRoomId || 'general',
                 mode: mpActiveMode || 'battle'
             };
+
+            if (!window.__seenChatMessageIds) window.__seenChatMessageIds = new Set();
+            window.__seenChatMessageIds.add(msgId);
 
             appendChatMessageToUI(msgObj, true);
             saveChatMessageForAdmin(msgObj);
@@ -4210,6 +4224,15 @@ window.hostStartFunnyBattleNow = function() {
             const container = document.getElementById('mpChatMessages');
             if (!container) return;
 
+            // Strict DOM-level duplicate check by unique message ID
+            if (msg.id && container.querySelector(`[data-msg-id="${msg.id}"]`)) {
+                return; // Already rendered on screen
+            }
+
+            // Remove empty notice if present
+            const notice = document.getElementById('mpChatEmptyNotice');
+            if (notice) notice.remove();
+
             const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             const safeName = (msg.senderName || 'Player').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeText = (msg.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -4218,6 +4241,7 @@ window.hostStartFunnyBattleNow = function() {
             const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(safeText.trim()) && safeText.trim().length <= 8;
 
             const row = document.createElement('div');
+            if (msg.id) row.setAttribute('data-msg-id', msg.id);
             row.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2 text-xs`;
 
             if (isMe) {
