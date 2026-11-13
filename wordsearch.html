@@ -231,6 +231,10 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <button type="button" id="toggleChatBtn" onclick="toggleMultiplayerChat()" class="relative text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <span>💬 Chat</span>
+                        <span id="chatUnreadBadge" class="hidden absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center animate-bounce">0</span>
+                    </button>
                     <button type="button" id="shareRoomAgainBtn" onclick="openMultiplayerModalAgain()" class="text-xs bg-indigo-600/60 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1">
                         <i class="fa-solid fa-qrcode"></i> <span>QR Code</span>
                     </button>
@@ -484,7 +488,24 @@
                     </div>
                 </div>
 
-                <!-- 3. ACTIONS & MODERATION -->
+                <!-- 3. MULTIPLAYER CHAT MONITOR & HISTORY (ADMIN ONLY) -->
+                <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">💬 Player Chat History</span>
+                            <span id="adminChatTotalCount" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-extrabold border border-indigo-500/30">0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="renderAdminChatHistoryList()" class="text-[11px] text-blue-600 dark:text-blue-400 font-bold hover:underline">Refresh ↻</button>
+                            <button type="button" onclick="confirmClearAllAdminChatHistory()" class="text-[10px] text-rose-500 hover:text-rose-600 font-bold px-2 py-0.5 bg-rose-500/10 rounded-lg transition">Clear All</button>
+                        </div>
+                    </div>
+                    <div id="adminChatHistoryList" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-2.5 max-h-52 overflow-y-auto space-y-2">
+                        <p class="text-xs text-slate-400 text-center py-4">No chat history recorded yet.</p>
+                    </div>
+                </div>
+
+                <!-- 4. ACTIONS & MODERATION -->
                 <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
                     <button type="button" id="adminOpenRankingsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
                         <span>🏆 Manage & Remove Players from Rankings</span>
@@ -674,6 +695,53 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 2-Player In-Game Live Chat Box -->
+    <div id="mpChatDrawer" class="fixed bottom-4 right-4 z-50 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border-2 border-indigo-500/50 rounded-3xl shadow-2xl overflow-hidden hidden flex flex-col transition-all duration-300" style="z-index: 99999; max-height: 480px; height: 420px;">
+        <!-- Chat Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2.5 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="text-base">💬</span>
+                <div>
+                    <h4 class="text-xs font-bold leading-tight">Live Player Chat</h4>
+                    <span id="mpChatHeaderStatus" class="text-[10px] text-indigo-100 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Connected</span>
+                    </span>
+                </div>
+            </div>
+            <button type="button" onclick="toggleMultiplayerChat(false)" class="w-6 h-6 rounded-full hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition">&times;</button>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="mpChatMessagesList" class="flex-grow p-3 overflow-y-auto space-y-2.5 bg-slate-50 dark:bg-slate-950/70 text-xs">
+            <div class="text-center text-slate-400 text-[11px] py-2">
+                🤝 Say hi to your game partner with messages & emojis!
+            </div>
+        </div>
+
+        <!-- Quick Emojis Bar -->
+        <div class="px-2 py-1.5 bg-slate-100 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            <button type="button" onclick="sendQuickEmoji('👍')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">👍</button>
+            <button type="button" onclick="sendQuickEmoji('❤️')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">❤️</button>
+            <button type="button" onclick="sendQuickEmoji('🔥')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">🔥</button>
+            <button type="button" onclick="sendQuickEmoji('😂')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">😂</button>
+            <button type="button" onclick="sendQuickEmoji('🎉')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">🎉</button>
+            <button type="button" onclick="sendQuickEmoji('✝️')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">✝️</button>
+            <button type="button" onclick="sendQuickEmoji('👏')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">👏</button>
+            <button type="button" onclick="sendQuickEmoji('⚡')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">⚡</button>
+            <button type="button" onclick="sendQuickEmoji('🙌')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">🙌</button>
+            <button type="button" onclick="sendQuickEmoji('🙏')" class="text-sm px-1.5 py-0.5 hover:scale-125 transition">🙏</button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="mpChatForm" onsubmit="handleSendMpChat(event)" class="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <input type="text" id="mpChatInput" placeholder="Type a message or emoji..." maxlength="200" autocomplete="off" class="flex-grow bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition shadow-xs flex items-center justify-center">
+                <span>Send</span>
+            </button>
+        </form>
     </div>
 
     <!-- Footer -->
@@ -1270,6 +1338,15 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
                 osc.start(now);
                 osc.stop(now + 0.7);
+            } else if (type === 'pop') {
+                const now = audioCtx.currentTime;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.08); // A5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
             }
         }
 
@@ -1819,6 +1896,9 @@
                 if (adminActivePanel) {
                     adminActivePanel.classList.remove('hidden');
                     adminActivePanel.style.display = 'block';
+                }
+                if (typeof renderAdminChatHistoryList === 'function') {
+                    renderAdminChatHistoryList();
                 }
             } else {
                 if (adminBtnLabel) adminBtnLabel.textContent = '👑 Admin';
@@ -3347,6 +3427,20 @@
                     }
                 }
             }
+
+            // 4. In-Game Real-Time Chat & Emoji Reactions
+            if (data.type === 'CHAT_MESSAGE') {
+                if (data.msgObj) {
+                    appendChatMessageToUI(data.msgObj, false);
+                    saveChatMessageForAdmin(data.msgObj);
+                    playSound('pop');
+                    const drawer = document.getElementById('mpChatDrawer');
+                    if (drawer && drawer.classList.contains('hidden')) {
+                        unreadChatCount++;
+                        updateChatUnreadBadge();
+                    }
+                }
+            }
         }
 
         function showBannerForMultiplayer() {
@@ -3476,10 +3570,12 @@
                 connectedPlayers[myPlayerId].name = myName;
             }
 
-            // Convert to array and sort by wordCount desc, then points desc
+            // Convert to array and sort strictly by POINTS desc, then wordCount desc
             const playerList = Object.values(connectedPlayers).sort((a, b) => {
-                if (b.wordCount !== a.wordCount) return b.wordCount - a.wordCount;
-                return b.points - a.points;
+                const ptsA = a.points || 0;
+                const ptsB = b.points || 0;
+                if (ptsB !== ptsA) return ptsB - ptsA;
+                return (b.wordCount || 0) - (a.wordCount || 0);
             });
 
             rosterEl.innerHTML = playerList.map((p, idx) => {
@@ -3499,7 +3595,7 @@
                                 ${meTag}
                             </div>
                             <span class="block text-[10px] text-amber-300 font-extrabold">
-                                🎯 ${p.wordCount || 0} words <span class="text-indigo-300 font-semibold text-[9px]">(${p.points || 0} pts)</span>
+                                ⭐ ${p.points || 0} pts <span class="text-indigo-300 font-semibold text-[9px]">(${p.wordCount || 0} words)</span>
                             </span>
                         </div>
                     </div>
@@ -3656,13 +3752,31 @@ window.hostStartFunnyBattleNow = function() {
 
         function checkBattleEnd() {
             if (foundWords.size >= currentWords.length) {
-                let winMsg = '🎉 Biblical Word Battle Finished!\n\n';
-                if (p1Score > p2Score) {
-                    winMsg += `🏆 Player 1 Wins with ${p1Score} pts! (Player 2: ${p2Score} pts)`;
-                } else if (p2Score > p1Score) {
-                    winMsg += `🏆 Player 2 Wins with ${p2Score} pts! (Player 1: ${p1Score} pts)`;
+                const playerList = Object.values(connectedPlayers).sort((a, b) => {
+                    const ptsA = a.points || 0;
+                    const ptsB = b.points || 0;
+                    if (ptsB !== ptsA) return ptsB - ptsA;
+                    return (b.wordCount || 0) - (a.wordCount || 0);
+                });
+
+                let winMsg = '🎉 Biblical Battle Finished!\n\n';
+                if (playerList.length >= 2) {
+                    const p1 = playerList[0];
+                    const p2 = playerList[1];
+                    const p1Pts = p1.points || 0;
+                    const p2Pts = p2.points || 0;
+
+                    if (p1Pts > p2Pts) {
+                        winMsg += `🏆 Winner: ${p1.name} with ${p1Pts} Points! (${p1.wordCount || 0} words)\nRunner-up: ${p2.name} with ${p2Pts} Points (${p2.wordCount || 0} words)`;
+                    } else if (p2Pts > p1Pts) {
+                        winMsg += `🏆 Winner: ${p2.name} with ${p2Pts} Points! (${p2.wordCount || 0} words)\nRunner-up: ${p1.name} with ${p1Pts} Points (${p1.wordCount || 0} words)`;
+                    } else {
+                        winMsg += `🤝 It's a Tie! Both players scored ${p1Pts} Points! (${p1.wordCount || 0} vs ${p2.wordCount || 0} words)`;
+                    }
+                } else if (playerList.length === 1) {
+                    winMsg += `🏆 ${playerList[0].name} Finished with ${playerList[0].points || 0} Points! (${playerList[0].wordCount || 0} words)`;
                 } else {
-                    winMsg += `🤝 It is a Tie! Both scored ${p1Score} pts!`;
+                    winMsg += `🎉 All words found!`;
                 }
                 setTimeout(() => alert(winMsg), 400);
             }
@@ -3818,6 +3932,236 @@ window.hostStartFunnyBattleNow = function() {
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + inputEl.value)}`, '_blank');
             }
         };
+
+        // ==============================================================
+        // 4.5 MULTIPLAYER IN-GAME CHAT, EMOJIS & ADMIN SURVEILLANCE
+        // ==============================================================
+        let unreadChatCount = 0;
+        const ADMIN_CHATS_STORAGE_KEY = 'sni_ws_admin_all_chats';
+
+        function getAllAdminChatHistory() {
+            try {
+                return JSON.parse(localStorage.getItem(ADMIN_CHATS_STORAGE_KEY) || '[]');
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function saveChatMessageForAdmin(msgObj) {
+            if (!msgObj || !msgObj.text) return;
+            try {
+                const chats = getAllAdminChatHistory();
+                // Avoid duplicate by id
+                if (!chats.some(c => c.id === msgObj.id)) {
+                    chats.unshift(msgObj);
+                    // Keep up to latest 500 messages across all rooms
+                    if (chats.length > 500) chats.length = 500;
+                    localStorage.setItem(ADMIN_CHATS_STORAGE_KEY, JSON.stringify(chats));
+                }
+                if (isAdminActive) {
+                    renderAdminChatHistoryList();
+                }
+            } catch(e) {
+                console.warn('saveChatMessageForAdmin local error:', e);
+            }
+        }
+
+        window.deleteAdminChatMessage = function(msgId) {
+            if (!isAdminActive) return;
+            try {
+                let chats = getAllAdminChatHistory();
+                chats = chats.filter(c => c.id !== msgId);
+                localStorage.setItem(ADMIN_CHATS_STORAGE_KEY, JSON.stringify(chats));
+                renderAdminChatHistoryList();
+            } catch(e) {
+                alert('Error deleting chat: ' + e.message);
+            }
+        };
+
+        window.confirmClearAllAdminChatHistory = function() {
+            if (!isAdminActive) return;
+            if (!confirm('Are you sure you want to PERMANENTLY CLEAR all multiplayer player chat history? This cannot be undone.')) {
+                return;
+            }
+            try {
+                localStorage.removeItem(ADMIN_CHATS_STORAGE_KEY);
+                renderAdminChatHistoryList();
+                alert('All chat history has been permanently cleared.');
+            } catch(e) {
+                alert('Error clearing chat history: ' + e.message);
+            }
+        };
+
+        function renderAdminChatHistoryList() {
+            const listEl = document.getElementById('adminChatHistoryList');
+            const totalCountEl = document.getElementById('adminChatTotalCount');
+            if (!listEl) return;
+
+            const chats = getAllAdminChatHistory();
+            if (totalCountEl) totalCountEl.textContent = `${chats.length} messages`;
+
+            if (chats.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 dark:text-slate-500">
+                        <div class="text-2xl mb-1">💬</div>
+                        <p class="text-xs font-semibold">No multiplayer chat history recorded yet.</p>
+                        <p class="text-[10px] mt-0.5">Player chats will appear here in real-time for administrative review.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = chats.map(msg => {
+                const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                const dateStr = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+                const safeName = (msg.senderName || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeText = (msg.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeRoom = (msg.roomId || 'lobby').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeMode = (msg.mode || 'game').toUpperCase();
+
+                return `
+                    <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition flex items-start justify-between gap-2 text-xs">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-bold text-slate-800 dark:text-slate-200">${safeName}</span>
+                                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">${msg.senderId ? msg.senderId.substring(0, 8) : ''}</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">${safeMode}</span>
+                                <span class="text-[9px] text-slate-400 font-mono">Room: ${safeRoom}</span>
+                                <span class="text-[9px] text-slate-400 ml-auto whitespace-nowrap">${dateStr} ${timeStr}</span>
+                            </div>
+                            <div class="mt-1 text-slate-700 dark:text-slate-300 break-words font-medium">
+                                ${safeText}
+                            </div>
+                        </div>
+                        <button type="button" onclick="deleteAdminChatMessage('${msg.id}')" class="shrink-0 p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition" title="Delete message">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.toggleMultiplayerChat = function(forceState) {
+            const drawer = document.getElementById('mpChatDrawer');
+            if (!drawer) return;
+            const willOpen = typeof forceState === 'boolean' ? forceState : drawer.classList.contains('hidden');
+            if (willOpen) {
+                drawer.classList.remove('hidden');
+                unreadChatCount = 0;
+                updateChatUnreadBadge();
+                scrollChatToBottom();
+                setTimeout(() => {
+                    const input = document.getElementById('mpChatInput');
+                    if (input) input.focus();
+                }, 100);
+            } else {
+                drawer.classList.add('hidden');
+            }
+        };
+
+        function updateChatUnreadBadge() {
+            const badge = document.getElementById('chatUnreadBadge');
+            if (!badge) return;
+            if (unreadChatCount > 0) {
+                badge.textContent = unreadChatCount > 9 ? '9+' : unreadChatCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function scrollChatToBottom() {
+            const msgs = document.getElementById('mpChatMessages');
+            if (msgs) {
+                setTimeout(() => {
+                    msgs.scrollTop = msgs.scrollHeight;
+                }, 50);
+            }
+        }
+
+        window.sendQuickEmoji = function(emoji) {
+            sendMultiplayerChatMessage(emoji);
+        };
+
+        window.handleSendMpChat = function(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('mpChatInput');
+            if (!input) return;
+            const text = (input.value || '').trim();
+            if (!text) return;
+            sendMultiplayerChatMessage(text);
+            input.value = '';
+            input.focus();
+        };
+
+        function sendMultiplayerChatMessage(text) {
+            if (!text) return;
+            const msgObj = {
+                id: 'm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                senderId: myPlayerId,
+                senderName: getMyPlayerName(),
+                text: text,
+                timestamp: Date.now(),
+                roomId: mpRoomId || 'general',
+                mode: mpActiveMode || 'battle'
+            };
+
+            appendChatMessageToUI(msgObj, true);
+            saveChatMessageForAdmin(msgObj);
+            playSound('pop');
+
+            // Send via MQTT & Firestore if in a room
+            if (mpRoomId) {
+                sendMpEvent({
+                    type: 'CHAT_MESSAGE',
+                    msgObj: msgObj,
+                    senderId: myPlayerId,
+                    senderName: getMyPlayerName()
+                });
+            }
+        }
+
+        function appendChatMessageToUI(msg, isMe) {
+            const container = document.getElementById('mpChatMessages');
+            if (!container) return;
+
+            const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            const safeName = (msg.senderName || 'Player').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeText = (msg.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Detect if message is pure emoji (large text)
+            const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(safeText.trim()) && safeText.trim().length <= 8;
+
+            const row = document.createElement('div');
+            row.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2 text-xs`;
+
+            if (isMe) {
+                row.innerHTML = `
+                    <div class="flex items-center gap-1 mb-0.5 text-[10px] text-slate-400">
+                        <span>You</span>
+                        <span>•</span>
+                        <span>${timeStr}</span>
+                    </div>
+                    <div class="${isEmojiOnly ? 'text-2xl p-1 bg-transparent' : 'bg-gradient-to-r from-teal-600 to-indigo-600 text-white rounded-2xl rounded-tr-xs px-3 py-1.5 max-w-[85%] break-words shadow-xs'}">
+                        ${safeText}
+                    </div>
+                `;
+            } else {
+                row.innerHTML = `
+                    <div class="flex items-center gap-1 mb-0.5 text-[10px] text-slate-400">
+                        <span class="font-bold text-slate-600 dark:text-slate-300">${safeName}</span>
+                        <span>•</span>
+                        <span>${timeStr}</span>
+                    </div>
+                    <div class="${isEmojiOnly ? 'text-2xl p-1 bg-transparent' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-xs px-3 py-1.5 max-w-[85%] break-words shadow-xs border border-slate-300/50 dark:border-slate-700/60'}">
+                        ${safeText}
+                    </div>
+                `;
+            }
+
+            container.appendChild(row);
+            scrollChatToBottom();
+        }
 
 function initWordSearchFeatures() {
             if (window.__wordSearchFeaturesInitialized) return;
