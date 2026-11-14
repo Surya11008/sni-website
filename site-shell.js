@@ -139,7 +139,7 @@ if (installButton) {
             category: "Portals",
             categorySlug: "support",
             icon: "S",
-            url: `${rootPrefix}support/`,
+            url: "https://support.sni.org.in",
             keywords: "support portal help helpdesk tickets library resources materials documents"
         },
         {
@@ -242,7 +242,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "🕊️",
-            url: `${rootPrefix}support/#Feast`,
+            url: "https://support.sni.org.in/#Feast",
             keywords: "feasts prayers feast passover unleavened bread resurrection pentecost trumpet atonement prayer week"
         },
         {
@@ -251,7 +251,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "🎵",
-            url: `${rootPrefix}support/#NewSong`,
+            url: "https://support.sni.org.in/#NewSong",
             keywords: "new song songs music worship melodies prayer praise audio albums mp3 singing"
         },
         {
@@ -260,7 +260,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "📖",
-            url: `${rootPrefix}support/#Sermon`,
+            url: "https://support.sni.org.in/#Sermon",
             keywords: "sermon sermons message preaching word bible scriptures teach study audio"
         },
         {
@@ -269,7 +269,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "🎬",
-            url: `${rootPrefix}support/#PreachingVideo`,
+            url: "https://support.sni.org.in/#PreachingVideo",
             keywords: "preaching videos ucc gospel presentations clips videos evangelism"
         },
         {
@@ -278,7 +278,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "📚",
-            url: `${rootPrefix}support/#SPB`,
+            url: "https://support.sni.org.in/#SPB",
             keywords: "spb books preaching diagrams full subject study guide zip download"
         },
         {
@@ -287,7 +287,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "🌟",
-            url: `${rootPrefix}support/#Watv`,
+            url: "https://support.sni.org.in/#Watv",
             keywords: "watv life essence happy home family love fragrance faith mother stories"
         },
         {
@@ -296,7 +296,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "❓",
-            url: `${rootPrefix}support/#Quiz`,
+            url: "https://support.sni.org.in/#Quiz",
             keywords: "quiz test questions review practice knowledge exam study"
         },
         {
@@ -305,7 +305,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "⛪",
-            url: `${rootPrefix}support/#Worship`,
+            url: "https://support.sni.org.in/#Worship",
             keywords: "worship orders tuesday sabbath service schedule liturgy order"
         },
         {
@@ -314,7 +314,7 @@ if (installButton) {
             category: "Support",
             categorySlug: "support",
             icon: "📁",
-            url: `${rootPrefix}support/#Files`,
+            url: "https://support.sni.org.in/#Files",
             keywords: "files documents pdf printables downloads forms sheets print"
         },
 
