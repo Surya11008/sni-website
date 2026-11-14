@@ -175,7 +175,7 @@ if (installButton) {
             category: "Portals",
             categorySlug: "counter",
             icon: "📖",
-            url: `${rootPrefix}counter.html`,
+            url: "https://count.sni.org.in",
             keywords: "counter preaching counter ministry partner sync qr code preaching report tracking split live"
         },
 
