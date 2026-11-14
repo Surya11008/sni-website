@@ -130,7 +130,7 @@ if (installButton) {
             category: "Portals",
             categorySlug: "star",
             icon: "★",
-            url: `${rootPrefix}star/`,
+            url: "https://star.sni.org.in",
             keywords: "star galaxy portal weekly status academies academy training progress milestone members"
         },
         {

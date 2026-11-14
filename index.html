@@ -984,11 +984,11 @@ footer span:hover {
 
 <section class="site-shortcuts" aria-label="SNI websites and videos">
     <div class="site-card-grid">
-        <a class="site-card" href="star/">
-            <span class="site-card-logo" aria-hidden="true">★</span>
+        <a class="site-card" href="https://star.sni.org.in" target="_blank" rel="noopener">
+            <span class="site-card-logo" aria-hidden="true" style="background: linear-gradient(135deg, #f5c75e, #eab308); color: #071b3b;">★</span>
             <span>
-                <span class="site-card-name">STAR</span>
-                <span class="site-card-url">Weekly status &amp; academies</span>
+                <span class="site-card-name">STAR <span style="font-size: 11px; opacity: 0.7;">↗</span></span>
+                <span class="site-card-url">star.sni.org.in</span>
             </span>
         </a>
 
@@ -1039,6 +1039,20 @@ footer span:hover {
                 <span class="site-card-url">Spiritual Journal &amp; Notes</span>
             </span>
         </a>
+
+        <!-- Injected custom cards -->
+        <span id="customCardsAnchor" style="display:contents;"></span>
+
+        <!-- Admin Add Card Trigger Button (Visible to Admin Only or clickable to Login) -->
+        <div id="adminCardActionContainer" style="display: flex; align-items: center;">
+            <button type="button" id="adminAddCardBtn" class="site-card" style="border: 2px dashed rgba(245, 199, 94, 0.4); background: rgba(255, 255, 255, 0.05); cursor: pointer; text-align: left; width: 100%;" title="Admin: Add New Shortcut Card">
+                <span class="site-card-logo" id="adminAddCardIcon" aria-hidden="true" style="background: rgba(245, 199, 94, 0.15); color: var(--gold); border: 1px dashed var(--gold);">➕</span>
+                <span>
+                    <span class="site-card-name" id="adminAddCardLabel" style="color: var(--gold);">+ Add Portal Card</span>
+                    <span class="site-card-url" id="adminAddCardSub">Admin Management</span>
+                </span>
+            </button>
+        </div>
     </div>
 </section>
 
@@ -1284,6 +1298,70 @@ footer span:hover {
     </div>
 </div>
 
+<!-- Admin Login Modal for Card Management -->
+<div class="sni-modal-overlay" id="cardAdminLoginModal">
+    <div class="sni-modal-card" style="max-width: 420px;">
+        <div class="sni-modal-header">
+            <h3 class="sni-modal-title">👑 Admin Authentication</h3>
+            <button type="button" class="sni-modal-close" id="closeCardAdminLoginModalBtn">&times;</button>
+        </div>
+        <form id="cardAdminLoginForm">
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Only authorized SNI Administrators can add or manage shortcut portal cards.</p>
+            <div class="sni-form-group">
+                <label for="cardAdminId">Admin ID *</label>
+                <input type="text" id="cardAdminId" class="sni-form-input" placeholder="e.g. surya11008" required autocomplete="username">
+            </div>
+            <div class="sni-form-group">
+                <label for="cardAdminPass">Password *</label>
+                <input type="password" id="cardAdminPass" class="sni-form-input" placeholder="Enter Admin Password" required autocomplete="current-password">
+            </div>
+            <div id="cardAdminErrorMsg" style="display: none; color: #e11d48; font-size: 12px; font-weight: bold; margin-bottom: 10px;">
+                Invalid Admin Credentials!
+            </div>
+            <div class="sni-modal-actions">
+                <button type="button" class="sni-btn-cancel" id="cancelCardAdminLoginBtn">Cancel</button>
+                <button type="submit" class="sni-btn-submit" style="background: var(--navy); color: var(--gold);">Login as Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Shortcut Card Modal (Admin Only) -->
+<div class="sni-modal-overlay" id="addCardModal">
+    <div class="sni-modal-card" style="max-width: 480px;">
+        <div class="sni-modal-header">
+            <h3 class="sni-modal-title">✨ Add New Portal Card</h3>
+            <button type="button" class="sni-modal-close" id="closeAddCardModalBtn">&times;</button>
+        </div>
+        <form id="addCardForm">
+            <div class="sni-form-group">
+                <label for="cardName">Card Title / Name *</label>
+                <input type="text" id="cardName" class="sni-form-input" placeholder="e.g. Youth Portal" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="cardSub">Subtitle / URL Display *</label>
+                <input type="text" id="cardSub" class="sni-form-input" placeholder="e.g. youth.sni.org.in or Announcements" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="cardUrl">Target URL / Link *</label>
+                <input type="text" id="cardUrl" class="sni-form-input" placeholder="e.g. https://example.com or page.html" required>
+            </div>
+            <div class="sni-form-group">
+                <label for="cardLogo">Card Icon / Emoji / Logo *</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="cardLogo" class="sni-form-input" placeholder="e.g. 🌟, 🚀, 📚, ✝️, 🕊️" maxlength="4" style="max-width: 90px; text-align: center; font-size: 18px;" required value="🌐">
+                    <input type="text" id="cardBgColor" class="sni-form-input" placeholder="Gradient or Color (Optional)" value="linear-gradient(135deg, #3b82f6, #1d4ed8)">
+                </div>
+                <small style="color: #64748b; font-size: 11px;">Select an emoji icon and optional background gradient.</small>
+            </div>
+            <div class="sni-modal-actions">
+                <button type="button" class="sni-btn-cancel" id="cancelAddCardBtn">Cancel</button>
+                <button type="submit" class="sni-btn-submit">Add Card Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 // --- NOTICES & NEW ARRIVALS STATE & LOGIC ---
 (function() {
@@ -1369,7 +1447,7 @@ footer span:hover {
             id: 'arr-3',
             title: 'STAR Galaxy Academies & Member Tracking',
             date: '2026-11-02',
-            link: 'star/',
+            link: 'https://star.sni.org.in',
             fileData: null,
             symbol: '★'
         }
@@ -1713,13 +1791,264 @@ footer span:hover {
             renderNotices();
             renderArrivals();
             setupModals();
+            initCustomCardManagement();
         });
     } else {
         renderNotices();
         renderArrivals();
         setupModals();
+        initCustomCardManagement();
     }
 })();
+
+// ==========================================
+// ADMIN SHORTCUT CARDS MANAGEMENT & SYNC
+// ==========================================
+const FB_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+const FB_PROJ = "sni-org-in";
+const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
+const VALID_ADMIN_PASSWORDS = [
+    'Surya742766.', 'Suri742766.', 'surya742766.', 'suri742766.',
+    'Surya742766', 'Suri742766', 'surya742766', 'suri742766',
+    'admin'
+];
+
+function isCardAdmin(userId, password) {
+    if (!userId || !password) return false;
+    const u = String(userId).trim().toLowerCase();
+    const p = String(password).trim().toLowerCase();
+    const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
+    return VALID_ADMIN_IDS.includes(u) && (
+        validLowers.includes(p) ||
+        validLowers.includes(p.replace(/\.$/, '')) ||
+        validLowers.includes(p + '.')
+    );
+}
+
+function isCardAdminSession() {
+    return sessionStorage.getItem('sni_admin_active') === 'true' || 
+           localStorage.getItem('word_search_admin_auth') === 'true';
+}
+
+function setCardAdminSession(val) {
+    if (val) {
+        sessionStorage.setItem('sni_admin_active', 'true');
+    } else {
+        sessionStorage.removeItem('sni_admin_active');
+    }
+}
+
+function getLocalCustomCards() {
+    try {
+        return JSON.parse(localStorage.getItem('sni_custom_cards') || '[]');
+    } catch(e) {
+        return [];
+    }
+}
+
+function saveLocalCustomCards(list) {
+    try {
+        localStorage.setItem('sni_custom_cards', JSON.stringify(list));
+    } catch(e) {}
+}
+
+async function fetchCloudCustomCards() {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards?pageSize=50&key=${FB_KEY}`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.documents) {
+            const list = data.documents.map(d => {
+                const f = d.fields || {};
+                return {
+                    id: d.name.split('/').pop(),
+                    name: f.name?.stringValue || 'Card',
+                    sub: f.sub?.stringValue || '',
+                    url: f.url?.stringValue || '#',
+                    logo: f.logo?.stringValue || '🌐',
+                    bgColor: f.bgColor?.stringValue || 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+                };
+            });
+            saveLocalCustomCards(list);
+            renderCustomCards();
+        }
+    } catch(e) {
+        console.warn('Cloud cards fetch error:', e);
+    }
+}
+
+async function saveCardToCloud(card) {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards/${card.id}?key=${FB_KEY}`;
+    try {
+        await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fields: {
+                    name: { stringValue: card.name },
+                    sub: { stringValue: card.sub },
+                    url: { stringValue: card.url },
+                    logo: { stringValue: card.logo },
+                    bgColor: { stringValue: card.bgColor }
+                }
+            })
+        });
+    } catch(e) {
+        console.warn('Could not save card to cloud:', e);
+    }
+}
+
+async function deleteCardFromCloud(cardId) {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards/${cardId}?key=${FB_KEY}`;
+    try {
+        await fetch(url, { method: 'DELETE' });
+    } catch(e) {}
+}
+
+window.deleteCustomCard = async function(id) {
+    if (!isCardAdminSession()) {
+        alert('Admin authorization required to delete cards.');
+        return;
+    }
+    if (!confirm('Are you sure you want to remove this shortcut card?')) return;
+    let list = getLocalCustomCards().filter(c => c.id !== id);
+    saveLocalCustomCards(list);
+    renderCustomCards();
+    await deleteCardFromCloud(id);
+};
+
+function renderCustomCards() {
+    const anchor = document.getElementById('customCardsAnchor');
+    if (!anchor) return;
+    const cards = getLocalCustomCards();
+    const isAdmin = isCardAdminSession();
+
+    anchor.innerHTML = cards.map(c => {
+        const isExternal = c.url.startsWith('http://') || c.url.startsWith('https://');
+        const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
+        const arrow = isExternal ? '<span style="font-size: 11px; opacity: 0.7;">↗</span>' : '';
+        const deleteBtn = isAdmin ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomCard('${c.id}');" style="position: absolute; top: -6px; right: -6px; background: #e11d48; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Delete Card">&times;</button>` : '';
+
+        return `
+            <div style="position: relative;">
+                <a class="site-card" href="${c.url}" ${targetAttr} style="width: 100%;">
+                    <span class="site-card-logo" aria-hidden="true" style="background: ${c.bgColor}; color: white; font-size: 18px;">${c.logo}</span>
+                    <span>
+                        <span class="site-card-name">${escapeHtml(c.name)} ${arrow}</span>
+                        <span class="site-card-url">${escapeHtml(c.sub)}</span>
+                    </span>
+                </a>
+                ${deleteBtn}
+            </div>
+        `;
+    }).join('');
+
+    // Update Admin button appearance
+    const btnLabel = document.getElementById('adminAddCardLabel');
+    const btnSub = document.getElementById('adminAddCardSub');
+    if (btnLabel && btnSub) {
+        if (isAdmin) {
+            btnLabel.textContent = '👑 + Add Portal Card';
+            btnSub.textContent = 'Admin Mode Active';
+        } else {
+            btnLabel.textContent = '⚙️ + Add Portal Card';
+            btnSub.textContent = 'Admin Login Required';
+        }
+    }
+}
+
+function initCustomCardManagement() {
+    renderCustomCards();
+    fetchCloudCustomCards();
+
+    const adminAddCardBtn = document.getElementById('adminAddCardBtn');
+    const cardAdminLoginModal = document.getElementById('cardAdminLoginModal');
+    const closeCardAdminLoginModalBtn = document.getElementById('closeCardAdminLoginModalBtn');
+    const cancelCardAdminLoginBtn = document.getElementById('cancelCardAdminLoginBtn');
+    const cardAdminLoginForm = document.getElementById('cardAdminLoginForm');
+    const cardAdminId = document.getElementById('cardAdminId');
+    const cardAdminPass = document.getElementById('cardAdminPass');
+    const cardAdminErrorMsg = document.getElementById('cardAdminErrorMsg');
+
+    const addCardModal = document.getElementById('addCardModal');
+    const closeAddCardModalBtn = document.getElementById('closeAddCardModalBtn');
+    const cancelAddCardBtn = document.getElementById('cancelAddCardBtn');
+    const addCardForm = document.getElementById('addCardForm');
+
+    if (adminAddCardBtn) {
+        adminAddCardBtn.addEventListener('click', () => {
+            if (isCardAdminSession()) {
+                addCardModal.classList.add('active');
+            } else {
+                cardAdminErrorMsg.style.display = 'none';
+                cardAdminLoginForm.reset();
+                cardAdminLoginModal.classList.add('active');
+            }
+        });
+    }
+
+    if (closeCardAdminLoginModalBtn) closeCardAdminLoginModalBtn.addEventListener('click', () => cardAdminLoginModal.classList.remove('active'));
+    if (cancelCardAdminLoginBtn) cancelCardAdminLoginBtn.addEventListener('click', () => cardAdminLoginModal.classList.remove('active'));
+    if (cardAdminLoginModal) {
+        cardAdminLoginModal.addEventListener('click', (e) => {
+            if (e.target === cardAdminLoginModal) cardAdminLoginModal.classList.remove('active');
+        });
+    }
+
+    if (cardAdminLoginForm) {
+        cardAdminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = (cardAdminId.value || '').trim();
+            const pass = (cardAdminPass.value || '').trim();
+            if (isCardAdmin(id, pass)) {
+                setCardAdminSession(true);
+                cardAdminLoginModal.classList.remove('active');
+                renderCustomCards();
+                addCardModal.classList.add('active');
+            } else {
+                cardAdminErrorMsg.style.display = 'block';
+            }
+        });
+    }
+
+    if (closeAddCardModalBtn) closeAddCardModalBtn.addEventListener('click', () => addCardModal.classList.remove('active'));
+    if (cancelAddCardBtn) cancelAddCardBtn.addEventListener('click', () => addCardModal.classList.remove('active'));
+    if (addCardModal) {
+        addCardModal.addEventListener('click', (e) => {
+            if (e.target === addCardModal) addCardModal.classList.remove('active');
+        });
+    }
+
+    if (addCardForm) {
+        addCardForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('cardName').value.trim();
+            const sub = document.getElementById('cardSub').value.trim();
+            const url = document.getElementById('cardUrl').value.trim();
+            const logo = document.getElementById('cardLogo').value.trim() || '🌐';
+            const bgColor = document.getElementById('cardBgColor').value.trim() || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+
+            const card = {
+                id: 'card-' + Date.now(),
+                name,
+                sub,
+                url,
+                logo,
+                bgColor
+            };
+
+            const list = getLocalCustomCards();
+            list.push(card);
+            saveLocalCustomCards(list);
+            renderCustomCards();
+            addCardModal.classList.remove('active');
+            addCardForm.reset();
+
+            await saveCardToCloud(card);
+        });
+    }
+}
 </script>
 
 <script src="site-shell.js" defer></script>
