@@ -1148,6 +1148,8 @@ body.sni-live-edit-active [data-sni-edit]:focus {
         <a href="#services">Services</a>
         <a href="#why">Why SNI</a>
         <a href="#contact">Contact</a>
+        <a href="signin.html" id="sniNavSignInBtn" style="color: white; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 7px 11px; font-size: 13.5px;" title="Sign In">Sign In</a>
+        <a href="join.html" id="sniNavJoinBtn" style="background: linear-gradient(135deg, #f5c75e, #eab308); color: #071b3b; font-weight: bold; border-radius: 6px; padding: 7px 13px; font-size: 13.5px; box-shadow: 0 2px 8px rgba(245, 199, 94, 0.3);" title="Join SNI">✨ Join</a>
         <a href="#admin" id="sniNavAdminBtn" style="color: var(--gold); font-weight: bold; border: 1px dashed rgba(245, 199, 94, 0.4); border-radius: 6px;" title="Admin Portal & Live Edit">👑 Admin</a>
         <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
@@ -1397,7 +1399,9 @@ body.sni-live-edit-active [data-sni-edit]:focus {
     <div data-sni-edit="footer_copy">
         © 2026 <span>S Natural Intelligence (SNI)</span>. All Rights Reserved.
     </div>
-    <div style="margin-top: 10px;">
+    <div style="margin-top: 10px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <a href="signin.html" style="color: #cbd5e1; font-size: 12.5px; text-decoration: none;">🔑 Sign In</a>
+        <a href="join.html" style="color: var(--gold); font-size: 12.5px; text-decoration: none; font-weight: bold;">✨ Join SNI</a>
         <a href="#admin" id="sniFooterAdminBtn" style="color: rgba(245, 199, 94, 0.75); font-size: 12px; text-decoration: none; cursor: pointer;">👑 Admin Portal &amp; Live Edit</a>
     </div>
 
@@ -2316,6 +2320,40 @@ function updateAdminUI() {
     const toolbar = document.getElementById('sniAdminToolbar');
     const navBtn = document.getElementById('sniNavAdminBtn');
     const footerBtn = document.getElementById('sniFooterAdminBtn');
+
+    // Update Member Navigation State
+    let currentUser = null;
+    try {
+        const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
+        if (s) currentUser = JSON.parse(s);
+    } catch(e) {}
+
+    const signInNav = document.getElementById('sniNavSignInBtn');
+    const joinNav = document.getElementById('sniNavJoinBtn');
+
+    if (currentUser) {
+        if (signInNav) signInNav.style.display = 'none';
+        if (joinNav) {
+            joinNav.innerHTML = `<span>👤 ${escapeHtml(currentUser.fullName || currentUser.userId)}</span>`;
+            joinNav.href = 'auth.html';
+            joinNav.title = 'View My Profile / Account';
+            joinNav.style.background = 'rgba(255, 255, 255, 0.15)';
+            joinNav.style.color = '#ffffff';
+            joinNav.style.boxShadow = 'none';
+            joinNav.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+        }
+    } else {
+        if (signInNav) signInNav.style.display = 'inline-flex';
+        if (joinNav) {
+            joinNav.innerHTML = '<span>✨ Join</span>';
+            joinNav.href = 'join.html';
+            joinNav.title = 'Join SNI';
+            joinNav.style.background = 'linear-gradient(135deg, #f5c75e, #eab308)';
+            joinNav.style.color = '#071b3b';
+            joinNav.style.boxShadow = '0 2px 8px rgba(245, 199, 94, 0.3)';
+            joinNav.style.border = 'none';
+        }
+    }
 
     if (isAdmin) {
         if (toolbar) toolbar.style.display = 'block';
