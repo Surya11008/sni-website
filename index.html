@@ -946,6 +946,183 @@ footer span:hover {
     border: 1px dashed #cbd5e1;
 }
 
+/* ADMIN TOOLBAR & LIVE EDIT STYLES */
+.sni-admin-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    animation: sniSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sniSlideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.sni-admin-toolbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(7, 27, 59, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(245, 199, 94, 0.5);
+    border-radius: 50px;
+    padding: 8px 18px;
+    box-shadow: 0 16px 36px rgba(4, 17, 39, 0.5), 0 0 20px rgba(245, 199, 94, 0.2);
+    color: white;
+}
+
+.sni-admin-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    padding-right: 6px;
+}
+
+.sni-toolbar-sep {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sni-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sni-toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(245, 199, 94, 0.5);
+    transform: translateY(-1px);
+}
+
+.sni-toolbar-btn.sni-edit-toggle.active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #071b3b;
+    border-color: var(--gold);
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.sni-toolbar-btn.sni-save-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #34d399;
+    color: white;
+    font-weight: bold;
+    animation: sniPulse 2s infinite;
+}
+
+@keyframes sniPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+
+.sni-toolbar-btn.sni-logout-btn {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+.sni-toolbar-btn.sni-logout-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* LIVE EDIT ACTIVE OUTLINES */
+body.sni-live-edit-active [data-sni-edit] {
+    outline: 2px dashed #f5c75e !important;
+    outline-offset: 4px;
+    border-radius: 6px;
+    background-color: rgba(245, 199, 94, 0.06);
+    cursor: text !important;
+    position: relative;
+    transition: outline-color 0.2s ease, background-color 0.2s ease;
+}
+
+body.sni-live-edit-active [data-sni-edit]:hover {
+    outline-color: #38bdf8 !important;
+    background-color: rgba(56, 189, 248, 0.1);
+}
+
+body.sni-live-edit-active [data-sni-edit]:focus {
+    outline: 2px solid #3b82f6 !important;
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* Toast Notification */
+.sni-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #071b3b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    border: 1px solid var(--gold);
+    z-index: 100000;
+    pointer-events: none;
+    animation: sniToastAnim 0.3s ease;
+}
+
+@keyframes sniToastAnim {
+    from { opacity: 0; transform: translate(-50%, -15px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.item-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.item-edit-btn {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.item-edit-btn:hover {
+    background: #e2e8f0;
+    color: var(--blue);
+    border-color: var(--blue);
+}
+
+@media (max-width: 650px) {
+    .sni-admin-toolbar-inner {
+        flex-wrap: wrap;
+        justify-content: center;
+        border-radius: 20px;
+        padding: 10px 14px;
+        gap: 8px;
+    }
+}
 </style>
 </head>
 
@@ -971,6 +1148,7 @@ footer span:hover {
         <a href="#services">Services</a>
         <a href="#why">Why SNI</a>
         <a href="#contact">Contact</a>
+        <a href="#admin" id="sniNavAdminBtn" style="color: var(--gold); font-weight: bold; border: 1px dashed rgba(245, 199, 94, 0.4); border-radius: 6px;" title="Admin Portal & Live Edit">👑 Admin</a>
         <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
         </button>
@@ -1095,15 +1273,15 @@ footer span:hover {
 
     <div class="about-content">
 
-        <h2 class="section-title">
+        <h2 class="section-title" data-sni-edit="about_title">
             About SNI
         </h2>
 
-        <p class="section-subtitle">
+        <p class="section-subtitle" data-sni-edit="about_sub">
             Ideas. Innovation. Intelligence.
         </p>
 
-        <p>
+        <p data-sni-edit="about_desc">
             S Natural Intelligence (SNI) is a platform
             focused on creativity, technology and
             innovative ideas.
@@ -1121,38 +1299,38 @@ footer span:hover {
 
 <section class="services" id="services">
 
-    <h2 class="section-title">
+    <h2 class="section-title" data-sni-edit="services_title">
         Our Services
     </h2>
 
-    <p class="section-subtitle">
+    <p class="section-subtitle" data-sni-edit="services_sub">
         Explore our areas of interest
     </p>
 
     <div class="cards">
 
         <div class="card">
-            <div class="symbol">💡</div>
-            <h3>Innovation</h3>
-            <p>
+            <div class="symbol" data-sni-edit="service_1_icon">💡</div>
+            <h3 data-sni-edit="service_1_title">Innovation</h3>
+            <p data-sni-edit="service_1_desc">
                 Creative thinking and new ideas
                 for tomorrow.
             </p>
         </div>
 
         <div class="card">
-            <div class="symbol">💻</div>
-            <h3>Technology</h3>
-            <p>
+            <div class="symbol" data-sni-edit="service_2_icon">💻</div>
+            <h3 data-sni-edit="service_2_title">Technology</h3>
+            <p data-sni-edit="service_2_desc">
                 Modern digital solutions and
                 technology concepts.
             </p>
         </div>
 
         <div class="card">
-            <div class="symbol">🚀</div>
-            <h3>Creative Ideas</h3>
-            <p>
+            <div class="symbol" data-sni-edit="service_3_icon">🚀</div>
+            <h3 data-sni-edit="service_3_title">Creative Ideas</h3>
+            <p data-sni-edit="service_3_desc">
                 Turning imagination into
                 meaningful experiences.
             </p>
@@ -1168,15 +1346,15 @@ footer span:hover {
 
     <div class="why-content">
 
-        <h2 class="section-title">
+        <h2 class="section-title" data-sni-edit="why_title">
             Why Choose SNI?
         </h2>
 
-        <p class="section-subtitle">
+        <p class="section-subtitle" data-sni-edit="why_sub">
             Think Different. Create Better.
         </p>
 
-        <p>
+        <p data-sni-edit="why_desc">
             We believe that every great achievement
             begins with an idea.
 
@@ -1193,20 +1371,20 @@ footer span:hover {
 
 <section class="contact" id="contact">
 
-    <h2 class="section-title">
+    <h2 class="section-title" data-sni-edit="contact_title">
         Let's Connect
     </h2>
 
-    <p>
+    <p data-sni-edit="contact_desc">
         Have an idea or want to connect with SNI?<br>
         Let's create something meaningful together.
     </p>
 
-    <a href="mailto:info@sni.org.in" class="btn">
+    <a href="mailto:info@sni.org.in" class="btn" data-sni-edit="contact_btn">
         ✉ Contact SNI
     </a>
 
-    <a class="email" href="mailto:info@sni.org.in">
+    <a class="email" href="mailto:info@sni.org.in" data-sni-edit="contact_email">
         info@sni.org.in
     </a>
 
@@ -1216,8 +1394,12 @@ footer span:hover {
 
 <footer>
 
-    © 2026 <span>S Natural Intelligence (SNI)</span>.
-    All Rights Reserved.
+    <div data-sni-edit="footer_copy">
+        © 2026 <span>S Natural Intelligence (SNI)</span>. All Rights Reserved.
+    </div>
+    <div style="margin-top: 10px;">
+        <a href="#admin" id="sniFooterAdminBtn" style="color: rgba(245, 199, 94, 0.75); font-size: 12px; text-decoration: none; cursor: pointer;">👑 Admin Portal &amp; Live Edit</a>
+    </div>
 
 </footer>
 
@@ -1226,10 +1408,11 @@ footer span:hover {
 <div class="sni-modal-overlay" id="noticeModal">
     <div class="sni-modal-card">
         <div class="sni-modal-header">
-            <h3 class="sni-modal-title">Post New Notice</h3>
+            <h3 class="sni-modal-title" id="noticeModalTitle">Post New Notice</h3>
             <button type="button" class="sni-modal-close" id="closeNoticeModalBtn">&times;</button>
         </div>
         <form id="noticeForm">
+            <input type="hidden" id="noticeEditId" value="">
             <div class="sni-form-group">
                 <label for="noticeTitle">Notice Title *</label>
                 <input type="text" id="noticeTitle" class="sni-form-input" placeholder="e.g., Annual Evaluation Guidelines Released" required>
@@ -1256,7 +1439,7 @@ footer span:hover {
             </div>
             <div class="sni-modal-actions">
                 <button type="button" class="sni-btn-cancel" id="cancelNoticeBtn">Cancel</button>
-                <button type="submit" class="sni-btn-submit">Post Notice</button>
+                <button type="submit" class="sni-btn-submit" id="noticeSubmitBtn">Post Notice</button>
             </div>
         </form>
     </div>
@@ -1266,10 +1449,11 @@ footer span:hover {
 <div class="sni-modal-overlay" id="arrivalModal">
     <div class="sni-modal-card">
         <div class="sni-modal-header">
-            <h3 class="sni-modal-title">Add New Arrival</h3>
+            <h3 class="sni-modal-title" id="arrivalModalTitle">Add New Arrival</h3>
             <button type="button" class="sni-modal-close" id="closeArrivalModalBtn">&times;</button>
         </div>
         <form id="arrivalForm">
+            <input type="hidden" id="arrivalEditId" value="">
             <div class="sni-form-group">
                 <label for="arrivalTitle">Title *</label>
                 <input type="text" id="arrivalTitle" class="sni-form-input" placeholder="e.g., Word Search 1000 Stages Game" required>
@@ -1292,48 +1476,60 @@ footer span:hover {
             </div>
             <div class="sni-modal-actions">
                 <button type="button" class="sni-btn-cancel" id="cancelArrivalBtn">Cancel</button>
-                <button type="submit" class="sni-btn-submit">Add Arrival</button>
+                <button type="submit" class="sni-btn-submit" id="arrivalSubmitBtn">Add Arrival</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Admin Login Modal for Card Management -->
+<!-- Admin Login Modal -->
 <div class="sni-modal-overlay" id="cardAdminLoginModal">
-    <div class="sni-modal-card" style="max-width: 420px;">
+    <div class="sni-modal-card" style="max-width: 440px;">
         <div class="sni-modal-header">
-            <h3 class="sni-modal-title">👑 Admin Authentication</h3>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 22px;">👑</span>
+                <div>
+                    <h3 class="sni-modal-title" style="margin: 0; font-size: 18px;">SNI Admin Portal</h3>
+                    <small style="color: #64748b; font-size: 11px;">Live Site Editing &amp; Content Management</small>
+                </div>
+            </div>
             <button type="button" class="sni-modal-close" id="closeCardAdminLoginModalBtn">&times;</button>
         </div>
         <form id="cardAdminLoginForm">
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Only authorized SNI Administrators can add or manage shortcut portal cards.</p>
+            <p style="font-size: 12.5px; color: #475569; margin-bottom: 14px; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--gold);">
+                Sign in with Admin credentials to enable <strong>Live Editing</strong> across all pages, manage Portal Cards, Notices &amp; Announcements.
+            </p>
             <div class="sni-form-group">
                 <label for="cardAdminId">Admin ID *</label>
-                <input type="text" id="cardAdminId" class="sni-form-input" placeholder="e.g. surya11008" required autocomplete="username">
+                <input type="text" id="cardAdminId" class="sni-form-input" placeholder="surya11008" required autocomplete="username" value="surya11008">
             </div>
             <div class="sni-form-group">
                 <label for="cardAdminPass">Password *</label>
-                <input type="password" id="cardAdminPass" class="sni-form-input" placeholder="Enter Admin Password" required autocomplete="current-password">
+                <div style="position: relative;">
+                    <input type="password" id="cardAdminPass" class="sni-form-input" placeholder="Enter Admin Password" required autocomplete="current-password" style="padding-right: 42px;">
+                    <button type="button" id="toggleAdminPassVisibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; font-size: 14px;" title="Show/Hide Password">👁️</button>
+                </div>
             </div>
-            <div id="cardAdminErrorMsg" style="display: none; color: #e11d48; font-size: 12px; font-weight: bold; margin-bottom: 10px;">
-                Invalid Admin Credentials!
+            <div id="cardAdminErrorMsg" style="display: none; color: #e11d48; font-size: 12px; font-weight: bold; margin-bottom: 12px; background: #ffe4e6; padding: 8px 12px; border-radius: 6px;">
+                ⚠️ Invalid Admin Credentials! Please verify ID and Password.
             </div>
             <div class="sni-modal-actions">
                 <button type="button" class="sni-btn-cancel" id="cancelCardAdminLoginBtn">Cancel</button>
-                <button type="submit" class="sni-btn-submit" style="background: var(--navy); color: var(--gold);">Login as Admin</button>
+                <button type="submit" class="sni-btn-submit" style="background: var(--navy); color: var(--gold); font-size: 13.5px;">👑 Login as Admin</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Add Shortcut Card Modal (Admin Only) -->
+<!-- Add / Edit Shortcut Card Modal (Admin Only) -->
 <div class="sni-modal-overlay" id="addCardModal">
     <div class="sni-modal-card" style="max-width: 480px;">
         <div class="sni-modal-header">
-            <h3 class="sni-modal-title">✨ Add New Portal Card</h3>
+            <h3 class="sni-modal-title" id="cardModalTitle">✨ Add Portal Card</h3>
             <button type="button" class="sni-modal-close" id="closeAddCardModalBtn">&times;</button>
         </div>
         <form id="addCardForm">
+            <input type="hidden" id="cardEditId" value="">
             <div class="sni-form-group">
                 <label for="cardName">Card Title / Name *</label>
                 <input type="text" id="cardName" class="sni-form-input" placeholder="e.g. Youth Portal" required>
@@ -1356,329 +1552,918 @@ footer span:hover {
             </div>
             <div class="sni-modal-actions">
                 <button type="button" class="sni-btn-cancel" id="cancelAddCardBtn">Cancel</button>
-                <button type="submit" class="sni-btn-submit">Add Card Now</button>
+                <button type="submit" class="sni-btn-submit" id="cardSubmitBtn">Save Card</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Floating Admin Toolbar -->
+<div id="sniAdminToolbar" class="sni-admin-toolbar" style="display: none;">
+    <div class="sni-admin-toolbar-inner">
+        <div class="sni-admin-badge">
+            <span class="sni-crown">👑</span>
+            <span>Admin: <strong>surya11008</strong></span>
+        </div>
+        <div class="sni-toolbar-sep"></div>
+        <button type="button" id="sniLiveEditToggleBtn" class="sni-toolbar-btn sni-edit-toggle" title="Toggle Live Editing on the whole website">
+            <span>✏️ Live Edit: <strong id="liveEditStateText">OFF</strong></span>
+        </button>
+        <button type="button" id="sniSaveLiveEditsBtn" class="sni-toolbar-btn sni-save-btn" style="display: none;" title="Save all on-page edits to live database">
+            <span>💾 Save Changes</span>
+        </button>
+        <button type="button" id="sniToolbarAddCardBtn" class="sni-toolbar-btn" title="Add a new Shortcut Card">
+            <span>➕ Add Card</span>
+        </button>
+        <button type="button" id="sniAdminLogoutBtn" class="sni-toolbar-btn sni-logout-btn" title="Log out from Admin session">
+            <span>🚪 Logout</span>
+        </button>
+    </div>
+</div>
+
+<!-- Global Toast Notification -->
+<div id="sniToast" class="sni-toast" style="display: none;"></div>
+
 <script>
-// --- NOTICES & NEW ARRIVALS STATE & LOGIC ---
-(function() {
-    // Initial Default Notices (Official Site Notices - Always live for everyone)
-    const defaultNotices = [
-        {
-            id: 'not-live-2',
-            title: 'Simple Preaching Counter Live with Partner Sync & QR',
-            date: '2026-11-11',
-            details: 'Track personal and group preaching counts in real time, pair with partners via QR code, split calculations, and view full date report history.',
-            link: 'https://count.sni.org.in',
-            fileData: null
-        },
-        {
-            id: 'not-live-1',
-            title: 'Word Search — 2-Player & Player Rankings Live Now!',
-            date: '2026-11-11',
-            details: 'Play 2-Player mode with friends via QR code or link (Co-op Support & Random Funny Play Battle). Track your 1000-stage progress on the live Rankings leaderboard!',
-            link: 'wordsearch.html',
-            fileData: null
-        },
-        {
-            id: 'not-1',
-            title: 'Official Evaluation Schedule & Timetable 2026',
-            date: '2026-11-10',
-            details: 'The official schedule for all subjects and academies is fully published and accessible. Open the Evaluation page to inspect your slots and test dates.',
-            link: 'evaluation/',
-            fileData: null
-        },
-        {
-            id: 'not-2',
-            title: 'Word Search Game Released with 1000 Stages',
-            date: '2026-11-09',
-            details: 'A brand-new 1000-stage Word Search game is now live on SNI! Challenge your vocabulary, track stage progress, and compete across 1000 levels.',
-            link: 'wordsearch.html',
-            fileData: null
-        },
-        {
-            id: 'not-3',
-            title: 'Support Portal & Resource Materials Updated',
-            date: '2026-11-05',
-            details: 'Updated preaching videos, SPB books, and study guides have been uploaded to the Support library. All resources can be accessed freely.',
-            link: 'https://support.sni.org.in',
-            fileData: null
-        }
-    ];
+// ========================================================
+// SNI UNIFIED ADMIN, LIVE EDIT & CLOUD REALTIME DATABASE
+// ========================================================
+const RTDB_BASE = "https://sni-org-in-default-rtdb.firebaseio.com";
+const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
+const VALID_ADMIN_PASSWORDS = [
+    'Suri742766.', 'Surya742766.', 'suri742766.', 'surya742766.',
+    'Suri742766', 'Surya742766', 'suri742766', 'surya742766',
+    'admin'
+];
 
-    // Initial Default New Arrivals (Official Site Arrivals - Always live for everyone)
-    const defaultArrivals = [
-        {
-            id: 'arr-live-2',
-            title: 'Simple Preaching Counter — Partner Sync & QR',
-            date: '2026-11-11',
-            link: 'https://count.sni.org.in',
-            fileData: null,
-            symbol: '📖'
-        },
-        {
-            id: 'arr-live-1',
-            title: 'Word Search — 2-Player & Rankings Update',
-            date: '2026-11-11',
-            link: 'wordsearch.html',
-            fileData: null,
-            symbol: '🎮'
-        },
-        {
-            id: 'arr-1',
-            title: 'Word Search — 1000 Stages Game',
-            date: '2026-11-10',
-            link: 'wordsearch.html',
-            fileData: null,
-            symbol: '🔤'
-        },
-        {
-            id: 'arr-2',
-            title: 'Official Schedule Timetable 2026',
-            date: '2026-11-08',
-            link: 'evaluation/',
-            fileData: null,
-            symbol: '📅'
-        },
-        {
-            id: 'arr-3',
-            title: 'STAR Galaxy Academies & Member Tracking',
-            date: '2026-11-02',
-            link: 'https://star.sni.org.in',
-            fileData: null,
-            symbol: '★'
-        }
-    ];
+function isCardAdmin(userId, password) {
+    if (!userId || !password) return false;
+    const u = String(userId).trim().toLowerCase();
+    const p = String(password).trim();
+    if (!VALID_ADMIN_IDS.includes(u)) return false;
+    const lowerP = p.toLowerCase();
+    const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
+    return validLowers.includes(lowerP) ||
+           validLowers.includes(lowerP.replace(/\.$/, '')) ||
+           validLowers.includes(lowerP + '.');
+}
 
-    // Load notices ensuring live defaultNotices are always visible to all users
-    function getNotices() {
-        let custom = [];
-        try {
-            const stored = localStorage.getItem('sni_notices_custom');
-            if (stored) {
-                custom = JSON.parse(stored);
-            } else {
-                const legacy = localStorage.getItem('sni_notices');
-                if (legacy) {
-                    const arr = JSON.parse(legacy);
-                    arr.forEach(item => {
-                        if (item && item.id && !item.id.startsWith('not-') && !custom.some(c => c.id === item.id)) {
-                            custom.push(item);
-                        }
-                    });
-                }
-            }
-        } catch(e) {}
+function isAdminActive() {
+    return localStorage.getItem('sni_admin_active') === 'true' || 
+           sessionStorage.getItem('sni_admin_active') === 'true' ||
+           localStorage.getItem('word_search_admin_auth') === 'true';
+}
 
-        let deleted = [];
-        try {
-            deleted = JSON.parse(localStorage.getItem('sni_notices_deleted') || '[]');
-        } catch(e) {}
+function setAdminActive(val) {
+    if (val) {
+        localStorage.setItem('sni_admin_active', 'true');
+        sessionStorage.setItem('sni_admin_active', 'true');
+    } else {
+        localStorage.removeItem('sni_admin_active');
+        sessionStorage.removeItem('sni_admin_active');
+    }
+}
 
-        const all = [...defaultNotices, ...custom].filter(item => item && !deleted.includes(item.id));
-        return all.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+function showSniToast(msg, duration = 3500) {
+    const toast = document.getElementById('sniToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+        toast.style.display = 'none';
+    }, duration);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// --------------------------------------------------------
+// 1. LIVE IN-PLACE WEBSITE EDITING
+// --------------------------------------------------------
+let isLiveEditing = false;
+let hasUnsavedLiveEdits = false;
+
+function initLiveEditEngine() {
+    loadLiveSiteContent();
+
+    const toggleBtn = document.getElementById('sniLiveEditToggleBtn');
+    const saveBtn = document.getElementById('sniSaveLiveEditsBtn');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            setLiveEditMode(!isLiveEditing);
+        });
     }
 
-    // Load arrivals ensuring live defaultArrivals are always visible to all users
-    function getArrivals() {
-        let custom = [];
-        try {
-            const stored = localStorage.getItem('sni_arrivals_custom');
-            if (stored) {
-                custom = JSON.parse(stored);
-            } else {
-                const legacy = localStorage.getItem('sni_arrivals');
-                if (legacy) {
-                    const arr = JSON.parse(legacy);
-                    arr.forEach(item => {
-                        if (item && item.id && !item.id.startsWith('arr-') && !custom.some(c => c.id === item.id)) {
-                            custom.push(item);
-                        }
-                    });
-                }
-            }
-        } catch(e) {}
-
-        let deleted = [];
-        try {
-            deleted = JSON.parse(localStorage.getItem('sni_arrivals_deleted') || '[]');
-        } catch(e) {}
-
-        const all = [...defaultArrivals, ...custom].filter(item => item && !deleted.includes(item.id));
-        return all.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            await saveLiveSiteContent(true);
+        });
     }
 
-    // Render Notices
-    function renderNotices() {
-        const container = document.getElementById('noticesContainer');
-        if (!container) return;
-        const notices = getNotices();
-
-        if (notices.length === 0) {
-            container.innerHTML = '<div class="empty-placeholder">No notices posted yet. Click "+ New Notice" to post the first notice.</div>';
-            return;
-        }
-
-        container.innerHTML = notices.map(item => {
-            const formattedDate = item.date || 'Recent';
-            let attachmentHtml = '';
-            if (item.fileData) {
-                if (item.fileData.startsWith('data:image')) {
-                    attachmentHtml = `<div class="notice-attachment"><img src="${item.fileData}" alt="Notice Attachment" onclick="window.open('${item.fileData}')"></div>`;
-                } else {
-                    attachmentHtml = `<div class="notice-attachment"><a href="${item.fileData}" download="notice-file" class="notice-link-btn" style="width:100%; justify-content:center;">📎 Download Attachment</a></div>`;
+    document.querySelectorAll('[data-sni-edit]').forEach(el => {
+        el.addEventListener('input', () => {
+            if (isLiveEditing) {
+                hasUnsavedLiveEdits = true;
+                const saveBtn = document.getElementById('sniSaveLiveEditsBtn');
+                if (saveBtn) {
+                    saveBtn.style.display = 'inline-flex';
+                    saveBtn.innerHTML = '<span>💾 Save Changes *</span>';
                 }
             }
+        });
+    });
+}
 
-            let linkHtml = '';
-            if (item.link) {
-                linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="notice-link-btn">Visit Link ↗</a>`;
+function setLiveEditMode(enable) {
+    if (!isAdminActive()) return;
+    isLiveEditing = enable;
+    const toggleBtn = document.getElementById('sniLiveEditToggleBtn');
+    const statusText = document.getElementById('liveEditStateText');
+    const saveBtn = document.getElementById('sniSaveLiveEditsBtn');
+
+    if (enable) {
+        document.body.classList.add('sni-live-edit-active');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        if (statusText) statusText.textContent = 'ON';
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
+
+        document.querySelectorAll('[data-sni-edit]').forEach(el => {
+            el.contentEditable = 'true';
+        });
+
+        showSniToast('✏️ Live Edit is ON! Click any text on the website to edit.');
+    } else {
+        if (hasUnsavedLiveEdits) {
+            saveLiveSiteContent(false);
+        }
+        document.body.classList.remove('sni-live-edit-active');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (statusText) statusText.textContent = 'OFF';
+        if (saveBtn) saveBtn.style.display = 'none';
+
+        document.querySelectorAll('[data-sni-edit]').forEach(el => {
+            el.contentEditable = 'false';
+        });
+
+        showSniToast('🔒 Live Edit turned OFF.');
+    }
+}
+
+async function saveLiveSiteContent(notify = true) {
+    const data = {};
+    document.querySelectorAll('[data-sni-edit]').forEach(el => {
+        const key = el.getAttribute('data-sni-edit');
+        if (key) {
+            data[key] = el.innerHTML;
+        }
+    });
+
+    try {
+        localStorage.setItem('sni_live_site_content', JSON.stringify(data));
+        await fetch(`${RTDB_BASE}/site_content.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        hasUnsavedLiveEdits = false;
+        const saveBtn = document.getElementById('sniSaveLiveEditsBtn');
+        if (saveBtn) {
+            saveBtn.innerHTML = '<span>💾 Save Changes</span>';
+        }
+        if (notify) {
+            showSniToast('✅ Website changes published live to cloud!');
+        }
+    } catch(e) {
+        console.warn('Live save error:', e);
+        if (notify) {
+            showSniToast('⚠️ Saved locally (Cloud sync failed).');
+        }
+    }
+}
+
+async function loadLiveSiteContent() {
+    // 1. Local Cache for instant 0ms rendering
+    try {
+        const cached = localStorage.getItem('sni_live_site_content');
+        if (cached) {
+            applySiteContent(JSON.parse(cached));
+        }
+    } catch(e) {}
+
+    // 2. Fetch fresh updates from Firebase Realtime Database
+    try {
+        const res = await fetch(`${RTDB_BASE}/site_content.json`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && typeof data === 'object') {
+                applySiteContent(data);
+                localStorage.setItem('sni_live_site_content', JSON.stringify(data));
             }
+        }
+    } catch(e) {
+        console.warn('Could not load site_content from RTDB:', e);
+    }
+}
 
-            return `
-                <div class="notice-card" id="notice-${item.id}">
-                    <div class="notice-top-row">
-                        <span class="notice-tag">📢 Notice</span>
-                        <span class="notice-date">${formattedDate}</span>
+function applySiteContent(data) {
+    if (!data) return;
+    Object.keys(data).forEach(key => {
+        const el = document.querySelector(`[data-sni-edit="${key}"]`);
+        if (el && typeof data[key] === 'string') {
+            el.innerHTML = data[key];
+        }
+    });
+}
+
+// --------------------------------------------------------
+// 2. NOTICES & ANNOUNCEMENTS ENGINE
+// --------------------------------------------------------
+const defaultNotices = [
+    {
+        id: 'not-live-2',
+        title: 'Simple Preaching Counter Live with Partner Sync & QR',
+        date: '2026-11-11',
+        details: 'Track personal and group preaching counts in real time, pair with partners via QR code, split calculations, and view full date report history.',
+        link: 'https://count.sni.org.in',
+        fileData: null
+    },
+    {
+        id: 'not-live-1',
+        title: 'Word Search — 2-Player & Player Rankings Live Now!',
+        date: '2026-11-11',
+        details: 'Play 2-Player mode with friends via QR code or link (Co-op Support & Random Funny Play Battle). Track your 1000-stage progress on the live Rankings leaderboard!',
+        link: 'wordsearch.html',
+        fileData: null
+    },
+    {
+        id: 'not-1',
+        title: 'Official Evaluation Schedule & Timetable 2026',
+        date: '2026-11-10',
+        details: 'The official schedule for all subjects and academies is fully published and accessible. Open the Evaluation page to inspect your slots and test dates.',
+        link: 'evaluation/',
+        fileData: null
+    },
+    {
+        id: 'not-2',
+        title: 'Word Search Game Released with 1000 Stages',
+        date: '2026-11-09',
+        details: 'A brand-new 1000-stage Word Search game is now live on SNI! Challenge your vocabulary, track stage progress, and compete across 1000 levels.',
+        link: 'wordsearch.html',
+        fileData: null
+    },
+    {
+        id: 'not-3',
+        title: 'Support Portal & Resource Materials Updated',
+        date: '2026-11-05',
+        details: 'Updated preaching videos, SPB books, and study guides have been uploaded to the Support library. All resources can be accessed freely.',
+        link: 'https://support.sni.org.in',
+        fileData: null
+    }
+];
+
+function getNotices() {
+    let custom = [];
+    try {
+        const stored = localStorage.getItem('sni_notices_custom');
+        if (stored) custom = JSON.parse(stored);
+    } catch(e) {}
+
+    let deleted = [];
+    try {
+        deleted = JSON.parse(localStorage.getItem('sni_notices_deleted') || '[]');
+    } catch(e) {}
+
+    const all = [...defaultNotices, ...custom].filter(item => item && !deleted.includes(item.id));
+    return all.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+}
+
+function saveNotices(list) {
+    try {
+        localStorage.setItem('sni_notices_custom', JSON.stringify(list));
+    } catch(e) {}
+    syncNoticesToCloud(list);
+}
+
+async function fetchCloudNotices() {
+    try {
+        const res = await fetch(`${RTDB_BASE}/notices.json`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data)) {
+                localStorage.setItem('sni_notices_custom', JSON.stringify(data));
+                renderNotices();
+            }
+        }
+    } catch(e) {}
+}
+
+async function syncNoticesToCloud(list) {
+    try {
+        await fetch(`${RTDB_BASE}/notices.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(list)
+        });
+    } catch(e) {}
+}
+
+function renderNotices() {
+    const container = document.getElementById('noticesContainer');
+    if (!container) return;
+    const notices = getNotices();
+    const isAdmin = isAdminActive();
+
+    if (notices.length === 0) {
+        container.innerHTML = '<div class="empty-placeholder">No notices posted yet.</div>';
+        return;
+    }
+
+    container.innerHTML = notices.map(item => {
+        const formattedDate = item.date || 'Recent';
+        let attachmentHtml = '';
+        if (item.fileData) {
+            if (item.fileData.startsWith('data:image')) {
+                attachmentHtml = `<div class="notice-attachment"><img src="${item.fileData}" alt="Notice Attachment" onclick="window.open('${item.fileData}')"></div>`;
+            } else {
+                attachmentHtml = `<div class="notice-attachment"><a href="${item.fileData}" download="notice-file" class="notice-link-btn" style="width:100%; justify-content:center;">📎 Download Attachment</a></div>`;
+            }
+        }
+
+        let linkHtml = '';
+        if (item.link) {
+            linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="notice-link-btn">Visit Link ↗</a>`;
+        }
+
+        const adminActions = isAdmin ? `
+            <div class="item-action-btns">
+                <button type="button" class="item-edit-btn" onclick="editNotice('${item.id}')" title="Edit Notice">✏️ Edit</button>
+                <button type="button" class="item-delete-btn" onclick="deleteNotice('${item.id}')" title="Delete notice">&times;</button>
+            </div>
+        ` : '';
+
+        return `
+            <div class="notice-card" id="notice-${item.id}">
+                <div class="notice-top-row">
+                    <span class="notice-tag">📢 Notice</span>
+                    <span class="notice-date">${formattedDate}</span>
+                </div>
+                <h3>${escapeHtml(item.title)}</h3>
+                <p class="notice-details">${escapeHtml(item.details)}</p>
+                ${attachmentHtml}
+                <div class="notice-bottom-row">
+                    <div>${linkHtml}</div>
+                    ${adminActions}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.deleteNotice = function(id) {
+    if (!isAdminActive()) {
+        showSniToast('Admin login required.');
+        return;
+    }
+    if (!confirm('Are you sure you want to delete this notice?')) return;
+    let deleted = [];
+    try {
+        deleted = JSON.parse(localStorage.getItem('sni_notices_deleted') || '[]');
+    } catch(e) {}
+    if (!deleted.includes(id)) deleted.push(id);
+    localStorage.setItem('sni_notices_deleted', JSON.stringify(deleted));
+
+    try {
+        let custom = JSON.parse(localStorage.getItem('sni_notices_custom') || '[]');
+        custom = custom.filter(n => n.id !== id);
+        saveNotices(custom);
+    } catch(e) {}
+
+    renderNotices();
+    showSniToast('Notice removed.');
+};
+
+window.editNotice = function(id) {
+    if (!isAdminActive()) return;
+    const item = getNotices().find(n => n.id === id);
+    if (!item) return;
+
+    document.getElementById('noticeEditId').value = item.id;
+    document.getElementById('noticeTitle').value = item.title || '';
+    document.getElementById('noticeDate').value = item.date || '';
+    document.getElementById('noticeDetails').value = item.details || '';
+    document.getElementById('noticeLink').value = item.link || '';
+    document.getElementById('noticeModalTitle').textContent = '✏️ Edit Notice';
+    document.getElementById('noticeSubmitBtn').textContent = 'Save Notice Changes';
+
+    const preview = document.getElementById('noticeFilePreview');
+    if (item.fileData && item.fileData.startsWith('data:image')) {
+        preview.src = item.fileData;
+        preview.style.display = 'block';
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
+
+    document.getElementById('noticeModal').classList.add('active');
+};
+
+// --------------------------------------------------------
+// 3. NEW ARRIVALS ENGINE
+// --------------------------------------------------------
+const defaultArrivals = [
+    {
+        id: 'arr-live-2',
+        title: 'Simple Preaching Counter — Partner Sync & QR',
+        date: '2026-11-11',
+        link: 'https://count.sni.org.in',
+        fileData: null,
+        symbol: '📖'
+    },
+    {
+        id: 'arr-live-1',
+        title: 'Word Search — 2-Player & Rankings Update',
+        date: '2026-11-11',
+        link: 'wordsearch.html',
+        fileData: null,
+        symbol: '🎮'
+    },
+    {
+        id: 'arr-1',
+        title: 'Word Search — 1000 Stages Game',
+        date: '2026-11-10',
+        link: 'wordsearch.html',
+        fileData: null,
+        symbol: '🔤'
+    },
+    {
+        id: 'arr-2',
+        title: 'Official Schedule Timetable 2026',
+        date: '2026-11-08',
+        link: 'evaluation/',
+        fileData: null,
+        symbol: '📅'
+    },
+    {
+        id: 'arr-3',
+        title: 'STAR Galaxy Academies & Member Tracking',
+        date: '2026-11-02',
+        link: 'https://star.sni.org.in',
+        fileData: null,
+        symbol: '★'
+    }
+];
+
+function getArrivals() {
+    let custom = [];
+    try {
+        const stored = localStorage.getItem('sni_arrivals_custom');
+        if (stored) custom = JSON.parse(stored);
+    } catch(e) {}
+
+    let deleted = [];
+    try {
+        deleted = JSON.parse(localStorage.getItem('sni_arrivals_deleted') || '[]');
+    } catch(e) {}
+
+    const all = [...defaultArrivals, ...custom].filter(item => item && !deleted.includes(item.id));
+    return all.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+}
+
+function saveArrivals(list) {
+    try {
+        localStorage.setItem('sni_arrivals_custom', JSON.stringify(list));
+    } catch(e) {}
+    syncArrivalsToCloud(list);
+}
+
+async function fetchCloudArrivals() {
+    try {
+        const res = await fetch(`${RTDB_BASE}/arrivals.json`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data)) {
+                localStorage.setItem('sni_arrivals_custom', JSON.stringify(data));
+                renderArrivals();
+            }
+        }
+    } catch(e) {}
+}
+
+async function syncArrivalsToCloud(list) {
+    try {
+        await fetch(`${RTDB_BASE}/arrivals.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(list)
+        });
+    } catch(e) {}
+}
+
+function renderArrivals() {
+    const container = document.getElementById('arrivalsContainer');
+    if (!container) return;
+    const arrivals = getArrivals();
+    const isAdmin = isAdminActive();
+
+    if (arrivals.length === 0) {
+        container.innerHTML = '<div class="empty-placeholder">No arrivals added yet.</div>';
+        return;
+    }
+
+    container.innerHTML = arrivals.map(item => {
+        const formattedDate = item.date || 'New';
+        let mediaHtml = '';
+        if (item.fileData) {
+            mediaHtml = `<img src="${item.fileData}" alt="${escapeHtml(item.title)}">`;
+        } else {
+            mediaHtml = `<span class="arrival-placeholder-icon" style="font-size: 55px;">${item.symbol || '✨'}</span>`;
+        }
+
+        let linkHtml = '';
+        if (item.link) {
+            linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="arrival-link-btn">Explore ↗</a>`;
+        }
+
+        const adminActions = isAdmin ? `
+            <div class="item-action-btns">
+                <button type="button" class="item-edit-btn" onclick="editArrival('${item.id}')" title="Edit Arrival">✏️ Edit</button>
+                <button type="button" class="item-delete-btn" onclick="deleteArrival('${item.id}')" title="Delete arrival">&times;</button>
+            </div>
+        ` : '';
+
+        return `
+            <div class="arrival-card" id="arrival-${item.id}">
+                <div class="arrival-media-wrap">
+                    ${mediaHtml}
+                </div>
+                <div class="arrival-body">
+                    <div class="arrival-top-row">
+                        <span class="arrival-badge">✨ Arrival</span>
+                        <span class="arrival-date">${formattedDate}</span>
                     </div>
                     <h3>${escapeHtml(item.title)}</h3>
-                    <p class="notice-details">${escapeHtml(item.details)}</p>
-                    ${attachmentHtml}
-                    <div class="notice-bottom-row">
+                    <div class="arrival-bottom-row">
                         <div>${linkHtml}</div>
-                        <button type="button" class="item-delete-btn" onclick="deleteNotice('${item.id}')" title="Delete notice">&times;</button>
+                        ${adminActions}
                     </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+    }).join('');
+}
+
+window.deleteArrival = function(id) {
+    if (!isAdminActive()) {
+        showSniToast('Admin login required.');
+        return;
+    }
+    if (!confirm('Are you sure you want to delete this arrival?')) return;
+    let deleted = [];
+    try {
+        deleted = JSON.parse(localStorage.getItem('sni_arrivals_deleted') || '[]');
+    } catch(e) {}
+    if (!deleted.includes(id)) deleted.push(id);
+    localStorage.setItem('sni_arrivals_deleted', JSON.stringify(deleted));
+
+    try {
+        let custom = JSON.parse(localStorage.getItem('sni_arrivals_custom') || '[]');
+        custom = custom.filter(a => a.id !== id);
+        saveArrivals(custom);
+    } catch(e) {}
+
+    renderArrivals();
+    showSniToast('Arrival removed.');
+};
+
+window.editArrival = function(id) {
+    if (!isAdminActive()) return;
+    const item = getArrivals().find(a => a.id === id);
+    if (!item) return;
+
+    document.getElementById('arrivalEditId').value = item.id;
+    document.getElementById('arrivalTitle').value = item.title || '';
+    document.getElementById('arrivalDate').value = item.date || '';
+    document.getElementById('arrivalLink').value = item.link || '';
+    document.getElementById('arrivalModalTitle').textContent = '✏️ Edit Arrival';
+    document.getElementById('arrivalSubmitBtn').textContent = 'Save Arrival Changes';
+
+    const preview = document.getElementById('arrivalFilePreview');
+    if (item.fileData && item.fileData.startsWith('data:image')) {
+        preview.src = item.fileData;
+        preview.style.display = 'block';
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
     }
 
-    // Render Arrivals
-    function renderArrivals() {
-        const container = document.getElementById('arrivalsContainer');
-        if (!container) return;
-        const arrivals = getArrivals();
+    document.getElementById('arrivalModal').classList.add('active');
+};
 
-        if (arrivals.length === 0) {
-            container.innerHTML = '<div class="empty-placeholder">No arrivals added yet. Click "+ Add New Arrival" to add the first item.</div>';
-            return;
+// --------------------------------------------------------
+// 4. SHORTCUT PORTAL CARDS ENGINE
+// --------------------------------------------------------
+function getLocalCustomCards() {
+    try {
+        return JSON.parse(localStorage.getItem('sni_custom_cards') || '[]');
+    } catch(e) {
+        return [];
+    }
+}
+
+function saveLocalCustomCards(list) {
+    try {
+        localStorage.setItem('sni_custom_cards', JSON.stringify(list));
+    } catch(e) {}
+    syncCardsToCloud(list);
+}
+
+async function fetchCloudCustomCards() {
+    try {
+        const res = await fetch(`${RTDB_BASE}/site_cards.json`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data) {
+                const list = Array.isArray(data) ? data : Object.values(data);
+                localStorage.setItem('sni_custom_cards', JSON.stringify(list));
+                renderCustomCards();
+            }
         }
+    } catch(e) {
+        console.warn('Could not fetch custom cards from RTDB:', e);
+    }
+}
 
-        container.innerHTML = arrivals.map(item => {
-            const formattedDate = item.date || 'New';
-            let mediaHtml = '';
-            if (item.fileData) {
-                mediaHtml = `<img src="${item.fileData}" alt="${escapeHtml(item.title)}">`;
+async function syncCardsToCloud(list) {
+    try {
+        await fetch(`${RTDB_BASE}/site_cards.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(list)
+        });
+    } catch(e) {}
+}
+
+window.deleteCustomCard = function(id) {
+    if (!isAdminActive()) {
+        showSniToast('Admin login required.');
+        return;
+    }
+    if (!confirm('Are you sure you want to remove this shortcut card?')) return;
+    let list = getLocalCustomCards().filter(c => c.id !== id);
+    saveLocalCustomCards(list);
+    renderCustomCards();
+    showSniToast('Portal Card removed.');
+};
+
+window.editCustomCard = function(id) {
+    if (!isAdminActive()) return;
+    const card = getLocalCustomCards().find(c => c.id === id);
+    if (!card) return;
+
+    document.getElementById('cardEditId').value = card.id;
+    document.getElementById('cardName').value = card.name || '';
+    document.getElementById('cardSub').value = card.sub || '';
+    document.getElementById('cardUrl').value = card.url || '';
+    document.getElementById('cardLogo').value = card.logo || '🌐';
+    document.getElementById('cardBgColor').value = card.bgColor || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+    document.getElementById('cardModalTitle').textContent = '✏️ Edit Portal Card';
+    document.getElementById('cardSubmitBtn').textContent = 'Save Card Changes';
+
+    document.getElementById('addCardModal').classList.add('active');
+};
+
+function renderCustomCards() {
+    const anchor = document.getElementById('customCardsAnchor');
+    if (!anchor) return;
+    const cards = getLocalCustomCards();
+    const isAdmin = isAdminActive();
+
+    anchor.innerHTML = cards.map(c => {
+        const isExternal = c.url.startsWith('http://') || c.url.startsWith('https://');
+        const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
+        const arrow = isExternal ? '<span style="font-size: 11px; opacity: 0.7;">↗</span>' : '';
+        const adminControls = isAdmin ? `
+            <div style="position: absolute; top: -6px; right: -6px; display: flex; gap: 4px; z-index: 10;">
+                <button type="button" onclick="event.preventDefault(); event.stopPropagation(); editCustomCard('${c.id}');" style="background: #3b82f6; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Edit Card">✏️</button>
+                <button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomCard('${c.id}');" style="background: #e11d48; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Delete Card">&times;</button>
+            </div>
+        ` : '';
+
+        return `
+            <div style="position: relative;">
+                <a class="site-card" href="${c.url}" ${targetAttr} style="width: 100%;">
+                    <span class="site-card-logo" aria-hidden="true" style="background: ${c.bgColor}; color: white; font-size: 18px;">${c.logo}</span>
+                    <span>
+                        <span class="site-card-name">${escapeHtml(c.name)} ${arrow}</span>
+                        <span class="site-card-url">${escapeHtml(c.sub)}</span>
+                    </span>
+                </a>
+                ${adminControls}
+            </div>
+        `;
+    }).join('');
+
+    const btnLabel = document.getElementById('adminAddCardLabel');
+    const btnSub = document.getElementById('adminAddCardSub');
+    if (btnLabel && btnSub) {
+        if (isAdmin) {
+            btnLabel.textContent = '👑 + Add Portal Card';
+            btnSub.textContent = 'Admin Mode Active';
+        } else {
+            btnLabel.textContent = '+ Add Portal Card';
+            btnSub.textContent = 'Admin Login';
+        }
+    }
+}
+
+// --------------------------------------------------------
+// 5. UNIFIED ADMIN AUTH & UI CONTROLLER
+// --------------------------------------------------------
+function updateAdminUI() {
+    const isAdmin = isAdminActive();
+    const toolbar = document.getElementById('sniAdminToolbar');
+    const navBtn = document.getElementById('sniNavAdminBtn');
+    const footerBtn = document.getElementById('sniFooterAdminBtn');
+
+    if (isAdmin) {
+        if (toolbar) toolbar.style.display = 'block';
+        if (navBtn) {
+            navBtn.textContent = '👑 Surya (Admin)';
+            navBtn.style.background = 'rgba(245, 199, 94, 0.2)';
+            navBtn.style.borderColor = 'var(--gold)';
+        }
+        if (footerBtn) {
+            footerBtn.textContent = '👑 Admin Active (Logout)';
+        }
+    } else {
+        if (toolbar) toolbar.style.display = 'none';
+        if (navBtn) {
+            navBtn.textContent = '👑 Admin';
+            navBtn.style.background = 'transparent';
+            navBtn.style.borderColor = 'rgba(245, 199, 94, 0.4)';
+        }
+        if (footerBtn) {
+            footerBtn.textContent = '👑 Admin Portal & Live Edit';
+        }
+        if (isLiveEditing) {
+            setLiveEditMode(false);
+        }
+    }
+
+    renderNotices();
+    renderArrivals();
+    renderCustomCards();
+}
+
+function openAdminLoginModal() {
+    const modal = document.getElementById('cardAdminLoginModal');
+    const form = document.getElementById('cardAdminLoginForm');
+    const errorMsg = document.getElementById('cardAdminErrorMsg');
+    if (modal && form) {
+        form.reset();
+        document.getElementById('cardAdminId').value = 'surya11008';
+        if (errorMsg) errorMsg.style.display = 'none';
+        modal.classList.add('active');
+    }
+}
+
+function logoutAdmin() {
+    if (isLiveEditing) {
+        setLiveEditMode(false);
+    }
+    setAdminActive(false);
+    updateAdminUI();
+    showSniToast('🚪 Successfully logged out from Admin mode.');
+}
+
+// --------------------------------------------------------
+// 6. SETUP MODALS AND INITIALIZATION
+// --------------------------------------------------------
+function setupModals() {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Password Visibility Toggle
+    const togglePassBtn = document.getElementById('toggleAdminPassVisibility');
+    const passInput = document.getElementById('cardAdminPass');
+    if (togglePassBtn && passInput) {
+        togglePassBtn.addEventListener('click', () => {
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                togglePassBtn.textContent = '🙈';
             } else {
-                mediaHtml = `<span class="arrival-placeholder-icon" style="font-size: 55px;">${item.symbol || '✨'}</span>`;
+                passInput.type = 'password';
+                togglePassBtn.textContent = '👁️';
             }
-
-            let linkHtml = '';
-            if (item.link) {
-                linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="arrival-link-btn">Explore ↗</a>`;
-            }
-
-            return `
-                <div class="arrival-card" id="arrival-${item.id}">
-                    <div class="arrival-media-wrap">
-                        ${mediaHtml}
-                    </div>
-                    <div class="arrival-body">
-                        <div class="arrival-top-row">
-                            <span class="arrival-badge">✨ Arrival</span>
-                            <span class="arrival-date">${formattedDate}</span>
-                        </div>
-                        <h3>${escapeHtml(item.title)}</h3>
-                        <div class="arrival-bottom-row">
-                            <div>${linkHtml}</div>
-                            <button type="button" class="item-delete-btn" onclick="deleteArrival('${item.id}')" title="Delete arrival">&times;</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        });
     }
 
-    // Global deletion functions
-    window.deleteNotice = function(id) {
-        if (!confirm('Are you sure you want to delete this notice?')) return;
-        let deleted = [];
-        try {
-            deleted = JSON.parse(localStorage.getItem('sni_notices_deleted') || '[]');
-        } catch(e) {}
-        if (!deleted.includes(id)) deleted.push(id);
-        localStorage.setItem('sni_notices_deleted', JSON.stringify(deleted));
-
-        try {
-            let custom = JSON.parse(localStorage.getItem('sni_notices_custom') || '[]');
-            custom = custom.filter(n => n.id !== id);
-            localStorage.setItem('sni_notices_custom', JSON.stringify(custom));
-        } catch(e) {}
-
-        renderNotices();
+    // Top Nav and Footer Admin Triggers
+    const navAdminBtn = document.getElementById('sniNavAdminBtn');
+    const footerAdminBtn = document.getElementById('sniFooterAdminBtn');
+    const handleAdminClick = (e) => {
+        e.preventDefault();
+        if (isAdminActive()) {
+            if (confirm('Admin session is active.\nDo you want to log out?')) {
+                logoutAdmin();
+            } else {
+                setLiveEditMode(!isLiveEditing);
+            }
+        } else {
+            openAdminLoginModal();
+        }
     };
+    if (navAdminBtn) navAdminBtn.addEventListener('click', handleAdminClick);
+    if (footerAdminBtn) footerAdminBtn.addEventListener('click', handleAdminClick);
 
-    window.deleteArrival = function(id) {
-        if (!confirm('Are you sure you want to delete this arrival?')) return;
-        let deleted = [];
-        try {
-            deleted = JSON.parse(localStorage.getItem('sni_arrivals_deleted') || '[]');
-        } catch(e) {}
-        if (!deleted.includes(id)) deleted.push(id);
-        localStorage.setItem('sni_arrivals_deleted', JSON.stringify(deleted));
+    // Toolbar Logout
+    const logoutBtn = document.getElementById('sniAdminLogoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logoutAdmin);
 
-        try {
-            let custom = JSON.parse(localStorage.getItem('sni_arrivals_custom') || '[]');
-            custom = custom.filter(a => a.id !== id);
-            localStorage.setItem('sni_arrivals_custom', JSON.stringify(custom));
-        } catch(e) {}
-
-        renderArrivals();
-    };
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
+    // Toolbar Add Card
+    const toolbarAddCardBtn = document.getElementById('sniToolbarAddCardBtn');
+    if (toolbarAddCardBtn) {
+        toolbarAddCardBtn.addEventListener('click', () => {
+            openAddCardModal();
+        });
     }
 
-    
-    function setupModals() {
-        const todayStr = new Date().toISOString().split('T')[0];
-        // Notice Modal
-        const noticeModal = document.getElementById('noticeModal');
-        const openNoticeBtn = document.getElementById('openNoticeModalBtn');
-        const closeNoticeBtn = document.getElementById('closeNoticeModalBtn');
-        const cancelNoticeBtn = document.getElementById('cancelNoticeBtn');
-        const noticeForm = document.getElementById('noticeForm');
-        const noticeDate = document.getElementById('noticeDate');
-        const noticeFile = document.getElementById('noticeFile');
-        const noticeFilePreview = document.getElementById('noticeFilePreview');
+    // Admin Login Modal Close/Submit
+    const loginModal = document.getElementById('cardAdminLoginModal');
+    const closeLoginBtn = document.getElementById('closeCardAdminLoginModalBtn');
+    const cancelLoginBtn = document.getElementById('cancelCardAdminLoginBtn');
+    const loginForm = document.getElementById('cardAdminLoginForm');
+    const loginError = document.getElementById('cardAdminErrorMsg');
 
-        let noticeUploadedData = null;
+    const closeLogin = () => loginModal && loginModal.classList.remove('active');
+    if (closeLoginBtn) closeLoginBtn.addEventListener('click', closeLogin);
+    if (cancelLoginBtn) cancelLoginBtn.addEventListener('click', closeLogin);
+    if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) closeLogin();
+        });
+    }
 
-        if (openNoticeBtn && noticeModal) {
-            openNoticeBtn.addEventListener('click', () => {
-                noticeForm.reset();
-                noticeDate.value = todayStr;
-                noticeFilePreview.style.display = 'none';
-                noticeFilePreview.src = '';
-                noticeUploadedData = null;
-                noticeModal.classList.add('active');
-            });
-            const closeN = () => noticeModal.classList.remove('active');
-            closeNoticeBtn.addEventListener('click', closeN);
-            cancelNoticeBtn.addEventListener('click', closeN);
-            noticeModal.addEventListener('click', (e) => {
-                if (e.target === noticeModal) closeN();
-            });
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('cardAdminId').value.trim();
+            const pass = document.getElementById('cardAdminPass').value.trim();
+            if (isCardAdmin(id, pass)) {
+                setAdminActive(true);
+                closeLogin();
+                updateAdminUI();
+                setLiveEditMode(true);
+                showSniToast('👑 Welcome Admin Surya! Live Edit Mode Activated.');
+            } else {
+                if (loginError) loginError.style.display = 'block';
+            }
+        });
+    }
 
+    // Notice Modal
+    const noticeModal = document.getElementById('noticeModal');
+    const openNoticeBtn = document.getElementById('openNoticeModalBtn');
+    const closeNoticeBtn = document.getElementById('closeNoticeModalBtn');
+    const cancelNoticeBtn = document.getElementById('cancelNoticeBtn');
+    const noticeForm = document.getElementById('noticeForm');
+    const noticeDate = document.getElementById('noticeDate');
+    const noticeFile = document.getElementById('noticeFile');
+    const noticeFilePreview = document.getElementById('noticeFilePreview');
+    let noticeUploadedData = null;
+
+    if (openNoticeBtn && noticeModal) {
+        openNoticeBtn.addEventListener('click', () => {
+            if (!isAdminActive()) {
+                openAdminLoginModal();
+                return;
+            }
+            noticeForm.reset();
+            document.getElementById('noticeEditId').value = '';
+            document.getElementById('noticeModalTitle').textContent = 'Post New Notice';
+            document.getElementById('noticeSubmitBtn').textContent = 'Post Notice';
+            noticeDate.value = todayStr;
+            noticeFilePreview.style.display = 'none';
+            noticeFilePreview.src = '';
+            noticeUploadedData = null;
+            noticeModal.classList.add('active');
+        });
+
+        const closeN = () => noticeModal.classList.remove('active');
+        if (closeNoticeBtn) closeNoticeBtn.addEventListener('click', closeN);
+        if (cancelNoticeBtn) cancelNoticeBtn.addEventListener('click', closeN);
+        noticeModal.addEventListener('click', (e) => {
+            if (e.target === noticeModal) closeN();
+        });
+
+        if (noticeFile) {
             noticeFile.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1694,59 +2479,97 @@ footer span:hover {
                 };
                 reader.readAsDataURL(file);
             });
+        }
 
+        if (noticeForm) {
             noticeForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                const editId = document.getElementById('noticeEditId').value;
                 const title = document.getElementById('noticeTitle').value.trim();
                 const date = document.getElementById('noticeDate').value;
                 const details = document.getElementById('noticeDetails').value.trim();
                 const link = document.getElementById('noticeLink').value.trim();
 
-                const newNotice = {
-                    id: 'not-' + Date.now(),
-                    title,
-                    date,
-                    details,
-                    link: link || null,
-                    fileData: noticeUploadedData || null
-                };
+                let list = [];
+                try {
+                    list = JSON.parse(localStorage.getItem('sni_notices_custom') || '[]');
+                } catch(e) {}
 
-                const list = getNotices();
-                list.unshift(newNotice);
+                if (editId) {
+                    const idx = list.findIndex(n => n.id === editId);
+                    if (idx !== -1) {
+                        list[idx].title = title;
+                        list[idx].date = date;
+                        list[idx].details = details;
+                        list[idx].link = link || null;
+                        if (noticeUploadedData) list[idx].fileData = noticeUploadedData;
+                    } else {
+                        list.unshift({
+                            id: editId,
+                            title,
+                            date,
+                            details,
+                            link: link || null,
+                            fileData: noticeUploadedData || null
+                        });
+                    }
+                    showSniToast('Notice updated successfully.');
+                } else {
+                    const newNotice = {
+                        id: 'not-' + Date.now(),
+                        title,
+                        date,
+                        details,
+                        link: link || null,
+                        fileData: noticeUploadedData || null
+                    };
+                    list.unshift(newNotice);
+                    showSniToast('Notice posted live.');
+                }
+
                 saveNotices(list);
                 renderNotices();
                 closeN();
             });
         }
+    }
 
-        // Arrival Modal
-        const arrivalModal = document.getElementById('arrivalModal');
-        const openArrivalBtn = document.getElementById('openArrivalModalBtn');
-        const closeArrivalBtn = document.getElementById('closeArrivalModalBtn');
-        const cancelArrivalBtn = document.getElementById('cancelArrivalBtn');
-        const arrivalForm = document.getElementById('arrivalForm');
-        const arrivalDate = document.getElementById('arrivalDate');
-        const arrivalFile = document.getElementById('arrivalFile');
-        const arrivalFilePreview = document.getElementById('arrivalFilePreview');
+    // Arrival Modal
+    const arrivalModal = document.getElementById('arrivalModal');
+    const openArrivalBtn = document.getElementById('openArrivalModalBtn');
+    const closeArrivalBtn = document.getElementById('closeArrivalModalBtn');
+    const cancelArrivalBtn = document.getElementById('cancelArrivalBtn');
+    const arrivalForm = document.getElementById('arrivalForm');
+    const arrivalDate = document.getElementById('arrivalDate');
+    const arrivalFile = document.getElementById('arrivalFile');
+    const arrivalFilePreview = document.getElementById('arrivalFilePreview');
+    let arrivalUploadedData = null;
 
-        let arrivalUploadedData = null;
+    if (openArrivalBtn && arrivalModal) {
+        openArrivalBtn.addEventListener('click', () => {
+            if (!isAdminActive()) {
+                openAdminLoginModal();
+                return;
+            }
+            arrivalForm.reset();
+            document.getElementById('arrivalEditId').value = '';
+            document.getElementById('arrivalModalTitle').textContent = 'Add New Arrival';
+            document.getElementById('arrivalSubmitBtn').textContent = 'Add Arrival';
+            arrivalDate.value = todayStr;
+            arrivalFilePreview.style.display = 'none';
+            arrivalFilePreview.src = '';
+            arrivalUploadedData = null;
+            arrivalModal.classList.add('active');
+        });
 
-        if (openArrivalBtn && arrivalModal) {
-            openArrivalBtn.addEventListener('click', () => {
-                arrivalForm.reset();
-                arrivalDate.value = todayStr;
-                arrivalFilePreview.style.display = 'none';
-                arrivalFilePreview.src = '';
-                arrivalUploadedData = null;
-                arrivalModal.classList.add('active');
-            });
-            const closeA = () => arrivalModal.classList.remove('active');
-            closeArrivalBtn.addEventListener('click', closeA);
-            cancelArrivalBtn.addEventListener('click', closeA);
-            arrivalModal.addEventListener('click', (e) => {
-                if (e.target === arrivalModal) closeA();
-            });
+        const closeA = () => arrivalModal.classList.remove('active');
+        if (closeArrivalBtn) closeArrivalBtn.addEventListener('click', closeA);
+        if (cancelArrivalBtn) cancelArrivalBtn.addEventListener('click', closeA);
+        arrivalModal.addEventListener('click', (e) => {
+            if (e.target === arrivalModal) closeA();
+        });
 
+        if (arrivalFile) {
             arrivalFile.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1760,24 +2583,52 @@ footer span:hover {
                 };
                 reader.readAsDataURL(file);
             });
+        }
 
+        if (arrivalForm) {
             arrivalForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                const editId = document.getElementById('arrivalEditId').value;
                 const title = document.getElementById('arrivalTitle').value.trim();
                 const date = document.getElementById('arrivalDate').value;
                 const link = document.getElementById('arrivalLink').value.trim();
 
-                const newArrival = {
-                    id: 'arr-' + Date.now(),
-                    title,
-                    date,
-                    link: link || null,
-                    fileData: arrivalUploadedData || null,
-                    symbol: '✨'
-                };
+                let list = [];
+                try {
+                    list = JSON.parse(localStorage.getItem('sni_arrivals_custom') || '[]');
+                } catch(e) {}
 
-                const list = getArrivals();
-                list.unshift(newArrival);
+                if (editId) {
+                    const idx = list.findIndex(a => a.id === editId);
+                    if (idx !== -1) {
+                        list[idx].title = title;
+                        list[idx].date = date;
+                        list[idx].link = link || null;
+                        if (arrivalUploadedData) list[idx].fileData = arrivalUploadedData;
+                    } else {
+                        list.unshift({
+                            id: editId,
+                            title,
+                            date,
+                            link: link || null,
+                            fileData: arrivalUploadedData || null,
+                            symbol: '✨'
+                        });
+                    }
+                    showSniToast('Arrival updated successfully.');
+                } else {
+                    const newArrival = {
+                        id: 'arr-' + Date.now(),
+                        title,
+                        date,
+                        link: link || null,
+                        fileData: arrivalUploadedData || null,
+                        symbol: '✨'
+                    };
+                    list.unshift(newArrival);
+                    showSniToast('Arrival added live.');
+                }
+
                 saveArrivals(list);
                 renderArrivals();
                 closeA();
@@ -1785,269 +2636,99 @@ footer span:hover {
         }
     }
 
-    // Initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            renderNotices();
-            renderArrivals();
-            setupModals();
-            initCustomCardManagement();
-        });
-    } else {
-        renderNotices();
-        renderArrivals();
-        setupModals();
-        initCustomCardManagement();
-    }
-})();
-
-// ==========================================
-// ADMIN SHORTCUT CARDS MANAGEMENT & SYNC
-// ==========================================
-const FB_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-const FB_PROJ = "sni-org-in";
-const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
-const VALID_ADMIN_PASSWORDS = [
-    'Surya742766.', 'Suri742766.', 'surya742766.', 'suri742766.',
-    'Surya742766', 'Suri742766', 'surya742766', 'suri742766',
-    'admin'
-];
-
-function isCardAdmin(userId, password) {
-    if (!userId || !password) return false;
-    const u = String(userId).trim().toLowerCase();
-    const p = String(password).trim().toLowerCase();
-    const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
-    return VALID_ADMIN_IDS.includes(u) && (
-        validLowers.includes(p) ||
-        validLowers.includes(p.replace(/\.$/, '')) ||
-        validLowers.includes(p + '.')
-    );
-}
-
-function isCardAdminSession() {
-    return sessionStorage.getItem('sni_admin_active') === 'true' || 
-           localStorage.getItem('word_search_admin_auth') === 'true';
-}
-
-function setCardAdminSession(val) {
-    if (val) {
-        sessionStorage.setItem('sni_admin_active', 'true');
-    } else {
-        sessionStorage.removeItem('sni_admin_active');
-    }
-}
-
-function getLocalCustomCards() {
-    try {
-        return JSON.parse(localStorage.getItem('sni_custom_cards') || '[]');
-    } catch(e) {
-        return [];
-    }
-}
-
-function saveLocalCustomCards(list) {
-    try {
-        localStorage.setItem('sni_custom_cards', JSON.stringify(list));
-    } catch(e) {}
-}
-
-async function fetchCloudCustomCards() {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards?pageSize=50&key=${FB_KEY}`;
-    try {
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data && data.documents) {
-            const list = data.documents.map(d => {
-                const f = d.fields || {};
-                return {
-                    id: d.name.split('/').pop(),
-                    name: f.name?.stringValue || 'Card',
-                    sub: f.sub?.stringValue || '',
-                    url: f.url?.stringValue || '#',
-                    logo: f.logo?.stringValue || '🌐',
-                    bgColor: f.bgColor?.stringValue || 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                };
-            });
-            saveLocalCustomCards(list);
-            renderCustomCards();
-        }
-    } catch(e) {
-        console.warn('Cloud cards fetch error:', e);
-    }
-}
-
-async function saveCardToCloud(card) {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards/${card.id}?key=${FB_KEY}`;
-    try {
-        await fetch(url, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fields: {
-                    name: { stringValue: card.name },
-                    sub: { stringValue: card.sub },
-                    url: { stringValue: card.url },
-                    logo: { stringValue: card.logo },
-                    bgColor: { stringValue: card.bgColor }
-                }
-            })
-        });
-    } catch(e) {
-        console.warn('Could not save card to cloud:', e);
-    }
-}
-
-async function deleteCardFromCloud(cardId) {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJ}/databases/(default)/documents/site_cards/${cardId}?key=${FB_KEY}`;
-    try {
-        await fetch(url, { method: 'DELETE' });
-    } catch(e) {}
-}
-
-window.deleteCustomCard = async function(id) {
-    if (!isCardAdminSession()) {
-        alert('Admin authorization required to delete cards.');
-        return;
-    }
-    if (!confirm('Are you sure you want to remove this shortcut card?')) return;
-    let list = getLocalCustomCards().filter(c => c.id !== id);
-    saveLocalCustomCards(list);
-    renderCustomCards();
-    await deleteCardFromCloud(id);
-};
-
-function renderCustomCards() {
-    const anchor = document.getElementById('customCardsAnchor');
-    if (!anchor) return;
-    const cards = getLocalCustomCards();
-    const isAdmin = isCardAdminSession();
-
-    anchor.innerHTML = cards.map(c => {
-        const isExternal = c.url.startsWith('http://') || c.url.startsWith('https://');
-        const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
-        const arrow = isExternal ? '<span style="font-size: 11px; opacity: 0.7;">↗</span>' : '';
-        const deleteBtn = isAdmin ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomCard('${c.id}');" style="position: absolute; top: -6px; right: -6px; background: #e11d48; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Delete Card">&times;</button>` : '';
-
-        return `
-            <div style="position: relative;">
-                <a class="site-card" href="${c.url}" ${targetAttr} style="width: 100%;">
-                    <span class="site-card-logo" aria-hidden="true" style="background: ${c.bgColor}; color: white; font-size: 18px;">${c.logo}</span>
-                    <span>
-                        <span class="site-card-name">${escapeHtml(c.name)} ${arrow}</span>
-                        <span class="site-card-url">${escapeHtml(c.sub)}</span>
-                    </span>
-                </a>
-                ${deleteBtn}
-            </div>
-        `;
-    }).join('');
-
-    // Update Admin button appearance
-    const btnLabel = document.getElementById('adminAddCardLabel');
-    const btnSub = document.getElementById('adminAddCardSub');
-    if (btnLabel && btnSub) {
-        if (isAdmin) {
-            btnLabel.textContent = '👑 + Add Portal Card';
-            btnSub.textContent = 'Admin Mode Active';
-        } else {
-            btnLabel.textContent = '⚙️ + Add Portal Card';
-            btnSub.textContent = 'Admin Login Required';
-        }
-    }
-}
-
-function initCustomCardManagement() {
-    renderCustomCards();
-    fetchCloudCustomCards();
-
-    const adminAddCardBtn = document.getElementById('adminAddCardBtn');
-    const cardAdminLoginModal = document.getElementById('cardAdminLoginModal');
-    const closeCardAdminLoginModalBtn = document.getElementById('closeCardAdminLoginModalBtn');
-    const cancelCardAdminLoginBtn = document.getElementById('cancelCardAdminLoginBtn');
-    const cardAdminLoginForm = document.getElementById('cardAdminLoginForm');
-    const cardAdminId = document.getElementById('cardAdminId');
-    const cardAdminPass = document.getElementById('cardAdminPass');
-    const cardAdminErrorMsg = document.getElementById('cardAdminErrorMsg');
-
+    // Portal Card Modal
     const addCardModal = document.getElementById('addCardModal');
+    const adminAddCardBtn = document.getElementById('adminAddCardBtn');
     const closeAddCardModalBtn = document.getElementById('closeAddCardModalBtn');
     const cancelAddCardBtn = document.getElementById('cancelAddCardBtn');
     const addCardForm = document.getElementById('addCardForm');
 
+    function openAddCardModal() {
+        if (!isAdminActive()) {
+            openAdminLoginModal();
+            return;
+        }
+        addCardForm.reset();
+        document.getElementById('cardEditId').value = '';
+        document.getElementById('cardModalTitle').textContent = '✨ Add Portal Card';
+        document.getElementById('cardSubmitBtn').textContent = 'Add Card Now';
+        document.getElementById('cardLogo').value = '🌐';
+        document.getElementById('cardBgColor').value = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+        addCardModal.classList.add('active');
+    }
+
     if (adminAddCardBtn) {
-        adminAddCardBtn.addEventListener('click', () => {
-            if (isCardAdminSession()) {
-                addCardModal.classList.add('active');
-            } else {
-                cardAdminErrorMsg.style.display = 'none';
-                cardAdminLoginForm.reset();
-                cardAdminLoginModal.classList.add('active');
-            }
-        });
+        adminAddCardBtn.addEventListener('click', openAddCardModal);
     }
 
-    if (closeCardAdminLoginModalBtn) closeCardAdminLoginModalBtn.addEventListener('click', () => cardAdminLoginModal.classList.remove('active'));
-    if (cancelCardAdminLoginBtn) cancelCardAdminLoginBtn.addEventListener('click', () => cardAdminLoginModal.classList.remove('active'));
-    if (cardAdminLoginModal) {
-        cardAdminLoginModal.addEventListener('click', (e) => {
-            if (e.target === cardAdminLoginModal) cardAdminLoginModal.classList.remove('active');
-        });
-    }
-
-    if (cardAdminLoginForm) {
-        cardAdminLoginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = (cardAdminId.value || '').trim();
-            const pass = (cardAdminPass.value || '').trim();
-            if (isCardAdmin(id, pass)) {
-                setCardAdminSession(true);
-                cardAdminLoginModal.classList.remove('active');
-                renderCustomCards();
-                addCardModal.classList.add('active');
-            } else {
-                cardAdminErrorMsg.style.display = 'block';
-            }
-        });
-    }
-
-    if (closeAddCardModalBtn) closeAddCardModalBtn.addEventListener('click', () => addCardModal.classList.remove('active'));
-    if (cancelAddCardBtn) cancelAddCardBtn.addEventListener('click', () => addCardModal.classList.remove('active'));
+    const closeCard = () => addCardModal && addCardModal.classList.remove('active');
+    if (closeAddCardModalBtn) closeAddCardModalBtn.addEventListener('click', closeCard);
+    if (cancelAddCardBtn) cancelAddCardBtn.addEventListener('click', closeCard);
     if (addCardModal) {
         addCardModal.addEventListener('click', (e) => {
-            if (e.target === addCardModal) addCardModal.classList.remove('active');
+            if (e.target === addCardModal) closeCard();
         });
     }
 
     if (addCardForm) {
-        addCardForm.addEventListener('submit', async (e) => {
+        addCardForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const editId = document.getElementById('cardEditId').value;
             const name = document.getElementById('cardName').value.trim();
             const sub = document.getElementById('cardSub').value.trim();
             const url = document.getElementById('cardUrl').value.trim();
             const logo = document.getElementById('cardLogo').value.trim() || '🌐';
             const bgColor = document.getElementById('cardBgColor').value.trim() || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
 
-            const card = {
-                id: 'card-' + Date.now(),
-                name,
-                sub,
-                url,
-                logo,
-                bgColor
-            };
+            let list = getLocalCustomCards();
 
-            const list = getLocalCustomCards();
-            list.push(card);
+            if (editId) {
+                const idx = list.findIndex(c => c.id === editId);
+                if (idx !== -1) {
+                    list[idx].name = name;
+                    list[idx].sub = sub;
+                    list[idx].url = url;
+                    list[idx].logo = logo;
+                    list[idx].bgColor = bgColor;
+                }
+                showSniToast('Card updated successfully.');
+            } else {
+                const card = {
+                    id: 'card-' + Date.now(),
+                    name,
+                    sub,
+                    url,
+                    logo,
+                    bgColor
+                };
+                list.push(card);
+                showSniToast('Card added live.');
+            }
+
             saveLocalCustomCards(list);
             renderCustomCards();
-            addCardModal.classList.remove('active');
-            addCardForm.reset();
-
-            await saveCardToCloud(card);
+            closeCard();
         });
     }
+}
+
+// --------------------------------------------------------
+// 7. INITIALIZE ON DOM READY
+// --------------------------------------------------------
+function initApp() {
+    initLiveEditEngine();
+    setupModals();
+    updateAdminUI();
+
+    fetchCloudNotices();
+    fetchCloudArrivals();
+    fetchCloudCustomCards();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
 }
 </script>
 
