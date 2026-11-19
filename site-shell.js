@@ -995,3 +995,96 @@ if (installButton) {
         }
     });
 })();
+
+// =============================================================================
+// SNI UNIFIED SINGLE SIGN-ON (SSO) & PORTAL LINK ENRICHER
+// =============================================================================
+(function() {
+    function getUnifiedUser() {
+        try {
+            const p = new URLSearchParams(window.location.search);
+            const ssoUser = p.get('sso_user');
+            if (ssoUser) {
+                const isAdmin = ssoUser.toLowerCase() === 'surya11008' || p.get('sso_role') === 'admin';
+                const u = {
+                    userId: ssoUser,
+                    fullName: p.get('sso_name') || ssoUser,
+                    role: isAdmin ? 'admin' : (p.get('sso_role') || 'member'),
+                    password: p.get('sso_key') || ''
+                };
+                syncStorage(u);
+                return u;
+            }
+        } catch(e) {}
+
+        try {
+            const m = document.cookie.match(/(?:^|;\s*)sni_unified_user=([^;]+)/);
+            if (m) {
+                const u = JSON.parse(decodeURIComponent(m[1]));
+                if (u && u.userId) {
+                    syncStorage(u);
+                    return u;
+                }
+            }
+        } catch(e) {}
+
+        try {
+            const s = localStorage.getItem('sni_user_session') || 
+                      localStorage.getItem('sni_current_user') || 
+                      localStorage.getItem('sni_unified_session') ||
+                      localStorage.getItem('live_counter_current_user');
+            if (s) {
+                const u = JSON.parse(s);
+                if (u && u.userId) {
+                    syncStorage(u);
+                    return u;
+                }
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function syncStorage(user) {
+        if (!user || !user.userId) return;
+        const isAdmin = user.userId.toLowerCase() === 'surya11008' || user.role === 'admin';
+        try {
+            localStorage.setItem('sni_user_session', JSON.stringify(user));
+            localStorage.setItem('sni_current_user', JSON.stringify(user));
+            localStorage.setItem('sni_unified_session', JSON.stringify(user));
+            localStorage.setItem('live_counter_current_user', JSON.stringify(user));
+            localStorage.setItem('star_galaxy_active_user_id', user.userId);
+            localStorage.setItem('wlh_current_user', JSON.stringify({ userId: user.userId, name: user.fullName || user.userId, role: user.role || 'user' }));
+            sessionStorage.setItem('l_support_session_active', 'true');
+            if (isAdmin) {
+                localStorage.setItem('sni_admin_active', 'true');
+                sessionStorage.setItem('sni_admin_active', 'true');
+                localStorage.setItem('word_search_admin_auth', 'true');
+                localStorage.setItem('star_galaxy_pin_unlocked', 'true');
+                sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+            }
+        } catch(e) {}
+    }
+
+    function enrichOutboundLinks(user) {
+        if (!user || !user.userId) return;
+        const targets = document.querySelectorAll('a[href*="star.sni.org.in"], a[href*="count.sni.org.in"], a[href*="support.sni.org.in"], a[href*="wordsearch"], a[href*="diary"]');
+        targets.forEach(a => {
+            try {
+                const url = new URL(a.href, window.location.origin);
+                url.searchParams.set('sso_user', user.userId);
+                url.searchParams.set('sso_name', user.fullName || user.userId);
+                url.searchParams.set('sso_role', user.role || 'member');
+                if (user.password) url.searchParams.set('sso_key', user.password);
+                url.searchParams.set('sso_ts', Date.now());
+                a.href = url.toString();
+            } catch(e) {}
+        });
+    }
+
+    const activeUser = getUnifiedUser();
+    if (activeUser) {
+        enrichOutboundLinks(activeUser);
+        document.addEventListener('DOMContentLoaded', () => enrichOutboundLinks(activeUser));
+        window.addEventListener('load', () => enrichOutboundLinks(activeUser));
+    }
+})();

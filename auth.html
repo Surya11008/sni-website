@@ -730,15 +730,60 @@
             if (user) {
                 localStorage.setItem('sni_user_session', JSON.stringify(user));
                 localStorage.setItem('sni_current_user', JSON.stringify(user));
-                if (user.role === 'admin' || isCardAdmin(user.userId, user.password)) {
+                localStorage.setItem('sni_unified_session', JSON.stringify(user));
+                localStorage.setItem('live_counter_current_user', JSON.stringify(user));
+                localStorage.setItem('star_galaxy_active_user_id', user.userId);
+                localStorage.setItem('wlh_current_user', JSON.stringify({ userId: user.userId, name: user.fullName || user.userId, role: user.role || 'user' }));
+                sessionStorage.setItem('l_support_session_active', 'true');
+                localStorage.setItem('word_search_current_user', JSON.stringify(user));
+
+                const isAdmin = user.role === 'admin' || isCardAdmin(user.userId, user.password);
+                if (isAdmin) {
                     localStorage.setItem('sni_admin_active', 'true');
                     sessionStorage.setItem('sni_admin_active', 'true');
+                    localStorage.setItem('word_search_admin_auth', 'true');
+                    localStorage.setItem('star_galaxy_pin_unlocked', 'true');
                 }
+
+                // Cross-Subdomain SSO Cookie on .sni.org.in
+                try {
+                    const cookiePayload = encodeURIComponent(JSON.stringify(user));
+                    const maxAge = 365 * 24 * 60 * 60; // 1 year
+                    document.cookie = `sni_unified_user=${cookiePayload}; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+                    document.cookie = `sni_session_active=true; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+                    document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+                    document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+                } catch(e) {}
             } else {
                 localStorage.removeItem('sni_user_session');
                 localStorage.removeItem('sni_current_user');
+                localStorage.removeItem('sni_unified_session');
+                localStorage.removeItem('live_counter_current_user');
+                localStorage.removeItem('star_galaxy_active_user_id');
+                localStorage.removeItem('wlh_current_user');
+                sessionStorage.removeItem('l_support_session_active');
+                localStorage.removeItem('word_search_current_user');
                 localStorage.removeItem('sni_admin_active');
                 sessionStorage.removeItem('sni_admin_active');
+                localStorage.removeItem('word_search_admin_auth');
+                localStorage.removeItem('star_galaxy_pin_unlocked');
+
+                try {
+                    document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+                    document.cookie = `sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+                    document.cookie = `sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax`;
+                    document.cookie = `sni_session_active=; Path=/; Max-Age=0; SameSite=Lax`;
+                } catch(e) {}
+            }
+        }
+
+        function redirectAfterLogin() {
+            const p = new URLSearchParams(window.location.search);
+            const dest = p.get('redirect');
+            if (dest && !dest.startsWith('auth.html') && !dest.startsWith('signin.html') && !dest.startsWith('login.html')) {
+                window.location.href = decodeURIComponent(dest);
+            } else {
+                window.location.href = 'index.html';
             }
         }
 
@@ -833,6 +878,19 @@
 
                 document.getElementById('profileRoleText').textContent = isAdmin ? 'Administrator' : 'Standard Member';
                 document.getElementById('profileJoinedDate').textContent = user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'Active Member';
+
+                // Enrich profile apps links with SSO
+                document.querySelectorAll('.profile-apps-grid a').forEach(a => {
+                    try {
+                        const url = new URL(a.href, window.location.origin);
+                        url.searchParams.set('sso_user', user.userId);
+                        url.searchParams.set('sso_name', user.fullName || user.userId);
+                        url.searchParams.set('sso_role', user.role || 'member');
+                        if (user.password) url.searchParams.set('sso_key', user.password);
+                        url.searchParams.set('sso_ts', Date.now());
+                        a.href = url.toString();
+                    } catch(e) {}
+                });
             } else {
                 profileView.classList.remove('active');
                 authFormsContainer.style.display = 'block';
@@ -879,8 +937,8 @@
                     setCurrentUser(adminUser);
                     showAlert('👑 Welcome Administrator Surya! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
+                        redirectAfterLogin();
+                    }, 800);
                     return;
                 }
 
@@ -896,8 +954,8 @@
                         setCurrentUser(userData);
                         showAlert(`Welcome back, ${userData.fullName || userData.userId}! Redirecting...`, 'success');
                         setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 1000);
+                            redirectAfterLogin();
+                        }, 800);
                     } else {
                         showAlert('⚠️ Incorrect password. Please try again.');
                         submitBtn.disabled = false;
@@ -984,8 +1042,8 @@
                 showAlert(`🎉 Account created successfully! Welcome to SNI, ${fullName}! Redirecting...`, 'success');
 
                 setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1200);
+                    redirectAfterLogin();
+                }, 1000);
 
             } catch(err) {
                 console.error(err);

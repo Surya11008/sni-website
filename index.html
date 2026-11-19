@@ -8,6 +8,56 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script>
+    // SNI Mandatory Auth Gatekeeper: Login page comes first
+    (function() {
+        function getSniSession() {
+            try {
+                const s = localStorage.getItem('sni_user_session') || 
+                          localStorage.getItem('sni_current_user') || 
+                          localStorage.getItem('sni_unified_session');
+                if (s) {
+                    const u = JSON.parse(s);
+                    if (u && u.userId) return u;
+                }
+            } catch(e) {}
+
+            try {
+                const m = document.cookie.match(/(?:^|;\s*)sni_unified_user=([^;]+)/);
+                if (m) {
+                    const u = JSON.parse(decodeURIComponent(m[1]));
+                    if (u && u.userId) {
+                        localStorage.setItem('sni_user_session', JSON.stringify(u));
+                        localStorage.setItem('sni_current_user', JSON.stringify(u));
+                        return u;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        const user = getSniSession();
+        if (!user) {
+            const p = new URLSearchParams(window.location.search);
+            const ssoUser = p.get('sso_user');
+            if (ssoUser) {
+                const ssoObj = {
+                    userId: ssoUser,
+                    fullName: p.get('sso_name') || ssoUser,
+                    role: p.get('sso_role') || 'member',
+                    password: p.get('sso_key') || ''
+                };
+                localStorage.setItem('sni_user_session', JSON.stringify(ssoObj));
+                localStorage.setItem('sni_current_user', JSON.stringify(ssoObj));
+                return;
+            }
+
+            const currentPath = window.location.pathname + window.location.search + window.location.hash;
+            window.location.replace('auth.html?mode=signin&redirect=' + encodeURIComponent(currentPath));
+        }
+    })();
+</script>
+
 <title>SNI | S Natural Intelligence</title>
 
 <meta name="description" content="S Natural Intelligence - Innovation, Technology and Creative Ideas.">
@@ -2383,6 +2433,28 @@ function updateAdminUI() {
     renderNotices();
     renderArrivals();
     renderCustomCards();
+    enrichPortalLinksWithSSO();
+}
+
+function enrichPortalLinksWithSSO() {
+    let currentUser = null;
+    try {
+        const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
+        if (s) currentUser = JSON.parse(s);
+    } catch(e) {}
+    if (!currentUser || !currentUser.userId) return;
+
+    document.querySelectorAll('a[href*="star.sni.org.in"], a[href*="count.sni.org.in"], a[href*="support.sni.org.in"]').forEach(a => {
+        try {
+            const url = new URL(a.href, window.location.origin);
+            url.searchParams.set('sso_user', currentUser.userId);
+            url.searchParams.set('sso_name', currentUser.fullName || currentUser.userId);
+            url.searchParams.set('sso_role', currentUser.role || 'member');
+            if (currentUser.password) url.searchParams.set('sso_key', currentUser.password);
+            url.searchParams.set('sso_ts', Date.now());
+            a.href = url.toString();
+        } catch(e) {}
+    });
 }
 
 function openAdminLoginModal() {
