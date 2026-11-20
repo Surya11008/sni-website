@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
@@ -57,6 +57,7 @@ const DEFAULT_UPDATES = [
 export default function Home() {
   const { currentUser } = useAuth();
   const { t, getText, getDesc, isTelugu } = useLanguage();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('all');
   const [updates, setUpdates] = useState([]);
@@ -326,11 +327,7 @@ export default function Home() {
                 return (
                   <article
                     key={item.id}
-                    onClick={() => {
-                      setSelectedItem(item);
-                      const el = document.getElementById('updates-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
+                    onClick={() => navigate(`/content/${item.id}`)}
                     className="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer"
                   >
                     <div>

@@ -124,11 +124,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 tracking-wide font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-[#F4B942] animate-pulse"></span>
-            <span className={isTelugu ? 'font-telugu' : ''}>
-              {isTelugu
-                ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI)'
-                : 'Super Natural Intelligence (SNI)'}
-            </span>
+            <span className="font-bold tracking-wider text-[#F4B942] text-xs">SNI</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -151,22 +147,19 @@ export default function Navbar() {
       {/* Main Navbar Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Emblem & Title - Exactly as in Photo 1 */}
-          <Link to="/" className="flex items-center gap-3.5 group shrink-0">
+          {/* Brand Emblem & Title */}
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
             <div className="relative w-12 h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
                 src="/logo.png"
-                alt="Super Natural Intelligence Logo"
+                alt="SNI Logo"
                 className="w-12 h-12 object-contain drop-shadow-sm"
               />
             </div>
 
             <div className="flex flex-col justify-center">
-              <span className="text-2xl sm:text-3xl font-black tracking-tight text-[#F4B942] leading-none font-sans">
+              <span className="text-2xl sm:text-3xl font-black tracking-wider text-[#F4B942] leading-none font-sans">
                 SNI
-              </span>
-              <span className={`text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] text-white/95 uppercase leading-none mt-1 ${isTelugu ? 'font-telugu' : ''}`}>
-                {isTelugu ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్' : 'SUPER NATURAL INTELLIGENCE'}
               </span>
             </div>
           </Link>
@@ -180,14 +173,16 @@ export default function Navbar() {
             {visibleCategories.map((cat) => {
               const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
               const isOpen = activeDropdown === cat.categorySlug;
-              const isCategoryActive = location.pathname.startsWith(`/page/${cat.categorySlug}`);
+              const isCategoryActive =
+                location.pathname.startsWith(`/category/${cat.categorySlug}`) ||
+                location.pathname.startsWith(`/page/${cat.categorySlug}`) ||
+                (cat.categorySlug === 'home' && location.pathname === '/');
 
               return (
                 <div key={cat.categorySlug} className="relative">
-                  <button
-                    onClick={() =>
-                      setActiveDropdown(isOpen ? null : cat.categorySlug)
-                    }
+                  <Link
+                    to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
+                    onClick={() => setActiveDropdown(null)}
                     onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
                     className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                       isOpen || isCategoryActive
@@ -201,7 +196,7 @@ export default function Navbar() {
                         isOpen ? 'rotate-180 text-[#F4B942]' : ''
                       }`}
                     />
-                  </button>
+                  </Link>
 
                   {/* Dropdown Menu Panel for this category - Compact without extra explanations */}
                   {isOpen && (
@@ -209,15 +204,25 @@ export default function Navbar() {
                       className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[280px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
                       onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
                     >
-                      {/* Compact Dropdown Header */}
-                      <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 border-b border-slate-100">
-                        <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#C59B27] flex items-center justify-center">
-                          <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
+                      {/* Compact Dropdown Header linking to main Category page */}
+                      <Link
+                        to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
+                        onClick={() => setActiveDropdown(null)}
+                        className="flex items-center justify-between px-2.5 py-1.5 mb-1.5 border-b border-slate-100 hover:bg-amber-50/70 rounded-lg group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#C59B27] flex items-center justify-center">
+                            <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
+                          </div>
+                          <div className={`text-xs font-bold text-[#0F294A] truncate group-hover:text-[#C59B27] ${isTelugu ? 'font-telugu' : ''}`}>
+                            {catTitle}
+                          </div>
                         </div>
-                        <div className={`text-xs font-bold text-[#0F294A] truncate ${isTelugu ? 'font-telugu' : ''}`}>
-                          {catTitle}
-                        </div>
-                      </div>
+                        <span className="text-[10px] font-bold text-[#C59B27] flex items-center gap-0.5">
+                          <span>{isTelugu ? 'పేజీ' : 'Main'}</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                        </span>
+                      </Link>
 
                       {/* Compact Sub-Pages List - Close together without bulky descriptions */}
                       <div className="flex flex-col gap-0.5 max-h-[340px] overflow-y-auto">
@@ -403,22 +408,28 @@ export default function Navbar() {
 
               return (
                 <div key={cat.categorySlug} className="border border-[#132A4A] rounded-xl overflow-hidden bg-[#0B1E36]">
-                  <button
-                    onClick={() =>
-                      setMobileExpandedCat(isExpanded ? null : cat.categorySlug)
-                    }
-                    className="w-full flex items-center justify-between p-3 hover:bg-[#0E2542] text-left font-bold text-xs text-slate-200 transition"
-                  >
-                    <div className="flex items-center gap-2">
+                  <div className="w-full flex items-center justify-between p-2.5 hover:bg-[#0E2542] text-left font-bold text-xs text-slate-200 transition">
+                    <Link
+                      to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 flex-1"
+                    >
                       <PortalIcon name={cat.iconName} className="w-4 h-4 text-[#F4B942]" />
                       <span className={isTelugu ? 'font-telugu' : ''}>{catTitle}</span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform ${
-                        isExpanded ? 'rotate-180 text-[#F4B942]' : ''
-                      }`}
-                    />
-                  </button>
+                    </Link>
+                    <button
+                      onClick={() =>
+                        setMobileExpandedCat(isExpanded ? null : cat.categorySlug)
+                      }
+                      className="p-1.5 text-slate-400 hover:text-white"
+                    >
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          isExpanded ? 'rotate-180 text-[#F4B942]' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
 
                   {isExpanded && (
                     <div className="p-2 bg-[#040E1E] space-y-1 border-t border-[#132A4A]">

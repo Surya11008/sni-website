@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import DynamicPage from './pages/DynamicPage';
+import CategoryPage from './pages/CategoryPage';
+import ContentDetailPage from './pages/ContentDetailPage';
 
 export default function App() {
   return (
@@ -34,10 +36,26 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/category/:categorySlug"
+                  element={
+                    <ProtectedRoute>
+                      <CategoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/page/:categorySlug/:pageSlug"
                   element={
                     <ProtectedRoute>
                       <DynamicPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/content/:contentId"
+                  element={
+                    <ProtectedRoute>
+                      <ContentDetailPage />
                     </ProtectedRoute>
                   }
                 />

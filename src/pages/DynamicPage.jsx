@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -41,6 +41,7 @@ export default function DynamicPage() {
   const { categorySlug, pageSlug } = useParams();
   const { currentUser, userProfile } = useAuth();
   const { isTelugu, getText, getDesc } = useLanguage();
+  const navigate = useNavigate();
 
   const [pageInfo, setPageInfo] = useState({ category: null, page: null });
   const [contents, setContents] = useState([]);
@@ -275,6 +276,60 @@ export default function DynamicPage() {
           </div>
         </div>
       </section>
+
+      {/* Top Sub-pages Navigation Bar ("page paina oka bar la subpage anni kanipinchali") */}
+      {category?.pages && category.pages.length > 0 && (
+        <div className="sticky top-20 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm py-3 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <Link
+              to={`/category/${categorySlug}`}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F294A] hover:text-[#C59B27] shrink-0"
+            >
+              <PortalIcon name={category?.iconName || 'BookOpen'} className="w-4 h-4 text-[#C59B27]" />
+              <span className={isTelugu ? 'font-telugu' : ''}>{categoryTitle}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </Link>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-1 no-scrollbar">
+              {category.pages.map((p) => {
+                const pTitle = isTelugu ? p.titleTe : p.titleEn;
+                const isCurrent = p.pageSlug === pageSlug;
+
+                if (p.externalUrl) {
+                  return (
+                    <a
+                      key={p.pageSlug}
+                      href={p.externalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0F294A] hover:text-[#F4B942] text-slate-800 text-xs font-bold transition shrink-0 group border border-slate-200"
+                    >
+                      <PortalIcon name={p.iconName} className="w-3.5 h-3.5 text-[#C59B27]" />
+                      <span className={isTelugu ? 'font-telugu' : ''}>{pTitle}</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#F4B942]" />
+                    </a>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={p.pageSlug}
+                    to={`/page/${categorySlug}/${p.pageSlug}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 border ${
+                      isCurrent
+                        ? 'bg-[#0F294A] text-[#F4B942] border-[#0F294A] shadow-sm'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                    }`}
+                  >
+                    <PortalIcon name={p.iconName} className="w-3.5 h-3.5" />
+                    <span className={isTelugu ? 'font-telugu' : ''}>{pTitle}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -642,7 +697,7 @@ export default function DynamicPage() {
                 return (
                   <article
                     key={item.id}
-                    onClick={() => { setActiveArticle(item); window.scrollTo({ top: 320, behavior: 'smooth' }); }}
+                    onClick={() => navigate(`/content/${item.id}`)}
                     className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:-translate-y-1 hover:border-[#C59B27]/60"
                   >
                     <div>
