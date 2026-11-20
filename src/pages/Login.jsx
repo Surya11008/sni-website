@@ -174,9 +174,12 @@ export default function Login() {
               alt="Super Natural Intelligence"
               className="w-16 h-16 object-contain mx-auto mb-2 drop-shadow-sm"
             />
-            <h2 className={`text-2xl font-bold text-[#0F294A] ${isTelugu ? 'font-krishna text-3xl' : 'font-serif'}`}>
-              Super Natural Intelligence
+            <h2 className="text-3xl font-black text-[#F4B942] tracking-tight leading-none font-sans">
+              SNI
             </h2>
+            <div className={`text-[11px] font-semibold tracking-[0.2em] text-[#0F294A] uppercase mt-1 ${isTelugu ? 'font-telugu' : ''}`}>
+              {isTelugu ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్' : 'SUPER NATURAL INTELLIGENCE'}
+            </div>
             <p className="text-xs font-bold uppercase tracking-wider text-[#C59B27] mt-0.5">
               {isRegistering
                 ? (isTelugu ? 'కొత్త ఖాతా సృష్టించండి' : 'Create Account')

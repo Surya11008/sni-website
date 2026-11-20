@@ -8,8 +8,13 @@ const rootIndex = path.resolve('index.html');
 const root404 = path.resolve('404.html');
 const distIndex = path.join(distDir, 'index.html');
 
-// 1. Ensure root assets directory exists
-if (!fs.existsSync(rootAssetsDir)) {
+// 1. Ensure root assets directory exists & clean old assets
+if (fs.existsSync(rootAssetsDir)) {
+  const existingAssets = fs.readdirSync(rootAssetsDir);
+  for (const f of existingAssets) {
+    fs.unlinkSync(path.join(rootAssetsDir, f));
+  }
+} else {
   fs.mkdirSync(rootAssetsDir, { recursive: true });
 }
 

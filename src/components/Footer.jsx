@@ -109,19 +109,13 @@ export default function Footer() {
                 alt="Super Natural Intelligence"
                 className="w-12 h-12 object-contain"
               />
-              <div>
-                <div
-                  className={`text-xl font-bold text-white tracking-tight ${
-                    isTelugu ? 'font-krishna text-2xl' : 'font-serif'
-                  }`}
-                >
-                  {t('brandName')}
-                </div>
-                {t('footerMotto') ? (
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#C59B27]">
-                    {t('footerMotto')}
-                  </div>
-                ) : null}
+              <div className="flex flex-col justify-center">
+                <span className="text-2xl font-black tracking-tight text-[#F4B942] leading-none font-sans">
+                  SNI
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] text-white/95 uppercase leading-none mt-1">
+                  {isTelugu ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్' : 'SUPER NATURAL INTELLIGENCE'}
+                </span>
               </div>
             </div>
 
@@ -244,12 +238,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-[#132A4A] flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Super Natural Intelligence (SNI). {t('footerRights')}</p>
-          <div className="flex items-center gap-6">
-            <span className="hover:text-slate-400 transition cursor-pointer">Terms of Assembly</span>
-            <span className="hover:text-slate-400 transition cursor-pointer">Privacy Policy</span>
+        {/* Bottom Bar - Exact Match to Photo 2 */}
+        <div className="mt-12 pt-8 border-t border-[#132A4A] flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+          <p className="text-center sm:text-left text-slate-300">
+            © {new Date().getFullYear()} Preaching Counter. All Rights Reserved. • Powered by{' '}
+            <span className="text-[#F4B942] font-semibold">SNI Network</span>
+          </p>
+          <div className="flex items-center gap-6 text-[11px] text-slate-500">
+            <span className="hover:text-slate-300 transition cursor-pointer">Terms of Assembly</span>
+            <span className="hover:text-slate-300 transition cursor-pointer">Privacy Policy</span>
           </div>
         </div>
       </div>

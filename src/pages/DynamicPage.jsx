@@ -330,7 +330,7 @@ export default function DynamicPage() {
               </div>
               <div>
                 <span className="text-xs uppercase font-bold text-[#C59B27] tracking-wider">
-                  {categoryTitle} • Official Section
+                  {categoryTitle}
                 </span>
                 <h2
                   className={`text-2xl sm:text-3xl font-bold text-[#0F294A] ${
