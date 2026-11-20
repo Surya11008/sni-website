@@ -872,16 +872,17 @@
                 profileView.classList.add('active');
 
                 document.getElementById('profileAvatarLetter').textContent = (user.fullName || user.userId || 'S').charAt(0).toUpperCase();
-                document.getElementById('profileFullName').textContent = user.fullName || user.userId;
+                const cleanName = String(user.fullName || user.userId || '').replace(/\s*\(Admin\)/gi, '').trim();
+                document.getElementById('profileFullName').textContent = cleanName;
                 document.getElementById('profileUserId').textContent = '@' + user.userId;
 
                 const isAdmin = user.role === 'admin' || isCardAdmin(user.userId, user.password);
-                document.getElementById('profileRoleBadge').textContent = isAdmin ? '👑 SNI Administrator' : '✨ Verified Member';
-                document.getElementById('profileRoleBadge').style.background = isAdmin ? 'rgba(245, 199, 94, 0.25)' : 'rgba(18, 75, 145, 0.15)';
-                document.getElementById('profileRoleBadge').style.color = isAdmin ? '#b45309' : '#124b91';
-                document.getElementById('profileRoleBadge').style.borderColor = isAdmin ? 'var(--gold)' : '#93c5fd';
+                document.getElementById('profileRoleBadge').textContent = '✨ Verified Member';
+                document.getElementById('profileRoleBadge').style.background = 'rgba(18, 75, 145, 0.15)';
+                document.getElementById('profileRoleBadge').style.color = '#124b91';
+                document.getElementById('profileRoleBadge').style.borderColor = '#93c5fd';
 
-                document.getElementById('profileRoleText').textContent = isAdmin ? 'Administrator' : 'Standard Member';
+                document.getElementById('profileRoleText').textContent = 'Verified Member';
                 document.getElementById('profileJoinedDate').textContent = user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'Active Member';
 
                 const studioSec = document.getElementById('profileAdminStudioSection');
@@ -939,13 +940,13 @@
                 if (isCardAdmin(userId, pass)) {
                     const adminUser = {
                         userId: 'surya11008',
-                        fullName: 'Surya (Admin)',
+                        fullName: 'Surya',
                         role: 'admin',
                         password: pass,
                         joinedAt: new Date().toISOString()
                     };
                     setCurrentUser(adminUser);
-                    showAlert('👑 Welcome Administrator Surya! Redirecting...', 'success');
+                    showAlert('Welcome, Surya! Redirecting...', 'success');
                     setTimeout(() => {
                         redirectAfterLogin();
                     }, 800);

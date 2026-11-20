@@ -2392,7 +2392,8 @@ function updateAdminUI() {
     if (currentUser) {
         if (signInNav) signInNav.style.display = 'none';
         if (joinNav) {
-            joinNav.innerHTML = `<span>👤 ${escapeHtml(currentUser.fullName || currentUser.userId)}</span>`;
+            const cleanName = String(currentUser.fullName || currentUser.userId || '').replace(/\s*\(Admin\)/gi, '').trim();
+            joinNav.innerHTML = `<span>👤 ${escapeHtml(cleanName)}</span>`;
             joinNav.href = 'auth.html';
             joinNav.title = 'View My Profile / Account';
             joinNav.style.background = 'rgba(255, 255, 255, 0.15)';
