@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { getSaturdayToFridayWeek, formatDate, formatDateTime, formatTimeOnly, getPostSortTime } from '../utils/dateUtils';
 import * as starCalc from '../utils/starCalculations';
 import { TRANSLATIONS } from '../utils/translations';
-import { isFirebaseConfigured } from '../firebase/firebaseConfig';
+import { isFirebaseConfigured, auth } from '../firebase/firebaseConfig';
+import { signOut } from 'firebase/auth';
 import {
   subscribeUsers,
   saveUserToFirestore,
@@ -198,81 +199,186 @@ export function AppProvider({ children, initialUser }) {
     return INITIAL_DATA;
   });
 
-  // Current logged in user (auto-sync with website user if available)
+  // Helper to extract active authenticated user from SNI (initialUser prop, Firebase Auth, or unified localStorage)
+  const getActiveSniUser = (propUser) => {
+    if (propUser && (propUser.uid || propUser.id || propUser.email)) {
+      return propUser;
+    }
+    try {
+      if (auth?.currentUser) {
+        return {
+          uid: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          displayName: auth.currentUser.displayName,
+        };
+      }
+    } catch (e) {}
+
+    const stored =
+      localStorage.getItem('sni_user_session') ||
+      localStorage.getItem('sni_unified_session') ||
+      localStorage.getItem('sni_current_user') ||
+      localStorage.getItem('sni_temp_session');
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && (parsed.uid || parsed.userId || parsed.id || parsed.email)) {
+          return {
+            uid: parsed.uid || parsed.userId || parsed.id,
+            email: parsed.email,
+            displayName: parsed.displayName || parsed.fullName || parsed.username,
+            role: parsed.role,
+            status: parsed.status,
+          };
+        }
+      } catch (e) {}
+    }
+    return null;
+  };
+
+  // Helper to resolve or automatically create approved Star Galaxy user matching SNI login
+  const resolveStarGalaxyUser = (sniUser, usersList = []) => {
+    if (!sniUser) return null;
+
+    const email = (sniUser.email || '').toLowerCase().trim();
+    const rawId = sniUser.uid || sniUser.id || sniUser.userId || (email ? email.split('@')[0] : 'user');
+    const uid = String(rawId);
+    const username = sniUser.username || (email ? email.split('@')[0] : uid);
+    const displayName =
+      sniUser.displayName ||
+      sniUser.fullName ||
+      sniUser.name ||
+      username ||
+      'Member';
+
+    const isAdmin =
+      sniUser.role === 'admin' ||
+      email === 'surya11008@sni.org.in' ||
+      email === 'admin@sni.org.in' ||
+      email.startsWith('surya') ||
+      uid.toLowerCase() === 'surya11008';
+
+    // 1. If Admin, always map to canonical surya11008 admin account in Star Galaxy
+    if (isAdmin) {
+      const adminIndex = usersList.findIndex(u => u.id === 'surya11008' || u.role === 'admin');
+      if (adminIndex !== -1) {
+        return {
+          ...usersList[adminIndex],
+          id: 'surya11008',
+          role: 'admin',
+          status: 'approved',
+          name: displayName.includes('Surya') || displayName.includes('Admin') ? displayName : `Admin (${displayName})`,
+        };
+      }
+    }
+
+    // 2. Look for matching existing user in Star Galaxy
+    const existing = usersList.find(
+      u =>
+        String(u.id) === uid ||
+        (email && u.contact && u.contact.toLowerCase() === email) ||
+        (email && u.email && u.email.toLowerCase() === email) ||
+        (username && u.username && u.username.toLowerCase() === username.toLowerCase())
+    );
+
+    if (existing) {
+      return {
+        ...existing,
+        id: existing.id || uid,
+        name: displayName || existing.name,
+        role: isAdmin ? 'admin' : (sniUser.role || existing.role || 'member'),
+        status: 'approved',
+        hasSetPersonalPin: true,
+      };
+    }
+
+    // 3. New user - auto-create approved Star Galaxy user profile
+    return {
+      id: uid,
+      username: username,
+      name: displayName,
+      nickname: displayName.split(' ')[0] || displayName,
+      contact: email || sniUser.phone || username,
+      email: email,
+      phone: sniUser.phone || '',
+      role: isAdmin ? 'admin' : (sniUser.role || 'member'),
+      status: 'approved',
+      hasSetPersonalPin: true,
+      pin: '1234',
+      personalPin: '1234',
+      place: sniUser.place || 'Assembly Sanctuary',
+      moreDetails: sniUser.ministryRole || 'SNI Assembly Member',
+      createdAt: sniUser.createdAt || new Date().toISOString().split('T')[0],
+    };
+  };
+
+  // Current logged in user (SNI login is main & master authority!)
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      if (initialUser) {
-        const isAdmin =
-          initialUser.role === 'admin' ||
-          initialUser.email === 'surya11008@sni.org.in' ||
-          initialUser.email === 'admin@sni.org.in' ||
-          initialUser.email?.startsWith('surya');
-
-        if (isAdmin) {
-          const admin = data.users.find(u => u.id === 'surya11008' || u.role === 'admin');
-          if (admin) {
-            localStorage.setItem(SESSION_USER_KEY, 'surya11008');
-            sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-            return admin;
-          }
-        }
-
-        const match = data.users.find(
-          u =>
-            u.id === initialUser.uid ||
-            u.contact === initialUser.email ||
-            u.username === initialUser.email?.split('@')[0]
-        );
-        if (match && match.status === 'approved') {
-          localStorage.setItem(SESSION_USER_KEY, match.id);
+      const activeSni = getActiveSniUser(initialUser);
+      if (activeSni) {
+        const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
+        if (resolved) {
+          localStorage.setItem(SESSION_USER_KEY, resolved.id);
           sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-          return match;
+          return resolved;
         }
       }
 
       const savedUserId = localStorage.getItem(SESSION_USER_KEY);
       if (savedUserId) {
-        const found = data.users.find(u => u.id === savedUserId);
+        const found = (data.users || []).find(u => String(u.id) === String(savedUserId));
         if (found && found.status === 'approved') return found;
       }
-    } catch (e) {}
-
-    if (initialUser?.role === 'admin' || initialUser?.email?.startsWith('surya')) {
-      return data.users.find(u => u.id === 'surya11008') || null;
+    } catch (e) {
+      console.warn('Error initializing Star Galaxy user from SNI session:', e);
     }
+
     return null;
   });
 
+  // Strict Unified Session Sync: whenever SNI user logs in, changes, or mounts,
+  // ensure Star Galaxy ALWAYS mirrors that exact logged in user!
   useEffect(() => {
-    if (initialUser) {
-      const isAdmin =
-        initialUser.role === 'admin' ||
-        initialUser.email === 'surya11008@sni.org.in' ||
-        initialUser.email === 'admin@sni.org.in' ||
-        initialUser.email?.startsWith('surya');
+    const activeSni = getActiveSniUser(initialUser);
+    if (activeSni) {
+      const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
+      if (resolved) {
+        const isDifferentUser = !currentUser || String(currentUser.id) !== String(resolved.id);
+        const needsRoleOrStatusUpdate =
+          currentUser &&
+          (currentUser.role !== resolved.role || currentUser.status !== 'approved');
 
-      if (isAdmin && (!currentUser || currentUser.role !== 'admin')) {
-        const admin = data.users.find(u => u.id === 'surya11008' || u.role === 'admin');
-        if (admin) {
-          setCurrentUser(admin);
-          localStorage.setItem(SESSION_USER_KEY, 'surya11008');
+        if (isDifferentUser || needsRoleOrStatusUpdate) {
+          setCurrentUser(resolved);
+          localStorage.setItem(SESSION_USER_KEY, resolved.id);
           sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-          return;
+          setIsPinLocked(false);
+          setSelectedMemberId(resolved.id);
+
+          // If this user was newly synthesized and doesn't exist in data.users, append and persist
+          const exists = (data.users || []).some(u => String(u.id) === String(resolved.id));
+          if (!exists) {
+            setData(prev => {
+              const updatedUsers = [...(prev.users || []), resolved];
+              try {
+                const rawLocal = localStorage.getItem(STORAGE_KEY);
+                const parsed = rawLocal ? JSON.parse(rawLocal) : {};
+                parsed.users = updatedUsers;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+              } catch (e) {}
+              return { ...prev, users: updatedUsers };
+            });
+            saveUserToFirestore(resolved).catch(() => {});
+          }
         }
       }
-
-      if (!currentUser) {
-        const match = data.users.find(
-          u =>
-            u.id === initialUser.uid ||
-            u.contact === initialUser.email ||
-            u.username === initialUser.email?.split('@')[0]
-        );
-        if (match && match.status === 'approved') {
-          setCurrentUser(match);
-          localStorage.setItem(SESSION_USER_KEY, match.id);
-          sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-        }
+    } else if (!initialUser && !localStorage.getItem('sni_user_session') && !localStorage.getItem('sni_unified_session')) {
+      // If SNI has logged out completely, clear Star Galaxy currentUser as well
+      if (currentUser) {
+        setCurrentUser(null);
+        localStorage.removeItem(SESSION_USER_KEY);
       }
     }
   }, [initialUser, data.users, currentUser]);
@@ -1242,6 +1348,30 @@ export function AppProvider({ children, initialUser }) {
     localStorage.setItem(SESSION_USER_KEY, user.id);
     sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
 
+    // Also synchronize unified SNI session
+    try {
+      const sniSession = {
+        userId: user.id,
+        uid: user.id,
+        email: user.email || user.contact || `${user.id}@sni.org.in`,
+        displayName: user.name || user.username || user.id,
+        fullName: user.name || user.username || user.id,
+        role: user.role || 'member',
+        status: user.status || 'approved',
+      };
+      localStorage.setItem('sni_user_session', JSON.stringify(sniSession));
+      localStorage.setItem('sni_unified_session', JSON.stringify(sniSession));
+      localStorage.setItem('sni_current_user', JSON.stringify(sniSession));
+      if (user.role === 'admin') {
+        localStorage.setItem('sni_admin_active', 'true');
+        sessionStorage.setItem('sni_admin_active', 'true');
+      }
+      const cookiePayload = encodeURIComponent(JSON.stringify(sniSession));
+      const maxAge = 365 * 24 * 60 * 60;
+      document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+      document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    } catch (e) {}
+
     // If PIN lock is disabled for user, never lock
     if (user.pinLockEnabled === false) {
       setIsPinLocked(false);
@@ -1397,17 +1527,52 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // 1. Reset Star Galaxy in-memory & local state
     setCurrentUser(null);
     localStorage.removeItem(SESSION_USER_KEY);
     localStorage.removeItem('star_galaxy_active_tab');
     localStorage.removeItem('star_galaxy_selected_activity');
-    // 🔒 Security: Clear in-memory diary state immediately upon logout
+    localStorage.removeItem('star_galaxy_pin_unlocked');
+    sessionStorage.removeItem('star_galaxy_pin_unlocked');
     setData(prev => ({
       ...prev,
       gospelDiary: {},
     }));
     setActiveTabState('activities');
+
+    // 2. Clear ALL SNI website auth & session tokens
+    // User requirement: "star galaxy lo logout chesthe motham SNI logout avvali"
+    localStorage.removeItem('sni_temp_session');
+    localStorage.removeItem('sni_user_session');
+    localStorage.removeItem('sni_current_user');
+    localStorage.removeItem('sni_unified_session');
+    localStorage.removeItem('sni_admin_active');
+    sessionStorage.removeItem('sni_admin_active');
+    localStorage.removeItem('live_counter_current_user');
+    localStorage.removeItem('wlh_current_user');
+    sessionStorage.removeItem('l_support_session_active');
+    localStorage.removeItem('word_search_current_user');
+    localStorage.removeItem('word_search_admin_auth');
+
+    try {
+      document.cookie = 'sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
+      document.cookie = 'sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
+      document.cookie = 'sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax';
+      document.cookie = 'sni_session_active=; Path=/; Max-Age=0; SameSite=Lax';
+    } catch (e) {}
+
+    // 3. Sign out of Firebase Auth completely
+    try {
+      if (auth) {
+        await signOut(auth);
+      }
+    } catch (e) {
+      console.warn('Firebase signOut error from Star Galaxy:', e);
+    }
+
+    // 4. Redirect to main SNI sign in page
+    window.location.href = '/auth.html';
   };
 
   // Change Password

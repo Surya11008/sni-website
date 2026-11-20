@@ -123,7 +123,7 @@ export default function StatusTab() {
 
       {/* 👑 Admin Mode Toggle: Leaderboard vs All Status Feed */}
       {isAdmin && (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-1.5 rounded-3xl border-2 border-amber-400/40 shadow-md flex items-center gap-1.5 text-xs font-bold">
+        <div className="bg-gradient-to-r from-blue-800 via-indigo-800 to-slate-800 p-1.5 rounded-3xl border border-blue-400/40 shadow-md flex items-center gap-1.5 text-xs font-bold">
           <button
             type="button"
             onClick={() => setAdminViewMode('standings')}
@@ -159,7 +159,7 @@ export default function StatusTab() {
       ) : (
         <>
           {/* 🌟 Top Standings Banner: Total Stars & Time Scope Selector */}
-      <div className="bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-950 text-white rounded-3xl p-4 sm:p-5 border-2 border-amber-300 shadow-md">
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 text-white rounded-3xl p-4 sm:p-5 border border-blue-400/30 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">

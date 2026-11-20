@@ -330,27 +330,27 @@ export default function LostSheep({ onBack }) {
         </div>
 
         {/* Card 2: Date Cycle / Filtered Range */}
-        <div className="rounded-3xl bg-gradient-to-br from-teal-800 via-emerald-900 to-cyan-950 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
+        <div className="rounded-3xl bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
           <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3 text-amber-400" />
             <span>Date Cycle (This Week)</span>
           </div>
-          <div className="text-[11px] font-bold text-teal-200 mt-0.5">
+          <div className="text-[11px] font-bold text-teal-100 mt-0.5">
             {dateRange.startDate} → {dateRange.endDate}
           </div>
           <div className="mt-1 flex items-center justify-center gap-1.5">
             <span className="text-3xl sm:text-4xl font-black text-amber-300">{cycleStars}</span>
             <Star className="w-6 h-6 fill-amber-400 text-amber-400 animate-pulse" />
           </div>
-          <p className="text-[10px] text-teal-200 mt-0.5">
+          <p className="text-[10px] text-teal-100 mt-0.5">
             {filteredSheep.length} lost sheep record{filteredSheep.length !== 1 ? 's' : ''} in cycle
           </p>
         </div>
 
         {/* Card 3: All-Time Overall */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-800 via-teal-950 to-emerald-950 text-white p-4 text-center shadow-md border-2 border-teal-400/50 relative overflow-hidden">
-          <div className="text-[10px] font-black text-teal-200 uppercase tracking-wider flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-teal-300" />
+        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 text-center shadow-md border-2 border-blue-300/50 relative overflow-hidden">
+          <div className="text-[10px] font-black text-blue-200 uppercase tracking-wider flex items-center justify-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-blue-300" />
             <span>Overall All-Time</span>
           </div>
           <div className="text-[11px] font-bold text-white/90 mt-0.5">From Start to Present</div>
@@ -358,7 +358,7 @@ export default function LostSheep({ onBack }) {
             <span className="text-2xl sm:text-3xl font-black text-amber-300">{overallBreakdown.lostSheep.stars}</span>
             <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
           </div>
-          <p className="text-[10px] text-teal-200 mt-0.5">
+          <p className="text-[10px] text-blue-100 mt-0.5">
             {overallBreakdown.lostSheep.count} total lost sheep recorded
           </p>
         </div>

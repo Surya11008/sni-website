@@ -558,12 +558,22 @@
         }
 
         function handleLogout() {
-            if (confirm('Are you sure you want to sign out?')) {
+            if (confirm('Are you sure you want to sign out? This will sign out of your entire SNI account.')) {
                 currentUser = null;
                 try {
+                    localStorage.removeItem('sni_user_session');
+                    localStorage.removeItem('sni_current_user');
                     localStorage.removeItem('sni_unified_session');
+                    localStorage.removeItem('sni_temp_session');
+                    localStorage.removeItem('star_galaxy_active_user_id');
+                    localStorage.removeItem('star_galaxy_pin_unlocked');
+                    sessionStorage.removeItem('star_galaxy_pin_unlocked');
+                    document.cookie = 'sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
+                    document.cookie = 'sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
+                    document.cookie = 'sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax';
+                    document.cookie = 'sni_session_active=; Path=/; Max-Age=0; SameSite=Lax';
                 } catch(e) {}
-                showAuthModal();
+                window.location.href = '/auth.html';
             }
         }
 

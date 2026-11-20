@@ -76,9 +76,9 @@ export default function Header() {
         {/* Brand Logo & Title: ONE SINGLE LINE, NO "WELCOME TO" */}
         <div className="flex items-center gap-1.5 sm:gap-2 select-none">
           <span className="text-xl sm:text-2xl animate-cute-wiggle inline-block">⭐</span>
-          <span className="text-lg sm:text-xl md:text-2xl font-black text-[#071B3B] uppercase tracking-wider leading-none drop-shadow-xs whitespace-nowrap flex items-center gap-1.5">
+          <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-950 uppercase tracking-wider leading-none drop-shadow-xs whitespace-nowrap flex items-center gap-1.5">
             <span>{t('starGalaxy') || 'STAR GALAXY'}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#071B3B] text-[#F4B942] font-mono font-bold tracking-normal">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-600 text-white font-mono font-bold tracking-normal">
               PRO
             </span>
           </span>
@@ -96,7 +96,7 @@ export default function Header() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#071B3B] text-[#F4B942] shadow-md border border-[#F4B942]/30 scale-102'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-bold scale-102'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-white/80'
                 }`}
               >

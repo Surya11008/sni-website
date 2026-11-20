@@ -6,9 +6,9 @@ export default function BottomNav() {
   const { activeTab, setActiveTab, currentUser, t } = useApp();
 
   const tabs = [
-    { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
-    { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
-    { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
+    { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
+    { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
+    { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
   ];
 
   return (
@@ -38,7 +38,7 @@ export default function BottomNav() {
           <button
             onClick={() => setActiveTab('admin')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all ${
-              activeTab === 'admin' ? 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/40 font-black scale-105 shadow-xs' : 'text-[#071B3B] hover:text-[#C59B27]'
+              activeTab === 'admin' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold scale-105 shadow-xs' : 'text-blue-900 hover:text-blue-600'
             }`}
           >
             <ShieldCheck className="w-5 h-5" />

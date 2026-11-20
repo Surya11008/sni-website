@@ -397,7 +397,7 @@ export default function ElohimAcademy({ onBack }) {
       {/* ⭐ STAR CALCULATION ACCORDING TO DATES (DASHBOARD) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* 1. Selected Calendar Date Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-indigo-400/30">
+        <div className="rounded-3xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-600 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-indigo-300/40">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-wider text-indigo-100 flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5 text-indigo-200" />
@@ -460,13 +460,13 @@ export default function ElohimAcademy({ onBack }) {
         </div>
 
         {/* 2. Date Range / This Week Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-purple-800 via-purple-900 to-pink-900 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-purple-400/30">
+        <div className="rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-sky-600 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-purple-300/40">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Date Cycle Stars</span>
             </span>
-            <span className="text-[9px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-sky-200 backdrop-blur-xs">
+            <span className="text-[9px] font-bold bg-white/20 px-2 py-0.5 rounded-full text-white backdrop-blur-xs">
               {dateRange?.startDate} → {dateRange?.endDate}
             </span>
           </div>
@@ -478,17 +478,17 @@ export default function ElohimAcademy({ onBack }) {
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-sky-200 font-semibold border-t border-white/10 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-purple-100 font-semibold border-t border-white/20 pt-2">
             <span>{rangeItemsCount} items in this cycle</span>
-            <span className="text-[10px] text-sky-300 font-bold">Week Cycle</span>
+            <span className="text-[10px] text-purple-200 font-bold">Week Cycle</span>
           </div>
         </div>
 
         {/* 3. All-Time Overall Total Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-400/40">
+        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-300/40">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
-              <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
+              <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
               <span>Overall Total Stars</span>
             </span>
             <span className="text-[10px] font-bold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-300/30">
@@ -503,7 +503,7 @@ export default function ElohimAcademy({ onBack }) {
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold border-t border-white/10 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-blue-100 font-semibold border-t border-white/20 pt-2">
             <span>Levels: {levelChecks.length}/50 • SOM: {somChecks.length}/20</span>
             <span className="text-[10px] text-amber-300 font-bold">Curriculum</span>
           </div>

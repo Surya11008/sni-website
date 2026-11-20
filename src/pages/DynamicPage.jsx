@@ -12,7 +12,7 @@ import {
   serverTimestamp,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db, auth } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PORTAL_STRUCTURE, findPageInfo } from '../config/portalStructure';
@@ -615,9 +615,9 @@ export default function DynamicPage() {
 
         {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Complete Star Galaxy */}
         {isStarsPage && starsViewTab === 'tracker' && !activeArticle && !isFormOpen ? (
-          <StarGalaxyApp initialUser={userProfile || currentUser} />
+          <StarGalaxyApp initialUser={userProfile || currentUser || auth?.currentUser} />
         ) : isDiaryPage && diaryViewTab === 'diary' && !activeArticle && !isFormOpen ? (
-          <AppProvider initialUser={userProfile || currentUser}>
+          <AppProvider initialUser={userProfile || currentUser || auth?.currentUser}>
             <GospelDiary />
           </AppProvider>
         ) : activeArticle ? (
