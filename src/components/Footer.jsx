@@ -239,15 +239,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar - Exact Match to Photo 2 */}
-        <div className="mt-12 pt-8 border-t border-[#132A4A] flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-          <p className="text-center sm:text-left text-slate-300">
-            © {new Date().getFullYear()} Preaching Counter. All Rights Reserved. • Powered by{' '}
+        <div className="mt-12 pt-8 border-t border-[#132A4A] flex items-center justify-center text-xs text-slate-400">
+          <p className="text-center text-slate-300 tracking-wide">
+            © 2026 Preaching Counter. All Rights Reserved. • Powered by{' '}
             <span className="text-[#F4B942] font-semibold">SNI Network</span>
           </p>
-          <div className="flex items-center gap-6 text-[11px] text-slate-500">
-            <span className="hover:text-slate-300 transition cursor-pointer">Terms of Assembly</span>
-            <span className="hover:text-slate-300 transition cursor-pointer">Privacy Policy</span>
-          </div>
         </div>
       </div>
     </footer>
