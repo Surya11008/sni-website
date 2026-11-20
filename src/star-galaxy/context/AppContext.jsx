@@ -383,8 +383,28 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [initialUser, data.users, currentUser]);
 
-  // Target member being inspected/entered (for Admin/Manager view)
-  const [selectedMemberId, setSelectedMemberId] = useState('surya11008');
+  // Target member being inspected/entered (strictly defaults to active currentUser's own ID)
+  const [selectedMemberId, setSelectedMemberId] = useState(() => {
+    try {
+      const activeSni = getActiveSniUser(initialUser);
+      if (activeSni) {
+        const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
+        if (resolved?.id) return resolved.id;
+      }
+      const savedUserId = localStorage.getItem(SESSION_USER_KEY);
+      if (savedUserId) return savedUserId;
+    } catch (e) {}
+    return 'surya11008';
+  });
+
+  // Ensure selectedMemberId always tracks currentUser unless admin explicitly changes it
+  useEffect(() => {
+    if (currentUser?.id) {
+      if (currentUser.role !== 'admin' || !selectedMemberId) {
+        setSelectedMemberId(currentUser.id);
+      }
+    }
+  }, [currentUser?.id]);
 
   // Currently active tab (persisted in localStorage to keep tab strictly stable on any input)
   const [activeTab, setActiveTabState] = useState(() => {

@@ -173,8 +173,8 @@ export default function Header() {
           </div>
         )}
 
-        {/* Regular Member View Indicator */}
-        {currentUser?.role === 'member' && (
+        {/* Regular Member View Indicator (Personal view for all non-admins) */}
+        {currentUser?.role !== 'admin' && currentUser?.role !== 'manager' && (
           <div className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
             ✓ {t('viewingPersonal') || 'Personal Status'}
           </div>
