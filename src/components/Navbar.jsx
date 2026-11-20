@@ -211,7 +211,12 @@ export default function Navbar() {
                 (cat.categorySlug === 'home' && (location.pathname === '/' || location.pathname.toLowerCase() === '/home'));
 
               return (
-                <div key={cat.categorySlug} className="relative">
+                <div
+                  key={cat.categorySlug}
+                  className="relative"
+                  onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
                   <Link
                     to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
                     onClick={() => setActiveDropdown(null)}
@@ -232,10 +237,14 @@ export default function Navbar() {
 
                   {/* Dropdown Menu Panel for this category - Compact without extra explanations */}
                   {isOpen && (
-                    <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[280px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
-                      onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
-                    >
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-0.5 pt-1.5 w-[280px] z-50 animate-in fade-in zoom-in-95 duration-150">
+                      {/* Invisible hover bridge ensuring the cursor never disconnects across frames */}
+                      <div className="absolute -top-3 inset-x-0 h-4 bg-transparent" />
+
+                      {/* Little top pointer arrow connecting button directly to dropdown card */}
+                      <div className="w-3 h-3 bg-white rotate-45 border-t border-l border-slate-200/90 mx-auto -mb-1.5 relative z-20 shadow-xs" />
+
+                      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 relative z-10">
                       {/* Compact Dropdown Header linking to main Category page */}
                       <Link
                         to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
@@ -295,6 +304,7 @@ export default function Navbar() {
                             </Link>
                           );
                         })}
+                      </div>
                       </div>
                     </div>
                   )}
