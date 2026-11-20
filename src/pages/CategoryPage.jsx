@@ -18,6 +18,7 @@ import {
   FileText,
   Loader2,
   FolderTree,
+  Heart,
 } from 'lucide-react';
 
 export default function CategoryPage() {
@@ -170,52 +171,7 @@ export default function CategoryPage() {
         </div>
       </section>
 
-      {/* 2. Top Sub-Pages Navigation Bar ("page paina oka bar la subpage anni kanipinchali") */}
-      <div className="sticky top-20 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm py-3 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#0F294A] shrink-0">
-            <FolderTree className="w-4 h-4 text-[#C59B27]" />
-            <span className="hidden sm:inline">{isTelugu ? 'ఉప-విభాగాలు:' : 'Sub-Pages:'}</span>
-          </div>
-
-          {/* Sub-Pages Pills Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-1 no-scrollbar">
-            {currentCategory.pages?.map((subPage) => {
-              const subTitle = isTelugu ? subPage.titleTe : subPage.titleEn;
-
-              if (subPage.externalUrl) {
-                return (
-                  <a
-                    key={subPage.pageSlug}
-                    href={subPage.externalUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0F294A] hover:text-[#F4B942] text-slate-800 text-xs font-bold transition shrink-0 group border border-slate-200"
-                  >
-                    <PortalIcon name={subPage.iconName} className="w-3.5 h-3.5 text-[#C59B27]" />
-                    <span className={isTelugu ? 'font-telugu' : ''}>{subTitle}</span>
-                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#F4B942]" />
-                  </a>
-                );
-              }
-
-              return (
-                <Link
-                  key={subPage.pageSlug}
-                  to={`/page/${categorySlug}/${subPage.pageSlug}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0F294A] hover:text-[#F4B942] text-slate-800 text-xs font-bold transition shrink-0 group border border-slate-200"
-                >
-                  <PortalIcon name={subPage.iconName} className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span className={isTelugu ? 'font-telugu' : ''}>{subTitle}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 group-hover:text-[#F4B942] transition-transform" />
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
+      {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-14">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
@@ -368,6 +324,12 @@ export default function CategoryPage() {
                                 text={itemDesc}
                                 title={itemTitle}
                               />
+                              {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
+                                  <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                                  <span>{item.likesCount || item.likedBy?.length}</span>
+                                </span>
+                              )}
                               {item.fileUrl && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
                                   <FileText className="w-2.5 h-2.5" />

@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,6 +36,10 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Heart,
+  MessageSquare,
+  Send,
+  MessageCircle,
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
@@ -32,8 +49,14 @@ export default function ContentDetailPage() {
   const navigate = useNavigate();
 
   const [article, setArticle] = useState(null);
+  const [sourceCollection, setSourceCollection] = useState('page_contents');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Comments & Fellowship state
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Admin edit form state - Unified Single Language Input
   const [isEditing, setIsEditing] = useState(false);
@@ -65,6 +88,7 @@ export default function ContentDetailPage() {
           const data = { id: snap.id, ...snap.data() };
           if (isMounted) {
             setArticle(data);
+            setSourceCollection('page_contents');
             setTitle(data.title || data.titleEn || data.titleTe || '');
             setDesc(data.desc || data.content || data.descEn || data.descTe || '');
             setImageUrl(data.imageUrl || '');
@@ -79,6 +103,7 @@ export default function ContentDetailPage() {
             const data = { id: annSnap.id, ...annSnap.data(), categorySlug: 'home', pageSlug: 'announcements' };
             if (isMounted) {
               setArticle(data);
+              setSourceCollection('announcements');
               setTitle(data.title || data.titleEn || data.titleTe || '');
               setDesc(data.desc || data.content || data.descEn || data.descTe || '');
               setImageUrl(data.imageUrl || '');
@@ -100,6 +125,125 @@ export default function ContentDetailPage() {
       isMounted = false;
     };
   }, [contentId]);
+
+  // Real-time listener for comments on this content
+  useEffect(() => {
+    if (!contentId) return;
+    try {
+      const commentsRef = collection(db, sourceCollection, contentId, 'comments');
+      const q = query(commentsRef, orderBy('createdAt', 'desc'));
+      const unsub = onSnapshot(
+        q,
+        (snapshot) => {
+          const items = [];
+          snapshot.forEach((d) => items.push({ id: d.id, ...d.data() }));
+          setComments(items);
+        },
+        (err) => {
+          console.warn('Comments query with index failed, using fallback:', err);
+          const unsubFallback = onSnapshot(
+            collection(db, sourceCollection, contentId, 'comments'),
+            (snapshot) => {
+              const items = [];
+              snapshot.forEach((d) => items.push({ id: d.id, ...d.data() }));
+              items.sort((a, b) => {
+                const tA = a.createdAt?.seconds || 0;
+                const tB = b.createdAt?.seconds || 0;
+                return tB - tA;
+              });
+              setComments(items);
+            }
+          );
+          return () => unsubFallback();
+        }
+      );
+      return () => unsub();
+    } catch (e) {
+      console.warn('Error setting up comments listener:', e);
+    }
+  }, [contentId, sourceCollection]);
+
+  // Likes calculation and toggle handler
+  const userKey = currentUser?.email || currentUser?.uid || '';
+  const likedByList = Array.isArray(article?.likedBy) ? article.likedBy : [];
+  const isLiked = userKey ? likedByList.includes(userKey) : false;
+  const likesCount =
+    typeof article?.likesCount === 'number'
+      ? article.likesCount
+      : likedByList.length;
+
+  const handleToggleLike = async () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    const currentlyLiked = isLiked;
+    const newLikedBy = currentlyLiked
+      ? likedByList.filter((k) => k !== userKey)
+      : [...likedByList, userKey];
+    const newCount = newLikedBy.length;
+
+    // Optimistic UI state update
+    setArticle((prev) => ({
+      ...prev,
+      likedBy: newLikedBy,
+      likesCount: newCount,
+    }));
+
+    try {
+      const docRef = doc(db, sourceCollection, contentId);
+      await updateDoc(docRef, {
+        likedBy: currentlyLiked ? arrayRemove(userKey) : arrayUnion(userKey),
+        likesCount: newCount,
+      });
+    } catch (err) {
+      console.warn('Could not sync like to server:', err);
+    }
+  };
+
+  // Add Comment handler
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    setSubmittingComment(true);
+    try {
+      const commentPayload = {
+        contentId,
+        authorName:
+          userProfile?.displayName ||
+          currentUser?.displayName ||
+          currentUser.email?.split('@')[0] ||
+          'Member',
+        authorEmail: currentUser.email || '',
+        authorRole: userProfile?.role || 'member',
+        text: commentText.trim(),
+        createdAt: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, sourceCollection, contentId, 'comments'), commentPayload);
+      setCommentText('');
+    } catch (err) {
+      console.error('Failed to post comment:', err);
+      alert('Failed to post comment: ' + err.message);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Delete Comment handler
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Delete this comment?')) return;
+    try {
+      await deleteDoc(doc(db, sourceCollection, contentId, 'comments', commentId));
+    } catch (err) {
+      alert('Failed to delete comment: ' + err.message);
+    }
+  };
 
   // Extract YouTube embed
   const getYouTubeEmbedUrl = (url) => {
@@ -237,6 +381,24 @@ export default function ContentDetailPage() {
             </Link>
 
             <div className="flex items-center gap-2">
+              {/* Heart Symbol / Like Button with Live Count */}
+              <button
+                onClick={handleToggleLike}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  isLiked
+                    ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
+                    : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
+                }`}
+                title={isLiked ? 'Liked / ఇష్టం' : 'Like this content / లైక్ చేయండి'}
+              >
+                <Heart
+                  className={`w-3.5 h-3.5 transition-transform ${
+                    isLiked ? 'fill-current text-white scale-110' : 'text-rose-400'
+                  }`}
+                />
+                <span>{likesCount}</span>
+              </button>
+
               <AudioSpeakerButton text={articleDesc} title={articleTitle} />
 
               {isAdmin && (
@@ -466,8 +628,8 @@ export default function ContentDetailPage() {
             </div>
           )}
 
-          {/* Bottom Bar: Back Navigation and Social Share */}
-          <div className="pt-8 border-t border-slate-100 flex items-center justify-between gap-4">
+          {/* Bottom Bar: Back Navigation, Heart Like, and Social Share */}
+          <div className="pt-8 border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap">
             <Link
               to={backUrl}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
@@ -476,25 +638,156 @@ export default function ContentDetailPage() {
               <span>{isTelugu ? '← పేజీ జాబితాకు తిరిగి వెళ్ళండి' : '← Back to Sub-Page'}</span>
             </Link>
 
-            <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: articleTitle,
-                    url: window.location.href,
-                  }).catch(() => {});
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert('Page link copied to clipboard!');
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition cursor-pointer"
-            >
-              <Share2 className="w-4 h-4 text-[#C59B27]" />
-              <span>Share Page</span>
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Heart Symbol / Like Button with Live Count */}
+              <button
+                onClick={handleToggleLike}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition cursor-pointer shadow-xs border ${
+                  isLiked
+                    ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 scale-105'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-rose-300'
+                }`}
+                title={isLiked ? 'Liked' : 'Like'}
+              >
+                <Heart
+                  className={`w-4 h-4 transition-transform ${
+                    isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
+                  }`}
+                />
+                <span>{likesCount}</span>
+                <span className="hidden sm:inline">{likesCount === 1 ? 'Like' : 'Likes'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: articleTitle,
+                      url: window.location.href,
+                    }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Page link copied to clipboard!');
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition cursor-pointer"
+              >
+                <Share2 className="w-4 h-4 text-[#C59B27]" />
+                <span>Share</span>
+              </button>
+            </div>
           </div>
         </article>
+
+        {/* ======================================================== */}
+        {/* COMMENTS & FELLOWSHIP SECTION                            */}
+        {/* ======================================================== */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 mt-8">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-[#C59B27]" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
+                  {isTelugu ? `వ్యాఖ్యలు & స్పందనలు (${comments.length})` : `Comments & Fellowship (${comments.length})`}
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  {isTelugu ? 'ఈ సందేశం లేదా అంశంపై మీ అభిప్రాయాన్ని పంచుకోండి' : 'Share your thoughts, reflections, or questions on this content.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* New Comment Input Box */}
+          <form onSubmit={handlePostComment} className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-bold text-xs uppercase shrink-0 mt-1 shadow-xs">
+                {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0).toUpperCase() || 'U')}
+              </div>
+              <div className="flex-1 space-y-2">
+                <textarea
+                  rows={3}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={isTelugu ? 'మీ వ్యాఖ్య లేదా స్పందనను ఇక్కడ రాయండి...' : 'Write your comment or reflection here...'}
+                  className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-[#C59B27] transition"
+                  required
+                />
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-slate-400">
+                    Posting as <span className="font-semibold text-slate-700">{userProfile?.displayName || currentUser?.email?.split('@')[0]}</span>
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !commentText.trim()}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-40"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{submittingComment ? 'Posting...' : (isTelugu ? 'పోస్ట్ చేయండి' : 'Post Comment')}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Comments List */}
+          <div className="space-y-3 pt-3">
+            {comments.length === 0 ? (
+              <div className="text-center py-8 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                <MessageCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs font-medium">
+                  {isTelugu ? 'ఇంకా ఎలాంటి వ్యాఖ్యలు లేవు. మొదటి వ్యాఖ్య మీరే రాయండి!' : 'No comments yet. Be the first to share your reflection!'}
+                </p>
+              </div>
+            ) : (
+              comments.map((c) => {
+                const isAuthorOrAdmin = isAdmin || (currentUser && c.authorEmail === currentUser.email);
+                return (
+                  <div
+                    key={c.id}
+                    className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 hover:border-slate-200 transition space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#C59B27]/20 text-[#071B3B] font-bold text-xs flex items-center justify-center">
+                          {c.authorName ? c.authorName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900">{c.authorName}</span>
+                            {c.authorRole && c.authorRole !== 'member' && (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] font-bold uppercase tracking-wider">
+                                {c.authorRole}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString() : 'Recent'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {isAuthorOrAdmin && (
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          title="Delete comment"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-10 whitespace-pre-wrap">
+                      {c.text}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

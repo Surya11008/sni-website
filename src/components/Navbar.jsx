@@ -120,36 +120,21 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-[#071B3B] border-b border-[#132A4A] shadow-[0_4px_25px_rgba(0,0,0,0.3)] font-sans">
-      {/* Top micro bar */}
-      <div className="bg-[#040E1E] text-slate-300 text-[11px] py-1.5 px-4 sm:px-8 border-b border-[#0C1D36]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 tracking-wide font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F4B942] animate-pulse"></span>
-            <span className="font-bold tracking-wider text-[#F4B942] text-xs">SNI</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* World Language Translator Globe Button */}
-            <WorldLanguageTranslator />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navbar Bar */}
+      {/* Main Sleek & Compact Navbar Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Brand Emblem & Title */}
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="relative w-12 h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
                 src="/logo.png"
                 alt="SNI Logo"
-                className="w-12 h-12 object-contain drop-shadow-sm"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-sm"
               />
             </div>
 
             <div className="flex flex-col justify-center">
-              <span className="text-2xl sm:text-3xl font-black tracking-wider text-[#F4B942] leading-none font-sans">
+              <span className="text-xl sm:text-2xl font-black tracking-wider text-[#F4B942] leading-none font-sans">
                 SNI
               </span>
             </div>
@@ -262,15 +247,18 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right Section: Admin, Member/Login */}
-          <div className="hidden lg:flex items-center gap-2.5">
+          {/* Right Section: Translator, Admin, Member/Login */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* World Language Translator Globe Button */}
+            <WorldLanguageTranslator />
+
             {currentUser ? (
-              <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+              <div className="flex items-center gap-2 pl-2 border-l border-white/10">
                 {/* Admin Button */}
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-[#F4B942] border border-[#F4B942]/40 text-xs font-bold transition shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-[#F4B942] border border-[#F4B942]/40 text-xs font-bold transition shadow-xs"
                   >
                     <Shield className="w-3.5 h-3.5 text-[#F4B942]" />
                     <span>{t('navAdmin')}</span>
@@ -280,12 +268,12 @@ export default function Navbar() {
                 {/* Dashboard Button */}
                 <Link
                   to="/dashboard"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 border border-white/15 transition"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 border border-white/15 transition"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#F4B942] text-[#071B3B] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
-                    {userProfile?.displayName ? userProfile.displayName.charAt(0) : <User className="w-3.5 h-3.5" />}
+                  <div className="w-6 h-6 rounded-full bg-[#F4B942] text-[#071B3B] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
+                    {userProfile?.displayName ? userProfile.displayName.charAt(0) : <User className="w-3 h-3" />}
                   </div>
-                  <span className="text-xs font-bold text-slate-200 max-w-[110px] truncate">
+                  <span className="text-xs font-bold text-slate-200 max-w-[100px] truncate">
                     {userProfile?.displayName || currentUser.email?.split('@')[0]}
                   </span>
                 </Link>
@@ -293,7 +281,7 @@ export default function Navbar() {
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/10 rounded-xl transition cursor-pointer"
+                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-white/10 rounded-xl transition cursor-pointer"
                   title="Sign out / లాగౌట్"
                 >
                   <LogOut className="w-4 h-4" />
@@ -302,7 +290,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs uppercase font-bold tracking-wider transition shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs uppercase font-bold tracking-wider transition shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
@@ -312,11 +300,12 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Hamburger */}
+          {/* Mobile Menu Actions & Hamburger */}
           <div className="flex xl:hidden items-center gap-2">
+            <WorldLanguageTranslator />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition focus:outline-none cursor-pointer"
+              className="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition focus:outline-none cursor-pointer"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
