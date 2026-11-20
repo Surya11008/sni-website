@@ -12,7 +12,9 @@ const distIndex = path.join(distDir, 'index.html');
 if (fs.existsSync(rootAssetsDir)) {
   const existingAssets = fs.readdirSync(rootAssetsDir);
   for (const f of existingAssets) {
-    fs.unlinkSync(path.join(rootAssetsDir, f));
+    try {
+      fs.unlinkSync(path.join(rootAssetsDir, f));
+    } catch {}
   }
 } else {
   fs.mkdirSync(rootAssetsDir, { recursive: true });
