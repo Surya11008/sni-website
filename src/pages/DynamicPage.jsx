@@ -303,12 +303,12 @@ export default function DynamicPage() {
       )}
 
       {/* 2. Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-8 space-y-2.5 sm:space-y-3">
         {/* Clean, Lightweight Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
           <div>
             {/* Breadcrumb Navigation */}
-            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2 flex-wrap">
+            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-0.5 flex-wrap">
               <Link to="/" className="hover:text-[#0F294A] transition flex items-center gap-1 font-bold text-slate-600">
                 <span>Home</span>
               </Link>
@@ -321,7 +321,7 @@ export default function DynamicPage() {
             </nav>
 
             <h1
-              className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0F294A] leading-tight ${
+              className={`text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F294A] leading-tight ${
                 isTelugu ? 'font-krishna' : 'font-serif'
               }`}
             >
@@ -334,17 +334,17 @@ export default function DynamicPage() {
             <div className="shrink-0 flex items-center gap-3">
               <button
                 onClick={handleOpenAddForm}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ Add Content to This Page</span>
+                <span>+ Add Content</span>
               </button>
             </div>
           )}
         </div>
         {/* Special Stars Program Mode Switcher (Tracker vs Articles) */}
         {isStarsPage && !activeArticle && !isFormOpen && (
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -392,7 +392,7 @@ export default function DynamicPage() {
 
         {/* Special Diary Program Mode Switcher (Gospel Diary vs Articles) */}
         {isDiaryPage && !activeArticle && !isFormOpen && (
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -815,9 +815,9 @@ export default function DynamicPage() {
           </div>
         ) : contents.length > 0 ? (
           /* Cards Grid: clicking any card opens the article in-page */
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Header with Multiple View Options (Only buttons, no extra explanation) */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#C59B27]"></span>
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">

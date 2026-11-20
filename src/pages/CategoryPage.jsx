@@ -151,12 +151,12 @@ export default function CategoryPage() {
       )}
 
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-8 space-y-5">
         {/* Clean, Lightweight Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2.5 border-b border-slate-200">
           <div>
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2 flex-wrap">
+            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-1 flex-wrap">
               <Link to="/" className="hover:text-[#0F294A] transition font-bold text-slate-600">
                 <span>Home</span>
               </Link>
