@@ -555,9 +555,9 @@ export default function AdminPanel() {
                     onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-semibold bg-white"
                   >
-                    <option value="home">Home (హోమ్)</option>
+                    <option value="home">Welcome (స్వాగతం)</option>
                     <option value="worship">Worship (ఆరాధన)</option>
-                    <option value="bible-truth">Bible & Truth (బైబిల్ & సత్యం)</option>
+                    <option value="bible-truth">Truth (సత్యం)</option>
                     <option value="family">Family (ఆత్మీయ కుటుంబం)</option>
                     <option value="grow">Grow (ఆత్మీయ ఎదుగుదల)</option>
                     <option value="go-come">Go & Come (సువార్త సేవ & గమ్యం)</option>

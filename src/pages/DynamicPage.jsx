@@ -166,7 +166,7 @@ export default function DynamicPage() {
           {/* Breadcrumb Navigation */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 mb-6 flex-wrap">
             <Link to="/" className="hover:text-[#C59B27] transition flex items-center gap-1">
-              <span>Home</span>
+              <span>{isTelugu ? 'స్వాగతం' : 'Welcome'}</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-[#C59B27] font-semibold">{categoryTitle}</span>
@@ -372,7 +372,7 @@ export default function DynamicPage() {
                 className="inline-flex items-center gap-2 text-xs font-bold text-[#0F294A] hover:text-[#C59B27] transition"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{isTelugu ? 'ముఖ్య పేజీకి తిరిగి వెళ్ళండి' : 'Return to Home'}</span>
+                <span>{isTelugu ? 'ముఖ్య పేజీకి తిరిగి వెళ్ళండి' : 'Return to Welcome'}</span>
               </Link>
 
               {isAdmin && (

@@ -148,7 +148,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link to="/page/bible-truth/father" className="hover:text-white transition">
-                  {isTelugu ? 'బైబిల్ & సత్యం' : 'Bible & Truth'}
+                  {isTelugu ? 'సత్యం' : 'Truth'}
                 </Link>
               </li>
               <li>

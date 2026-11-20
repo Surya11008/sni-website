@@ -3,8 +3,8 @@
 export const DEFAULT_PORTAL_STRUCTURE = [
   {
     categorySlug: 'home',
-    titleEn: 'Home',
-    titleTe: 'హోమ్',
+    titleEn: 'Welcome',
+    titleTe: 'స్వాగతం',
     descriptionEn: 'Central assembly announcements, event highlights, and ministry schedule.',
     descriptionTe: 'కేంద్ర సమాఖ్య నూతన తాజా సమాచారం, సంఘ విశేషాలు మరియు సమయ పట్టిక.',
     iconName: 'Home',
@@ -95,8 +95,8 @@ export const DEFAULT_PORTAL_STRUCTURE = [
   },
   {
     categorySlug: 'bible-truth',
-    titleEn: 'Bible & Truth',
-    titleTe: 'బైబిల్ & సత్యం',
+    titleEn: 'Truth',
+    titleTe: 'సత్యం',
     descriptionEn: 'Theological doctrines, biblical prophecies, New Covenant mysteries, and reading plans.',
     descriptionTe: 'లేఖనముల సత్య సిద్ధాంతములు, బైబిల్ ప్రవచనములు మరియు నూతన నిబంధన మర్మములు.',
     iconName: 'BookOpen',
