@@ -527,9 +527,6 @@
         <a class="logo" href="index.html" title="SNI Home">
             <span style="color: var(--gold); font-size: 24px; font-weight: 800; letter-spacing: 2.5px;">SNI</span>
         </a>
-        <a href="index.html" class="nav-home-link">
-            <span>← Back to Home</span>
-        </a>
     </header>
 
     <main class="auth-wrapper">
@@ -637,7 +634,7 @@
                     <div class="form-group">
                         <label for="joinFullName">Your Full Name *</label>
                         <div class="input-wrap">
-                            <input type="text" id="joinFullName" class="form-input" placeholder="e.g., John David" required autocomplete="name">
+                            <input type="text" id="joinFullName" class="form-input" placeholder="Full Name" required autocomplete="name">
                         </div>
                     </div>
 
@@ -652,14 +649,14 @@
                     <div class="form-group">
                         <label for="joinContact">Email or Mobile Number (Optional)</label>
                         <div class="input-wrap">
-                            <input type="text" id="joinContact" class="form-input" placeholder="e.g., john@example.com or mobile">
+                            <input type="text" id="joinContact" class="form-input" placeholder="Email or Mobile Number">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="joinPass">Create SNI Password *</label>
                         <div class="input-wrap">
-                            <input type="password" id="joinPass" class="form-input" placeholder="Enter SNI Password (at least 5 characters)" required autocomplete="new-password" style="padding-right: 40px;">
+                            <input type="password" id="joinPass" class="form-input" placeholder="Enter SNI Password (at least 8 characters)" minlength="8" required autocomplete="new-password" style="padding-right: 40px;">
                             <button type="button" class="toggle-password" id="toggleJoinPassBtn" title="Show/Hide Password">👁️</button>
                         </div>
                     </div>
@@ -818,8 +815,8 @@
                 tabSignInBtn.classList.remove('active');
                 joinForm.classList.add('active');
                 signInForm.classList.remove('active');
-                authMainTitle.textContent = 'Join SNI Network';
-                authMainSub.textContent = 'Create your unified account for all SNI portals & tools';
+                authMainTitle.textContent = 'Join SNI';
+                authMainSub.textContent = '';
                 history.replaceState(null, '', '?mode=join');
             } else {
                 tabSignInBtn.classList.add('active');
@@ -1015,8 +1012,8 @@
                 return;
             }
 
-            if (pass.length < 5) {
-                showAlert('SNI Password must be at least 5 characters long.');
+            if (pass.length < 8) {
+                showAlert('SNI Password must be at least 8 characters long.');
                 return;
             }
 
@@ -1084,10 +1081,10 @@
         // INITIAL CHECK
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
-        if (mode === 'join' || window.location.pathname.includes('join')) {
-            switchMode('join');
-        } else {
+        if (mode === 'signin') {
             switchMode('signin');
+        } else {
+            switchMode('join');
         }
         checkExistingSession();
     </script>

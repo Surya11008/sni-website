@@ -4,6 +4,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import ScrollToTopButton from './components/ScrollToTopButton';
 
 // Pages
 import Home from './pages/Home';
@@ -52,6 +53,10 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/program/stars"
+                  element={<Navigate to="/page/program/stars" replace />}
+                />
+                <Route
                   path="/content/:contentId"
                   element={
                     <ProtectedRoute>
@@ -84,6 +89,7 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
+            <ScrollToTopButton />
             <Footer />
           </div>
         </BrowserRouter>

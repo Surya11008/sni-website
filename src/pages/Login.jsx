@@ -34,7 +34,9 @@ const isKnownAdmin = (id, pwd) => {
 };
 
 export default function Login() {
-  const [isRegistering, setIsRegistering] = useState(false);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const [isRegistering, setIsRegistering] = useState(queryParams.get('mode') !== 'signin');
   const [identifier, setIdentifier] = useState(''); // Email or SNI User ID
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -47,7 +49,6 @@ export default function Login() {
   const { login, signup, loginWithTempPassword } = useAuth();
   const { isTelugu } = useLanguage();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const destination = location.state?.from?.pathname || '/';
 
@@ -305,7 +306,7 @@ export default function Login() {
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="e.g. John David"
+                      placeholder="Full Name"
                       className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
                     />
                   </div>
@@ -321,7 +322,7 @@ export default function Login() {
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 9876543210"
+                      placeholder="Phone Number"
                       className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
                     />
                   </div>
@@ -340,13 +341,13 @@ export default function Login() {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. surya11008 or user@sni.org.in"
+                  placeholder="SNI ID or Email"
                   className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
                   autoComplete="username"
                 />
               </div>
               <p className="text-[10px] text-slate-500 mt-1">
-                Enter your SNI User ID (e.g. surya11008) or registered email.
+                Enter your SNI User ID or registered email.
               </p>
             </div>
 
@@ -359,7 +360,7 @@ export default function Login() {
                 <input
                   type="password"
                   required
-                  minLength={5}
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

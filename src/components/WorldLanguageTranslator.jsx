@@ -183,14 +183,14 @@ export default function WorldLanguageTranslator({ className = '' }) {
       {/* Hidden placeholder for Google Translate widget */}
       <div id="google_translate_element" style={{ display: 'none' }}></div>
 
-      {/* Trigger Button in Header */}
+      {/* Trigger Button in Header - ONLY Globe Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-[#F4B942] hover:text-[#071B3B] text-slate-200 text-xs font-bold transition shadow-xs cursor-pointer border border-white/15"
-        title="Translate Website to Any Language / భాష మార్చండి"
+        className="p-2 rounded-full bg-white/10 hover:bg-[#F4B942] hover:text-[#071B3B] text-slate-200 transition shadow-xs cursor-pointer border border-white/15 flex items-center justify-center"
+        title="Translate Website"
+        aria-label="Translate Website"
       >
-        <Globe className="w-3.5 h-3.5 text-[#F4B942]" />
-        <span>{currentLang === 'en' ? 'Translate' : currentLangObj.nativeName}</span>
+        <Globe className="w-4 h-4 text-[#F4B942]" />
       </button>
 
       {/* World Languages Modal / Dropdown */}
@@ -205,7 +205,7 @@ export default function WorldLanguageTranslator({ className = '' }) {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[#0F294A]">
-                    Select Language / ప్రపంచ భాషలు
+                    Select Language
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     Translate all content and pages into your preferred language instantly

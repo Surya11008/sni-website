@@ -196,7 +196,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-[#132A4A] flex items-center justify-center text-xs text-slate-400">
           <p className="text-center text-slate-300 tracking-wide">
             © 2026 Preaching Counter. All Rights Reserved. • Powered by{' '}
-            <span className="text-[#F4B942] font-semibold">SNI Network</span>
+            <span className="text-[#F4B942] font-semibold">SNI</span>
           </p>
         </div>
       </div>

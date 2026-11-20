@@ -174,8 +174,8 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-[#071B3B] border-b border-[#132A4A] shadow-[0_4px_25px_rgba(0,0,0,0.3)] font-sans">
       {/* Main Sleek & Compact Navbar Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Brand Emblem & Title */}
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-4">
+          {/* Brand Emblem & Title on the Far Left */}
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
@@ -192,10 +192,13 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* 8 Main Categories Mega-Menu (Desktop - Role Filtered) */}
+          {/* Spacer to push pages header towards right side leaving good gap from SNI */}
+          <div className="flex-1" />
+
+          {/* Main Categories Menu sitting closer together on the right side */}
           <nav
             ref={dropdownRef}
-            className="hidden xl:flex items-center gap-1 lg:gap-2.5 relative"
+            className="hidden xl:flex items-center gap-1 relative"
             onMouseLeave={() => setActiveDropdown(null)}
           >
             {visibleCategories.map((cat) => {
@@ -212,7 +215,7 @@ export default function Navbar() {
                     to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
                     onClick={() => setActiveDropdown(null)}
                     onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
-                    className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                       isOpen || isCategoryActive
                         ? 'text-[#F4B942] bg-white/15 border-b-2 border-[#F4B942]'
                         : 'text-slate-200 hover:text-[#F4B942] hover:bg-white/5'

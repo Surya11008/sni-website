@@ -59,6 +59,7 @@ export default function ContentDetailPage() {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState([]);
 
   // Admin edit form state - Unified Single Language Input
   const [isEditing, setIsEditing] = useState(false);
@@ -195,6 +196,19 @@ export default function ContentDetailPage() {
       likedBy: newLikedBy,
       likesCount: newCount,
     }));
+
+    // Trigger floating hearts animation when liked
+    if (!currentlyLiked) {
+      const newHearts = Array.from({ length: 6 }, (_, i) => ({
+        id: `${Date.now()}-${i}`,
+        x: (Math.random() - 0.5) * 50,
+        delay: i * 0.08,
+      }));
+      setFloatingHearts((prev) => [...prev, ...newHearts]);
+      setTimeout(() => {
+        setFloatingHearts((prev) => prev.filter((h) => !newHearts.some((nh) => nh.id === h.id)));
+      }, 1200);
+    }
 
     try {
       const docRef = doc(db, sourceCollection, contentId);
@@ -350,10 +364,10 @@ export default function ContentDetailPage() {
       {/* Top Banner Navigation Header */}
       <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
         <div className="max-w-4xl mx-auto space-y-4">
-          {/* Breadcrumb Links */}
+          {/* Breadcrumb Links: Welcome > Category > Page > Content Title */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
             <Link to="/" className="hover:text-[#F4B942] transition">
-              {isTelugu ? 'స్వాగతం' : 'Welcome'}
+              Welcome
             </Link>
             {article.categorySlug && (
               <>
@@ -370,13 +384,15 @@ export default function ContentDetailPage() {
               <>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
                 <Link
-                  to={`/page/${article.categorySlug}/${article.pageSlug}`}
+                  to={`/page/${article.categorySlug || 'worship'}/${article.pageSlug}`}
                   className="hover:text-[#F4B942] capitalize font-medium text-slate-200 transition"
                 >
                   {article.pageSlug}
                 </Link>
               </>
             )}
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-[#F4B942] font-bold truncate max-w-xs">{articleTitle}</span>
           </nav>
 
           <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
@@ -389,23 +405,37 @@ export default function ContentDetailPage() {
             </Link>
 
             <div className="flex items-center gap-2">
-              {/* Heart Symbol / Like Button with Live Count */}
-              <button
-                onClick={handleToggleLike}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                  isLiked
-                    ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
-                    : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
-                }`}
-                title={isLiked ? 'Liked' : 'Like this content'}
-              >
-                <Heart
-                  className={`w-3.5 h-3.5 transition-transform ${
-                    isLiked ? 'fill-current text-white scale-110' : 'text-rose-400'
+              {/* Heart Symbol / Like Button with Live Count and Floating Hearts */}
+              <div className="relative">
+                <button
+                  onClick={handleToggleLike}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                    isLiked
+                      ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
+                      : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
                   }`}
-                />
-                <span>{likesCount}</span>
-              </button>
+                  title={isLiked ? 'Liked' : 'Like'}
+                >
+                  <Heart
+                    className={`w-3.5 h-3.5 transition-transform ${
+                      isLiked ? 'fill-current text-white scale-110' : 'text-rose-400'
+                    }`}
+                  />
+                  <span>{likesCount}</span>
+                </button>
+                {floatingHearts.map((h) => (
+                  <span
+                    key={h.id}
+                    className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-sm select-none"
+                    style={{
+                      '--tw-translate-x': `${h.x}px`,
+                      animationDelay: `${h.delay}s`,
+                    }}
+                  >
+                    ❤️
+                  </span>
+                ))}
+              </div>
 
               <AudioSpeakerButton text={articleDesc} title={articleTitle} />
 
@@ -559,12 +589,6 @@ export default function ContentDetailPage() {
                         })
                       : 'Recent'}
                   </span>
-                </span>
-              )}
-
-              {article.authorEmail && (
-                <span className="text-slate-400 text-xs">
-                  • Published by {article.authorEmail.split('@')[0]}
                 </span>
               )}
             </div>
@@ -736,24 +760,37 @@ export default function ContentDetailPage() {
             </Link>
 
             <div className="flex items-center gap-3">
-              {/* Heart Symbol / Like Button with Live Count */}
-              <button
-                onClick={handleToggleLike}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition cursor-pointer shadow-xs border ${
-                  isLiked
-                    ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 scale-105'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-rose-300'
-                }`}
-                title={isLiked ? 'Liked' : 'Like'}
-              >
-                <Heart
-                  className={`w-4 h-4 transition-transform ${
-                    isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
+              {/* Heart Symbol / Like Button: ONLY count, floating hearts animation */}
+              <div className="relative">
+                <button
+                  onClick={handleToggleLike}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition cursor-pointer shadow-xs border ${
+                    isLiked
+                      ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 scale-105'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-rose-300'
                   }`}
-                />
-                <span>{likesCount}</span>
-                <span className="hidden sm:inline">{likesCount === 1 ? 'Like' : 'Likes'}</span>
-              </button>
+                  title={isLiked ? 'Liked' : 'Like'}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-transform ${
+                      isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
+                    }`}
+                  />
+                  <span>{likesCount}</span>
+                </button>
+                {floatingHearts.map((h) => (
+                  <span
+                    key={h.id}
+                    className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-base select-none"
+                    style={{
+                      '--tw-translate-x': `${h.x}px`,
+                      animationDelay: `${h.delay}s`,
+                    }}
+                  >
+                    ❤️
+                  </span>
+                ))}
+              </div>
 
               <button
                 onClick={() => {
@@ -773,57 +810,54 @@ export default function ContentDetailPage() {
                 <span>Share</span>
               </button>
             </div>
-          </div>
-        </article>
+            </div>
+          </article>
 
-        {/* ======================================================== */}
-        {/* COMMENTS & FELLOWSHIP SECTION                            */}
-        {/* ======================================================== */}
-        <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 mt-8">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-[#C59B27]" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
-                  Comments & Fellowship ({comments.length})
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  Share your thoughts, reflections, or questions on this content.
-                </p>
+          {/* ======================================================== */}
+          {/* COMMENTS SECTION                                         */}
+          {/* ======================================================== */}
+          <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 mt-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-[#C59B27]" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
+                    Comments ({comments.length})
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Share your thoughts, reflections, or questions on this content.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* New Comment Input Box */}
-          <form onSubmit={handlePostComment} className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-bold text-xs uppercase shrink-0 mt-1 shadow-xs">
-                {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0).toUpperCase() || 'U')}
-              </div>
-              <div className="flex-1 space-y-2">
-                <textarea
-                  rows={3}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Write your comment or reflection here..."
-                  className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-[#C59B27] transition"
-                  required
-                />
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] text-slate-400">
-                    Posting as <span className="font-semibold text-slate-700">{userProfile?.displayName || currentUser?.email?.split('@')[0]}</span>
-                  </span>
-                  <button
-                    type="submit"
-                    disabled={submittingComment || !commentText.trim()}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-40"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
-                  </button>
+            {/* New Comment Input Box */}
+            <form onSubmit={handlePostComment} className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-bold text-xs uppercase shrink-0 mt-1 shadow-xs">
+                  {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0).toUpperCase() || 'U')}
                 </div>
+                <div className="flex-1 space-y-2">
+                  <textarea
+                    rows={3}
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write your comment or reflection here..."
+                    className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-[#C59B27] transition"
+                    required
+                  />
+                  <div className="flex items-center justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={submittingComment || !commentText.trim()}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-40"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{submittingComment ? 'Submitting...' : 'Post Comment'}</span>
+                    </button>
+                  </div>
               </div>
             </div>
           </form>

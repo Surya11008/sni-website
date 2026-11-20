@@ -21,6 +21,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
+import StarsProgramTracker from '../components/StarsProgramTracker';
 import {
   ChevronRight,
   Plus,
@@ -42,6 +43,7 @@ import {
   Music,
   Download,
   Check,
+  Star,
 } from 'lucide-react';
 
 export default function DynamicPage() {
@@ -56,6 +58,10 @@ export default function DynamicPage() {
 
   // View Mode: 'grid' | 'list' | 'compact'
   const [viewMode, setViewMode] = useState('grid');
+
+  // Stars Program special view tab: 'tracker' | 'articles'
+  const isStarsPage = pageSlug === 'stars' || (categorySlug === 'program' && pageSlug === 'stars');
+  const [starsViewTab, setStarsViewTab] = useState('tracker');
 
   // In-Page Article View state (NO popup)
   const [activeArticle, setActiveArticle] = useState(null);
@@ -93,6 +99,7 @@ export default function DynamicPage() {
     setPageInfo(info);
     setActiveArticle(null);
     setIsFormOpen(false);
+    setStarsViewTab('tracker');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [categorySlug, pageSlug]);
 
@@ -307,6 +314,54 @@ export default function DynamicPage() {
 
       {/* 2. Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Special Stars Program Mode Switcher (Tracker vs Articles) */}
+        {isStarsPage && !activeArticle && !isFormOpen && (
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStarsViewTab('tracker')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  starsViewTab === 'tracker'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 fill-current text-[#F4B942]" />
+                <span>{isTelugu ? 'ఆకాశ నక్షత్రాల సాధన & మైలురాళ్ళు' : 'Stars & Milestones Tracker'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setStarsViewTab('articles')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  starsViewTab === 'articles'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{isTelugu ? 'అధ్యయన సామగ్రి & ప్రసంగాలు' : 'Study Materials & Articles'}</span>
+                {contents.length > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] font-bold">
+                    {contents.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {starsViewTab === 'tracker' && isAdmin && (
+              <button
+                type="button"
+                onClick={handleOpenAddForm}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-[#071B3B] text-xs font-bold transition cursor-pointer border border-slate-200"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#C59B27]" />
+                <span>{isTelugu ? 'ఆర్టికల్ జోడించండి' : '+ Add Article to Page'}</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* IN-PAGE ADD / EDIT FORM (No Popup!) */}
         {isFormOpen && (
           <div className="mb-12 bg-white rounded-3xl border-2 border-[#F4B942]/50 p-6 sm:p-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
@@ -482,8 +537,10 @@ export default function DynamicPage() {
           </div>
         )}
 
-        {/* IN-PAGE FULL ARTICLE READER VIEW (No Popup!) */}
-        {activeArticle ? (
+        {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Stars Tracker */}
+        {isStarsPage && starsViewTab === 'tracker' && !activeArticle && !isFormOpen ? (
+          <StarsProgramTracker />
+        ) : activeArticle ? (
           <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-12 shadow-md max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
             {/* Top Bar: Back Button & Admin Controls */}
             <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4 flex-wrap">
@@ -543,11 +600,7 @@ export default function DynamicPage() {
                     </span>
                   </span>
                 )}
-                {activeArticle.authorEmail && (
-                  <span className="text-slate-400 text-xs hidden sm:inline">
-                    • By {activeArticle.authorEmail.split('@')[0]}
-                  </span>
-                )}
+
               </div>
 
               <h1
