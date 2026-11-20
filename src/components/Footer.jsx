@@ -21,7 +21,7 @@ export default function Footer() {
 
   const ecosystemLinks = [
     {
-      name: 'Eva Portal',
+      name: 'Eva',
       url: 'https://eva.sni.org.in',
       icon: Award,
       badge: 'eva.sni.org.in',
@@ -117,30 +117,29 @@ export default function Footer() {
                 >
                   {t('brandName')}
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#C59B27]">
-                  {t('footerMotto')}
-                </div>
+                {t('footerMotto') ? (
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#C59B27]">
+                    {t('footerMotto')}
+                  </div>
+                ) : null}
               </div>
             </div>
 
-            <p
-              className={`text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md ${
-                isTelugu ? 'font-telugu leading-loose' : ''
-              }`}
-            >
-              {t('footerDesc')}
-            </p>
-
-            <div className="pt-2 flex items-center gap-2 text-xs text-slate-400">
-              <Shield className="w-4 h-4 text-[#C59B27]" />
-              <span>General Assembly of Assemblies • Theological Education & Fellowship</span>
-            </div>
+            {t('footerDesc') ? (
+              <p
+                className={`text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md ${
+                  isTelugu ? 'font-telugu leading-loose' : ''
+                }`}
+              >
+                {t('footerDesc')}
+              </p>
+            ) : null}
           </div>
 
-          {/* Column 2: Portal Navigation */}
+          {/* Column 2: Categories Navigation */}
           <div>
             <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-4 border-b border-[#1A3860] pb-2 text-[#C59B27]">
-              Portal Categories
+              {isTelugu ? 'విభాగాలు' : 'Categories'}
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li>
@@ -184,7 +183,7 @@ export default function Footer() {
                   rel="noreferrer"
                   className="hover:text-white transition flex items-center gap-1.5"
                 >
-                  <span>Eva Portal (eva.sni.org.in)</span>
+                  <span>Eva (eva.sni.org.in)</span>
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </a>
               </li>
@@ -251,8 +250,6 @@ export default function Footer() {
           <div className="flex items-center gap-6">
             <span className="hover:text-slate-400 transition cursor-pointer">Terms of Assembly</span>
             <span className="hover:text-slate-400 transition cursor-pointer">Privacy Policy</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-[#C59B27] font-semibold">watv.org Visual Layout Edition</span>
           </div>
         </div>
       </div>

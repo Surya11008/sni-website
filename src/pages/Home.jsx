@@ -205,7 +205,7 @@ export default function Home() {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 text-[#C59B27] text-xs font-bold uppercase tracking-widest mb-2">
             <span className="w-2 h-0.5 bg-[#C59B27]"></span>
-            <span>watv.org Architecture</span>
+            <span>{isTelugu ? 'విభాగాలు' : 'Categories'}</span>
             <span className="w-2 h-0.5 bg-[#C59B27]"></span>
           </div>
           <h2
@@ -213,7 +213,7 @@ export default function Home() {
               isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
             }`}
           >
-            {isTelugu ? 'దేవుని సంఘ సమాఖ్య ముఖ్య విభాగాలు' : 'Portal Directory & Ministry Hubs'}
+            {isTelugu ? 'ముఖ్య విభాగాలు' : 'Directory & Services'}
           </h2>
           <p
             className={`text-slate-600 text-xs sm:text-sm mt-2 leading-relaxed ${
@@ -221,8 +221,8 @@ export default function Home() {
             }`}
           >
             {isTelugu
-              ? 'ఆరాధనలు, లేఖన సత్యాలు, ఆత్మీయ కుటుంబం, ఎదుగుదల మరియు సువార్త కార్యక్రమాల సమగ్ర సమాహారం.'
-              : 'Explore the 8 central pillars of our spiritual assembly, theological doctrines, gospel programs, and ministerial administration.'}
+              ? 'ఆరాధనలు, లేఖన సత్యాలు, ఆత్మీయ కుటుంబం, ఎదుగుదల మరియు కార్యక్రమాల సమగ్ర సమాహారం.'
+              : 'Explore the central pillars of our fellowship, resources, programs, and administration.'}
           </p>
         </div>
 

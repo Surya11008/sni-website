@@ -91,8 +91,8 @@ export default function Navbar() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#C59B27] animate-pulse"></span>
             <span className={isTelugu ? 'font-telugu' : ''}>
               {isTelugu
-                ? 'పరిశుద్ధ సత్య మార్గం • సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI) అధికారిక పోర్టల్'
-                : 'Super Natural Intelligence (SNI) • Official Global Assembly Portal'}
+                ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI)'
+                : 'Super Natural Intelligence (SNI)'}
             </span>
           </div>
 
@@ -359,7 +359,7 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold"
                   >
-                    Portal
+                    {t('navDashboard')}
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -387,7 +387,7 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-bold text-slate-900 hover:text-[#0F294A] py-1.5 px-2 rounded-lg hover:bg-slate-50"
           >
-            {isTelugu ? 'ముఖ్య హోమ్ పేజీ' : 'Portal Home'}
+            {isTelugu ? 'ముఖ్య హోమ్ పేజీ' : 'Home'}
           </Link>
 
           {/* Accordion Categories */}

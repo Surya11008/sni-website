@@ -178,7 +178,7 @@ export default function DynamicPage() {
             <div className="max-w-3xl space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#C59B27] border border-[#C59B27]/40 text-xs font-semibold uppercase tracking-wider">
                 <PortalIcon name={page?.iconName || 'FileText'} className="w-3.5 h-3.5 text-[#C59B27]" />
-                <span>{categoryTitle} • Portal Hub</span>
+                <span>{categoryTitle}</span>
               </div>
 
               <h1
@@ -350,7 +350,7 @@ export default function DynamicPage() {
               <p>
                 {isTelugu
                   ? `దేవుని సంఘ సమాఖ్య ${categoryTitle} విభాగంలోని "${pageTitle}" పేజీకి స్వాగతం. ఈ విభాగం ద్వారా దైవిక క్రమములు, సిద్ధాంత గ్రంథములు మరియు ఆత్మీయ మార్గదర్శకాలను క్రమబద్ధంగా అందించడం జరుగుతుంది.`
-                  : `Welcome to the official "${pageTitle}" section within the ${categoryTitle} directory of the SNI General Assembly Portal. This repository organizes sacred orders, theological teachings, and administrative records for all ministerial workers and fellowship members.`}
+                  : `Welcome to the official "${pageTitle}" section within the ${categoryTitle} directory of Super Natural Intelligence (SNI). This repository organizes sacred orders, theological teachings, and administrative records for all ministerial workers and fellowship members.`}
               </p>
 
               {pageDesc && (
@@ -372,7 +372,7 @@ export default function DynamicPage() {
                 className="inline-flex items-center gap-2 text-xs font-bold text-[#0F294A] hover:text-[#C59B27] transition"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{isTelugu ? 'ముఖ్య పేజీకి తిరిగి వెళ్ళండి' : 'Return to Portal Home'}</span>
+                <span>{isTelugu ? 'ముఖ్య పేజీకి తిరిగి వెళ్ళండి' : 'Return to Home'}</span>
               </Link>
 
               {isAdmin && (

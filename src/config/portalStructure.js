@@ -308,11 +308,11 @@ export const DEFAULT_PORTAL_STRUCTURE = [
         iconName: 'Book',
       },
       {
-        pageSlug: 'watv',
-        titleEn: 'WATV',
-        titleTe: 'WATV అధికారిక పోర్టల్',
-        descEn: 'Direct access to the global headquarters portal: watv.org news and media.',
-        descTe: 'ప్రధాన ప్రధాన కార్యాలయ అంతర్జాతీయ అధికారిక పోర్టల్ watv.org.',
+        pageSlug: 'broadcasts',
+        titleEn: 'Broadcasts',
+        titleTe: 'ప్రత్యక్ష ప్రసారాలు',
+        descEn: 'Official video broadcasts, news, and special coverage.',
+        descTe: 'అధికారిక వీడియో ప్రసారాలు, వార్తలు మరియు ప్రత్యేక ప్రసారాలు.',
         iconName: 'Globe',
       },
       {

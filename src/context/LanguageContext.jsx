@@ -7,12 +7,12 @@ export const translations = {
   en: {
     // Nav & Brand
     brandName: 'Super Natural Intelligence',
-    brandTag: 'SNI Organization Portal',
+    brandTag: 'SNI Official',
     navHome: 'Home',
     navNewsEvents: 'News & Events',
     navMediaVideos: 'Media & Videos',
     navEcosystemApps: 'Ecosystem Apps',
-    navMemberPortal: 'Member Portal',
+    navMemberPortal: 'Members',
     navDashboard: 'Dashboard',
     navAdmin: 'Admin Panel',
     navSignIn: 'Sign In',
@@ -21,17 +21,17 @@ export const translations = {
     roleMember: 'MEMBER',
 
     // Hero
-    heroBadge: 'Super Natural Intelligence • Gospel & Assembly Hub',
+    heroBadge: 'Super Natural Intelligence • Official Hub',
     heroTitle: 'Welcome to Super Natural Intelligence',
-    heroSubtitle: 'A centralized sanctuary of divine truth, spiritual fellowship, sacred broadcast archives, and ministerial applications.',
+    heroSubtitle: 'A centralized sanctuary of fellowship, broadcast archives, and ministerial applications.',
     heroBtnExplore: 'Explore More',
     heroBtnMedia: 'Watch Media & Sermons',
-    heroBtnPortal: 'Member Portal',
+    heroBtnPortal: 'Member Area',
     heroBtnApps: 'Ecosystem Apps Hub',
 
     // Announcements
     announcementsTitle: 'Latest News & Announcements',
-    announcementsSubtitle: 'Official pastoral updates, sacred feast convocations, and fellowship notices from the general assembly.',
+    announcementsSubtitle: 'Official pastoral updates, notices, and communications.',
     readMore: 'Read Full Story',
     closeModal: 'Close',
     noAnnouncements: 'No announcements posted yet. Check back soon.',
@@ -87,19 +87,19 @@ export const translations = {
     confirmDelete: 'Are you sure you want to delete this item? This action cannot be undone.',
 
     // Footer
-    footerMotto: 'Preaching the New Covenant Gospel of the Kingdom to All Nations',
-    footerRights: 'All rights reserved. Official Organization Portal.',
-    footerDesc: 'Dedicated to the propagation of divine truth, biblical doctrine, and mutual love across all global assemblies.',
+    footerMotto: '',
+    footerRights: 'All rights reserved. Official Organization.',
+    footerDesc: '',
   },
   te: {
     // Nav & Brand
     brandName: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్',
-    brandTag: 'SNI అధికారిక పోర్టల్',
+    brandTag: 'SNI అధికారికం',
     navHome: 'ముఖ్యాంశాలు',
     navNewsEvents: 'వార్తలు & విశేషాలు',
     navMediaVideos: 'మీడియా & ప్రసంగాలు',
     navEcosystemApps: 'సంస్థ వెబ్ యాప్స్',
-    navMemberPortal: 'సభ్యుల పోర్టల్',
+    navMemberPortal: 'సభ్యుల విభాగం',
     navDashboard: 'సభ్యుల డాష్‌బోర్డ్',
     navAdmin: 'అడ్మిన్ ప్యానెల్',
     navSignIn: 'లాగిన్',
@@ -108,12 +108,12 @@ export const translations = {
     roleMember: 'సభ్యుడు',
 
     // Hero
-    heroBadge: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI) • పరిశుద్ధ సత్య మార్గం',
-    heroTitle: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ పోర్టల్‌కు స్వాగతం',
+    heroBadge: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI)',
+    heroTitle: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ స్వాగతం',
     heroSubtitle: 'సమస్త సమాజాల సభ్యులకు అవసరమైన సువార్త సత్యాలు, ఆత్మీయ ప్రసంగాలు, పండుగల వివరాలు మరియు అనుసంధానిత వెబ్ అప్లికేషన్ల కేంద్ర వేదిక.',
     heroBtnExplore: 'మరిన్ని వివరాలు',
     heroBtnMedia: 'మీడియా & ప్రసంగాలు',
-    heroBtnPortal: 'సభ్యుల పోర్టల్',
+    heroBtnPortal: 'సభ్యుల విభాగం',
     heroBtnApps: 'సంస్థ వెబ్ యాప్స్',
 
     // Announcements
@@ -174,9 +174,9 @@ export const translations = {
     confirmDelete: 'మీరు నిజంగా ఈ ఐటమ్‌ను తొలగించాలనుకుంటున్నారా? దీనిని తిరిగి పొందలేరు.',
 
     // Footer
-    footerMotto: 'సర్వలోకమునకు నూతన నిబంధన సువార్తను ప్రకటించుట',
-    footerRights: 'అన్ని హక్కులూ ప్రత్యేకించబడ్డాయి. అధికారిక సంస్థ వెబ్ పోర్టల్.',
-    footerDesc: 'సమస్త సమాజాల మధ్య దైవిక సత్యము, పరిశుద్ధ ప్రేమ మరియు ఐక్యతను పెంపొందించుట కొరకు అంకితం.',
+    footerMotto: '',
+    footerRights: 'అన్ని హక్కులూ ప్రత్యేకించబడ్డాయి. అధికారిక సంస్థ.',
+    footerDesc: '',
   },
 };
 

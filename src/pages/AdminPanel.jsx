@@ -337,7 +337,7 @@ export default function AdminPanel() {
         iconName: 'FileText',
       });
       await fetchCustomPages();
-      setStatusMessage({ type: 'success', text: 'Portal page successfully added to navigation & dynamic routes!' });
+      setStatusMessage({ type: 'success', text: 'Page successfully added to navigation & dynamic routes!' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: `Failed to save page: ${err.message}` });
     } finally {
@@ -351,7 +351,7 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, 'portal_pages', id));
       setCustomPagesList((prev) => prev.filter((item) => item.id !== id));
-      setStatusMessage({ type: 'success', text: 'Portal page removed.' });
+      setStatusMessage({ type: 'success', text: 'Page removed.' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
     }
@@ -536,7 +536,7 @@ export default function AdminPanel() {
               <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
                 <Plus className="w-5 h-5 text-amber-600" />
                 <span className={isTelugu ? 'font-telugu' : ''}>
-                  {isTelugu ? 'నూతన పేజీని జోడించండి' : 'Add New Portal Page'}
+                  {isTelugu ? 'నూతన పేజీని జోడించండి' : 'Add New Page'}
                 </span>
               </h2>
               <p className="text-xs text-slate-500 mb-5">
@@ -720,22 +720,22 @@ export default function AdminPanel() {
                   disabled={loading}
                   className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
                 >
-                  {loading ? 'Saving...' : 'Save to Portal Pages'}
+                  {loading ? 'Saving...' : 'Save Page'}
                 </button>
               </form>
             </div>
 
-            {/* Portal Architecture & Active Pages Directory */}
+            {/* Category Architecture & Active Pages Directory */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                   <div>
                     <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                       <FolderTree className="w-5 h-5 text-indigo-600" />
-                      <span>Live Multi-Level Portal Hierarchy</span>
+                      <span>Live Category & Navigation Hierarchy</span>
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      8 Standard watv.org categories + {customPagesList.length} custom sub-pages stored in Firestore <code className="bg-slate-100 px-1 py-0.5 rounded">portal_pages</code>.
+                      8 Standard categories + {customPagesList.length} custom sub-pages stored in Firestore <code className="bg-slate-100 px-1 py-0.5 rounded">portal_pages</code>.
                     </p>
                   </div>
                   <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-[#C59B27] rounded-full border border-[#C59B27]/30">

@@ -179,12 +179,12 @@ export default function Login() {
             </h2>
             <p className="text-xs font-bold uppercase tracking-wider text-[#C59B27] mt-0.5">
               {isRegistering
-                ? (isTelugu ? 'కొత్త ఖాతా సృష్టించండి' : 'Create Portal Account')
-                : (isTelugu ? 'పోర్టల్ లాగిన్' : 'Official Portal Login')}
+                ? (isTelugu ? 'కొత్త ఖాతా సృష్టించండి' : 'Create Account')
+                : (isTelugu ? 'అధికారిక లాగిన్' : 'Official Login')}
             </p>
             <p className={`text-xs text-slate-500 mt-1 ${isTelugu ? 'font-telugu' : ''}`}>
               {isRegistering
-                ? (isTelugu ? 'మీ వివరాలను నమోదు చేసి సంస్థ పోర్టల్‌లో చేరండి' : 'Join our organization team and access ministerial resources')
+                ? (isTelugu ? 'మీ వివరాలను నమోదు చేసి సంస్థలో చేరండి' : 'Join our organization team and access ministerial resources')
                 : (isTelugu ? 'మీ SNI ID లేదా ఈమెయిల్ ద్వారా డాష్‌బోర్డ్ ప్రవేశించండి' : 'Enter your SNI ID or Work Email to access your dashboard')}
             </p>
           </div>
