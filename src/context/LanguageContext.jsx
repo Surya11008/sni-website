@@ -5,9 +5,9 @@ const LanguageContext = createContext(null);
 
 export const translations = {
   en: {
-    // Nav
-    brandName: 'SNI Portal',
-    brandTag: 'Church of God Assembly',
+    // Nav & Brand
+    brandName: 'Super Natural Intelligence',
+    brandTag: 'SNI Organization Portal',
     navHome: 'Home',
     navNewsEvents: 'News & Events',
     navMediaVideos: 'Media & Videos',
@@ -21,9 +21,9 @@ export const translations = {
     roleMember: 'MEMBER',
 
     // Hero
-    heroBadge: 'Spiritual Nature of India • Gospel & Assembly Hub',
-    heroTitle: 'Welcome to the SNI Organization Portal',
-    heroSubtitle: 'A centralized sanctuary of truth, spiritual fellowship, sermon archives, and official organizational ministries.',
+    heroBadge: 'Super Natural Intelligence • Gospel & Assembly Hub',
+    heroTitle: 'Welcome to Super Natural Intelligence',
+    heroSubtitle: 'A centralized sanctuary of divine truth, spiritual fellowship, sacred broadcast archives, and ministerial applications.',
     heroBtnExplore: 'Explore More',
     heroBtnMedia: 'Watch Media & Sermons',
     heroBtnPortal: 'Member Portal',
@@ -92,9 +92,9 @@ export const translations = {
     footerDesc: 'Dedicated to the propagation of divine truth, biblical doctrine, and mutual love across all global assemblies.',
   },
   te: {
-    // Nav
-    brandName: 'SNI పోర్టల్',
-    brandTag: 'దేవుని సంఘ సమాఖ్య',
+    // Nav & Brand
+    brandName: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్',
+    brandTag: 'SNI అధికారిక పోర్టల్',
     navHome: 'ముఖ్యాంశాలు',
     navNewsEvents: 'వార్తలు & విశేషాలు',
     navMediaVideos: 'మీడియా & ప్రసంగాలు',
@@ -108,8 +108,8 @@ export const translations = {
     roleMember: 'సభ్యుడు',
 
     // Hero
-    heroBadge: 'పరిశుద్ధ సత్య మార్గం • సువార్త & సమాచార కేంద్రం',
-    heroTitle: 'SNI సంస్థ అధికారిక వెబ్ పోర్టల్‌కు స్వాగతం',
+    heroBadge: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI) • పరిశుద్ధ సత్య మార్గం',
+    heroTitle: 'సూపర్ నేచురల్ ఇంటెలిజెన్స్ పోర్టల్‌కు స్వాగతం',
     heroSubtitle: 'సమస్త సమాజాల సభ్యులకు అవసరమైన సువార్త సత్యాలు, ఆత్మీయ ప్రసంగాలు, పండుగల వివరాలు మరియు అనుసంధానిత వెబ్ అప్లికేషన్ల కేంద్ర వేదిక.',
     heroBtnExplore: 'మరిన్ని వివరాలు',
     heroBtnMedia: 'మీడియా & ప్రసంగాలు',
