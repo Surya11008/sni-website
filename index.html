@@ -1200,7 +1200,6 @@ body.sni-live-edit-active [data-sni-edit]:focus {
         <a href="#contact">Contact</a>
         <a href="signin.html" id="sniNavSignInBtn" style="color: white; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 7px 11px; font-size: 13.5px;" title="Sign In">Sign In</a>
         <a href="join.html" id="sniNavJoinBtn" style="background: linear-gradient(135deg, #f5c75e, #eab308); color: #071b3b; font-weight: bold; border-radius: 6px; padding: 7px 13px; font-size: 13.5px; box-shadow: 0 2px 8px rgba(245, 199, 94, 0.3);" title="Join SNI">✨ Join</a>
-        <a href="#admin" id="sniNavAdminBtn" style="color: var(--gold); font-weight: bold; border: 1px dashed rgba(245, 199, 94, 0.4); border-radius: 6px;" title="Admin Portal & Live Edit">👑 Admin</a>
         <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
         </button>
@@ -1273,9 +1272,9 @@ body.sni-live-edit-active [data-sni-edit]:focus {
         <!-- Injected custom cards -->
         <span id="customCardsAnchor" style="display:contents;"></span>
 
-        <!-- Admin Add Card Trigger Button (Visible to Admin Only or clickable to Login) -->
-        <div id="adminCardActionContainer" style="display: flex; align-items: center;">
-            <button type="button" id="adminAddCardBtn" class="site-card" style="border: 2px dashed rgba(245, 199, 94, 0.4); background: rgba(255, 255, 255, 0.05); cursor: pointer; text-align: left; width: 100%;" title="Admin: Add New Shortcut Card">
+        <!-- Admin Add Card Trigger Button (Visible only in Developer Mode) -->
+        <div id="adminCardActionContainer" style="display: none; align-items: center;">
+            <button type="button" id="adminAddCardBtn" class="site-card" style="border: 2px dashed rgba(245, 199, 94, 0.4); background: rgba(255, 255, 255, 0.05); cursor: pointer; text-align: left; width: 100%;" title="Developer: Add New Shortcut Card">
                 <span class="site-card-logo" id="adminAddCardIcon" aria-hidden="true" style="background: rgba(245, 199, 94, 0.15); color: var(--gold); border: 1px dashed var(--gold);">➕</span>
                 <span>
                     <span class="site-card-name" id="adminAddCardLabel" style="color: var(--gold);">+ Add Portal Card</span>
@@ -1293,7 +1292,7 @@ body.sni-live-edit-active [data-sni-edit]:focus {
     <div class="section-head-wrap">
         <h2 class="section-title" data-sni-edit="notices_title">Notices &amp; Announcements</h2>
         <p class="section-subtitle" data-sni-edit="notices_sub">Official updates, guidelines, schedules, and important notifications</p>
-        <button type="button" class="section-action-btn" id="openNoticeModalBtn">
+        <button type="button" class="section-action-btn" id="openNoticeModalBtn" style="display: none;">
             <span>+ New Notice</span>
         </button>
     </div>
@@ -1452,7 +1451,6 @@ body.sni-live-edit-active [data-sni-edit]:focus {
     <div style="margin-top: 10px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
         <a href="signin.html" style="color: #cbd5e1; font-size: 12.5px; text-decoration: none;">🔑 Sign In</a>
         <a href="join.html" style="color: var(--gold); font-size: 12.5px; text-decoration: none; font-weight: bold;">✨ Join SNI</a>
-        <a href="#admin" id="sniFooterAdminBtn" style="color: rgba(245, 199, 94, 0.75); font-size: 12px; text-decoration: none; cursor: pointer;">👑 Admin Portal &amp; Live Edit</a>
     </div>
 
 </footer>
@@ -1612,13 +1610,13 @@ body.sni-live-edit-active [data-sni-edit]:focus {
     </div>
 </div>
 
-<!-- Floating Admin Toolbar -->
+<!-- Floating Developer HUD (Only visible in Developer / Live Edit Mode) -->
 <div id="sniAdminToolbar" class="sni-admin-toolbar" style="display: none;">
     <div class="sni-admin-toolbar-inner">
-        <div class="sni-admin-badge">
-            <span class="sni-crown">👑</span>
-            <span>Admin: <strong>surya11008</strong></span>
-        </div>
+        <a href="studio.html" class="sni-admin-badge" style="text-decoration: none; color: inherit; cursor: pointer;" title="Open Developer Studio">
+            <span class="sni-crown">🛠️</span>
+            <span>Developer Studio</span>
+        </a>
         <div class="sni-toolbar-sep"></div>
         <button type="button" id="sniLiveEditToggleBtn" class="sni-toolbar-btn sni-edit-toggle" title="Toggle Live Editing on the whole website">
             <span>✏️ Live Edit: <strong id="liveEditStateText">OFF</strong></span>
@@ -1629,8 +1627,8 @@ body.sni-live-edit-active [data-sni-edit]:focus {
         <button type="button" id="sniToolbarAddCardBtn" class="sni-toolbar-btn" title="Add a new Shortcut Card">
             <span>➕ Add Card</span>
         </button>
-        <button type="button" id="sniAdminLogoutBtn" class="sni-toolbar-btn sni-logout-btn" title="Log out from Admin session">
-            <span>🚪 Logout</span>
+        <button type="button" id="sniExitDevModeBtn" class="sni-toolbar-btn sni-logout-btn" title="Exit Developer Mode">
+            <span>✖️ Exit Dev</span>
         </button>
     </div>
 </div>
@@ -1949,7 +1947,7 @@ function renderNotices() {
     const container = document.getElementById('noticesContainer');
     if (!container) return;
     const notices = getNotices();
-    const isAdmin = isAdminActive();
+    const isDev = isDevelopModeActive();
 
     if (notices.length === 0) {
         container.innerHTML = '<div class="empty-placeholder">No notices posted yet.</div>';
@@ -1972,15 +1970,15 @@ function renderNotices() {
             linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="notice-link-btn">Visit Link ↗</a>`;
         }
 
-        const adminActions = isAdmin ? `
+        const adminActions = isDev ? `
             <div class="item-action-btns">
                 <button type="button" class="item-edit-btn" onclick="editNotice('${item.id}')" title="Edit Notice">✏️ Edit</button>
                 <button type="button" class="item-delete-btn" onclick="deleteNotice('${item.id}')" title="Delete notice">&times;</button>
             </div>
         ` : '';
 
-        const noticeTitleAttr = (isAdmin && isLiveEditing) ? `contenteditable="true" data-sni-edit="notice_title_${item.id}"` : '';
-        const noticeDetailsAttr = (isAdmin && isLiveEditing) ? `contenteditable="true" data-sni-edit="notice_details_${item.id}"` : '';
+        const noticeTitleAttr = (isDev && isLiveEditing) ? `contenteditable="true" data-sni-edit="notice_title_${item.id}"` : '';
+        const noticeDetailsAttr = (isDev && isLiveEditing) ? `contenteditable="true" data-sni-edit="notice_details_${item.id}"` : '';
 
         return `
             <div class="notice-card" id="notice-${item.id}">
@@ -2144,7 +2142,7 @@ function renderArrivals() {
     const container = document.getElementById('arrivalsContainer');
     if (!container) return;
     const arrivals = getArrivals();
-    const isAdmin = isAdminActive();
+    const isDev = isDevelopModeActive();
 
     if (arrivals.length === 0) {
         container.innerHTML = '<div class="empty-placeholder">No arrivals added yet.</div>';
@@ -2165,14 +2163,14 @@ function renderArrivals() {
             linkHtml = `<a href="${item.link}" target="_blank" rel="noopener" class="arrival-link-btn">Explore ↗</a>`;
         }
 
-        const adminActions = isAdmin ? `
+        const adminActions = isDev ? `
             <div class="item-action-btns">
                 <button type="button" class="item-edit-btn" onclick="editArrival('${item.id}')" title="Edit Arrival">✏️ Edit</button>
                 <button type="button" class="item-delete-btn" onclick="deleteArrival('${item.id}')" title="Delete arrival">&times;</button>
             </div>
         ` : '';
 
-        const arrivalTitleAttr = (isAdmin && isLiveEditing) ? `contenteditable="true" data-sni-edit="arrival_title_${item.id}"` : '';
+        const arrivalTitleAttr = (isDev && isLiveEditing) ? `contenteditable="true" data-sni-edit="arrival_title_${item.id}"` : '';
 
         return `
             <div class="arrival-card" id="arrival-${item.id}">
@@ -2315,25 +2313,40 @@ window.editCustomCard = function(id) {
     document.getElementById('addCardModal').classList.add('active');
 };
 
+function isDevelopModeActive() {
+    const p = new URLSearchParams(window.location.search);
+    const hasParam = p.get('mode') === 'develop' || p.get('dev') === '1';
+    const hasStorage = sessionStorage.getItem('sni_develop_mode') === 'true';
+    return (hasParam || hasStorage) && isAdminActive();
+}
+
+function setDevelopModeActive(val) {
+    if (val) {
+        sessionStorage.setItem('sni_develop_mode', 'true');
+    } else {
+        sessionStorage.removeItem('sni_develop_mode');
+    }
+}
+
 function renderCustomCards() {
     const anchor = document.getElementById('customCardsAnchor');
     if (!anchor) return;
     const cards = getLocalCustomCards();
-    const isAdmin = isAdminActive();
+    const isDev = isDevelopModeActive();
 
     anchor.innerHTML = cards.map(c => {
         const isExternal = c.url.startsWith('http://') || c.url.startsWith('https://');
         const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
         const arrow = isExternal ? '<span style="font-size: 11px; opacity: 0.7;">↗</span>' : '';
-        const adminControls = isAdmin ? `
+        const adminControls = isDev ? `
             <div style="position: absolute; top: -6px; right: -6px; display: flex; gap: 4px; z-index: 10;">
                 <button type="button" onclick="event.preventDefault(); event.stopPropagation(); editCustomCard('${c.id}');" style="background: #3b82f6; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Edit Card">✏️</button>
                 <button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomCard('${c.id}');" style="background: #e11d48; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Delete Card">&times;</button>
             </div>
         ` : '';
 
-        const cardNameAttr = (isAdmin && isLiveEditing) ? `contenteditable="true" data-sni-edit="card_custom_name_${c.id}"` : '';
-        const cardSubAttr = (isAdmin && isLiveEditing) ? `contenteditable="true" data-sni-edit="card_custom_sub_${c.id}"` : '';
+        const cardNameAttr = (isDev && isLiveEditing) ? `contenteditable="true" data-sni-edit="card_custom_name_${c.id}"` : '';
+        const cardSubAttr = (isDev && isLiveEditing) ? `contenteditable="true" data-sni-edit="card_custom_sub_${c.id}"` : '';
 
         return `
             <div style="position: relative;">
@@ -2352,13 +2365,8 @@ function renderCustomCards() {
     const btnLabel = document.getElementById('adminAddCardLabel');
     const btnSub = document.getElementById('adminAddCardSub');
     if (btnLabel && btnSub) {
-        if (isAdmin) {
-            btnLabel.textContent = '👑 + Add Portal Card';
-            btnSub.textContent = 'Admin Mode Active';
-        } else {
-            btnLabel.textContent = '+ Add Portal Card';
-            btnSub.textContent = 'Admin Login';
-        }
+        btnLabel.textContent = '+ Add Portal Card';
+        btnSub.textContent = 'Developer Mode';
     }
 }
 
@@ -2366,12 +2374,12 @@ function renderCustomCards() {
 // 5. UNIFIED ADMIN AUTH & UI CONTROLLER
 // --------------------------------------------------------
 function updateAdminUI() {
-    const isAdmin = isAdminActive();
+    const isDev = isDevelopModeActive();
     const toolbar = document.getElementById('sniAdminToolbar');
-    const navBtn = document.getElementById('sniNavAdminBtn');
-    const footerBtn = document.getElementById('sniFooterAdminBtn');
+    const adminCardAction = document.getElementById('adminCardActionContainer');
+    const noticeModalBtn = document.getElementById('openNoticeModalBtn');
 
-    // Update Member Navigation State
+    // Update Member Navigation State (Clean public view, NO admin badges!)
     let currentUser = null;
     try {
         const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
@@ -2405,26 +2413,15 @@ function updateAdminUI() {
         }
     }
 
-    if (isAdmin) {
+    if (isDev) {
         if (toolbar) toolbar.style.display = 'block';
-        if (navBtn) {
-            navBtn.textContent = '👑 Surya (Admin)';
-            navBtn.style.background = 'rgba(245, 199, 94, 0.2)';
-            navBtn.style.borderColor = 'var(--gold)';
-        }
-        if (footerBtn) {
-            footerBtn.textContent = '👑 Admin Active (Logout)';
-        }
+        if (adminCardAction) adminCardAction.style.display = 'flex';
+        if (noticeModalBtn) noticeModalBtn.style.display = 'inline-flex';
+        setLiveEditMode(true);
     } else {
         if (toolbar) toolbar.style.display = 'none';
-        if (navBtn) {
-            navBtn.textContent = '👑 Admin';
-            navBtn.style.background = 'transparent';
-            navBtn.style.borderColor = 'rgba(245, 199, 94, 0.4)';
-        }
-        if (footerBtn) {
-            footerBtn.textContent = '👑 Admin Portal & Live Edit';
-        }
+        if (adminCardAction) adminCardAction.style.display = 'none';
+        if (noticeModalBtn) noticeModalBtn.style.display = 'none';
         if (isLiveEditing) {
             setLiveEditMode(false);
         }
@@ -2499,27 +2496,51 @@ function setupModals() {
         });
     }
 
-    // Top Nav and Footer Admin Triggers
-    const navAdminBtn = document.getElementById('sniNavAdminBtn');
-    const footerAdminBtn = document.getElementById('sniFooterAdminBtn');
-    const handleAdminClick = (e) => {
-        e.preventDefault();
-        if (isAdminActive()) {
-            if (confirm('Admin session is active.\nDo you want to log out?')) {
-                logoutAdmin();
-            } else {
-                setLiveEditMode(!isLiveEditing);
-            }
-        } else {
-            openAdminLoginModal();
-        }
-    };
-    if (navAdminBtn) navAdminBtn.addEventListener('click', handleAdminClick);
-    if (footerAdminBtn) footerAdminBtn.addEventListener('click', handleAdminClick);
+    // Exit Developer Mode
+    const exitDevBtn = document.getElementById('sniExitDevModeBtn');
+    if (exitDevBtn) {
+        exitDevBtn.addEventListener('click', () => {
+            setDevelopModeActive(false);
+            setLiveEditMode(false);
+            const url = new URL(window.location.href);
+            url.searchParams.delete('mode');
+            url.searchParams.delete('dev');
+            window.history.replaceState({}, '', url.pathname + (url.search ? url.search : '') + url.hash);
+            updateAdminUI();
+            showSniToast('Developer mode closed.');
+        });
+    }
 
-    // Toolbar Logout
-    const logoutBtn = document.getElementById('sniAdminLogoutBtn');
-    if (logoutBtn) logoutBtn.addEventListener('click', logoutAdmin);
+    // Secret Developer Shortcut: Ctrl + Shift + D (or Ctrl + Shift + A)
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd' || e.key === 'A' || e.key === 'a')) {
+            e.preventDefault();
+            if (isDevelopModeActive()) {
+                window.location.href = 'studio.html';
+            } else {
+                setDevelopModeActive(true);
+                updateAdminUI();
+                showSniToast('🛠️ Developer Live Edit Mode Activated!');
+            }
+        }
+    });
+
+    // Secret SNI Logo 5-click Trigger to Open Developer Studio
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+    const logoEl = document.querySelector('.site-logo');
+    if (logoEl) {
+        logoEl.addEventListener('click', (e) => {
+            logoClickCount++;
+            clearTimeout(logoClickTimer);
+            logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2500);
+            if (logoClickCount >= 5) {
+                e.preventDefault();
+                logoClickCount = 0;
+                window.location.href = 'studio.html';
+            }
+        });
+    }
 
     // Toolbar Add Card
     const toolbarAddCardBtn = document.getElementById('sniToolbarAddCardBtn');

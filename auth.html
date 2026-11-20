@@ -565,6 +565,11 @@
                 </div>
 
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 10px; font-weight: 600;">ACCESS SNI ECOSYSTEM</p>
+                <div id="profileAdminStudioSection" style="display: none; margin-bottom: 12px;">
+                    <a href="studio.html" class="profile-app-btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #0f172a, #1e293b); color: var(--gold); border: 1px solid rgba(245, 199, 94, 0.4); font-weight: 700; padding: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <span>🛠️ Open Developer &amp; Creator Studio →</span>
+                    </a>
+                </div>
                 <div class="profile-apps-grid">
                     <a href="index.html" class="profile-app-btn">🌐 SNI Home</a>
                     <a href="https://count.sni.org.in" class="profile-app-btn" target="_blank" rel="noopener">📖 Preaching Counter</a>
@@ -878,6 +883,11 @@
 
                 document.getElementById('profileRoleText').textContent = isAdmin ? 'Administrator' : 'Standard Member';
                 document.getElementById('profileJoinedDate').textContent = user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'Active Member';
+
+                const studioSec = document.getElementById('profileAdminStudioSection');
+                if (studioSec) {
+                    studioSec.style.display = (isAdmin || user.userId === 'surya11008') ? 'block' : 'none';
+                }
 
                 // Enrich profile apps links with SSO
                 document.querySelectorAll('.profile-apps-grid a').forEach(a => {

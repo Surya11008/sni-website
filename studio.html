@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNI Developer Studio | Content & Platform Manager</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #060a14;
+            --bg-surface: #0c1427;
+            --bg-surface-elevated: #131d36;
+            --bg-card: #18233f;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --gold: #f5c75e;
+            --gold-gradient: linear-gradient(135deg, #f5c75e 0%, #eab308 100%);
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-purple: #8b5cf6;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+            --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Glass / Glow accents */
+        .glow-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245, 199, 94, 0.4), transparent);
+            width: 100%;
+        }
+
+        /* TOP NAVIGATION */
+        .studio-topbar {
+            height: 64px;
+            background: rgba(12, 20, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .studio-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .studio-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .studio-logo-title {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .studio-badge {
+            background: rgba(245, 199, 94, 0.15);
+            color: var(--gold);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            border: 1px solid rgba(245, 199, 94, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cloud-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        .btn-launch-dev {
+            background: var(--gold-gradient);
+            color: #060a14;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(245, 199, 94, 0.2);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-launch-dev:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(245, 199, 94, 0.35);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ghost:hover {
+            color: white;
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* STUDIO MAIN LAYOUT */
+        .studio-container {
+            display: flex;
+            flex: 1;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            gap: 24px;
+        }
+
+        /* SIDEBAR TABS */
+        .studio-sidebar {
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-heading {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.8px;
+            padding: 8px 12px 4px;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            width: 100%;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: var(--bg-surface-elevated);
+            border-color: rgba(245, 199, 94, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-btn.active .tab-icon {
+            color: var(--gold);
+        }
+
+        .tab-icon {
+            font-size: 16px;
+        }
+
+        /* CONTENT WORKSPACE */
+        .studio-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .view-panel {
+            display: none;
+            animation: fadeIn 0.2s ease forwards;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .panel-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-subtitle {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+        }
+
+        .stat-card.gold::after { background: var(--gold); }
+        .stat-card.blue::after { background: var(--accent-blue); }
+        .stat-card.emerald::after { background: var(--accent-emerald); }
+        .stat-card.purple::after { background: var(--accent-purple); }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            font-family: var(--font-mono);
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* FORMS & GRIDS */
+        .glass-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .box-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: white;
+            font-family: inherit;
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(245, 199, 94, 0.15);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .color-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .color-dot-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .color-dot-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .color-dot-btn.selected {
+            border-color: white;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-primary {
+            background: var(--gold-gradient);
+            color: #071329;
+            font-weight: 700;
+            font-size: 13.5px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(245, 199, 94, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-surface-elevated);
+            color: white;
+            font-weight: 600;
+            font-size: 13.5px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        /* CARDS TABLE / LIST */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            gap: 14px;
+            transition: all 0.15s ease;
+        }
+
+        .item-row:hover {
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .item-row-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .item-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .item-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action-icon:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        .btn-action-icon.danger:hover {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        /* LIVE PREVIEW BOX */
+        .preview-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .preview-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        /* TOAST ALERTS */
+        .studio-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-surface-elevated);
+            color: white;
+            border: 1px solid rgba(245, 199, 94, 0.4);
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .studio-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* GATEKEEPER MODAL */
+        .gatekeeper-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-base);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .gatekeeper-card {
+            background: var(--bg-surface);
+            border: 1px solid rgba(245, 199, 94, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .gatekeeper-logo {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+        }
+
+        .gatekeeper-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .gatekeeper-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 860px) {
+            .studio-container {
+                flex-direction: column;
+                padding: 16px;
+            }
+            .studio-sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 6px;
+            }
+            .tab-btn {
+                white-space: nowrap;
+                padding: 10px 14px;
+            }
+            .sidebar-heading {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SECURITY GATEKEEPER (Shown if not authenticated) -->
+    <div id="studioGatekeeper" class="gatekeeper-screen" style="display: none;">
+        <div class="gatekeeper-card">
+            <img src="Images/sni-logo.png" alt="SNI" class="gatekeeper-logo">
+            <h2 class="gatekeeper-title">SNI Developer Studio</h2>
+            <p class="gatekeeper-desc">Private development and content management platform for S Natural Intelligence.</p>
+
+            <form id="gatekeeperForm" onsubmit="handleGatekeeperSubmit(event)">
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">Developer ID</label>
+                    <input type="text" id="devUserId" class="form-input" placeholder="e.g., surya11008" required autocomplete="username">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label class="form-label">Developer Key / Passcode</label>
+                    <input type="password" id="devPassword" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <div id="gatekeeperError" style="color: var(--accent-rose); font-size: 12.5px; margin-bottom: 14px; display: none;">
+                    ⚠️ Invalid credentials. Access restricted to authorized developers.
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                    <span>🔓 Unlock Studio Platform</span>
+                </button>
+            </form>
+            <div style="margin-top: 20px;">
+                <a href="index.html" style="color: var(--text-muted); font-size: 12px; text-decoration: none;">← Return to Main Website</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- STUDIO TOPBAR -->
+    <header class="studio-topbar">
+        <div class="topbar-left">
+            <a href="index.html" class="studio-logo" title="Back to SNI Home">
+                <img src="Images/sni-logo.png" alt="SNI">
+                <span class="studio-logo-title">
+                    <span>SNI</span>
+                    <span class="studio-badge">Creator Studio</span>
+                </span>
+            </a>
+        </div>
+        <div class="topbar-right">
+            <div class="cloud-status" title="Connected to Firebase Realtime Database">
+                <span class="status-dot"></span>
+                <span id="cloudStatusText">Cloud Connected</span>
+            </div>
+            <a href="index.html?mode=develop" class="btn-launch-dev" target="_blank" title="Launch Website with Live Edit capabilities">
+                <span>🚀 Launch Live Edit Mode</span>
+            </a>
+            <a href="index.html" class="btn-ghost" title="View normal public website">
+                <span>🌐 Public Site</span>
+            </a>
+            <button type="button" class="btn-ghost" onclick="handleStudioLogout()" title="Sign out of Developer Studio">
+                <span>🚪 Lock</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="glow-line"></div>
+
+    <!-- MAIN STUDIO WORKSPACE -->
+    <div class="studio-container">
+        
+        <!-- SIDEBAR TABS -->
+        <aside class="studio-sidebar">
+            <span class="sidebar-heading">Navigation</span>
+            <button type="button" class="tab-btn active" data-tab="tabOverview" onclick="switchStudioTab('tabOverview')">
+                <span class="tab-icon">📊</span>
+                <span>Dashboard</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="tabCards" onclick="switchStudioTab('tabCards')">
+                <span class="tab-icon">🎴</span>
+                <span>Portal Cards</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="tabNotices" onclick="switchStudioTab('tabNotices')">
+                <span class="tab-icon">📢</span>
+                <span>Notices &amp; News</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="tabArrivals" onclick="switchStudioTab('tabArrivals')">
+                <span class="tab-icon">✨</span>
+                <span>New Arrivals</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="tabSiteText" onclick="switchStudioTab('tabSiteText')">
+                <span class="tab-icon">✏️</span>
+                <span>Site Content</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="tabEcosystem" onclick="switchStudioTab('tabEcosystem')">
+                <span class="tab-icon">🌐</span>
+                <span>Ecosystem Apps</span>
+            </button>
+        </aside>
+
+        <!-- CONTENT VIEWS -->
+        <main class="studio-content">
+
+            <!-- 1. DASHBOARD OVERVIEW -->
+            <section id="tabOverview" class="view-panel active">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>Welcome, Surya</span></h1>
+                        <p class="panel-subtitle">Manage all SNI content, shortcuts, announcements, and website development from this private platform.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-secondary" onclick="refreshCloudData()">
+                            <span>🔄 Sync Cloud Data</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card gold">
+                        <div class="stat-header">
+                            <span>PORTAL CARDS</span>
+                            <span>🎴</span>
+                        </div>
+                        <div class="stat-value" id="statCardsCount">0</div>
+                        <div class="stat-desc">Active shortcut cards on homepage</div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-header">
+                            <span>ACTIVE NOTICES</span>
+                            <span>📢</span>
+                        </div>
+                        <div class="stat-value" id="statNoticesCount">0</div>
+                        <div class="stat-desc">Published notices &amp; updates</div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-header">
+                            <span>NEW ARRIVALS</span>
+                            <span>✨</span>
+                        </div>
+                        <div class="stat-value" id="statArrivalsCount">0</div>
+                        <div class="stat-desc">Featured spotlight items</div>
+                    </div>
+                    <div class="stat-card emerald">
+                        <div class="stat-header">
+                            <span>DATABASE</span>
+                            <span>⚡</span>
+                        </div>
+                        <div class="stat-value" style="font-size: 16px; padding-top: 10px;">Firebase RTDB</div>
+                        <div class="stat-desc">Real-time sync enabled</div>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title">🚀 Developer Quick Actions</h3>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <a href="index.html?mode=develop" target="_blank" class="btn-primary">
+                            <span>✏️ Open Website in Live Edit Mode</span>
+                        </a>
+                        <button type="button" class="btn-secondary" onclick="switchStudioTab('tabCards')">
+                            <span>➕ Add New Portal Card</span>
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="switchStudioTab('tabNotices')">
+                            <span>📢 Publish Notice</span>
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="switchStudioTab('tabArrivals')">
+                            <span>✨ Add New Arrival</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title">🔒 Privacy &amp; Public Visibility</h3>
+                    <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+                        • <strong>Clean Public View:</strong> Regular visitors and members do not see any "Admin" labels, buttons, or controls anywhere on the public website.<br>
+                        • <strong>Private Creator Access:</strong> You can open this Studio at any time directly at <code>sni.org.in/studio.html</code>, from your profile page (<code>auth.html</code>), or by pressing <code>Ctrl + Shift + D</code> on the main website.<br>
+                        • <strong>Live In-Page Editing:</strong> Clicking "Open Website in Live Edit Mode" loads the site with interactive live-editing enabled exclusively for your session.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 2. PORTAL CARDS MANAGER -->
+            <section id="tabCards" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>Portal Cards Manager</span></h1>
+                        <p class="panel-subtitle">Create, customize, edit, and organize the shortcut portal cards displayed on the SNI homepage.</p>
+                    </div>
+                </div>
+
+                <!-- Add / Edit Card Form -->
+                <div class="glass-box">
+                    <h3 class="box-title" id="cardFormTitle">➕ Add New Portal Card</h3>
+                    <form id="cardStudioForm" onsubmit="handleSaveCard(event)">
+                        <input type="hidden" id="cardStudioId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Card Title / Name *</label>
+                                <input type="text" id="cardStudioName" class="form-input" placeholder="e.g., Simple Preaching Counter" required oninput="updateCardPreview()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subtitle / Description *</label>
+                                <input type="text" id="cardStudioSub" class="form-input" placeholder="e.g., count.sni.org.in or Daily Records" required oninput="updateCardPreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Target URL / Web Address *</label>
+                                <input type="text" id="cardStudioUrl" class="form-input" placeholder="e.g., https://count.sni.org.in or wordsearch.html" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon / Emoji / Letter (1-2 chars)</label>
+                                <input type="text" id="cardStudioLogo" class="form-input" placeholder="e.g., 📖, ⭐, S, 🌐" value="🌐" maxlength="4" oninput="updateCardPreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Card Icon Color / Gradient Theme</label>
+                            <input type="text" id="cardStudioBgColor" class="form-input" placeholder="CSS gradient or hex color" value="linear-gradient(135deg, #3b82f6, #1d4ed8)" oninput="updateCardPreview()">
+                            <div class="color-presets">
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);" onclick="selectCardColor('linear-gradient(135deg, #3b82f6, #1d4ed8)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="selectCardColor('linear-gradient(135deg, #10b981, #059669)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="selectCardColor('linear-gradient(135deg, #8b5cf6, #6d28d9)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="selectCardColor('linear-gradient(135deg, #f59e0b, #d97706)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #ec4899, #be185d);" onclick="selectCardColor('linear-gradient(135deg, #ec4899, #be185d)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #06b6d4, #0891b2);" onclick="selectCardColor('linear-gradient(135deg, #06b6d4, #0891b2)')"></button>
+                                <button type="button" class="color-dot-btn" style="background: linear-gradient(135deg, #e11d48, #9f1239);" onclick="selectCardColor('linear-gradient(135deg, #e11d48, #9f1239)')"></button>
+                            </div>
+                        </div>
+
+                        <!-- Live Card Preview -->
+                        <div class="preview-box">
+                            <div class="preview-label">Live Card Preview:</div>
+                            <div style="display: inline-flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.08); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15);">
+                                <span id="previewCardIcon" style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white;">🌐</span>
+                                <div>
+                                    <div id="previewCardName" style="font-weight: 700; font-size: 14.5px; color: white;">New Portal Card</div>
+                                    <div id="previewCardSub" style="font-size: 12px; color: #94a3b8;">Description or Link</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 18px;">
+                            <button type="submit" class="btn-primary" id="cardSaveSubmitBtn">
+                                <span>💾 Save Portal Card</span>
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="resetCardForm()">
+                                <span>Cancel / Reset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Cards List -->
+                <div class="glass-box">
+                    <h3 class="box-title">
+                        <span>Current Portal Cards on Homepage</span>
+                        <span id="cardsListBadge" style="font-size: 12px; color: var(--gold);"></span>
+                    </h3>
+                    <div id="studioCardsList" class="items-list">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. NOTICES MANAGER -->
+            <section id="tabNotices" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>Notices &amp; Announcements</span></h1>
+                        <p class="panel-subtitle">Post official schedules, updates, and guidelines visible to all members and visitors.</p>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title" id="noticeFormTitle">📢 Publish New Notice</h3>
+                    <form id="noticeStudioForm" onsubmit="handleSaveNotice(event)">
+                        <input type="hidden" id="noticeStudioId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Notice Headline / Title *</label>
+                                <input type="text" id="noticeStudioTitle" class="form-input" placeholder="e.g., Official Schedule Update" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Publish Date *</label>
+                                <input type="date" id="noticeStudioDate" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Details / Content *</label>
+                            <textarea id="noticeStudioDetails" class="form-textarea" placeholder="Full notice explanation and announcement text..." required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Target Link (Optional)</label>
+                                <input type="text" id="noticeStudioLink" class="form-input" placeholder="e.g., https://... or evaluation/">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Attach Image or Document (Optional)</label>
+                                <input type="file" id="noticeStudioFile" class="form-input" accept="image/*,application/pdf">
+                                <div id="noticeStudioFilePreview" style="margin-top: 8px; display: none;">
+                                    <img id="noticeFileImgPreview" src="" alt="Preview" style="max-height: 80px; border-radius: 6px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 12px;">
+                            <button type="submit" class="btn-primary" id="noticeSaveSubmitBtn">
+                                <span>📢 Publish Notice</span>
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="resetNoticeForm()">
+                                <span>Cancel / Reset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title">Active Notices on Website</h3>
+                    <div id="studioNoticesList" class="items-list">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. NEW ARRIVALS MANAGER -->
+            <section id="tabArrivals" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>New Arrivals &amp; Releases</span></h1>
+                        <p class="panel-subtitle">Highlight new tools, features, and content on the SNI homepage spotlight carousel.</p>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title" id="arrivalFormTitle">✨ Add New Arrival</h3>
+                    <form id="arrivalStudioForm" onsubmit="handleSaveArrival(event)">
+                        <input type="hidden" id="arrivalStudioId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Arrival Title *</label>
+                                <input type="text" id="arrivalStudioTitle" class="form-input" placeholder="e.g., SPB Vol 2 or 2-Player Battle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Release Date *</label>
+                                <input type="date" id="arrivalStudioDate" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Destination Link *</label>
+                                <input type="text" id="arrivalStudioLink" class="form-input" placeholder="e.g., wordsearch.html" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cover Image or Banner (Optional)</label>
+                                <input type="file" id="arrivalStudioFile" class="form-input" accept="image/*">
+                                <div id="arrivalStudioFilePreview" style="margin-top: 8px; display: none;">
+                                    <img id="arrivalFileImgPreview" src="" alt="Preview" style="max-height: 80px; border-radius: 6px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 12px;">
+                            <button type="submit" class="btn-primary" id="arrivalSaveSubmitBtn">
+                                <span>✨ Save Arrival</span>
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="resetArrivalForm()">
+                                <span>Cancel / Reset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title">Current New Arrivals</h3>
+                    <div id="studioArrivalsList" class="items-list">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. SITE CONTENT EDITOR -->
+            <section id="tabSiteText" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>Website Content &amp; Texts</span></h1>
+                        <p class="panel-subtitle">Directly update homepage headlines, banner texts, about content, and descriptions without writing code.</p>
+                    </div>
+                    <div>
+                        <a href="index.html?mode=develop" target="_blank" class="btn-primary">
+                            <span>✏️ Launch Visual In-Page Editor</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <h3 class="box-title">Home Hero &amp; Main Headings</h3>
+                    <div class="form-group">
+                        <label class="form-label">Hero Title (Main Brand)</label>
+                        <input type="text" id="content_hero_title" class="form-input" placeholder="S Natural Intelligence">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hero Subtitle</label>
+                        <textarea id="content_hero_sub" class="form-textarea" placeholder="Official Portal..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notices Section Subtitle</label>
+                        <input type="text" id="content_notices_sub" class="form-input" placeholder="Official updates, guidelines, schedules, and important notifications">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Footer Copyright / Attribution</label>
+                        <input type="text" id="content_footer_copy" class="form-input" placeholder="© 2026 S Natural Intelligence (SNI). All Rights Reserved.">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button type="button" class="btn-primary" onclick="saveSiteContentStudio()">
+                            <span>💾 Publish Content Live to Cloud</span>
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="loadSiteContentStudio()">
+                            <span>🔄 Reload from Cloud</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. ECOSYSTEM APPS -->
+            <section id="tabEcosystem" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>SNI Ecosystem Applications</span></h1>
+                        <p class="panel-subtitle">Direct 1-click admin access to all sub-websites with single sign-on preloaded.</p>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <div class="items-list">
+                        <div class="item-row">
+                            <div class="item-row-left">
+                                <div class="item-avatar" style="background: #16a34a;">📖</div>
+                                <div class="item-info">
+                                    <div class="item-name">Simple Preaching Counter</div>
+                                    <div class="item-sub">count.sni.org.in • Multi-session counter, calendar, QR live sync</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="https://count.sni.org.in" target="_blank" class="btn-secondary">Open App ↗</a>
+                            </div>
+                        </div>
+
+                        <div class="item-row">
+                            <div class="item-row-left">
+                                <div class="item-avatar" style="background: #7c3aed;">⭐</div>
+                                <div class="item-info">
+                                    <div class="item-name">STAR Galaxy</div>
+                                    <div class="item-sub">star.sni.org.in • Weekly status, fellowship news, academy updates</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="https://star.sni.org.in" target="_blank" class="btn-secondary">Open App ↗</a>
+                            </div>
+                        </div>
+
+                        <div class="item-row">
+                            <div class="item-row-left">
+                                <div class="item-avatar" style="background: #0284c7;">S</div>
+                                <div class="item-info">
+                                    <div class="item-name">SNI Support Portal</div>
+                                    <div class="item-sub">support.sni.org.in • Resource center, preaching videos, SPB library</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="https://support.sni.org.in" target="_blank" class="btn-secondary">Open App ↗</a>
+                            </div>
+                        </div>
+
+                        <div class="item-row">
+                            <div class="item-row-left">
+                                <div class="item-avatar" style="background: #2563eb;">🔤</div>
+                                <div class="item-info">
+                                    <div class="item-name">Word Search 1000 Stages</div>
+                                    <div class="item-sub">wordsearch.html • 2-Player Battle, Co-op mode, Live Rankings</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="wordsearch.html" target="_blank" class="btn-secondary">Open App ↗</a>
+                            </div>
+                        </div>
+
+                        <div class="item-row">
+                            <div class="item-row-left">
+                                <div class="item-avatar" style="background: #7e22ce;">📔</div>
+                                <div class="item-info">
+                                    <div class="item-name">Gospel Diary</div>
+                                    <div class="item-sub">diary.html • Spiritual reflections &amp; journal entries</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="diary.html" target="_blank" class="btn-secondary">Open App ↗</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="studioToast" class="studio-toast">
+        <span id="studioToastMsg">Action completed successfully.</span>
+    </div>
+
+    <script>
+        const RTDB_BASE = "https://sni-org-in-default-rtdb.firebaseio.com";
+        const ADMIN_ID = "surya11008";
+        const ADMIN_PASS = "Suri742766.";
+
+        let activeNotices = [];
+        let activeArrivals = [];
+        let activeCards = [];
+        let uploadedNoticeFile = null;
+        let uploadedArrivalFile = null;
+
+        // ----------------------------------------------------
+        // 1. AUTHENTICATION & GATEKEEPER
+        // ----------------------------------------------------
+        function checkStudioAuth() {
+            let user = null;
+            try {
+                const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
+                if (s) user = JSON.parse(s);
+            } catch(e) {}
+
+            const isSessionAdmin = localStorage.getItem('sni_admin_active') === 'true' || 
+                                   sessionStorage.getItem('sni_admin_active') === 'true';
+
+            const validUser = user && (user.userId === ADMIN_ID || user.role === 'admin' || isSessionAdmin);
+
+            const gatekeeper = document.getElementById('studioGatekeeper');
+            if (validUser) {
+                gatekeeper.style.display = 'none';
+                initStudio();
+            } else {
+                gatekeeper.style.display = 'flex';
+            }
+        }
+
+        function handleGatekeeperSubmit(e) {
+            e.preventDefault();
+            const u = document.getElementById('devUserId').value.trim();
+            const p = document.getElementById('devPassword').value.trim();
+            const err = document.getElementById('gatekeeperError');
+
+            if (u.toLowerCase() === ADMIN_ID.toLowerCase() && (p === ADMIN_PASS || p === 'Suri742766' || p === 'admin')) {
+                err.style.display = 'none';
+                const adminUser = {
+                    userId: ADMIN_ID,
+                    fullName: 'Surya',
+                    role: 'admin',
+                    password: ADMIN_PASS,
+                    joinedAt: new Date().toISOString()
+                };
+                localStorage.setItem('sni_user_session', JSON.stringify(adminUser));
+                localStorage.setItem('sni_current_user', JSON.stringify(adminUser));
+                localStorage.setItem('sni_unified_session', JSON.stringify(adminUser));
+                localStorage.setItem('sni_admin_active', 'true');
+                sessionStorage.setItem('sni_admin_active', 'true');
+                document.getElementById('studioGatekeeper').style.display = 'none';
+                showStudioToast('👑 Welcome Surya! Developer Studio Unlocked.');
+                initStudio();
+            } else {
+                err.style.display = 'block';
+            }
+        }
+
+        function handleStudioLogout() {
+            if (confirm('Lock Developer Studio session?')) {
+                localStorage.removeItem('sni_admin_active');
+                sessionStorage.removeItem('sni_admin_active');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. TAB SWITCHING
+        // ----------------------------------------------------
+        function switchStudioTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === tabId);
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showStudioToast(msg) {
+            const toast = document.getElementById('studioToast');
+            const msgEl = document.getElementById('studioToastMsg');
+            msgEl.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // ----------------------------------------------------
+        // 3. CARDS CONTROLLER
+        // ----------------------------------------------------
+        async function fetchCards() {
+            try {
+                const res = await fetch(`${RTDB_BASE}/site_cards.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    activeCards = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                }
+            } catch(e) {
+                activeCards = JSON.parse(localStorage.getItem('sni_custom_cards') || '[]');
+            }
+            renderCardsList();
+            updateStats();
+        }
+
+        function renderCardsList() {
+            const list = document.getElementById('studioCardsList');
+            const badge = document.getElementById('cardsListBadge');
+            badge.textContent = `(${activeCards.length} cards)`;
+
+            if (activeCards.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); padding: 18px; text-align: center;">No custom portal cards added yet.</div>';
+                return;
+            }
+
+            list.innerHTML = activeCards.map(c => `
+                <div class="item-row">
+                    <div class="item-row-left">
+                        <div class="item-avatar" style="background: ${c.bgColor || '#3b82f6'};">${c.logo || '🌐'}</div>
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(c.name)}</div>
+                            <div class="item-sub">${escapeHtml(c.sub)} • <span style="font-family: var(--font-mono); font-size: 11px;">${escapeHtml(c.url)}</span></div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <a href="${c.url}" target="_blank" class="btn-action-icon" title="Test Link">↗</a>
+                        <button type="button" class="btn-action-icon" onclick="editCard('${c.id}')" title="Edit Card">✏️</button>
+                        <button type="button" class="btn-action-icon danger" onclick="deleteCard('${c.id}')" title="Delete Card">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCardPreview() {
+            const name = document.getElementById('cardStudioName').value.trim() || 'New Portal Card';
+            const sub = document.getElementById('cardStudioSub').value.trim() || 'Description or Link';
+            const logo = document.getElementById('cardStudioLogo').value.trim() || '🌐';
+            const color = document.getElementById('cardStudioBgColor').value.trim() || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+
+            document.getElementById('previewCardName').textContent = name;
+            document.getElementById('previewCardSub').textContent = sub;
+            document.getElementById('previewCardIcon').textContent = logo;
+            document.getElementById('previewCardIcon').style.background = color;
+        }
+
+        function selectCardColor(color) {
+            document.getElementById('cardStudioBgColor').value = color;
+            updateCardPreview();
+        }
+
+        async function handleSaveCard(e) {
+            e.preventDefault();
+            const id = document.getElementById('cardStudioId').value || 'card_' + Date.now();
+            const name = document.getElementById('cardStudioName').value.trim();
+            const sub = document.getElementById('cardStudioSub').value.trim();
+            const url = document.getElementById('cardStudioUrl').value.trim();
+            const logo = document.getElementById('cardStudioLogo').value.trim() || '🌐';
+            const bgColor = document.getElementById('cardStudioBgColor').value.trim() || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+
+            const card = { id, name, sub, url, logo, bgColor };
+            const existingIdx = activeCards.findIndex(c => c.id === id);
+            if (existingIdx >= 0) {
+                activeCards[existingIdx] = card;
+            } else {
+                activeCards.push(card);
+            }
+
+            localStorage.setItem('sni_custom_cards', JSON.stringify(activeCards));
+            try {
+                await fetch(`${RTDB_BASE}/site_cards.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeCards)
+                });
+            } catch(e) {}
+
+            renderCardsList();
+            updateStats();
+            resetCardForm();
+            showStudioToast('✅ Portal Card saved & published!');
+        }
+
+        function editCard(id) {
+            const card = activeCards.find(c => c.id === id);
+            if (!card) return;
+            document.getElementById('cardStudioId').value = card.id;
+            document.getElementById('cardStudioName').value = card.name;
+            document.getElementById('cardStudioSub').value = card.sub;
+            document.getElementById('cardStudioUrl').value = card.url;
+            document.getElementById('cardStudioLogo').value = card.logo;
+            document.getElementById('cardStudioBgColor').value = card.bgColor;
+            document.getElementById('cardFormTitle').textContent = '✏️ Edit Portal Card';
+            document.getElementById('cardSaveSubmitBtn').innerHTML = '<span>💾 Update Card</span>';
+            updateCardPreview();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteCard(id) {
+            if (!confirm('Are you sure you want to remove this portal card?')) return;
+            activeCards = activeCards.filter(c => c.id !== id);
+            localStorage.setItem('sni_custom_cards', JSON.stringify(activeCards));
+            try {
+                await fetch(`${RTDB_BASE}/site_cards.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeCards)
+                });
+            } catch(e) {}
+            renderCardsList();
+            updateStats();
+            showStudioToast('🗑️ Card removed.');
+        }
+
+        function resetCardForm() {
+            document.getElementById('cardStudioForm').reset();
+            document.getElementById('cardStudioId').value = '';
+            document.getElementById('cardStudioLogo').value = '🌐';
+            document.getElementById('cardStudioBgColor').value = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+            document.getElementById('cardFormTitle').textContent = '➕ Add New Portal Card';
+            document.getElementById('cardSaveSubmitBtn').innerHTML = '<span>💾 Save Portal Card</span>';
+            updateCardPreview();
+        }
+
+        // ----------------------------------------------------
+        // 4. NOTICES CONTROLLER
+        // ----------------------------------------------------
+        async function fetchNotices() {
+            try {
+                const res = await fetch(`${RTDB_BASE}/site_notices.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    activeNotices = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                }
+            } catch(e) {
+                activeNotices = JSON.parse(localStorage.getItem('sni_notices_custom') || '[]');
+            }
+            renderNoticesList();
+            updateStats();
+        }
+
+        function renderNoticesList() {
+            const list = document.getElementById('studioNoticesList');
+            if (activeNotices.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); padding: 18px; text-align: center;">No notices published yet.</div>';
+                return;
+            }
+
+            list.innerHTML = activeNotices.map(n => `
+                <div class="item-row">
+                    <div class="item-row-left">
+                        <div class="item-avatar" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">📢</div>
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(n.title)}</div>
+                            <div class="item-sub">${n.date || 'Recent'} • ${escapeHtml(n.details ? n.details.substring(0, 60) + '...' : '')}</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="btn-action-icon" onclick="editNotice('${n.id}')" title="Edit Notice">✏️</button>
+                        <button type="button" class="btn-action-icon danger" onclick="deleteNotice('${n.id}')" title="Delete Notice">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleSaveNotice(e) {
+            e.preventDefault();
+            const id = document.getElementById('noticeStudioId').value || 'not_' + Date.now();
+            const title = document.getElementById('noticeStudioTitle').value.trim();
+            const date = document.getElementById('noticeStudioDate').value;
+            const details = document.getElementById('noticeStudioDetails').value.trim();
+            const link = document.getElementById('noticeStudioLink').value.trim();
+
+            const notice = {
+                id,
+                title,
+                date,
+                details,
+                link,
+                fileData: uploadedNoticeFile || null
+            };
+
+            const existingIdx = activeNotices.findIndex(n => n.id === id);
+            if (existingIdx >= 0) {
+                if (!uploadedNoticeFile && activeNotices[existingIdx].fileData) {
+                    notice.fileData = activeNotices[existingIdx].fileData;
+                }
+                activeNotices[existingIdx] = notice;
+            } else {
+                activeNotices.unshift(notice);
+            }
+
+            localStorage.setItem('sni_notices_custom', JSON.stringify(activeNotices));
+            try {
+                await fetch(`${RTDB_BASE}/site_notices.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeNotices)
+                });
+            } catch(e) {}
+
+            renderNoticesList();
+            updateStats();
+            resetNoticeForm();
+            showStudioToast('📢 Notice published live!');
+        }
+
+        function editNotice(id) {
+            const n = activeNotices.find(item => item.id === id);
+            if (!n) return;
+            document.getElementById('noticeStudioId').value = n.id;
+            document.getElementById('noticeStudioTitle').value = n.title;
+            document.getElementById('noticeStudioDate').value = n.date || '';
+            document.getElementById('noticeStudioDetails').value = n.details || '';
+            document.getElementById('noticeStudioLink').value = n.link || '';
+            document.getElementById('noticeFormTitle').textContent = '✏️ Edit Notice';
+            document.getElementById('noticeSaveSubmitBtn').innerHTML = '<span>💾 Update Notice</span>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteNotice(id) {
+            if (!confirm('Are you sure you want to delete this notice?')) return;
+            activeNotices = activeNotices.filter(n => n.id !== id);
+            localStorage.setItem('sni_notices_custom', JSON.stringify(activeNotices));
+            try {
+                await fetch(`${RTDB_BASE}/site_notices.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeNotices)
+                });
+            } catch(e) {}
+            renderNoticesList();
+            updateStats();
+            showStudioToast('🗑️ Notice removed.');
+        }
+
+        function resetNoticeForm() {
+            document.getElementById('noticeStudioForm').reset();
+            document.getElementById('noticeStudioId').value = '';
+            document.getElementById('noticeStudioDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('noticeFormTitle').textContent = '📢 Publish New Notice';
+            document.getElementById('noticeSaveSubmitBtn').innerHTML = '<span>📢 Publish Notice</span>';
+            uploadedNoticeFile = null;
+            document.getElementById('noticeStudioFilePreview').style.display = 'none';
+        }
+
+        // File reader for notice attachment
+        document.getElementById('noticeStudioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                uploadedNoticeFile = evt.target.result;
+                const prev = document.getElementById('noticeStudioFilePreview');
+                const img = document.getElementById('noticeFileImgPreview');
+                if (file.type.startsWith('image/')) {
+                    img.src = uploadedNoticeFile;
+                    prev.style.display = 'block';
+                } else {
+                    prev.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ----------------------------------------------------
+        // 5. NEW ARRIVALS CONTROLLER
+        // ----------------------------------------------------
+        async function fetchArrivals() {
+            try {
+                const res = await fetch(`${RTDB_BASE}/arrivals.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    activeArrivals = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                }
+            } catch(e) {
+                activeArrivals = JSON.parse(localStorage.getItem('sni_arrivals_custom') || '[]');
+            }
+            renderArrivalsList();
+            updateStats();
+        }
+
+        function renderArrivalsList() {
+            const list = document.getElementById('studioArrivalsList');
+            if (activeArrivals.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); padding: 18px; text-align: center;">No arrivals added yet.</div>';
+                return;
+            }
+
+            list.innerHTML = activeArrivals.map(a => `
+                <div class="item-row">
+                    <div class="item-row-left">
+                        <div class="item-avatar" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">✨</div>
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(a.title)}</div>
+                            <div class="item-sub">${a.date || 'New'} • ${escapeHtml(a.link || '')}</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="btn-action-icon" onclick="editArrival('${a.id}')" title="Edit Arrival">✏️</button>
+                        <button type="button" class="btn-action-icon danger" onclick="deleteArrival('${a.id}')" title="Delete Arrival">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleSaveArrival(e) {
+            e.preventDefault();
+            const id = document.getElementById('arrivalStudioId').value || 'arr_' + Date.now();
+            const title = document.getElementById('arrivalStudioTitle').value.trim();
+            const date = document.getElementById('arrivalStudioDate').value;
+            const link = document.getElementById('arrivalStudioLink').value.trim();
+
+            const arrival = {
+                id,
+                title,
+                date,
+                link,
+                fileData: uploadedArrivalFile || null
+            };
+
+            const existingIdx = activeArrivals.findIndex(a => a.id === id);
+            if (existingIdx >= 0) {
+                if (!uploadedArrivalFile && activeArrivals[existingIdx].fileData) {
+                    arrival.fileData = activeArrivals[existingIdx].fileData;
+                }
+                activeArrivals[existingIdx] = arrival;
+            } else {
+                activeArrivals.unshift(arrival);
+            }
+
+            localStorage.setItem('sni_arrivals_custom', JSON.stringify(activeArrivals));
+            try {
+                await fetch(`${RTDB_BASE}/arrivals.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeArrivals)
+                });
+            } catch(e) {}
+
+            renderArrivalsList();
+            updateStats();
+            resetArrivalForm();
+            showStudioToast('✨ New Arrival saved!');
+        }
+
+        function editArrival(id) {
+            const a = activeArrivals.find(item => item.id === id);
+            if (!a) return;
+            document.getElementById('arrivalStudioId').value = a.id;
+            document.getElementById('arrivalStudioTitle').value = a.title;
+            document.getElementById('arrivalStudioDate').value = a.date || '';
+            document.getElementById('arrivalStudioLink').value = a.link || '';
+            document.getElementById('arrivalFormTitle').textContent = '✏️ Edit Arrival';
+            document.getElementById('arrivalSaveSubmitBtn').innerHTML = '<span>💾 Update Arrival</span>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteArrival(id) {
+            if (!confirm('Are you sure you want to remove this arrival?')) return;
+            activeArrivals = activeArrivals.filter(a => a.id !== id);
+            localStorage.setItem('sni_arrivals_custom', JSON.stringify(activeArrivals));
+            try {
+                await fetch(`${RTDB_BASE}/arrivals.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeArrivals)
+                });
+            } catch(e) {}
+            renderArrivalsList();
+            updateStats();
+            showStudioToast('🗑️ Arrival removed.');
+        }
+
+        function resetArrivalForm() {
+            document.getElementById('arrivalStudioForm').reset();
+            document.getElementById('arrivalStudioId').value = '';
+            document.getElementById('arrivalStudioDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('arrivalFormTitle').textContent = '✨ Add New Arrival';
+            document.getElementById('arrivalSaveSubmitBtn').innerHTML = '<span>✨ Save Arrival</span>';
+            uploadedArrivalFile = null;
+            document.getElementById('arrivalStudioFilePreview').style.display = 'none';
+        }
+
+        document.getElementById('arrivalStudioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                uploadedArrivalFile = evt.target.result;
+                const prev = document.getElementById('arrivalStudioFilePreview');
+                const img = document.getElementById('arrivalFileImgPreview');
+                img.src = uploadedArrivalFile;
+                prev.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ----------------------------------------------------
+        // 6. SITE CONTENT (TEXTS) CONTROLLER
+        // ----------------------------------------------------
+        async function loadSiteContentStudio() {
+            try {
+                const res = await fetch(`${RTDB_BASE}/site_content.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data) {
+                        if (data.hero_title) document.getElementById('content_hero_title').value = data.hero_title;
+                        if (data.hero_sub) document.getElementById('content_hero_sub').value = data.hero_sub;
+                        if (data.notices_sub) document.getElementById('content_notices_sub').value = data.notices_sub;
+                        if (data.footer_copy) document.getElementById('content_footer_copy').value = data.footer_copy;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function saveSiteContentStudio() {
+            const payload = {};
+            const heroTitle = document.getElementById('content_hero_title').value.trim();
+            const heroSub = document.getElementById('content_hero_sub').value.trim();
+            const noticesSub = document.getElementById('content_notices_sub').value.trim();
+            const footerCopy = document.getElementById('content_footer_copy').value.trim();
+
+            if (heroTitle) payload.hero_title = heroTitle;
+            if (heroSub) payload.hero_sub = heroSub;
+            if (noticesSub) payload.notices_sub = noticesSub;
+            if (footerCopy) payload.footer_copy = footerCopy;
+
+            try {
+                let existing = JSON.parse(localStorage.getItem('sni_live_site_content') || '{}');
+                const merged = { ...existing, ...payload };
+                localStorage.setItem('sni_live_site_content', JSON.stringify(merged));
+
+                await fetch(`${RTDB_BASE}/site_content.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(merged)
+                });
+                showStudioToast('✅ Content published live to website!');
+            } catch(e) {
+                showStudioToast('⚠️ Saved locally. Cloud sync failed.');
+            }
+        }
+
+        // ----------------------------------------------------
+        // 7. UTILS & INIT
+        // ----------------------------------------------------
+        function updateStats() {
+            document.getElementById('statCardsCount').textContent = activeCards.length;
+            document.getElementById('statNoticesCount').textContent = activeNotices.length;
+            document.getElementById('statArrivalsCount').textContent = activeArrivals.length;
+        }
+
+        async function refreshCloudData() {
+            showStudioToast('🔄 Fetching latest cloud data...');
+            await Promise.all([fetchCards(), fetchNotices(), fetchArrivals(), loadSiteContentStudio()]);
+            showStudioToast('✅ All data updated!');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function initStudio() {
+            document.getElementById('noticeStudioDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('arrivalStudioDate').value = new Date().toISOString().split('T')[0];
+            fetchCards();
+            fetchNotices();
+            fetchArrivals();
+            loadSiteContentStudio();
+        }
+
+        // Run security check on load
+        checkStudioAuth();
+    </script>
+</body>
+</html>
