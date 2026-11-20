@@ -459,13 +459,13 @@ export default function NewSongAcademy({ onBack }) {
         </div>
 
         {/* 2. Date Range / This Week Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-purple-800 via-indigo-900 to-blue-900 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-indigo-400/30">
+        <div className="rounded-3xl bg-gradient-to-br from-pink-600 via-purple-600 to-indigo-600 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-pink-300/40">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Date Cycle Stars</span>
             </span>
-            <span className="text-[9px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-sky-200 backdrop-blur-xs">
+            <span className="text-[9px] font-bold bg-white/20 px-2 py-0.5 rounded-full text-white backdrop-blur-xs">
               {dateRange?.startDate} → {dateRange?.endDate}
             </span>
           </div>
@@ -477,17 +477,17 @@ export default function NewSongAcademy({ onBack }) {
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-sky-200 font-semibold border-t border-white/10 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-pink-100 font-semibold border-t border-white/20 pt-2">
             <span>{rangeSongsCount} {rangeSongsCount === 1 ? 'song' : 'songs'} in this cycle</span>
-            <span className="text-[10px] text-sky-300 font-bold">Week Cycle (6=10⭐, +3=+10⭐)</span>
+            <span className="text-[10px] text-pink-200 font-bold">Week Cycle (6=10⭐, +3=+10⭐)</span>
           </div>
         </div>
 
         {/* 3. All-Time Overall Total Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-400/40">
+        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-300/40">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
+              <Award className="w-3.5 h-3.5 text-amber-300" />
               <span>Overall Total Stars</span>
             </span>
             <span className="text-[10px] font-bold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-300/30">
@@ -502,7 +502,7 @@ export default function NewSongAcademy({ onBack }) {
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold border-t border-white/10 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-blue-100 font-semibold border-t border-white/20 pt-2">
             <span>{songChecks.length} / 485 completed</span>
             <span className="text-[10px] text-amber-300 font-bold">Sum of Week Cycles</span>
           </div>

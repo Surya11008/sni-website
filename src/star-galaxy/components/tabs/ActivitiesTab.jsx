@@ -214,12 +214,12 @@ export default function ActivitiesTab() {
       {/* 🌟 Cute Colorful Top Bar: Total Stars on Left, Cute Date Filter on Right */}
       <div className="bg-gradient-to-r from-white via-amber-50/40 to-white border-2 border-amber-200/80 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1 font-black text-[#071B3B] text-2xl sm:text-3xl">
-            <Star className="w-7 h-7 fill-[#F4B942] text-[#F4B942] animate-spin-slow" />
+          <div className="flex items-center gap-1 font-black text-blue-950 text-2xl sm:text-3xl">
+            <Star className="w-7 h-7 fill-[#F4B942] text-amber-300 animate-spin-slow" />
             <span>{breakdown.totalStars}</span>
           </div>
           <div>
-            <span className="text-xs font-black text-[#071B3B] uppercase tracking-wider block">
+            <span className="text-xs font-black text-blue-950 uppercase tracking-wider block">
               {t('totalStars') || 'Total Stars'}
             </span>
             <span className="text-[11px] text-amber-800 font-bold">
@@ -273,10 +273,10 @@ export default function ActivitiesTab() {
       </div>
 
       {/* 👑 Overall Summary Card (From the Beginning to Present) at bottom */}
-      <div className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#071B3B] text-white rounded-3xl p-5 border-2 border-[#F4B942]/50 shadow-md">
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-700 text-white rounded-3xl p-5 border-2 border-amber-300/50 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/20">
           <div>
-            <span className="text-xs font-black text-[#F4B942] uppercase tracking-widest block">
+            <span className="text-xs font-black text-amber-300 uppercase tracking-widest block">
               Overall (From Beginning to Present)
             </span>
             <span className="text-xs text-sky-200 font-bold">

@@ -114,10 +114,10 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setShowPendingApprovalsModal(true)}
-              className="flex items-center gap-1.5 bg-[#071B3B] text-[#F4B942] hover:bg-[#0F294A] px-2.5 sm:px-3 py-1 rounded-full text-xs font-black shadow-xs transition-all active:scale-95 animate-pulse cursor-pointer border border-[#F4B942]/40"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:brightness-110 px-2.5 sm:px-3 py-1 rounded-full text-xs font-black shadow-xs transition-all active:scale-95 animate-pulse cursor-pointer border border-blue-400/40"
               title="Review Pending User Registration Approvals"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#F4B942]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
               <span>{pendingApprovalsCount}</span>
               <span className="hidden sm:inline">Approvals</span>
             </button>

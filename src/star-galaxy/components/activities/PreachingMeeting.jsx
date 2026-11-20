@@ -223,12 +223,12 @@ export default function PreachingMeeting({ onBack }) {
         </div>
 
         {/* Card 2: Date Cycle / Filtered Range */}
-        <div className="rounded-3xl bg-gradient-to-br from-indigo-900 via-blue-900 to-sky-950 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
+        <div className="rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-sky-600 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
           <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3 text-amber-400" />
             <span>Date Cycle (This Week)</span>
           </div>
-          <div className="text-[11px] font-bold text-sky-200 mt-0.5">
+          <div className="text-[11px] font-bold text-sky-100 mt-0.5">
             {dateRange.startDate} → {dateRange.endDate}
           </div>
           <div className="mt-1 flex items-center justify-center gap-1.5">
@@ -236,16 +236,16 @@ export default function PreachingMeeting({ onBack }) {
             <Star className="w-6 h-6 fill-amber-400 text-amber-400 animate-pulse" />
           </div>
           <div className="mt-1.5 flex items-center justify-center gap-2 text-[10px]">
-            <span className="text-emerald-300 font-bold">✓ {onTimeChecksCount} On-Time</span>
-            <span className="text-slate-400">•</span>
-            <span className="text-rose-300 font-bold">✗ {lateChecksCount} Late</span>
+            <span className="text-emerald-200 font-bold">✓ {onTimeChecksCount} On-Time</span>
+            <span className="text-blue-200">•</span>
+            <span className="text-rose-200 font-bold">✗ {lateChecksCount} Late</span>
           </div>
         </div>
 
         {/* Card 3: All-Time Overall */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-800 via-indigo-950 to-blue-950 text-white p-4 text-center shadow-md border-2 border-indigo-400/50 relative overflow-hidden">
-          <div className="text-[10px] font-black text-indigo-200 uppercase tracking-wider flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-indigo-300" />
+        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 text-center shadow-md border-2 border-blue-300/50 relative overflow-hidden">
+          <div className="text-[10px] font-black text-blue-200 uppercase tracking-wider flex items-center justify-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-blue-300" />
             <span>Overall All-Time</span>
           </div>
           <div className="text-[11px] font-bold text-white/90 mt-0.5">From Start to Present</div>
@@ -253,7 +253,7 @@ export default function PreachingMeeting({ onBack }) {
             <span className="text-2xl sm:text-3xl font-black text-amber-300">{overallBreakdown.preachingMeeting.stars}</span>
             <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
           </div>
-          <p className="text-[10px] text-indigo-200 mt-0.5">
+          <p className="text-[10px] text-blue-100 mt-0.5">
             {overallBreakdown.preachingMeeting.count} total on-time meetings
           </p>
         </div>

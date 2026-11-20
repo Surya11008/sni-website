@@ -364,25 +364,25 @@ export default function AuthPage() {
             <div className="mb-4">
               <a
                 href="/auth.html"
-                className="w-full p-3 bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] hover:brightness-110 text-white rounded-2xl flex items-center justify-between shadow-md border border-[#F4B942]/40 transition-all cursor-pointer group"
+                className="w-full p-3 bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-700 hover:brightness-110 text-white rounded-2xl flex items-center justify-between shadow-md border border-blue-400/40 transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5 text-left">
-                  <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-[#F4B942] border border-[#F4B942]/40 flex items-center justify-center font-bold text-sm shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-300/40 flex items-center justify-center font-bold text-sm shrink-0">
                     ✨
                   </div>
                   <div>
                     <h4 className="font-extrabold text-xs text-white flex items-center gap-1.5 leading-tight">
                       <span>Sign In with SNI Master Account</span>
-                      <span className="text-[9px] bg-[#F4B942] text-[#071B3B] px-1.5 py-0.2 rounded font-black uppercase">
+                      <span className="text-[9px] bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded font-black uppercase">
                         Main
                       </span>
                     </h4>
-                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium leading-tight">
+                    <p className="text-[10px] text-blue-100 mt-0.5 font-medium leading-tight">
                       Single login for SNI Website & Star Galaxy
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#F4B942] shrink-0">
+                <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 shrink-0">
                   <span>Sign In</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
