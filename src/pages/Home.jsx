@@ -4,8 +4,8 @@ import { collection, getDocs, query, orderBy, limit, where } from 'firebase/fire
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
-import PortalIcon from '../components/PortalIcon';
+import PhotoGalleryManager from '../components/PhotoGalleryManager';
+import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import {
   Calendar,
   ArrowRight,
@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Bell,
   ExternalLink,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 // Editorial fallback announcements for the New Updates & Schedule feed
@@ -155,148 +156,38 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="pt-3 flex flex-wrap items-center gap-4">
               <button
-                onClick={() => handleScrollTo('categories-section')}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border-2 border-[#C59B27] text-[#C59B27] hover:bg-[#C59B27] hover:text-[#0F294A] font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer group"
-              >
-                <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
-                  {isTelugu ? 'విభాగాలను చూడండి' : 'Explore 8 Main Categories'}
-                </span>
-                <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
-              </button>
-
-              <button
                 onClick={() => handleScrollTo('updates-section')}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm border border-white/20 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#C59B27] hover:bg-amber-400 text-[#0F294A] font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md cursor-pointer"
               >
-                <Bell className="w-4 h-4 text-[#C59B27]" />
+                <Bell className="w-4 h-4" />
                 <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
                   {isTelugu ? 'తాజా సమాచారం & షెడ్యూల్' : 'New Updates & Schedule'}
                 </span>
+                <ChevronDown className="w-4 h-4" />
               </button>
 
-              {currentUser ? (
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#C59B27] hover:bg-amber-400 text-[#0F294A] font-bold text-xs sm:text-sm uppercase tracking-wider transition shadow-md"
-                >
-                  <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
-                    {t('heroBtnPortal')}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#C59B27] hover:bg-amber-400 text-[#0F294A] font-bold text-xs sm:text-sm uppercase tracking-wider transition shadow-md"
-                >
-                  <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
-                    {t('heroBtnPortal')}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
+              <button
+                onClick={() => handleScrollTo('photos-section')}
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border-2 border-white/40 text-white hover:bg-white/10 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer group"
+              >
+                <ImageIcon className="w-4 h-4 text-[#F4B942]" />
+                <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
+                  {isTelugu ? 'ఛాయాచిత్రాలు & విశేషాలు' : 'Photo Gallery'}
+                </span>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. EIGHT MAIN CATEGORIES SHOWCASE (watv.org style portal directory) */}
-      <section id="categories-section" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 text-[#C59B27] text-xs font-bold uppercase tracking-widest mb-2">
-            <span className="w-2 h-0.5 bg-[#C59B27]"></span>
-            <span>{isTelugu ? 'విభాగాలు' : 'Categories'}</span>
-            <span className="w-2 h-0.5 bg-[#C59B27]"></span>
-          </div>
-          <h2
-            className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0F294A] tracking-tight ${
-              isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
-            }`}
-          >
-            {isTelugu ? 'ముఖ్య విభాగాలు' : 'Directory & Services'}
-          </h2>
-          <p
-            className={`text-slate-600 text-xs sm:text-sm mt-2 leading-relaxed ${
-              isTelugu ? 'font-telugu' : ''
-            }`}
-          >
-            {isTelugu
-              ? 'ఆరాధనలు, లేఖన సత్యాలు, ఆత్మీయ కుటుంబం, ఎదుగుదల మరియు కార్యక్రమాల సమగ్ర సమాహారం.'
-              : 'Explore the central pillars of our fellowship, resources, programs, and administration.'}
-          </p>
-        </div>
-
-        {/* 8 Category Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DEFAULT_PORTAL_STRUCTURE.map((cat) => {
-            const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
-            const catDesc = isTelugu ? cat.descriptionTe : cat.descriptionEn;
-
-            return (
-              <div
-                key={cat.categorySlug}
-                className="bg-[#F8FAFC] hover:bg-white rounded-3xl border border-slate-200/90 hover:border-[#C59B27]/60 p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-[#0F294A] text-[#C59B27] border border-[#C59B27]/30 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                      <PortalIcon name={cat.iconName} className="w-6 h-6" />
-                    </div>
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-50 text-[#0F294A] border border-[#C59B27]/40 uppercase">
-                      {cat.pages.length} Pages
-                    </span>
-                  </div>
-
-                  <h3
-                    className={`text-lg font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors ${
-                      isTelugu ? 'font-telugu' : 'font-serif'
-                    }`}
-                  >
-                    {catTitle}
-                  </h3>
-
-                  <p
-                    className={`text-slate-600 text-xs mt-2 line-clamp-2 leading-relaxed ${
-                      isTelugu ? 'font-telugu' : ''
-                    }`}
-                  >
-                    {catDesc}
-                  </p>
-
-                  {/* Top Sub-pages pills */}
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 space-y-1.5">
-                    {cat.pages.slice(0, 4).map((subPage) => {
-                      const subTitle = isTelugu ? subPage.titleTe : subPage.titleEn;
-                      return (
-                        <Link
-                          key={subPage.pageSlug}
-                          to={`/page/${cat.categorySlug}/${subPage.pageSlug}`}
-                          className="flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-[#0F294A] hover:bg-white p-1.5 rounded-lg transition"
-                        >
-                          <span className={`truncate ${isTelugu ? 'font-telugu text-[11px]' : ''}`}>
-                            {subTitle}
-                          </span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#C59B27]" />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-slate-200/60">
-                  <Link
-                    to={`/page/${cat.categorySlug}/${cat.pages[0]?.pageSlug || 'overview'}`}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#0B1E36] text-[#C59B27] font-bold text-xs uppercase tracking-wider transition shadow-xs group-hover:bg-[#C59B27] group-hover:text-[#0F294A]"
-                  >
-                    <span>{isTelugu ? 'పూర్తి విభాగం చూడండి' : 'Explore Category'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      {/* 2. DYNAMIC PHOTO SHOWCASE & VISUAL GALLERY (Admin editable) */}
+      <div id="photos-section" className="bg-white border-b border-slate-200">
+        <PhotoGalleryManager
+          targetPage="home"
+          sectionTitleEn="Featured Photos & Visual Gallery"
+          sectionTitleTe="ముఖ్య ఛాయాచిత్రాలు & విశేషాలు"
+        />
+      </div>
 
       {/* 3. DYNAMIC 'NEW UPDATES & SCHEDULE' HIGHLIGHT FEED (watv.org editorial layout) */}
       <section id="updates-section" className="py-20 bg-[#F8FAFC] border-t border-slate-200">
@@ -350,7 +241,7 @@ export default function Home() {
           {selectedItem ? (
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-lg space-y-6 animate-in fade-in duration-200">
               {/* Back to List Button */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-wrap gap-3">
                 <button
                   onClick={() => setSelectedItem(null)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
@@ -359,9 +250,15 @@ export default function Home() {
                   <span>{isTelugu ? '← వార్తల జాబితాకు తిరిగి వెళ్ళండి' : '← Back to All Announcements'}</span>
                 </button>
 
-                <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-[#C59B27] border border-[#C59B27]/40 rounded-lg">
-                  {selectedItem.category || selectedItem.pageSlug || 'Notice'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <AudioSpeakerButton
+                    text={getDesc(selectedItem)}
+                    title={getText(selectedItem, 'title')}
+                  />
+                  <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-[#C59B27] border border-[#C59B27]/40 rounded-lg">
+                    {selectedItem.category || selectedItem.pageSlug || 'Notice'}
+                  </span>
+                </div>
               </div>
 
               {/* Title & Date */}
@@ -476,11 +373,18 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors">
-                      <span className={isTelugu ? 'font-telugu' : ''}>
-                        {isTelugu ? 'పూర్తి వివరాలు చూడండి' : 'Read Full Details'}
-                      </span>
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors gap-2">
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <AudioSpeakerButton
+                          buttonStyle="icon"
+                          text={desc}
+                          title={title}
+                        />
+                        <span className={isTelugu ? 'font-telugu' : ''}>
+                          {isTelugu ? 'వివరాలు' : 'Read Details'}
+                        </span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   </article>
                 );

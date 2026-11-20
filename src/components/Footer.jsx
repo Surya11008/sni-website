@@ -59,46 +59,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#0B1E36] text-slate-300 border-t border-[#132A4A] selection:bg-[#C59B27] selection:text-[#0F294A]">
-      {/* 1. Quick Ecosystem Horizontal Bar (watv.org style banner) */}
-      <div className="bg-[#0F294A] border-b border-[#1A3860] py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#C59B27] shrink-0"></span>
-            <div>
-              <div className="text-white text-xs font-bold uppercase tracking-widest text-[#C59B27]">
-                Integrated Organization Ecosystem
-              </div>
-              <div className="text-slate-300 text-xs">
-                Single Sign-On (SSO) connected ministerial tools & platforms
-              </div>
-            </div>
-          </div>
-
-          {/* Clean Horizontal Link Pills */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {ecosystemLinks.map((app) => {
-              const Icon = app.icon;
-              return (
-                <button
-                  key={app.name}
-                  onClick={() => launchEcosystemApp(app.url, currentUser, userProfile)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-200 hover:text-white border border-white/10 hover:border-[#C59B27]/50 text-xs font-medium transition shadow-xs cursor-pointer group"
-                >
-                  <Icon className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span>{app.name}</span>
-                  {app.isExternal ? (
-                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#C59B27]" />
-                  ) : (
-                    <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Structured Multi-Column Institutional Footer */}
+      {/* Structured Multi-Column Institutional Footer */}
       <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Column 1: Organization Seal & Mission (Spans 2 columns on desktop) */}

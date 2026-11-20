@@ -21,10 +21,26 @@ export default function App() {
             <Navbar />
             <main className="flex-1">
               <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
+                {/* Login Route (Public Entry) */}
                 <Route path="/login" element={<Login />} />
-                <Route path="/page/:categorySlug/:pageSlug" element={<DynamicPage />} />
+
+                {/* Gated Behind Login - Only Authenticated & Approved Users Can Access */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/page/:categorySlug/:pageSlug"
+                  element={
+                    <ProtectedRoute>
+                      <DynamicPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Protected Member Route */}
                 <Route

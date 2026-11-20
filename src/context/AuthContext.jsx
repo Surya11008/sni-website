@@ -40,14 +40,31 @@ export const AuthProvider = ({ children }) => {
             userDocRef,
             async (snapshot) => {
               if (snapshot.exists()) {
-                setUserProfile(snapshot.data());
+                const data = snapshot.data();
+                // Ensure known admins are always marked approved
+                const isAdmin =
+                  user.email === 'surya11008@sni.org.in' ||
+                  user.email === 'admin@sni.org.in' ||
+                  user.email?.startsWith('surya') ||
+                  data.role === 'admin';
+
+                setUserProfile({
+                  ...data,
+                  status: isAdmin ? 'approved' : data.status || 'pending',
+                });
               } else {
                 // Initialize default profile in Firestore if not yet created
+                const isAdmin =
+                  user.email === 'surya11008@sni.org.in' ||
+                  user.email === 'admin@sni.org.in' ||
+                  user.email?.startsWith('surya');
+
                 const defaultProfile = {
                   uid: user.uid,
                   email: user.email || '',
                   displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                  role: 'member',
+                  role: isAdmin ? 'admin' : 'member',
+                  status: isAdmin ? 'approved' : 'pending',
                   createdAt: new Date().toISOString(),
                 };
                 await setDoc(userDocRef, defaultProfile, { merge: true });
@@ -109,11 +126,18 @@ export const AuthProvider = ({ children }) => {
       await updateProfile(user, { displayName });
     }
 
+    const isAdmin =
+      email === 'surya11008@sni.org.in' ||
+      email === 'admin@sni.org.in' ||
+      email.startsWith('surya') ||
+      role === 'admin';
+
     const newProfile = {
       uid: user.uid,
       email: user.email || email,
       displayName: displayName || email.split('@')[0],
-      role: role || 'member',
+      role: isAdmin ? 'admin' : role || 'member',
+      status: isAdmin ? 'approved' : 'pending',
       createdAt: new Date().toISOString(),
     };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -82,6 +82,41 @@ export default function Navbar() {
 
   const isAdmin = userProfile?.role === 'admin';
 
+  // Role permissions filtering
+  const [rolePermissions, setRolePermissions] = useState(['*']);
+
+  useEffect(() => {
+    const isUserAdmin =
+      userProfile?.role === 'admin' ||
+      currentUser?.email === 'surya11008@sni.org.in' ||
+      currentUser?.email === 'admin@sni.org.in' ||
+      currentUser?.email?.startsWith('surya');
+
+    if (isUserAdmin) {
+      setRolePermissions(['*']);
+      return;
+    }
+
+    if (userProfile?.role) {
+      getDoc(doc(db, 'roles', userProfile.role))
+        .then((snap) => {
+          if (snap.exists() && snap.data().allowedCategories) {
+            setRolePermissions(snap.data().allowedCategories);
+          } else {
+            setRolePermissions(['*']);
+          }
+        })
+        .catch(() => setRolePermissions(['*']));
+    } else {
+      setRolePermissions(['*']);
+    }
+  }, [userProfile?.role, currentUser?.email]);
+
+  const visibleCategories = portalStructure.filter((cat) => {
+    if (!rolePermissions || rolePermissions.includes('*')) return true;
+    return rolePermissions.includes(cat.categorySlug);
+  });
+
   return (
     <header className="sticky top-0 z-50 bg-[#071B3B] border-b border-[#132A4A] shadow-[0_4px_25px_rgba(0,0,0,0.3)] font-sans">
       {/* Top micro bar */}
@@ -136,13 +171,13 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* 8 Main Categories Mega-Menu (Desktop) */}
+          {/* 8 Main Categories Mega-Menu (Desktop - Role Filtered) */}
           <nav
             ref={dropdownRef}
             className="hidden xl:flex items-center gap-1 lg:gap-2.5 relative"
             onMouseLeave={() => setActiveDropdown(null)}
           >
-            {portalStructure.map((cat) => {
+            {visibleCategories.map((cat) => {
               const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
               const isOpen = activeDropdown === cat.categorySlug;
               const isCategoryActive = location.pathname.startsWith(`/page/${cat.categorySlug}`);
@@ -168,34 +203,26 @@ export default function Navbar() {
                     />
                   </button>
 
-                  {/* Dropdown Menu Panel for this category */}
+                  {/* Dropdown Menu Panel for this category - Compact without extra explanations */}
                   {isOpen && (
                     <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[420px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-4 z-50 animate-in fade-in zoom-in-95 duration-150"
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[280px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
                       onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
                     >
-                      {/* Dropdown Header */}
-                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-[#0F294A] text-[#C59B27] flex items-center justify-center">
-                            <PortalIcon name={cat.iconName} className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold text-[#0F294A]">
-                              {catTitle}
-                            </div>
-                            <div className="text-[10px] text-slate-500 line-clamp-1">
-                              {isTelugu ? cat.descriptionTe : cat.descriptionEn}
-                            </div>
-                          </div>
+                      {/* Compact Dropdown Header */}
+                      <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 border-b border-slate-100">
+                        <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#C59B27] flex items-center justify-center">
+                          <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
+                        </div>
+                        <div className={`text-xs font-bold text-[#0F294A] truncate ${isTelugu ? 'font-telugu' : ''}`}>
+                          {catTitle}
                         </div>
                       </div>
 
-                      {/* Sub-Pages Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[360px] overflow-y-auto pr-1">
+                      {/* Compact Sub-Pages List - Close together without bulky descriptions */}
+                      <div className="flex flex-col gap-0.5 max-h-[340px] overflow-y-auto">
                         {cat.pages.map((page) => {
                           const pageTitle = isTelugu ? page.titleTe : page.titleEn;
-                          const pageDesc = isTelugu ? page.descTe : page.descEn;
 
                           if (page.externalUrl) {
                             return (
@@ -205,22 +232,13 @@ export default function Navbar() {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => setActiveDropdown(null)}
-                                className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200 group text-left"
+                                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 text-slate-800 transition group text-xs font-medium"
                               >
-                                <div className="w-6 h-6 rounded-md bg-amber-50 text-[#C59B27] flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                                  <PortalIcon name={page.iconName} className="w-3.5 h-3.5" />
+                                <div className="w-5 h-5 rounded-md bg-amber-50 text-[#C59B27] flex items-center justify-center shrink-0">
+                                  <PortalIcon name={page.iconName} className="w-3 h-3" />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-xs font-bold text-slate-800 group-hover:text-[#0F294A] flex items-center gap-1">
-                                    <span className="truncate">{pageTitle}</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#C59B27]" />
-                                  </div>
-                                  {pageDesc && (
-                                    <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                                      {pageDesc}
-                                    </p>
-                                  )}
-                                </div>
+                                <span className={`truncate flex-1 ${isTelugu ? 'font-telugu' : ''}`}>{pageTitle}</span>
+                                <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#C59B27] shrink-0" />
                               </a>
                             );
                           }
@@ -230,22 +248,13 @@ export default function Navbar() {
                               key={page.pageSlug}
                               to={`/page/${cat.categorySlug}/${page.pageSlug}`}
                               onClick={() => setActiveDropdown(null)}
-                              className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200 group text-left"
+                              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-amber-50/70 hover:text-[#0F294A] text-slate-700 transition group text-xs font-medium"
                             >
-                              <div className="w-6 h-6 rounded-md bg-slate-100 text-[#0F294A] group-hover:bg-[#0F294A] group-hover:text-[#C59B27] flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                                <PortalIcon name={page.iconName} className="w-3.5 h-3.5" />
+                              <div className="w-5 h-5 rounded-md bg-slate-100 text-[#0F294A] group-hover:bg-[#0F294A] group-hover:text-[#F4B942] flex items-center justify-center shrink-0 transition-colors">
+                                <PortalIcon name={page.iconName} className="w-3 h-3" />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-bold text-slate-800 group-hover:text-[#0F294A] flex items-center justify-between">
-                                  <span className="truncate">{pageTitle}</span>
-                                  <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-[#C59B27] group-hover:translate-x-0.5 transition-transform" />
-                                </div>
-                                {pageDesc && (
-                                  <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                                    {pageDesc}
-                                  </p>
-                                )}
-                              </div>
+                              <span className={`truncate flex-1 ${isTelugu ? 'font-telugu' : ''}`}>{pageTitle}</span>
+                              <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-[#C59B27] group-hover:translate-x-0.5 transition-transform shrink-0" />
                             </Link>
                           );
                         })}
@@ -386,9 +395,9 @@ export default function Navbar() {
             {isTelugu ? 'స్వాగతం' : 'Welcome'}
           </Link>
 
-          {/* Accordion Categories */}
+          {/* Accordion Categories - Role Filtered */}
           <div className="space-y-1">
-            {portalStructure.map((cat) => {
+            {visibleCategories.map((cat) => {
               const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
               const isExpanded = mobileExpandedCat === cat.categorySlug;
 

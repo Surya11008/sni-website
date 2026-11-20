@@ -45,7 +45,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const destination = location.state?.from?.pathname || '/dashboard';
+  const destination = location.state?.from?.pathname || '/';
 
   const formatFirebaseError = (err) => {
     const code = err?.code || '';

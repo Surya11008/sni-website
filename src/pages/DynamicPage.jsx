@@ -19,6 +19,8 @@ import { DEFAULT_PORTAL_STRUCTURE, findPageInfo } from '../config/portalStructur
 import PortalIcon from '../components/PortalIcon';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
+import PhotoGalleryManager from '../components/PhotoGalleryManager';
+import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import {
   ChevronRight,
   Plus,
@@ -256,16 +258,6 @@ export default function DynamicPage() {
               >
                 {pageTitle}
               </h1>
-
-              {pageDesc && (
-                <p
-                  className={`text-slate-300 text-sm sm:text-base leading-relaxed ${
-                    isTelugu ? 'font-telugu leading-relaxed text-slate-200' : ''
-                  }`}
-                >
-                  {pageDesc}
-                </p>
-              )}
             </div>
 
             {/* Quick Action Buttons for Admin */}
@@ -433,7 +425,7 @@ export default function DynamicPage() {
         {activeArticle ? (
           <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-12 shadow-md max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
             {/* Top Bar: Back Button & Admin Controls */}
-            <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4">
+            <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4 flex-wrap">
               <button
                 onClick={() => { setActiveArticle(null); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
@@ -442,25 +434,32 @@ export default function DynamicPage() {
                 <span>{isTelugu ? '← అన్ని ఆర్టికల్స్ జాబితాకు వెళ్ళండి' : `← Back to ${pageTitle}`}</span>
               </button>
 
-              {isAdmin && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => handleOpenEditForm(activeArticle, e)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer shadow-xs"
-                    title="Edit this article"
-                  >
-                    <Pencil className="w-3.5 h-3.5 text-[#C59B27]" />
-                    <span>Edit Content</span>
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteContent(activeArticle.id, e)}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
-                    title="Delete this article"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5">
+                <AudioSpeakerButton
+                  text={getDesc(activeArticle)}
+                  title={getText(activeArticle, 'title')}
+                />
+
+                {isAdmin && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleOpenEditForm(activeArticle, e)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer shadow-xs"
+                      title="Edit this article"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-[#C59B27]" />
+                      <span>Edit Content</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteContent(activeArticle.id, e)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                      title="Delete this article"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Article Header */}
@@ -692,9 +691,14 @@ export default function DynamicPage() {
                       </div>
                     </div>
 
-                    {/* Actions / Attachments / Edit */}
+                    {/* Actions / Attachments / Audio / Edit */}
                     <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <AudioSpeakerButton
+                          buttonStyle="icon"
+                          text={itemDesc}
+                          title={itemTitle}
+                        />
                         {item.videoUrl && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-semibold text-[10px]">
                             <Play className="w-2.5 h-2.5 fill-current" />
@@ -758,26 +762,14 @@ export default function DynamicPage() {
             </div>
 
             <div
-              className={`text-slate-700 text-sm sm:text-base leading-relaxed space-y-4 ${
+              className={`text-slate-700 text-sm sm:text-base leading-relaxed space-y-3 ${
                 isTelugu ? 'font-telugu leading-loose' : ''
               }`}
             >
               <p>
                 {isTelugu
-                  ? `దేవుని సంఘ సమాఖ్య ${categoryTitle} విభాగంలోని "${pageTitle}" పేజీకి స్వాగతం. ఈ విభాగం ద్వారా దైవిక క్రమములు, సిద్ధాంత గ్రంథములు మరియు ఆత్మీయ మార్గదర్శకాలను క్రమబద్ధంగా అందించడం జరుగుతుంది.`
-                  : `Welcome to the official "${pageTitle}" section within the ${categoryTitle} directory of Super Natural Intelligence (SNI). This repository organizes sacred orders, theological teachings, and administrative records for all ministerial workers and fellowship members.`}
-              </p>
-
-              {pageDesc && (
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-[#C59B27]/30 text-[#0F294A] text-xs sm:text-sm font-medium">
-                  {pageDesc}
-                </div>
-              )}
-
-              <p className="text-slate-500 text-xs sm:text-sm">
-                {isTelugu
-                  ? 'అడ్మిన్ అధికారులు ఈ పేజీకి సంబంధించిన నూతన ఆర్టికల్స్, పత్రాలు, వీడియోలు లేదా ఫైళ్ళను నేరుగా ఇక్కడే "+ Add Content to This Page" బటన్ ద్వారా ప్రచురించవచ్చు.'
-                  : 'Authorized administrators can publish official articles, media broadcasts, lesson sheets, and circulars directly into this page using the "+ Add Content to This Page" button above.'}
+                  ? `దేవుని సంఘ సమాఖ్య ${categoryTitle} విభాగంలోని "${pageTitle}" పేజీకి స్వాగతం.`
+                  : `Welcome to the official "${pageTitle}" section within ${categoryTitle}.`}
               </p>
             </div>
 
@@ -802,6 +794,15 @@ export default function DynamicPage() {
             </div>
           </div>
         )}
+
+        {/* Dynamic Page Photo Gallery & Visual Media (Admin editable) */}
+        <div className="pt-10 border-t border-slate-200 mt-12">
+          <PhotoGalleryManager
+            targetPage={`${categorySlug}_${pageSlug}`}
+            sectionTitleEn={`${pageTitle} Photo Gallery`}
+            sectionTitleTe={`${pageTitle} చిత్రమాలిక`}
+          />
+        </div>
       </main>
     </div>
   );
