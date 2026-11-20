@@ -94,7 +94,7 @@ export default function Navbar() {
     try {
       setUserMenuOpen(false);
       await logout();
-      navigate('/login');
+      window.location.href = '/auth.html?mode=join';
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -376,15 +376,15 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link
-                to="/login"
+              <a
+                href="/auth.html?mode=join"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs uppercase font-bold tracking-wider transition shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
                   {t('navSignIn')}
                 </span>
-              </Link>
+              </a>
             )}
           </div>
 
@@ -453,14 +453,14 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link
-                to="/login"
+              <a
+                href="/auth.html?mode=join"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full inline-flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#F4B942] text-[#071B3B] font-bold text-xs uppercase"
               >
                 <LogIn className="w-4 h-4" />
                 <span>{t('navSignIn')}</span>
-              </Link>
+              </a>
             )}
           </div>
 

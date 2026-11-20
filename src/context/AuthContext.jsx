@@ -26,11 +26,44 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Auto-expire timer for 3-hour temporary password sessions
+  // Auto-expire timer for 3-hour temporary password sessions & unified session sync
   useEffect(() => {
     let logoutTimer = null;
 
-    // Check if there is an active temporary password session in storage
+    // 1. Check if there is an active unified session from auth.html
+    const storedUnifiedSession =
+      localStorage.getItem('sni_user_session') ||
+      localStorage.getItem('sni_current_user') ||
+      localStorage.getItem('sni_unified_session');
+
+    if (storedUnifiedSession) {
+      try {
+        const u = JSON.parse(storedUnifiedSession);
+        if (u && (u.userId || u.uid)) {
+          const id = u.userId || u.uid;
+          const email = u.email || `${id}@sni.org.in`;
+          const isAdmin = String(id).toLowerCase() === 'surya11008' || u.role === 'admin';
+          const unifiedUser = {
+            uid: id,
+            email: email,
+            displayName: u.fullName || u.displayName || id,
+          };
+          setCurrentUser((prev) => prev || unifiedUser);
+          setUserProfile((prev) => prev || {
+            uid: id,
+            email: email,
+            displayName: u.fullName || u.displayName || id,
+            role: isAdmin ? 'admin' : (u.role || 'member'),
+            status: u.status || 'approved',
+          });
+          setLoading(false);
+        }
+      } catch (err) {
+        console.warn('Failed to parse unified session:', err);
+      }
+    }
+
+    // 2. Check if there is an active temporary password session in storage
     const storedTempSession = localStorage.getItem('sni_temp_session');
     if (storedTempSession) {
       try {
@@ -145,7 +178,13 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         }
       } else {
-        if (!localStorage.getItem('sni_temp_session')) {
+        const hasSession =
+          localStorage.getItem('sni_temp_session') ||
+          localStorage.getItem('sni_user_session') ||
+          localStorage.getItem('sni_current_user') ||
+          localStorage.getItem('sni_unified_session');
+
+        if (!hasSession) {
           if (unsubscribeFirestore) {
             unsubscribeFirestore();
             unsubscribeFirestore = null;
@@ -258,6 +297,15 @@ export const AuthProvider = ({ children }) => {
   // Sign out
   const logout = async () => {
     localStorage.removeItem('sni_temp_session');
+    localStorage.removeItem('sni_user_session');
+    localStorage.removeItem('sni_current_user');
+    localStorage.removeItem('sni_unified_session');
+    localStorage.removeItem('sni_admin_active');
+    sessionStorage.removeItem('sni_admin_active');
+    try {
+      document.cookie = 'sni_unified_user=; Path=/; Max-Age=0';
+      document.cookie = 'sni_session_active=; Path=/; Max-Age=0';
+    } catch (e) {}
     setCurrentUser(null);
     setUserProfile(null);
     try {

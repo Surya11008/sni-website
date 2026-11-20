@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -8,12 +9,26 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 
 // Pages
 import Home from './pages/Home';
-import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import DynamicPage from './pages/DynamicPage';
 import CategoryPage from './pages/CategoryPage';
 import ContentDetailPage from './pages/ContentDetailPage';
+
+function RedirectToAuthJoin() {
+  useEffect(() => {
+    window.location.replace('/auth.html?mode=join');
+  }, []);
+
+  return (
+    <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-slate-600">
+      <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        Opening Join page...
+      </p>
+    </div>
+  );
+}
 
 export default function App() {
   return (
@@ -24,8 +39,9 @@ export default function App() {
             <Navbar />
             <main className="flex-1">
               <Routes>
-                {/* Login Route (Public Entry) */}
-                <Route path="/login" element={<Login />} />
+                {/* Login & Join Routes redirect to auth.html?mode=join */}
+                <Route path="/login" element={<RedirectToAuthJoin />} />
+                <Route path="/join" element={<RedirectToAuthJoin />} />
 
                 {/* Gated Behind Login - Only Authenticated & Approved Users Can Access */}
                 <Route

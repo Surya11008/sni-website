@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071b3b">
+    <link rel="manifest" href="manifest.webmanifest">
+    <title>Videos | SNI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    <link rel="stylesheet" href="site-pages.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="site-logo" href="index.html#home">
+            <img src="Images/sni-logo.png" alt="">
+            <span><strong>SNI</strong><small>S NATURAL INTELLIGENCE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#services">Services</a>
+            <a href="index.html#contact">Contact</a>
+            <button class="site-search-link" id="site-global-search-btn" type="button" aria-label="Search site">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            </button>
+            <button class="site-install-button" id="site-install-button" type="button" aria-label="Install SNI as an app" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <span>Install</span>
+            </button>
+        </nav>
+    </header>
+    <main class="app-main">
+        <div class="app-heading">
+            <div>
+                <h1>Videos</h1>
+                <p>Browse videos by category.</p>
+            </div>
+        </div>
+        <p class="video-intro">Videos are shared across the site. All videos can be watched freely without requiring any special login or access permissions.</p>
+        <div class="video-search" role="search">
+            <label for="videoSearch">Search videos</label>
+            <input id="videoSearch" type="search" placeholder="Search by title or category" autocomplete="off">
+        </div>
+        <button class="video-filter" id="admin-toggle" type="button" aria-expanded="false" style="font-size: 13px;">Admin: Add / Edit videos</button>
+        <form class="video-admin-form" id="admin-login" hidden>
+            <label>
+                Admin ID
+                <input id="admin-id" name="username" type="text" autocomplete="username" required>
+            </label>
+            <label>
+                Password
+                <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="video-filter video-submit" type="submit">Sign in</button>
+            <p class="video-form-status" id="login-status" role="status"></p>
+        </form>
+        <section class="video-admin-panel" id="video-admin-panel" aria-label="Add video" hidden>
+            <div class="video-admin-heading">
+                <h2>Add a video</h2>
+                <button class="video-filter" id="admin-logout" type="button">Sign out</button>
+            </div>
+            <form class="video-admin-form" id="video-form">
+                <label>
+                    Title
+                    <input id="video-title" name="title" type="text" maxlength="160" required>
+                </label>
+                <label>
+                    Category
+                    <input id="video-category" name="category" type="text" maxlength="50" list="video-category-options" required>
+                    <datalist id="video-category-options"></datalist>
+                </label>
+                <label class="form-wide">
+                    Video link
+                    <input id="video-url" name="videoUrl" type="url" inputmode="url" placeholder="Paste a Google Drive, YouTube, Vimeo, or direct video link" required>
+                    <small style="display:block; margin-top:4px; font-size:12px; color:#53647c; font-weight:normal;">💡 Google Drive Tip: Make sure file sharing in Google Drive is set to "Anyone with the link can view" so all visitors can play without asking for access.</small>
+                </label>
+                <label class="form-wide">
+                    Cover photo link (optional)
+                    <input id="video-cover" name="coverUrl" type="url" inputmode="url" placeholder="Thumbnails for Google Drive, YouTube, and Vimeo are detected automatically">
+                </label>
+                <div class="video-form-actions form-wide">
+                    <button class="video-filter video-submit" id="metadata-button" type="button">Auto-fill title and cover</button>
+                    <button class="video-filter video-submit" id="video-submit-button" type="submit">Add video</button>
+                    <button class="video-filter" id="cancel-edit-button" type="button" hidden>Cancel edit</button>
+                </div>
+                <p class="video-form-status form-wide" id="video-form-status" role="status"></p>
+            </form>
+        </section>
+        <div class="video-categories" id="video-categories" aria-label="Filter videos by category"></div>
+        <p class="video-message" id="video-message" role="status">Loading videos…</p>
+        <div class="video-grid" id="video-grid"></div>
+    </main>
+    <footer class="site-footer">© 2026 S Natural Intelligence (SNI). All Rights Reserved. <a href="index.html">Home</a></footer>
+    <script src="site-shell.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signInWithEmailAndPassword,
+            signOut,
+        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import {
+            addDoc,
+            collection,
+            deleteDoc,
+            doc,
+            getFirestore,
+            onSnapshot,
+            orderBy,
+            query,
+            serverTimestamp,
+            updateDoc,
+        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGFYGJDBQeAkMUucaj4O0PWWPB03lL01Y",
+            authDomain: "evaluation-dd0ff.firebaseapp.com",
+            projectId: "evaluation-dd0ff",
+            storageBucket: "evaluation-dd0ff.firebasestorage.app",
+            messagingSenderId: "889018796074",
+            appId: "1:889018796074:web:042a59274a4cd589d85b53",
+            measurementId: "G-MMGPR1ENVS",
+        };
+        const ADMIN_ID = "surya11008";
+        const ADMIN_EMAIL = "admin11008@gmail.com";
+        const ADMIN_UID = "6NguI1ON0Dg95qeJNeXnbw2aRyX2";
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+        const database = getFirestore(firebaseApp);
+        const videosCollection = collection(database, "videos");
+        const categoryContainer = document.getElementById("video-categories");
+        const videoGrid = document.getElementById("video-grid");
+        const message = document.getElementById("video-message");
+        const adminToggle = document.getElementById("admin-toggle");
+        const loginForm = document.getElementById("admin-login");
+        const loginStatus = document.getElementById("login-status");
+        const adminPanel = document.getElementById("video-admin-panel");
+        const videoForm = document.getElementById("video-form");
+        const videoFormStatus = document.getElementById("video-form-status");
+        const videoUrlInput = document.getElementById("video-url");
+        const titleInput = document.getElementById("video-title");
+        const coverInput = document.getElementById("video-cover");
+        const categoryInput = document.getElementById("video-category");
+        const categoryOptions = document.getElementById("video-category-options");
+        const searchInput = document.getElementById("videoSearch");
+        const submitButton = document.getElementById("video-submit-button");
+        const cancelEditButton = document.getElementById("cancel-edit-button");
+        let allVideos = [];
+        let unsubscribeVideos;
+        let selectedCategory = "All";
+        let editingVideoId = null;
+
+        function parseVideoUrl(value) {
+            if (!value || typeof value !== "string") return null;
+            let url;
+            try {
+                url = new URL(value.trim());
+            } catch {
+                return null;
+            }
+
+            if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+            const host = url.hostname.toLowerCase().replace(/^www\./, "");
+            const pathname = url.pathname;
+
+            // 1. GOOGLE DRIVE (view, preview, open?id, uc?id)
+            if (host === "drive.google.com" || host === "docs.google.com") {
+                let driveId = "";
+                const fileMatch = pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (fileMatch) {
+                    driveId = fileMatch[1];
+                } else if (url.searchParams.has("id")) {
+                    driveId = url.searchParams.get("id");
+                } else if (pathname.includes("/open") && url.searchParams.has("id")) {
+                    driveId = url.searchParams.get("id");
+                } else if (pathname.includes("/uc") && url.searchParams.has("id")) {
+                    driveId = url.searchParams.get("id");
+                }
+
+                if (driveId && driveId.length >= 10) {
+                    return {
+                        kind: "embed",
+                        type: "googledrive",
+                        id: driveId,
+                        src: `https://drive.google.com/file/d/${driveId}/preview`,
+                        thumbnail: `https://lh3.googleusercontent.com/d/${driveId}=w800`,
+                        fallbackThumbnail: `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`,
+                        metadataUrl: `https://drive.google.com/file/d/${driveId}/preview`,
+                    };
+                }
+            }
+
+            // 2. YOUTUBE (watch, share, shorts, live, embed)
+            if (["youtu.be", "youtube.com", "m.youtube.com", "youtube-nocookie.com"].includes(host)) {
+                const parts = pathname.split("/").filter(Boolean);
+                let id = "";
+                if (host === "youtu.be") {
+                    id = parts[0];
+                } else if (url.searchParams.has("v")) {
+                    id = url.searchParams.get("v");
+                } else if (["embed", "shorts", "live", "v"].includes(parts[0])) {
+                    id = parts[1];
+                }
+                if (id && /^[\w-]{11}$/.test(id)) {
+                    return {
+                        kind: "embed",
+                        type: "youtube",
+                        id,
+                        src: `https://www.youtube-nocookie.com/embed/${id}`,
+                        thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+                        fallbackThumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+                        metadataUrl: `https://www.youtube.com/watch?v=${id}`,
+                    };
+                }
+            }
+
+            // 3. VIMEO
+            if (host === "vimeo.com" || host === "player.vimeo.com") {
+                const parts = pathname.split("/").filter(Boolean);
+                const id = host === "player.vimeo.com" && parts[0] === "video" ? parts[1] : parts[0];
+                if (id && /^\d{6,12}$/.test(id)) {
+                    return {
+                        kind: "embed",
+                        type: "vimeo",
+                        id,
+                        src: `https://player.vimeo.com/video/${id}`,
+                        thumbnail: `https://vumbnail.com/${id}.jpg`,
+                        metadataUrl: `https://vimeo.com/${id}`,
+                    };
+                }
+            }
+
+            // 4. DAILYMOTION
+            if (host === "dailymotion.com" || host === "dai.ly") {
+                let id = "";
+                if (host === "dai.ly") {
+                    id = pathname.split("/").filter(Boolean)[0];
+                } else {
+                    const match = pathname.match(/\/video\/([a-zA-Z0-9]+)/);
+                    if (match) id = match[1];
+                }
+                if (id) {
+                    return {
+                        kind: "embed",
+                        type: "dailymotion",
+                        id,
+                        src: `https://www.dailymotion.com/embed/video/${id}`,
+                        thumbnail: `https://www.dailymotion.com/thumbnail/video/${id}`,
+                        metadataUrl: `https://www.dailymotion.com/video/${id}`,
+                    };
+                }
+            }
+
+            // 5. DROPBOX
+            if (host === "dropbox.com") {
+                const rawUrl = new URL(url.href);
+                rawUrl.searchParams.set("raw", "1");
+                return {
+                    kind: "video",
+                    type: "dropbox",
+                    src: rawUrl.href,
+                    thumbnail: null,
+                };
+            }
+
+            // 6. DIRECT VIDEO FILES
+            if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(pathname)) {
+                return {
+                    kind: "video",
+                    type: "direct",
+                    src: url.href,
+                    thumbnail: null,
+                };
+            }
+
+            return {
+                kind: "embed",
+                type: "generic",
+                src: url.href,
+                thumbnail: null,
+            };
+        }
+
+        function showMessage(text, isError = false) {
+            message.textContent = text;
+            message.classList.toggle("error", isError);
+            message.hidden = false;
+        }
+
+        function makePlayer(video, parsed, preview) {
+            if (parsed.kind === "embed" || parsed.kind === "iframe") {
+                const frame = document.createElement("iframe");
+                let playerUrl;
+                try {
+                    playerUrl = new URL(parsed.src);
+                    if (parsed.type === "youtube") {
+                        playerUrl.searchParams.set("autoplay", "1");
+                        playerUrl.searchParams.set("controls", "1");
+                        playerUrl.searchParams.set("playsinline", "1");
+                        playerUrl.searchParams.set("rel", "0");
+                    } else if (parsed.type === "vimeo" || parsed.type === "dailymotion") {
+                        playerUrl.searchParams.set("autoplay", "1");
+                    }
+                } catch {
+                    playerUrl = { href: parsed.src };
+                }
+
+                frame.src = playerUrl.href;
+                frame.title = video.title;
+                frame.loading = "lazy";
+                frame.referrerPolicy = "no-referrer-when-downgrade";
+                frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+                frame.allowFullscreen = true;
+                frame.className = "video-player-frame";
+                preview.replaceWith(frame);
+            } else if (parsed.kind === "video") {
+                const shell = document.createElement("div");
+                shell.className = "video-player-shell";
+                const player = document.createElement("video");
+                player.src = parsed.src;
+                player.controls = true;
+                player.preload = "metadata";
+                player.autoplay = true;
+                player.playsInline = true;
+                player.title = video.title;
+                shell.append(player);
+
+                const controls = document.createElement("div");
+                controls.className = "video-player-controls";
+                const rewindButton = document.createElement("button");
+                rewindButton.type = "button";
+                rewindButton.textContent = "−10s";
+                rewindButton.setAttribute("aria-label", "Rewind 10 seconds");
+                rewindButton.addEventListener("click", () => {
+                    player.currentTime = Math.max(0, player.currentTime - 10);
+                });
+                const muteButton = document.createElement("button");
+                muteButton.type = "button";
+                muteButton.textContent = "Mute";
+                muteButton.addEventListener("click", () => {
+                    player.muted = !player.muted;
+                    muteButton.textContent = player.muted ? "Unmute" : "Mute";
+                });
+                const forwardButton = document.createElement("button");
+                forwardButton.type = "button";
+                forwardButton.textContent = "+10s";
+                forwardButton.setAttribute("aria-label", "Forward 10 seconds");
+                forwardButton.addEventListener("click", () => {
+                    player.currentTime = Math.min(player.duration || Infinity, player.currentTime + 10);
+                });
+                const fullscreenButton = document.createElement("button");
+                fullscreenButton.type = "button";
+                fullscreenButton.textContent = "Full screen";
+                fullscreenButton.addEventListener("click", async () => {
+                    try {
+                        if (!shell.requestFullscreen) throw new Error("Full screen is not supported by this browser.");
+                        await shell.requestFullscreen();
+                    } catch (error) {
+                        showMessage(`Could not open full screen: ${error.message}`, true);
+                    }
+                });
+                controls.append(rewindButton, muteButton, forwardButton, fullscreenButton);
+                shell.append(controls);
+                preview.replaceWith(shell);
+                player.play().catch(error => {
+                    if (error.name !== "NotAllowedError") showMessage(`Could not play video: ${error.message}`, true);
+                });
+            }
+        }
+
+        function renderVideos() {
+            videoGrid.replaceChildren();
+            const searchTerm = searchInput.value.trim().toLocaleLowerCase();
+            const visibleVideos = allVideos.filter(video => {
+                const matchesCategory = selectedCategory === "All" || video.category === selectedCategory;
+                const matchesSearch = !searchTerm
+                    || `${video.title} ${video.category}`.toLocaleLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+
+            if (!visibleVideos.length) {
+                showMessage(searchTerm
+                    ? `No videos match "${searchInput.value.trim()}".`
+                    : selectedCategory === "All"
+                        ? "No videos have been added yet."
+                        : `No videos in ${selectedCategory} yet.`);
+                return;
+            }
+
+            message.hidden = true;
+            for (const video of visibleVideos) {
+                const parsed = parseVideoUrl(video.videoUrl);
+                if (!parsed) continue;
+
+                const card = document.createElement("article");
+                card.className = "video-card";
+                const coverUrl = video.coverUrl || parsed.thumbnail;
+                const preview = document.createElement("button");
+                preview.type = "button";
+                preview.className = "video-play-preview";
+                preview.setAttribute("aria-label", `Play ${video.title}`);
+
+                if (coverUrl) {
+                    const image = document.createElement("img");
+                    image.src = coverUrl;
+                    image.alt = video.title || "";
+                    image.loading = "lazy";
+                    image.addEventListener("error", () => {
+                        if (parsed.fallbackThumbnail && image.src !== parsed.fallbackThumbnail) {
+                            image.src = parsed.fallbackThumbnail;
+                        } else {
+                            image.style.display = "none";
+                            preview.classList.add("cover-unavailable");
+                        }
+                    });
+                    preview.append(image);
+                } else {
+                    preview.classList.add("cover-unavailable");
+                }
+
+                const playLabel = document.createElement("span");
+                playLabel.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play video`;
+                preview.append(playLabel);
+                preview.addEventListener("click", () => makePlayer(video, parsed, preview));
+                card.append(preview);
+
+                const info = document.createElement("div");
+                info.className = "video-card-info";
+                const heading = document.createElement("h2");
+                heading.textContent = video.title;
+                const categoryLabel = document.createElement("p");
+                categoryLabel.textContent = video.category;
+                info.append(heading, categoryLabel);
+
+                if (auth.currentUser?.uid === ADMIN_UID) {
+                    const actions = document.createElement("div");
+                    actions.className = "video-card-actions";
+                    const editButton = document.createElement("button");
+                    editButton.type = "button";
+                    editButton.className = "video-filter";
+                    editButton.textContent = "Edit";
+                    editButton.addEventListener("click", () => {
+                        editingVideoId = video.id;
+                        titleInput.value = video.title;
+                        categoryInput.value = video.category;
+                        videoUrlInput.value = video.videoUrl;
+                        coverInput.value = video.coverUrl || "";
+                        submitButton.textContent = "Save changes";
+                        cancelEditButton.hidden = false;
+                        videoFormStatus.textContent = `Editing "${video.title}".`;
+                        videoForm.scrollIntoView({ behavior: "smooth", block: "center" });
+                    });
+                    actions.append(editButton);
+
+                    const removeButton = document.createElement("button");
+                    removeButton.type = "button";
+                    removeButton.className = "video-filter video-delete";
+                    removeButton.textContent = "Delete";
+                    removeButton.addEventListener("click", async () => {
+                        if (!window.confirm(`Delete "${video.title}"?`)) return;
+                        try {
+                            await deleteDoc(doc(database, "videos", video.id));
+                        } catch (error) {
+                            showMessage(`Could not delete video: ${error.message}`, true);
+                        }
+                    });
+                    actions.append(removeButton);
+                    info.append(actions);
+                }
+
+                card.append(info);
+                videoGrid.append(card);
+            }
+        }
+
+        function createFilters(categories) {
+            categoryContainer.replaceChildren();
+            ["All", ...categories].forEach(category => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "video-filter";
+                button.textContent = category === "All" ? "All videos" : category;
+                button.setAttribute("aria-pressed", String(selectedCategory === category));
+                button.addEventListener("click", () => {
+                    selectedCategory = category;
+                    categoryContainer.querySelectorAll("button").forEach(filter => {
+                        filter.setAttribute("aria-pressed", String(filter === button));
+                    });
+                    renderVideos();
+                });
+                categoryContainer.append(button);
+            });
+        }
+
+        function cancelEditing() {
+            editingVideoId = null;
+            videoForm.reset();
+            submitButton.textContent = "Add video";
+            cancelEditButton.hidden = true;
+            videoFormStatus.textContent = "";
+        }
+
+        async function fillVideoMetadata() {
+            const parsed = parseVideoUrl(videoUrlInput.value.trim());
+            if (!parsed) {
+                videoFormStatus.textContent = "Enter a valid video URL first (Google Drive, YouTube, Vimeo, etc.).";
+                return;
+            }
+
+            videoFormStatus.textContent = "Detecting video details & thumbnail…";
+            let metadata;
+            let metadataError = "";
+            try {
+                if (parsed.type === "youtube") {
+                    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(parsed.metadataUrl)}&format=json`, {
+                        signal: AbortSignal.timeout(8000),
+                    });
+                    if (response.ok) metadata = await response.json();
+                } else if (parsed.type === "vimeo") {
+                    const response = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(parsed.metadataUrl)}`, {
+                        signal: AbortSignal.timeout(8000),
+                    });
+                    if (response.ok) metadata = await response.json();
+                }
+            } catch (error) {
+                metadataError = error.message;
+            }
+
+            if (metadata?.title && !titleInput.value.trim()) {
+                titleInput.value = metadata.title.slice(0, 160);
+            }
+
+            const autoCover = metadata?.thumbnail_url || parsed.thumbnail;
+            if (autoCover && !coverInput.value.trim()) {
+                coverInput.value = autoCover;
+            }
+
+            if (parsed.type === "googledrive") {
+                videoFormStatus.textContent = "Google Drive video detected! Embed URL and thumbnail configured automatically. (Ensure file sharing in Drive is set to 'Anyone with the link'.)";
+            } else if (metadata?.title) {
+                videoFormStatus.textContent = "Video title and thumbnail detected successfully!";
+            } else if (autoCover) {
+                videoFormStatus.textContent = "Thumbnail detected automatically! Please enter or review the title.";
+            } else {
+                videoFormStatus.textContent = "Link validated. Enter a title and optional cover link.";
+            }
+        }
+
+        adminToggle.addEventListener("click", () => {
+            const isExpanded = adminToggle.getAttribute("aria-expanded") === "true";
+            adminToggle.setAttribute("aria-expanded", String(!isExpanded));
+            loginForm.hidden = isExpanded;
+            if (!isExpanded) document.getElementById("admin-id").focus();
+        });
+
+        loginForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            loginStatus.textContent = "";
+            const userId = document.getElementById("admin-id").value.trim();
+            const password = document.getElementById("admin-password").value;
+            if (userId !== ADMIN_ID) {
+                loginStatus.textContent = "Invalid admin ID or password.";
+                return;
+            }
+
+            try {
+                const credential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, password);
+                if (credential.user.uid !== ADMIN_UID) {
+                    await signOut(auth);
+                    throw new Error("This account is not authorized to manage videos.");
+                }
+                document.getElementById("admin-password").value = "";
+                loginStatus.textContent = "Signed in.";
+            } catch (error) {
+                loginStatus.textContent = error.code === "auth/invalid-credential"
+                    ? "Invalid admin ID or password."
+                    : `Sign-in failed: ${error.message}`;
+            }
+        });
+
+        document.getElementById("admin-logout").addEventListener("click", () => signOut(auth));
+        document.getElementById("metadata-button").addEventListener("click", fillVideoMetadata);
+        cancelEditButton.addEventListener("click", cancelEditing);
+        searchInput.addEventListener("input", renderVideos);
+        videoUrlInput.addEventListener("change", () => {
+            if (videoUrlInput.value.trim()) fillVideoMetadata();
+        });
+
+        videoForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            if (auth.currentUser?.uid !== ADMIN_UID) {
+                videoFormStatus.textContent = "Sign in with the authorized admin account before adding videos.";
+                return;
+            }
+
+            const title = titleInput.value.trim();
+            const category = categoryInput.value.trim();
+            const videoUrl = videoUrlInput.value.trim();
+            const parsed = parseVideoUrl(videoUrl);
+            let coverUrl = coverInput.value.trim() || (parsed?.thumbnail || "");
+            let coverIsSecure = !coverUrl;
+            try {
+                coverIsSecure = !coverUrl || new URL(coverUrl).protocol === "https:";
+            } catch {
+                coverIsSecure = false;
+            }
+            if (!title || !category || category.toLowerCase() === "all" || !parsed || !coverIsSecure) {
+                videoFormStatus.textContent = "Enter a title, category other than All, a valid HTTPS video link, and an HTTPS cover link if provided.";
+                return;
+            }
+
+            const videoData = { title, category, videoUrl, coverUrl };
+            const editId = editingVideoId;
+            videoFormStatus.textContent = editId ? "Saving changes…" : "Adding video…";
+            try {
+                if (editId) {
+                    await updateDoc(doc(database, "videos", editId), videoData);
+                    cancelEditing();
+                    videoFormStatus.textContent = "Video updated.";
+                } else {
+                    await addDoc(videosCollection, {
+                        ...videoData,
+                        createdAt: serverTimestamp(),
+                    });
+                    videoForm.reset();
+                    videoFormStatus.textContent = "Video added to the shared library.";
+                }
+            } catch (error) {
+                videoFormStatus.textContent = `Could not ${editId ? "update" : "add"} video: ${error.message}`;
+            }
+        });
+
+        onAuthStateChanged(auth, async user => {
+            if (user && user.uid !== ADMIN_UID) {
+                await signOut(auth);
+                loginStatus.textContent = "This account is not authorized to manage videos.";
+                return;
+            }
+
+            const isAdmin = user?.uid === ADMIN_UID;
+            adminPanel.hidden = !isAdmin;
+            adminToggle.hidden = isAdmin;
+            if (isAdmin) adminToggle.setAttribute("aria-expanded", "false");
+            loginForm.hidden = isAdmin || adminToggle.getAttribute("aria-expanded") !== "true";
+            if (!isAdmin && editingVideoId) cancelEditing();
+            if (unsubscribeVideos) unsubscribeVideos();
+            unsubscribeVideos = onSnapshot(
+                query(videosCollection, orderBy("createdAt", "desc")),
+                snapshot => {
+                    allVideos = snapshot.docs.map(video => ({ id: video.id, ...video.data() }));
+                    const categories = [...new Set(allVideos.map(video => video.category))]
+                        .filter(category => typeof category === "string" && category.trim())
+                        .sort((a, b) => a.localeCompare(b));
+                    if (selectedCategory !== "All" && !categories.includes(selectedCategory)) {
+                        selectedCategory = "All";
+                    }
+                    categoryOptions.replaceChildren(...categories.map(category => {
+                        const option = document.createElement("option");
+                        option.value = category;
+                        return option;
+                    }));
+                    createFilters(categories);
+                    renderVideos();
+                },
+                error => showMessage(`Could not load shared videos: ${error.message}`, true),
+            );
+        });
+    </script>
+</body>
+</html>

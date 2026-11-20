@@ -9,6 +9,28 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "source": "/login",
+        "destination": "/auth.html?mode=join",
+        "type": 302
+      },
+      {
+        "source": "/login.html",
+        "destination": "/auth.html?mode=join",
+        "type": 302
+      },
+      {
+        "source": "/join",
+        "destination": "/auth.html?mode=join",
+        "type": 302
+      },
+      {
+        "source": "/join.html",
+        "destination": "/auth.html?mode=join",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "source": "**",

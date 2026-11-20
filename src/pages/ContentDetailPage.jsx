@@ -181,7 +181,7 @@ export default function ContentDetailPage() {
 
   const handleToggleLike = async () => {
     if (!currentUser) {
-      navigate('/login');
+      window.location.href = '/auth.html?mode=join';
       return;
     }
     const currentlyLiked = isLiked;
@@ -226,7 +226,7 @@ export default function ContentDetailPage() {
     e.preventDefault();
     if (!commentText.trim()) return;
     if (!currentUser) {
-      navigate('/login');
+      window.location.href = '/auth.html?mode=join';
       return;
     }
 
