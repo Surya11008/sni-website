@@ -772,6 +772,11 @@
                 <span class="tab-icon">✨</span>
                 <span>New Arrivals</span>
             </button>
+            <button type="button" class="tab-btn" data-tab="tabUsers" onclick="switchStudioTab('tabUsers')">
+                <span class="tab-icon">👥</span>
+                <span>Member Approvals</span>
+                <span id="pendingApprovalBadge" style="display: none; background: var(--accent-rose); color: white; border-radius: 999px; font-size: 10px; padding: 2px 7px; margin-left: auto; font-weight: 800;">0</span>
+            </button>
             <button type="button" class="tab-btn" data-tab="tabSiteText" onclick="switchStudioTab('tabSiteText')">
                 <span class="tab-icon">✏️</span>
                 <span>Site Content</span>
@@ -824,6 +829,14 @@
                         <div class="stat-value" id="statArrivalsCount">0</div>
                         <div class="stat-desc">Featured spotlight items</div>
                     </div>
+                    <div class="stat-card" style="border-top: 3px solid var(--accent-rose);">
+                        <div class="stat-header">
+                            <span style="color: #fb7185;">PENDING APPROVALS</span>
+                            <span>⏳</span>
+                        </div>
+                        <div class="stat-value" id="statPendingCount" style="color: var(--accent-rose);">0</div>
+                        <div class="stat-desc">New join requests awaiting review</div>
+                    </div>
                     <div class="stat-card emerald">
                         <div class="stat-header">
                             <span>DATABASE</span>
@@ -840,6 +853,9 @@
                         <a href="index.html?mode=develop" target="_blank" class="btn-primary">
                             <span>✏️ Open Website in Live Edit Mode</span>
                         </a>
+                        <button type="button" class="btn-secondary" onclick="switchStudioTab('tabUsers')" style="border-color: rgba(244, 63, 94, 0.4);">
+                            <span>👥 Member Approvals</span>
+                        </button>
                         <button type="button" class="btn-secondary" onclick="switchStudioTab('tabCards')">
                             <span>➕ Add New Portal Card</span>
                         </button>
@@ -1185,6 +1201,33 @@
                                 <a href="diary.html" target="_blank" class="btn-secondary">Open App ↗</a>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. MEMBER APPROVALS & PERMISSIONS -->
+            <section id="tabUsers" class="view-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title"><span>Member Approvals &amp; Permissions</span></h1>
+                        <p class="panel-subtitle">Review new registration requests. Only approved members can log in. Members have View-Only access with no permissions to edit or add content.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-secondary" onclick="fetchUsers()">
+                            <span>🔄 Refresh Members</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-box">
+                    <div style="display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;">
+                        <button type="button" class="btn-secondary" id="filterAllUsersBtn" onclick="filterUsersView('all')" style="border-color: var(--gold);">All Accounts</button>
+                        <button type="button" class="btn-secondary" id="filterPendingUsersBtn" onclick="filterUsersView('pending')">⏳ Pending Approvals</button>
+                        <button type="button" class="btn-secondary" id="filterApprovedUsersBtn" onclick="filterUsersView('approved')">✅ Approved Members</button>
+                    </div>
+
+                    <div id="studioUsersList" class="items-list">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
             </section>
@@ -1746,17 +1789,208 @@
         }
 
         // ----------------------------------------------------
-        // 7. UTILS & INIT
+        // 7. MEMBER APPROVALS CONTROLLER
+        // ----------------------------------------------------
+        let allUsersList = [];
+        let currentUsersFilter = 'all';
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${RTDB_BASE}/users.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && typeof data === 'object') {
+                        allUsersList = Object.keys(data).map(key => {
+                            const u = data[key];
+                            return {
+                                userId: key,
+                                fullName: u.fullName || key,
+                                contact: u.contact || '',
+                                role: u.role || 'member',
+                                status: u.status || (u.role === 'admin' ? 'approved' : 'pending'),
+                                joinedAt: u.joinedAt || ''
+                            };
+                        });
+                    } else {
+                        allUsersList = [];
+                    }
+                }
+            } catch(e) {
+                console.warn('Could not fetch users:', e);
+            }
+
+            updateUserStats();
+            renderUsersList();
+        }
+
+        function updateUserStats() {
+            const pendingCount = allUsersList.filter(u => u.role !== 'admin' && u.status !== 'approved').length;
+            const badge = document.getElementById('pendingApprovalBadge');
+            const statPending = document.getElementById('statPendingCount');
+            if (statPending) statPending.textContent = pendingCount;
+            if (badge) {
+                badge.textContent = pendingCount;
+                badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        function filterUsersView(filter) {
+            currentUsersFilter = filter;
+            ['filterAllUsersBtn', 'filterPendingUsersBtn', 'filterApprovedUsersBtn'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.borderColor = 'var(--border)';
+            });
+            if (filter === 'all') document.getElementById('filterAllUsersBtn').style.borderColor = 'var(--gold)';
+            if (filter === 'pending') document.getElementById('filterPendingUsersBtn').style.borderColor = 'var(--accent-rose)';
+            if (filter === 'approved') document.getElementById('filterApprovedUsersBtn').style.borderColor = 'var(--accent-emerald)';
+            renderUsersList();
+        }
+
+        function renderUsersList() {
+            const container = document.getElementById('studioUsersList');
+            if (!container) return;
+
+            let filtered = allUsersList;
+            if (currentUsersFilter === 'pending') {
+                filtered = allUsersList.filter(u => u.role !== 'admin' && u.status !== 'approved');
+            } else if (currentUsersFilter === 'approved') {
+                filtered = allUsersList.filter(u => u.status === 'approved');
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 18px; text-align: center;">No members found matching this filter.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(u => {
+                const isAdmin = u.userId === ADMIN_ID || u.role === 'admin';
+                const isApproved = isAdmin || u.status === 'approved';
+                const statusBadge = isAdmin ? 
+                    `<span style="background: rgba(245, 199, 94, 0.2); color: var(--gold); padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">Owner</span>` :
+                    (isApproved ? 
+                        `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">✅ Approved (View-Only)</span>` :
+                        (u.status === 'rejected' ? 
+                            `<span style="background: rgba(244, 63, 94, 0.2); color: #f87171; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">❌ Rejected</span>` :
+                            `<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">⏳ Pending Approval</span>`
+                        )
+                    );
+
+                let actionBtns = '';
+                if (!isAdmin) {
+                    if (!isApproved) {
+                        actionBtns = `
+                            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="approveUser('${u.userId}')">
+                                <span>✅ Approve</span>
+                            </button>
+                            <button type="button" class="btn-action-icon danger" onclick="rejectUser('${u.userId}')" title="Reject Request">&times;</button>
+                        `;
+                    } else {
+                        actionBtns = `
+                            <button type="button" class="btn-ghost" style="padding: 6px 10px; font-size: 11.5px;" onclick="revokeUser('${u.userId}')" title="Revoke Approval">
+                                <span>⏸️ Revoke</span>
+                            </button>
+                            <button type="button" class="btn-action-icon danger" onclick="deleteUser('${u.userId}')" title="Delete Member">&times;</button>
+                        `;
+                    }
+                }
+
+                const dateStr = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString() : 'Active';
+                const contactStr = u.contact ? ` • ${escapeHtml(u.contact)}` : '';
+
+                return `
+                    <div class="item-row">
+                        <div class="item-row-left">
+                            <div class="item-avatar" style="background: ${isAdmin ? 'var(--gold-gradient)' : 'rgba(255, 255, 255, 0.1)'}; color: ${isAdmin ? '#071329' : 'white'};">
+                                ${escapeHtml(u.fullName.charAt(0).toUpperCase())}
+                            </div>
+                            <div class="item-info">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="item-name">${escapeHtml(u.fullName)}</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="item-sub">
+                                    <span style="font-family: var(--font-mono); color: #cbd5e1;">@${escapeHtml(u.userId)}</span>${contactStr} • Joined: ${dateStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            ${actionBtns}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function approveUser(userId) {
+            try {
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'approved' })
+                });
+                showStudioToast(`✅ Member @${userId} approved! They can now sign in.`);
+                await fetchUsers();
+            } catch(e) {
+                showStudioToast('Error approving user.');
+            }
+        }
+
+        async function rejectUser(userId) {
+            if (!confirm(`Reject registration for @${userId}?`)) return;
+            try {
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'rejected' })
+                });
+                showStudioToast(`❌ Member @${userId} rejected.`);
+                await fetchUsers();
+            } catch(e) {
+                showStudioToast('Error rejecting user.');
+            }
+        }
+
+        async function revokeUser(userId) {
+            if (!confirm(`Revoke login access for @${userId}?`)) return;
+            try {
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'pending' })
+                });
+                showStudioToast(`⏸️ Access revoked for @${userId}.`);
+                await fetchUsers();
+            } catch(e) {
+                showStudioToast('Error revoking user.');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm(`Are you sure you want to completely delete member @${userId}?`)) return;
+            try {
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'DELETE'
+                });
+                showStudioToast(`🗑️ Member @${userId} deleted.`);
+                await fetchUsers();
+            } catch(e) {
+                showStudioToast('Error deleting user.');
+            }
+        }
+
+        // ----------------------------------------------------
+        // 8. UTILS & INIT
         // ----------------------------------------------------
         function updateStats() {
             document.getElementById('statCardsCount').textContent = activeCards.length;
             document.getElementById('statNoticesCount').textContent = activeNotices.length;
             document.getElementById('statArrivalsCount').textContent = activeArrivals.length;
+            updateUserStats();
         }
 
         async function refreshCloudData() {
             showStudioToast('🔄 Fetching latest cloud data...');
-            await Promise.all([fetchCards(), fetchNotices(), fetchArrivals(), loadSiteContentStudio()]);
+            await Promise.all([fetchCards(), fetchNotices(), fetchArrivals(), fetchUsers(), loadSiteContentStudio()]);
             showStudioToast('✅ All data updated!');
         }
 
@@ -1776,6 +2010,7 @@
             fetchCards();
             fetchNotices();
             fetchArrivals();
+            fetchUsers();
             loadSiteContentStudio();
         }
 

@@ -581,17 +581,17 @@
             <!-- AUTH BOX (SIGN IN & JOIN) -->
             <div id="authFormsContainer">
                 <div class="auth-header">
-                    <div class="auth-badge-icon">👑</div>
+                    <div class="auth-badge-icon">✨</div>
                     <h1 id="authMainTitle">Welcome to SNI</h1>
-                    <p id="authMainSub">One unified account for all SNI websites, study portals, and apps</p>
+                    <p id="authMainSub">One account for all SNI websites, study portals, and apps</p>
                 </div>
 
                 <div class="auth-tabs">
                     <button type="button" class="auth-tab-btn active" id="tabSignInBtn">
-                        <span>🔑 Sign In</span>
+                        <span>Sign In</span>
                     </button>
                     <button type="button" class="auth-tab-btn" id="tabJoinBtn">
-                        <span>✨ Join SNI</span>
+                        <span>✨ Join</span>
                     </button>
                 </div>
 
@@ -601,16 +601,16 @@
                 <!-- 1. SIGN IN FORM -->
                 <form id="signInForm" class="auth-form active">
                     <div class="form-group">
-                        <label for="signInUserId">Member ID / User ID *</label>
+                        <label for="signInUserId">SNI ID *</label>
                         <div class="input-wrap">
-                            <input type="text" id="signInUserId" class="form-input" placeholder="e.g., surya11008 or member ID" required autocomplete="username">
+                            <input type="text" id="signInUserId" class="form-input" placeholder="Enter SNI ID" required autocomplete="username">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="signInPass">Password *</label>
+                        <label for="signInPass">SNI Password *</label>
                         <div class="input-wrap">
-                            <input type="password" id="signInPass" class="form-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 40px;">
+                            <input type="password" id="signInPass" class="form-input" placeholder="Enter SNI Password" required autocomplete="current-password" style="padding-right: 40px;">
                             <button type="button" class="toggle-password" id="toggleSignInPassBtn" title="Show/Hide Password">👁️</button>
                         </div>
                     </div>
@@ -620,7 +620,6 @@
                             <input type="checkbox" id="rememberMeCheckbox" checked>
                             <span>Remember Me</span>
                         </label>
-                        <span style="font-size: 11.5px; color: var(--gold-dark); font-weight: bold;">Unified Sync</span>
                     </div>
 
                     <button type="submit" class="btn-submit" id="signInSubmitBtn">
@@ -629,7 +628,7 @@
                     </button>
 
                     <div class="auth-switch-prompt">
-                        Don't have an account yet? <a id="switchToJoinLink">Join SNI here</a>
+                        Don't have an account yet? <a id="switchToJoinLink">Join here</a>
                     </div>
                 </form>
 
@@ -643,44 +642,44 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="joinUserId">Choose Member ID / User ID *</label>
+                        <label for="joinUserId">Choose SNI ID *</label>
                         <div class="input-wrap">
-                            <input type="text" id="joinUserId" class="form-input" placeholder="e.g., john77" required autocomplete="username">
+                            <input type="text" id="joinUserId" class="form-input" placeholder="Enter desired SNI ID" required autocomplete="username">
                         </div>
-                        <div class="form-helper">Unique username (lowercase letters and numbers).</div>
+                        <div class="form-helper">Unique username (letters and numbers).</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="joinContact">Email or Phone Number (Optional)</label>
+                        <label for="joinContact">Email or Mobile Number (Optional)</label>
                         <div class="input-wrap">
                             <input type="text" id="joinContact" class="form-input" placeholder="e.g., john@example.com or mobile">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="joinPass">Create Password *</label>
+                        <label for="joinPass">Create SNI Password *</label>
                         <div class="input-wrap">
-                            <input type="password" id="joinPass" class="form-input" placeholder="At least 6 characters" required autocomplete="new-password" style="padding-right: 40px;">
+                            <input type="password" id="joinPass" class="form-input" placeholder="Enter SNI Password (at least 5 characters)" required autocomplete="new-password" style="padding-right: 40px;">
                             <button type="button" class="toggle-password" id="toggleJoinPassBtn" title="Show/Hide Password">👁️</button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="joinConfirmPass">Confirm Password *</label>
+                        <label for="joinConfirmPass">Confirm SNI Password *</label>
                         <div class="input-wrap">
-                            <input type="password" id="joinConfirmPass" class="form-input" placeholder="Re-enter password" required autocomplete="new-password">
+                            <input type="password" id="joinConfirmPass" class="form-input" placeholder="Re-enter SNI Password" required autocomplete="new-password">
                         </div>
                     </div>
 
                     <div class="form-options">
                         <label class="form-checkbox">
                             <input type="checkbox" id="joinTermsCheck" required checked>
-                            <span>I agree to the SNI community guidelines</span>
+                            <span>I agree to the SNI guidelines</span>
                         </label>
                     </div>
 
                     <button type="submit" class="btn-submit btn-join-special" id="joinSubmitBtn">
-                        <span>✨ Create Account &amp; Join</span>
+                        <span>✨ Submit Registration</span>
                     </button>
 
                     <div class="auth-switch-prompt">
@@ -924,7 +923,7 @@
             const submitBtn = document.getElementById('signInSubmitBtn');
 
             if (!userId || !pass) {
-                showAlert('Please provide both Member ID and Password.');
+                showAlert('Please provide both SNI ID and SNI Password.');
                 return;
             }
 
@@ -938,6 +937,7 @@
                         userId: 'surya11008',
                         fullName: 'Surya',
                         role: 'admin',
+                        status: 'approved',
                         password: pass,
                         joinedAt: new Date().toISOString()
                     };
@@ -958,8 +958,20 @@
 
                 if (userData) {
                     if (userData.password === pass) {
+                        const isApproved = userData.role === 'admin' || userData.status === 'approved';
+                        if (!isApproved) {
+                            if (userData.status === 'rejected') {
+                                showAlert('❌ Your registration request was not approved.');
+                            } else {
+                                showAlert('⏳ Your registration is pending admin approval. You can sign in once verified.');
+                            }
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                            return;
+                        }
+
                         setCurrentUser(userData);
-                        showAlert(`Welcome back, ${userData.fullName || userData.userId}! Redirecting...`, 'success');
+                        showAlert(`Welcome, ${userData.fullName || userData.userId}! Redirecting...`, 'success');
                         setTimeout(() => {
                             redirectAfterLogin();
                         }, 800);
@@ -969,7 +981,7 @@
                         submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
                     }
                 } else {
-                    showAlert(`⚠️ Account "@${userId}" not found. Click "Join SNI" to create an account!`);
+                    showAlert(`⚠️ Account "${userId}" not found. Click "Join" to submit a registration request.`);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
                 }
@@ -999,12 +1011,12 @@
             }
 
             if (userId.length < 3) {
-                showAlert('Member ID must be at least 3 characters long.');
+                showAlert('SNI ID must be at least 3 characters long.');
                 return;
             }
 
             if (pass.length < 5) {
-                showAlert('Password should be at least 5 characters long.');
+                showAlert('SNI Password must be at least 5 characters long.');
                 return;
             }
 
@@ -1014,7 +1026,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Creating Account...</span>';
+            submitBtn.innerHTML = '<span>Submitting Registration...</span>';
 
             try {
                 // Check if user already exists
@@ -1022,19 +1034,21 @@
                 if (checkRes.ok) {
                     const existing = await checkRes.json();
                     if (existing) {
-                        showAlert(`⚠️ Member ID "@${userId}" is already registered! Please choose another ID or Sign In.`);
+                        showAlert(`⚠️ SNI ID "${userId}" is already registered. Please choose another ID or Sign In.`);
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span>✨ Create Account &amp; Join</span>';
+                        submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
                         return;
                     }
                 }
 
+                const isAdmin = isCardAdmin(userId, pass);
                 const newUser = {
                     userId: userId,
                     fullName: fullName,
                     contact: contact || '',
                     password: pass,
-                    role: isCardAdmin(userId, pass) ? 'admin' : 'member',
+                    role: isAdmin ? 'admin' : 'member',
+                    status: isAdmin ? 'approved' : 'pending',
                     joinedAt: new Date().toISOString()
                 };
 
@@ -1045,18 +1059,25 @@
                     body: JSON.stringify(newUser)
                 });
 
-                setCurrentUser(newUser);
-                showAlert(`🎉 Account created successfully! Welcome to SNI, ${fullName}! Redirecting...`, 'success');
-
-                setTimeout(() => {
-                    redirectAfterLogin();
-                }, 1000);
+                if (isAdmin) {
+                    setCurrentUser(newUser);
+                    showAlert(`Welcome, ${fullName}! Redirecting...`, 'success');
+                    setTimeout(() => redirectAfterLogin(), 800);
+                } else {
+                    joinForm.reset();
+                    showAlert(`🎉 Registration submitted successfully, ${fullName}! Your account is pending verification. Once approved, you will be able to sign in.`, 'success');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+                    setTimeout(() => {
+                        switchMode('signin');
+                    }, 3500);
+                }
 
             } catch(err) {
                 console.error(err);
-                showAlert('Error registering account. Please try again.');
+                showAlert('Error submitting registration. Please try again.');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨ Create Account &amp; Join</span>';
+                submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
             }
         });
 

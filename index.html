@@ -1655,6 +1655,15 @@ function isCardAdmin(userId, password) {
 }
 
 function isAdminActive() {
+    let currentUser = null;
+    try {
+        const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
+        if (s) currentUser = JSON.parse(s);
+    } catch(e) {}
+    if (!currentUser || !currentUser.userId) return false;
+    const isOwner = currentUser.userId.toLowerCase() === 'surya11008' || currentUser.role === 'admin';
+    if (!isOwner) return false;
+
     return localStorage.getItem('sni_admin_active') === 'true' || 
            sessionStorage.getItem('sni_admin_active') === 'true' ||
            localStorage.getItem('word_search_admin_auth') === 'true';
