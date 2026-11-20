@@ -1660,17 +1660,28 @@ export default function AdminPanel() {
         {activeTab === 'photos' && (
           <div className="space-y-6">
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
-              <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2 mb-1">
-                <ImageIcon className="w-5 h-5 text-[#C59B27]" />
-                <span>Home Page Photos & Visual Showcase</span>
-              </h3>
-              <p className="text-xs text-slate-500 mb-6">
-                Photos added here automatically display in the Visual Gallery section on the Welcome page.
-              </p>
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 flex-wrap gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2 mb-1">
+                    <ImageIcon className="w-5 h-5 text-[#C59B27]" />
+                    <span>Home Page Photos & Visual Showcase</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Photos added here automatically display in the Visual Gallery section on the Home page.
+                  </p>
+                </div>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0F294A] text-[#F4B942] font-bold text-xs hover:bg-[#071B3B] transition shadow-xs"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Home Hero Background & Content</span>
+                </Link>
+              </div>
 
               <PhotoGalleryManager
                 targetPage="home"
-                sectionTitleEn="Welcome Page Featured Photos"
+                sectionTitleEn="Home Page Featured Photos"
                 sectionTitleTe=""
               />
             </div>

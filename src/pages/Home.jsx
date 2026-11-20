@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
   Check,
+  Upload,
 } from 'lucide-react';
 
 export default function Home() {
@@ -68,6 +69,38 @@ export default function Home() {
     } finally {
       setSavingHero(false);
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1920;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+        setHeroForm((prev) => ({ ...prev, bgImageUrl: compressed }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleScrollTo = (id) => {
@@ -179,38 +212,69 @@ export default function Home() {
             <form onSubmit={handleSaveHero} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Background Photo URL
+                  Background Photo (Add / Change / Remove)
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={heroForm.bgImageUrl || ''}
-                    onChange={(e) => setHeroForm({ ...heroForm, bgImageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/... or any photo link"
-                    className="flex-1 p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500/20"
-                  />
-                  {heroForm.bgImageUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setHeroForm({ ...heroForm, bgImageUrl: '' })}
-                      className="px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold flex items-center gap-1 cursor-pointer"
-                      title="Remove background photo"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remove</span>
-                    </button>
-                  )}
-                </div>
-                {heroForm.bgImageUrl ? (
-                  <div className="mt-2 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                    <img
-                      src={heroForm.bgImageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
+                
+                {/* Options: File Upload from Device or Paste URL */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition border border-slate-200">
+                      <Upload className="w-3.5 h-3.5 text-[#C59B27]" />
+                      <span>Upload Photo from Device</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {heroForm.bgImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setHeroForm({ ...heroForm, bgImageUrl: '' })}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition border border-rose-200 cursor-pointer"
+                        title="Remove background photo"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove Photo</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      value={heroForm.bgImageUrl && !heroForm.bgImageUrl.startsWith('data:') ? heroForm.bgImageUrl : ''}
+                      onChange={(e) => setHeroForm({ ...heroForm, bgImageUrl: e.target.value })}
+                      placeholder="Or paste image URL (https://...)"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500/20"
                     />
                   </div>
+                </div>
+
+                {heroForm.bgImageUrl ? (
+                  <div className="mt-2.5 relative h-36 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-xs">
+                    <img
+                      src={heroForm.bgImageUrl}
+                      alt="Hero Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <label className="px-3 py-1.5 rounded-lg bg-white/95 text-[#0F294A] font-bold text-xs flex items-center gap-1 cursor-pointer hover:bg-white shadow-sm">
+                        <Upload className="w-3 h-3 text-[#C59B27]" />
+                        <span>Change Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-400 mt-1.5">
                     No photo selected (sleek dark blue gradient will be displayed).
                   </p>
                 )}

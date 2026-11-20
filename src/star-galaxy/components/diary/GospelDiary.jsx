@@ -261,58 +261,82 @@ export default function GospelDiary({ onBack }) {
       )}
 
       {/* 📖 Header Banner */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-5 sm:p-6 text-white shadow-md flex items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] rounded-3xl p-5 sm:p-6 text-white shadow-md flex items-center justify-between gap-4 border border-[#1A3860]">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-white/30">
+          <div className="w-12 h-12 rounded-2xl bg-[#F4B942]/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-[#F4B942]/40 text-[#F4B942]">
             📖
           </div>
           <div>
-            <h3 className="font-black text-base sm:text-xl tracking-tight">
-              Gospel Diary
+            <h3 className="font-black text-base sm:text-xl tracking-tight text-white flex items-center gap-2">
+              <span>Gospel Diary</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-bold">
+                PRO
+              </span>
             </h3>
-            <p className="text-xs text-amber-100 mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               Record daily preaching reflections, testimonies, mood & track connected calendar
             </p>
           </div>
         </div>
 
-        <div className="bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/30 text-center">
-          <span className="text-[10px] uppercase font-bold text-amber-100 block">Total Notes</span>
+        <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-[#F4B942]/40 text-center">
+          <span className="text-[10px] uppercase font-bold text-[#F4B942] block">Total Notes</span>
           <span className="text-base sm:text-lg font-black text-white">{userEntries.length}</span>
         </div>
       </div>
 
       {/* 🔒 100% Personal & Private Shield Guarantee */}
-      <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-900 shadow-2xs">
+      <div className="bg-emerald-50/90 border border-emerald-300/80 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Lock className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-emerald-700" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xs text-emerald-950">
+              <span className="font-black text-xs text-emerald-950">
                 100% Personal & Confidential
               </span>
-              <span className="bg-emerald-200/70 text-emerald-900 text-[10px] font-black px-2 py-0.5 rounded-full">
+              <span className="bg-emerald-200/80 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
                 Your Eyes Only
               </span>
             </div>
             <p className="text-[11px] text-emerald-800 mt-0.5">
-              Entries are strictly isolated to <strong className="text-emerald-950">{currentUser?.name}</strong>. Neither Admin, Managers, nor other members can view your diary notes.
+              Entries are strictly isolated to <strong className="text-emerald-950 font-bold">{currentUser?.name || 'You'}</strong>. Neither Admin, Managers, nor other members can view your diary notes.
             </p>
           </div>
         </div>
-        <div className="text-[11px] font-bold text-emerald-800 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs shrink-0 flex items-center gap-1.5">
+        <div className="text-[11px] font-bold text-emerald-900 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs shrink-0 flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>User Isolation Active</span>
         </div>
       </div>
 
+      {/* Anonymous Guest Alert if not signed in */}
+      {!currentUser && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-[#C59B27]/40 rounded-3xl p-5 sm:p-6 text-center space-y-2 shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center mx-auto text-lg shadow-sm">
+            🔒
+          </div>
+          <h4 className="text-sm sm:text-base font-bold text-[#071B3B]">
+            Sign In to Save Personal Diary Notes
+          </h4>
+          <p className="text-xs text-slate-600 max-w-md mx-auto">
+            Your Gospel Diary reflections are 100% confidential and securely isolated to your personal account.
+          </p>
+          <a
+            href="/auth.html"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
+          >
+            Sign In / Join Now →
+          </a>
+        </div>
+      )}
+
       {/* 📝 Diary Input Form (Today Date, Title, Writing, Mood/Feel Emoji) */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-xs space-y-4">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-5 h-5 text-amber-600" />
+            <Edit3 className="w-5 h-5 text-[#C59B27]" />
             <h4 className="font-black text-xs sm:text-sm text-slate-800">
               {editingId ? 'Edit Diary Note' : 'New Diary Note'}
             </h4>
@@ -371,7 +395,7 @@ export default function GospelDiary({ onBack }) {
                     onClick={() => setSelectedMood(m.emoji)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border cursor-pointer ${
                       selectedMood === m.emoji
-                        ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-2xs scale-105'
+                        ? 'bg-amber-50 border-[#C59B27] text-[#071B3B] shadow-xs scale-105 ring-1 ring-[#F4B942] font-black'
                         : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
@@ -394,7 +418,7 @@ export default function GospelDiary({ onBack }) {
               value={entryTitle}
               onChange={(e) => setEntryTitle(e.target.value)}
               placeholder="e.g. Joyful preaching fellowship at community hall..."
-              className="w-full px-3.5 py-2 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-400"
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#F4B942]/30 focus:border-[#C59B27] focus:outline-none"
             />
           </div>
 
@@ -409,7 +433,7 @@ export default function GospelDiary({ onBack }) {
               value={entryWriting}
               onChange={(e) => setEntryWriting(e.target.value)}
               placeholder="Write your gospel experiences, preaching lessons, grace received, prayer requests..."
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-400 leading-relaxed font-sans"
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#F4B942]/30 focus:border-[#C59B27] focus:outline-none leading-relaxed font-sans"
             />
           </div>
 
@@ -426,9 +450,9 @@ export default function GospelDiary({ onBack }) {
 
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3 bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 border border-[#F4B942]/30"
           >
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4 text-[#F4B942]" />
             <span>{editingId ? 'Update Diary Note ✓' : 'Save to Gospel Diary ✓'}</span>
           </button>
         </form>
@@ -439,7 +463,7 @@ export default function GospelDiary({ onBack }) {
         {/* Calendar Top Header: Navigation & View Toggle */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] border border-amber-200 flex items-center justify-center font-bold">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
@@ -463,9 +487,9 @@ export default function GospelDiary({ onBack }) {
                 key={v.key}
                 type="button"
                 onClick={() => setCalendarView(v.key)}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   calendarView === v.key
-                    ? 'bg-white text-orange-700 shadow-xs'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-xs font-black'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -481,7 +505,7 @@ export default function GospelDiary({ onBack }) {
             <button
               type="button"
               onClick={prevPeriod}
-              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
               title="Previous"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -494,7 +518,7 @@ export default function GospelDiary({ onBack }) {
             <button
               type="button"
               onClick={nextPeriod}
-              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
               title="Next"
             >
               <ChevronRight className="w-4 h-4" />
@@ -506,7 +530,7 @@ export default function GospelDiary({ onBack }) {
               <button
                 type="button"
                 onClick={() => setFilterDate(null)}
-                className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100"
+                className="text-[11px] font-bold text-[#071B3B] bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100 cursor-pointer"
               >
                 Clear Date Filter ({filterDate}) ✕
               </button>
@@ -514,7 +538,7 @@ export default function GospelDiary({ onBack }) {
             <button
               type="button"
               onClick={jumpToToday}
-              className="text-xs font-bold text-slate-600 hover:text-orange-600 bg-slate-100 px-3 py-1 rounded-lg"
+              className="text-xs font-bold text-slate-600 hover:text-[#071B3B] bg-slate-100 px-3 py-1 rounded-lg cursor-pointer"
             >
               Today
             </button>
@@ -548,11 +572,11 @@ export default function GospelDiary({ onBack }) {
                     }}
                     className={`h-12 sm:h-14 rounded-2xl p-1 sm:p-1.5 flex flex-col justify-between cursor-pointer border transition-all ${
                       isSelected
-                        ? 'bg-amber-100 border-amber-500 shadow-sm ring-2 ring-amber-300'
+                        ? 'bg-[#071B3B] border-[#071B3B] text-[#F4B942] shadow-sm font-black'
                         : item.hasEntry
-                        ? 'bg-emerald-50/90 border-emerald-300 hover:bg-emerald-100'
+                        ? 'bg-amber-50/70 border-amber-300 hover:bg-amber-100 text-[#071B3B]'
                         : item.isToday
-                        ? 'bg-sky-50 border-sky-300 font-bold'
+                        ? 'bg-slate-100 border-[#C59B27] ring-1 ring-[#C59B27] font-bold'
                         : 'bg-white border-slate-100 hover:bg-slate-50'
                     }`}
                   >
