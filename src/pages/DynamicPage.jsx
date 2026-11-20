@@ -266,16 +266,48 @@ export default function DynamicPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#C59B27] selection:text-[#0F294A]">
+      {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
+      {category?.pages && category.pages.length > 0 && (
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            <Link
+              to={`/category/${categorySlug}`}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
+            >
+              {isTelugu ? 'అన్ని' : 'All'}
+            </Link>
+            {category.pages.map((sp) => {
+              const isCurrent = sp.pageSlug === pageSlug;
+              return (
+                <Link
+                  key={sp.pageSlug}
+                  to={`/page/${categorySlug}/${sp.pageSlug}`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
+                    isCurrent
+                      ? 'bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {isTelugu ? sp.titleTe : sp.titleEn}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 1. Cinematic Header Banner */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#14294A] text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
+      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#14294A] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 mb-6 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition flex items-center gap-1">
+            <Link to="/" className="hover:text-[#F4B942] transition flex items-center gap-1 font-bold">
               <span>Home</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-[#F4B942] font-semibold">{categoryTitle}</span>
+            <Link to={`/category/${categorySlug}`} className="text-[#F4B942] font-semibold uppercase hover:underline">
+              {categoryTitle}
+            </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-white font-bold">{pageTitle}</span>
           </nav>
@@ -311,36 +343,6 @@ export default function DynamicPage() {
           </div>
         </div>
       </section>
-
-      {/* 2nd Header: Subpage Navigation Bar for this Category */}
-      {category?.pages && category.pages.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
-            <Link
-              to={`/category/${categorySlug}`}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
-            >
-              {isTelugu ? 'అన్ని' : 'All'}
-            </Link>
-            {category.pages.map((sp) => {
-              const isCurrent = sp.pageSlug === pageSlug;
-              return (
-                <Link
-                  key={sp.pageSlug}
-                  to={`/page/${categorySlug}/${sp.pageSlug}`}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
-                    isCurrent
-                      ? 'bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27]'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {isTelugu ? sp.titleTe : sp.titleEn}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* 2. Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

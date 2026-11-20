@@ -131,12 +131,32 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
+      {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
+      {currentCategory.pages?.length > 0 && (
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27] shrink-0">
+              {isTelugu ? 'అన్ని' : 'All'}
+            </span>
+            {currentCategory.pages.map((sp) => (
+              <Link
+                key={sp.pageSlug}
+                to={`/page/${categorySlug}/${sp.pageSlug}`}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition whitespace-nowrap shrink-0"
+              >
+                {isTelugu ? sp.titleTe : sp.titleEn}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 1. Category Hero Banner */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-10 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
+      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
         <div className="max-w-7xl mx-auto space-y-5">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition">
+            <Link to="/" className="hover:text-[#F4B942] transition font-bold">
               <span>Home</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
@@ -171,26 +191,6 @@ export default function CategoryPage() {
           </div>
         </div>
       </section>
-
-      {/* 2nd Header: Subpage Navigation Bar for this Category */}
-      {currentCategory.pages?.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
-            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27] shrink-0">
-              {isTelugu ? 'అన్ని' : 'All'}
-            </span>
-            {currentCategory.pages.map((sp) => (
-              <Link
-                key={sp.pageSlug}
-                to={`/page/${categorySlug}/${sp.pageSlug}`}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition whitespace-nowrap shrink-0"
-              >
-                {isTelugu ? sp.titleTe : sp.titleEn}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-14">
