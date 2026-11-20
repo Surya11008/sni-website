@@ -9,10 +9,10 @@ import PortalIcon from '../components/PortalIcon';
 import {
   Calendar,
   ArrowRight,
+  ArrowLeft,
   ChevronRight,
   ChevronDown,
   Bell,
-  X,
   ExternalLink,
 } from 'lucide-react';
 
@@ -346,132 +346,149 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredUpdates.map((item) => {
-              const title = getText(item, 'title');
-              const desc = getDesc(item);
-
-              return (
-                <article
-                  key={item.id}
-                  onClick={() => setSelectedItem(item)}
-                  className="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer"
+          {/* IN-PAGE FULL ARTICLE READER (No Popup!) */}
+          {selectedItem ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-lg space-y-6 animate-in fade-in duration-200">
+              {/* Back to List Button */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
                 >
-                  <div>
-                    {/* 16:9 Aspect Cover Image */}
-                    <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-                      <img
-                        src={
-                          item.imageUrl ||
-                          'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80'
-                        }
-                        alt={title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                      <div className="absolute top-3 left-3 bg-[#0F294A]/90 backdrop-blur-sm text-[#C59B27] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-[#C59B27]/30 shadow-xs">
-                        {item.category || item.pageSlug || 'Update'}
+                  <ArrowLeft className="w-4 h-4 text-[#C59B27]" />
+                  <span>{isTelugu ? '← వార్తల జాబితాకు తిరిగి వెళ్ళండి' : '← Back to All Announcements'}</span>
+                </button>
+
+                <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-[#C59B27] border border-[#C59B27]/40 rounded-lg">
+                  {selectedItem.category || selectedItem.pageSlug || 'Notice'}
+                </span>
+              </div>
+
+              {/* Title & Date */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                  <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+                  <span>{selectedItem.date || 'Official Update'}</span>
+                </div>
+                <h3
+                  className={`text-2xl sm:text-3xl font-bold text-[#0F294A] leading-tight ${
+                    isTelugu ? 'font-telugu' : 'font-serif'
+                  }`}
+                >
+                  {getText(selectedItem, 'title')}
+                </h3>
+              </div>
+
+              {/* Image Banner */}
+              {selectedItem.imageUrl && (
+                <div className="rounded-2xl overflow-hidden border border-slate-200 max-h-[460px] bg-slate-100 shadow-xs">
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt={getText(selectedItem, 'title')}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Body Content */}
+              <div
+                className={`text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line py-2 ${
+                  isTelugu ? 'font-telugu leading-loose' : ''
+                }`}
+              >
+                {getDesc(selectedItem)}
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="flex flex-wrap items-center justify-between pt-6 border-t border-slate-100 gap-4">
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                >
+                  {isTelugu ? '← జాబితాకు వెళ్ళండి' : '← Back to List'}
+                </button>
+
+                {selectedItem.pageSlug && (
+                  <Link
+                    to={`/page/home/${selectedItem.pageSlug}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F294A] hover:text-[#C59B27]"
+                  >
+                    <span>Go to Section Page</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Cards Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredUpdates.map((item) => {
+                const title = getText(item, 'title');
+                const desc = getDesc(item);
+
+                return (
+                  <article
+                    key={item.id}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      const el = document.getElementById('updates-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                  >
+                    <div>
+                      {/* 16:9 Aspect Cover Image */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                        <img
+                          src={
+                            item.imageUrl ||
+                            'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80'
+                          }
+                          alt={title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                        <div className="absolute top-3 left-3 bg-[#0F294A]/90 backdrop-blur-sm text-[#C59B27] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-[#C59B27]/30 shadow-xs">
+                          {item.category || item.pageSlug || 'Update'}
+                        </div>
+                      </div>
+
+                      <div className="p-6">
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium mb-2">
+                          <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+                          <span>{item.date || 'Active Notice'}</span>
+                        </div>
+
+                        <h3
+                          className={`text-lg font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors line-clamp-2 leading-snug ${
+                            isTelugu ? 'font-telugu leading-snug' : 'font-serif'
+                          }`}
+                        >
+                          {title}
+                        </h3>
+
+                        <p
+                          className={`text-slate-600 text-xs sm:text-sm mt-2 line-clamp-3 leading-relaxed ${
+                            isTelugu ? 'font-telugu' : ''
+                          }`}
+                        >
+                          {desc}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium mb-2">
-                        <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>{item.date || 'Active Notice'}</span>
-                      </div>
-
-                      <h3
-                        className={`text-lg font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors line-clamp-2 leading-snug ${
-                          isTelugu ? 'font-telugu leading-snug' : 'font-serif'
-                        }`}
-                      >
-                        {title}
-                      </h3>
-
-                      <p
-                        className={`text-slate-600 text-xs sm:text-sm mt-2 line-clamp-3 leading-relaxed ${
-                          isTelugu ? 'font-telugu' : ''
-                        }`}
-                      >
-                        {desc}
-                      </p>
+                    <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors">
+                      <span className={isTelugu ? 'font-telugu' : ''}>
+                        {isTelugu ? 'పూర్తి వివరాలు చూడండి' : 'Read Full Details'}
+                      </span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
-                  </div>
-
-                  <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors">
-                    <span className={isTelugu ? 'font-telugu' : ''}>
-                      {isTelugu ? 'పూర్తి వివరాలు చూడండి' : 'Read Full Details'}
-                    </span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
-
-      {/* DETAIL MODAL */}
-      {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F294A]/80 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
-              <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-[#C59B27] border border-[#C59B27]/40 rounded-lg">
-                {selectedItem.category || selectedItem.pageSlug || 'Notice'}
-              </span>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition cursor-pointer"
-                aria-label="Close modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {selectedItem.imageUrl && (
-              <img
-                src={selectedItem.imageUrl}
-                alt=""
-                className="w-full h-64 object-cover rounded-2xl mb-6 shadow-xs"
-              />
-            )}
-
-            <h3
-              className={`text-xl sm:text-2xl font-bold text-[#0F294A] mb-4 ${
-                isTelugu ? 'font-telugu' : 'font-serif'
-              }`}
-            >
-              {getText(selectedItem, 'title')}
-            </h3>
-
-            <div
-              className={`text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line mb-8 ${
-                isTelugu ? 'font-telugu leading-loose' : ''
-              }`}
-            >
-              {getDesc(selectedItem)}
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-              {selectedItem.pageSlug && (
-                <Link
-                  to={`/page/home/${selectedItem.pageSlug}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F294A] hover:text-[#C59B27]"
-                >
-                  <span>Go to Section Page</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              )}
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="px-6 py-2.5 rounded-xl bg-[#0F294A] text-white font-bold text-xs sm:text-sm hover:bg-[#0B1E36] transition cursor-pointer ml-auto"
-              >
-                {t('closeModal')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

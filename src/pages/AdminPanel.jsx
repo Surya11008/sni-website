@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
+import RichTextEditor from '../components/RichTextEditor';
 import {
   collection,
   getDocs,
@@ -32,6 +33,8 @@ import {
   FolderTree,
   ExternalLink,
   Eye,
+  Pencil,
+  X,
 } from 'lucide-react';
 
 export default function AdminPanel() {
@@ -41,6 +44,11 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('announcements'); // announcements, media, docs, users
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+
+  // Edit states for content
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
+  const [editingMediaId, setEditingMediaId] = useState(null);
+  const [editingDocId, setEditingDocId] = useState(null);
 
   // Announcements state
   const [announcements, setAnnouncements] = useState([]);
@@ -179,7 +187,7 @@ export default function AdminPanel() {
     };
   }, [activeTab, fetchAnnouncements, fetchMedia, fetchMemberDocs, fetchUsers]);
 
-  // ADD Announcement
+  // ADD / UPDATE Announcement
   const handleAddAnnouncement = async (e) => {
     e.preventDefault();
     if (!newAnnouncement.titleEn && !newAnnouncement.titleTe) return;
@@ -187,10 +195,20 @@ export default function AdminPanel() {
     setStatusMessage({ type: '', text: '' });
 
     try {
-      await addDoc(collection(db, 'announcements'), {
-        ...newAnnouncement,
-        createdAt: new Date().toISOString(),
-      });
+      if (editingAnnouncementId) {
+        await updateDoc(doc(db, 'announcements', editingAnnouncementId), {
+          ...newAnnouncement,
+          updatedAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Announcement updated successfully!' });
+        setEditingAnnouncementId(null);
+      } else {
+        await addDoc(collection(db, 'announcements'), {
+          ...newAnnouncement,
+          createdAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Announcement published successfully!' });
+      }
       setNewAnnouncement({
         titleEn: '',
         titleTe: '',
@@ -200,10 +218,9 @@ export default function AdminPanel() {
         date: new Date().toISOString().split('T')[0],
       });
       await fetchAnnouncements();
-      setStatusMessage({ type: 'success', text: 'Announcement published successfully!' });
     } catch (err) {
       console.error(err);
-      setStatusMessage({ type: 'error', text: `Failed to add announcement: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `Failed to save announcement: ${err.message}` });
     } finally {
       setLoading(false);
     }
@@ -215,13 +232,16 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, 'announcements', id));
       setAnnouncements((prev) => prev.filter((item) => item.id !== id));
+      if (editingAnnouncementId === id) {
+        setEditingAnnouncementId(null);
+      }
       setStatusMessage({ type: 'success', text: 'Announcement deleted.' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
     }
   };
 
-  // ADD Media
+  // ADD / UPDATE Media
   const handleAddMedia = async (e) => {
     e.preventDefault();
     if (!newMedia.videoUrl) return;
@@ -229,13 +249,22 @@ export default function AdminPanel() {
     setStatusMessage({ type: '', text: '' });
 
     try {
-      await addDoc(collection(db, 'media'), {
-        ...newMedia,
-        createdAt: new Date().toISOString(),
-      });
+      if (editingMediaId) {
+        await updateDoc(doc(db, 'media', editingMediaId), {
+          ...newMedia,
+          updatedAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Media item updated successfully!' });
+        setEditingMediaId(null);
+      } else {
+        await addDoc(collection(db, 'media'), {
+          ...newMedia,
+          createdAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Media item added successfully!' });
+      }
       setNewMedia({ titleEn: '', titleTe: '', videoUrl: '', thumbnailUrl: '' });
       await fetchMedia();
-      setStatusMessage({ type: 'success', text: 'Media item added successfully!' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
     } finally {
@@ -249,13 +278,14 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, 'media', id));
       setMediaList((prev) => prev.filter((item) => item.id !== id));
+      if (editingMediaId === id) setEditingMediaId(null);
       setStatusMessage({ type: 'success', text: 'Media item removed.' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
     }
   };
 
-  // ADD Member Document
+  // ADD / UPDATE Member Document
   const handleAddDoc = async (e) => {
     e.preventDefault();
     if (!newDocItem.title || !newDocItem.fileUrl) return;
@@ -263,13 +293,22 @@ export default function AdminPanel() {
     setStatusMessage({ type: '', text: '' });
 
     try {
-      await addDoc(collection(db, 'member_docs'), {
-        ...newDocItem,
-        createdAt: new Date().toISOString(),
-      });
+      if (editingDocId) {
+        await updateDoc(doc(db, 'member_docs', editingDocId), {
+          ...newDocItem,
+          updatedAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Document updated successfully!' });
+        setEditingDocId(null);
+      } else {
+        await addDoc(collection(db, 'member_docs'), {
+          ...newDocItem,
+          createdAt: new Date().toISOString(),
+        });
+        setStatusMessage({ type: 'success', text: 'Member document saved successfully!' });
+      }
       setNewDocItem({ title: '', fileUrl: '', category: 'Guidelines' });
       await fetchMemberDocs();
-      setStatusMessage({ type: 'success', text: 'Member document saved successfully!' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
     } finally {
@@ -283,6 +322,7 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, 'member_docs', id));
       setDocsList((prev) => prev.filter((item) => item.id !== id));
+      if (editingDocId === id) setEditingDocId(null);
       setStatusMessage({ type: 'success', text: 'Document removed from member resources.' });
     } catch (err) {
       setStatusMessage({ type: 'error', text: err.message });
@@ -830,16 +870,39 @@ export default function AdminPanel() {
         {/* TAB 1: ANNOUNCEMENTS MANAGER */}
         {activeTab === 'announcements' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Create Form */}
+            {/* Create / Edit Form */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-amber-600" />
-                <span className={isTelugu ? 'font-telugu' : ''}>{t('addNew')}</span>
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  {editingAnnouncementId ? <Pencil className="w-5 h-5 text-amber-600" /> : <Plus className="w-5 h-5 text-amber-600" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingAnnouncementId ? 'Edit Announcement' : t('addNew')}
+                  </span>
+                </h2>
+                {editingAnnouncementId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingAnnouncementId(null);
+                      setNewAnnouncement({
+                        titleEn: '',
+                        titleTe: '',
+                        descEn: '',
+                        descTe: '',
+                        imageUrl: '',
+                        date: new Date().toISOString().split('T')[0],
+                      });
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
 
               <form onSubmit={handleAddAnnouncement} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('titleEn')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{t('titleEn')} *</label>
                   <input
                     type="text"
                     required
@@ -851,7 +914,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1 font-telugu">{t('titleTe')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1 font-telugu">{t('titleTe')} *</label>
                   <input
                     type="text"
                     value={newAnnouncement.titleTe}
@@ -861,27 +924,24 @@ export default function AdminPanel() {
                   />
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('descEn')}</label>
-                  <textarea
-                    rows={3}
-                    value={newAnnouncement.descEn}
-                    onChange={(e) => setNewAnnouncement({ ...newAnnouncement, descEn: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                    placeholder="Details about time, location and guidelines..."
-                  />
-                </div>
+                {/* Rich Text Editor for English Description */}
+                <RichTextEditor
+                  label={t('descEn')}
+                  value={newAnnouncement.descEn}
+                  onChange={(val) => setNewAnnouncement({ ...newAnnouncement, descEn: val })}
+                  placeholder="Details about time, location and guidelines... (Use # for Headings, > for Quotes, **bold**, etc.)"
+                  rows={4}
+                />
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1 font-telugu">{t('descTe')}</label>
-                  <textarea
-                    rows={3}
-                    value={newAnnouncement.descTe}
-                    onChange={(e) => setNewAnnouncement({ ...newAnnouncement, descTe: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-telugu"
-                    placeholder="సమావేశ సమయము, వేదిక మరియు మార్గదర్శకాలు..."
-                  />
-                </div>
+                {/* Rich Text Editor for Telugu Description */}
+                <RichTextEditor
+                  label={t('descTe')}
+                  value={newAnnouncement.descTe}
+                  onChange={(val) => setNewAnnouncement({ ...newAnnouncement, descTe: val })}
+                  isTelugu={true}
+                  placeholder="సమావేశ సమయము, వేదిక మరియు మార్గదర్శకాలు..."
+                  rows={4}
+                />
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">{t('dateLabel')}</label>
@@ -910,8 +970,10 @@ export default function AdminPanel() {
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span className={isTelugu ? 'font-telugu' : ''}>{t('publishBtn')}</span>
+                  {editingAnnouncementId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingAnnouncementId ? 'Update Announcement' : t('publishBtn')}
+                  </span>
                 </button>
               </form>
             </div>
@@ -950,13 +1012,33 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleDeleteAnnouncement(item.id)}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-100 transition shrink-0 cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingAnnouncementId(item.id);
+                          setNewAnnouncement({
+                            titleEn: item.titleEn || '',
+                            titleTe: item.titleTe || '',
+                            descEn: item.descEn || '',
+                            descTe: item.descTe || '',
+                            imageUrl: item.imageUrl || '',
+                            date: item.date || new Date().toISOString().split('T')[0],
+                          });
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                        className="p-2 rounded-xl text-amber-600 hover:bg-amber-100 transition cursor-pointer"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAnnouncement(item.id)}
+                        className="p-2 rounded-xl text-rose-600 hover:bg-rose-100 transition shrink-0 cursor-pointer"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -967,16 +1049,32 @@ export default function AdminPanel() {
         {/* TAB 2: MEDIA MANAGER */}
         {activeTab === 'media' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Create Media Form */}
+            {/* Create / Edit Media Form */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Video className="w-5 h-5 text-indigo-600" />
-                <span className={isTelugu ? 'font-telugu' : ''}>{t('addNew')}</span>
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  {editingMediaId ? <Pencil className="w-5 h-5 text-indigo-600" /> : <Video className="w-5 h-5 text-indigo-600" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingMediaId ? 'Edit Media Broadcast' : t('addNew')}
+                  </span>
+                </h2>
+                {editingMediaId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingMediaId(null);
+                      setNewMedia({ titleEn: '', titleTe: '', videoUrl: '', thumbnailUrl: '' });
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
 
               <form onSubmit={handleAddMedia} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('titleEn')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{t('titleEn')} *</label>
                   <input
                     type="text"
                     required
@@ -999,7 +1097,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('videoUrl')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{t('videoUrl')} *</label>
                   <input
                     type="url"
                     required
@@ -1026,8 +1124,10 @@ export default function AdminPanel() {
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span className={isTelugu ? 'font-telugu' : ''}>{t('publishBtn')}</span>
+                  {editingMediaId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingMediaId ? 'Update Media' : t('publishBtn')}
+                  </span>
                 </button>
               </form>
             </div>
@@ -1063,13 +1163,31 @@ export default function AdminPanel() {
                       >
                         Preview Video
                       </a>
-                      <button
-                        onClick={() => handleDeleteMedia(item.id)}
-                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100 transition cursor-pointer"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingMediaId(item.id);
+                            setNewMedia({
+                              titleEn: item.titleEn || '',
+                              titleTe: item.titleTe || '',
+                              videoUrl: item.videoUrl || '',
+                              thumbnailUrl: item.thumbnailUrl || '',
+                            });
+                            window.scrollTo({ top: 300, behavior: 'smooth' });
+                          }}
+                          className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 transition cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMedia(item.id)}
+                          className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100 transition cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1081,16 +1199,32 @@ export default function AdminPanel() {
         {/* TAB 3: MEMBER DOCS MANAGER */}
         {activeTab === 'docs' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Create Doc Form */}
+            {/* Create / Edit Doc Form */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
-                <span className={isTelugu ? 'font-telugu' : ''}>{t('addNew')}</span>
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  {editingDocId ? <Pencil className="w-5 h-5 text-indigo-600" /> : <FileText className="w-5 h-5 text-indigo-600" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingDocId ? 'Edit Document' : t('addNew')}
+                  </span>
+                </h2>
+                {editingDocId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingDocId(null);
+                      setNewDocItem({ title: '', fileUrl: '', category: 'Guidelines' });
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
 
               <form onSubmit={handleAddDoc} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('docTitle')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{t('docTitle')} *</label>
                   <input
                     type="text"
                     required
@@ -1117,7 +1251,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">{t('fileUrl')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{t('fileUrl')} *</label>
                   <input
                     type="url"
                     required
@@ -1133,8 +1267,10 @@ export default function AdminPanel() {
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span className={isTelugu ? 'font-telugu' : ''}>{t('publishBtn')}</span>
+                  {editingDocId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span className={isTelugu ? 'font-telugu' : ''}>
+                    {editingDocId ? 'Update Document' : t('publishBtn')}
+                  </span>
                 </button>
               </form>
             </div>
@@ -1172,6 +1308,21 @@ export default function AdminPanel() {
                       >
                         Open
                       </a>
+                      <button
+                        onClick={() => {
+                          setEditingDocId(docItem.id);
+                          setNewDocItem({
+                            title: docItem.title || '',
+                            fileUrl: docItem.fileUrl || '',
+                            category: docItem.category || 'Guidelines',
+                          });
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                        className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 transition cursor-pointer"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleDeleteDoc(docItem.id)}
                         className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100 transition cursor-pointer"
