@@ -127,7 +127,6 @@ export default function CategoryPage() {
   };
 
   const categoryTitle = isTelugu ? currentCategory.titleTe : currentCategory.titleEn;
-  const categoryDesc = isTelugu ? currentCategory.descriptionTe : currentCategory.descriptionEn;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">

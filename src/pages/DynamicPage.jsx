@@ -252,7 +252,6 @@ export default function DynamicPage() {
   const { category, page } = pageInfo;
   const categoryTitle = category ? (isTelugu ? category.titleTe : category.titleEn) : categorySlug;
   const pageTitle = page ? (isTelugu ? page.titleTe : page.titleEn) : pageSlug;
-  const pageDesc = page ? (isTelugu ? page.descTe : page.descEn) : '';
 
   // Helper to extract YouTube video ID for responsive embed
   const getYouTubeEmbedUrl = (url) => {
