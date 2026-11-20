@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
+import PortalIcon from './PortalIcon';
 import {
   Globe,
   LogIn,
@@ -11,11 +15,7 @@ import {
   Shield,
   ChevronDown,
   User,
-  Award,
-  ClipboardCheck,
-  BookOpen,
-  Video,
-  Search,
+  ArrowRight,
   ExternalLink,
 } from 'lucide-react';
 
@@ -23,9 +23,53 @@ export default function Navbar() {
   const { currentUser, userProfile, logout } = useAuth();
   const { language, toggleLanguage, t, isTelugu } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
+  const [mobileExpandedCat, setMobileExpandedCat] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();
+  const dropdownRef = useRef(null);
+
+  // Subscribe to custom pages from Firestore `portal_pages`
+  useEffect(() => {
+    try {
+      const unsub = onSnapshot(
+        collection(db, 'portal_pages'),
+        (snapshot) => {
+          const customPages = [];
+          snapshot.forEach((doc) => {
+            customPages.push({ id: doc.id, ...doc.data() });
+          });
+          setPortalStructure(mergePortalStructure(customPages));
+        },
+        (error) => {
+          console.warn('Using default portal structure, Firestore offline/inaccessible:', error);
+          setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
+        }
+      );
+      return () => unsub();
+    } catch (err) {
+      console.warn('Error setting up portal_pages listener:', err);
+      setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
+    }
+  }, []);
+
+  // Close dropdown when route changes or user clicks outside
+  useEffect(() => {
+    setActiveDropdown(null);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -36,24 +80,11 @@ export default function Navbar() {
     }
   };
 
-  const handleScrollToSection = (sectionId) => {
-    setMobileMenuOpen(false);
-    setAppsDropdownOpen(false);
-    if (location.pathname === '/') {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      navigate(`/#${sectionId}`);
-    }
-  };
-
   const isAdmin = userProfile?.role === 'admin';
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-      {/* watv.org style top micro bar */}
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.04)] font-sans">
+      {/* Top micro bar - watv.org inspired institutional notice */}
       <div className="bg-[#0F294A] text-slate-200 text-[11px] py-1.5 px-4 sm:px-8 border-b border-[#0B1E36]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 tracking-wide font-medium">
@@ -82,149 +113,156 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Main Navbar */}
+      {/* Main Navbar Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Emblem & Seal - watv.org inspired emblem */}
-          <Link to="/" className="flex items-center gap-3.5 group shrink-0">
-            {/* Elegant Circular Emblem */}
-            <div className="relative w-12 h-12 rounded-full bg-[#0F294A] border-2 border-[#C59B27] flex items-center justify-center text-[#C59B27] shadow-md group-hover:scale-105 transition-transform">
-              <span className="font-serif font-black text-lg tracking-tighter">SNI</span>
+          {/* Brand Emblem & Title */}
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
+            <div className="relative w-11 h-11 rounded-full bg-[#0F294A] border-2 border-[#C59B27] flex items-center justify-center text-[#C59B27] shadow-md group-hover:scale-105 transition-transform">
+              <span className="font-serif font-black text-base tracking-tighter">SNI</span>
               <div className="absolute -inset-0.5 rounded-full border border-[#C59B27]/40 pointer-events-none"></div>
             </div>
 
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-xl font-bold tracking-tight text-[#0F294A] ${
-                    isTelugu ? 'font-krishna text-2xl' : 'font-serif'
-                  }`}
-                >
-                  {t('brandName')}
-                </span>
-              </div>
+              <span
+                className={`text-xl font-bold tracking-tight text-[#0F294A] ${
+                  isTelugu ? 'font-krishna text-2xl' : 'font-serif'
+                }`}
+              >
+                {t('brandName')}
+              </span>
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C59B27]">
                 {t('brandTag')}
               </span>
             </div>
           </Link>
 
-          {/* Centered Navigation Links (Editorial watv.org style) */}
-          <nav className="hidden lg:flex items-center gap-7">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `text-[13px] uppercase tracking-wider font-semibold py-2 transition-colors relative ${
-                  isActive && location.hash === ''
-                    ? 'text-[#0F294A] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#C59B27]'
-                    : 'text-slate-600 hover:text-[#0F294A]'
-                } ${isTelugu ? 'font-telugu tracking-normal normal-case' : ''}`
-              }
-            >
-              {t('navHome')}
-            </NavLink>
+          {/* 8 Main Categories Mega-Menu (Desktop) */}
+          <nav
+            ref={dropdownRef}
+            className="hidden xl:flex items-center gap-1 lg:gap-2.5 relative"
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            {portalStructure.map((cat) => {
+              const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
+              const isOpen = activeDropdown === cat.categorySlug;
+              const isCategoryActive = location.pathname.startsWith(`/page/${cat.categorySlug}`);
 
-            <button
-              onClick={() => handleScrollToSection('news-section')}
-              className={`text-[13px] uppercase tracking-wider font-semibold py-2 text-slate-600 hover:text-[#0F294A] transition-colors cursor-pointer ${
-                isTelugu ? 'font-telugu tracking-normal normal-case' : ''
-              }`}
-            >
-              {t('navNewsEvents')}
-            </button>
+              return (
+                <div key={cat.categorySlug} className="relative">
+                  <button
+                    onClick={() =>
+                      setActiveDropdown(isOpen ? null : cat.categorySlug)
+                    }
+                    onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
+                    className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                      isOpen || isCategoryActive
+                        ? 'text-[#0F294A] bg-amber-50/80 border-b-2 border-[#C59B27]'
+                        : 'text-slate-700 hover:text-[#0F294A] hover:bg-slate-50'
+                    } ${isTelugu ? 'font-telugu normal-case text-xs' : ''}`}
+                  >
+                    <span>{catTitle}</span>
+                    <ChevronDown
+                      className={`w-3 h-3 text-slate-400 transition-transform ${
+                        isOpen ? 'rotate-180 text-[#C59B27]' : ''
+                      }`}
+                    />
+                  </button>
 
-            <button
-              onClick={() => handleScrollToSection('media-section')}
-              className={`text-[13px] uppercase tracking-wider font-semibold py-2 text-slate-600 hover:text-[#0F294A] transition-colors cursor-pointer ${
-                isTelugu ? 'font-telugu tracking-normal normal-case' : ''
-              }`}
-            >
-              {t('navMediaVideos')}
-            </button>
+                  {/* Dropdown Menu Panel for this category */}
+                  {isOpen && (
+                    <div
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[420px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-4 z-50 animate-in fade-in zoom-in-95 duration-150"
+                      onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
+                    >
+                      {/* Dropdown Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-[#0F294A] text-[#C59B27] flex items-center justify-center">
+                            <PortalIcon name={cat.iconName} className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[#0F294A]">
+                              {catTitle}
+                            </div>
+                            <div className="text-[10px] text-slate-500 line-clamp-1">
+                              {isTelugu ? cat.descriptionTe : cat.descriptionEn}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-            {/* Ecosystem Apps Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setAppsDropdownOpen(!appsDropdownOpen)}
-                onMouseEnter={() => setAppsDropdownOpen(true)}
-                className={`inline-flex items-center gap-1 text-[13px] uppercase tracking-wider font-semibold py-2 text-slate-600 hover:text-[#0F294A] transition-colors cursor-pointer ${
-                  isTelugu ? 'font-telugu tracking-normal normal-case' : ''
-                }`}
-              >
-                <span>{t('navEcosystemApps')}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${appsDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
+                      {/* Sub-Pages Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[360px] overflow-y-auto pr-1">
+                        {cat.pages.map((page) => {
+                          const pageTitle = isTelugu ? page.titleTe : page.titleEn;
+                          const pageDesc = isTelugu ? page.descTe : page.descEn;
 
-              {appsDropdownOpen && (
-                <div
-                  onMouseLeave={() => setAppsDropdownOpen(false)}
-                  className="absolute left-0 mt-1 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-2.5 z-50 animate-in fade-in zoom-in-95 duration-150"
-                >
-                  <div className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                    Integrated Ministry Apps
-                  </div>
-                  <a
-                    href="https://eva.sni.org.in"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-800 text-xs font-semibold group transition"
-                  >
-                    <Award className="w-4 h-4 text-[#C59B27]" />
-                    <span className="flex-1">Eva Portal (eva.sni.org.in)</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700" />
-                  </a>
-                  <a
-                    href="/evaluation/"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-800 text-xs font-semibold group transition"
-                  >
-                    <ClipboardCheck className="w-4 h-4 text-[#0F294A]" />
-                    <span>Evaluation System</span>
-                  </a>
-                  <a
-                    href="/diary.html"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-800 text-xs font-semibold group transition"
-                  >
-                    <BookOpen className="w-4 h-4 text-emerald-600" />
-                    <span>Gospel Diary</span>
-                  </a>
-                  <a
-                    href="/videos.html"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-800 text-xs font-semibold group transition"
-                  >
-                    <Video className="w-4 h-4 text-rose-600" />
-                    <span>Videos Library</span>
-                  </a>
-                  <a
-                    href="/wordsearch.html"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-800 text-xs font-semibold group transition"
-                  >
-                    <Search className="w-4 h-4 text-violet-600" />
-                    <span>Word Search</span>
-                  </a>
+                          if (page.externalUrl) {
+                            return (
+                              <a
+                                key={page.pageSlug}
+                                href={page.externalUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => setActiveDropdown(null)}
+                                className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200 group text-left"
+                              >
+                                <div className="w-6 h-6 rounded-md bg-amber-50 text-[#C59B27] flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                                  <PortalIcon name={page.iconName} className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-bold text-slate-800 group-hover:text-[#0F294A] flex items-center gap-1">
+                                    <span className="truncate">{pageTitle}</span>
+                                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#C59B27]" />
+                                  </div>
+                                  {pageDesc && (
+                                    <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                                      {pageDesc}
+                                    </p>
+                                  )}
+                                </div>
+                              </a>
+                            );
+                          }
+
+                          return (
+                            <Link
+                              key={page.pageSlug}
+                              to={`/page/${cat.categorySlug}/${page.pageSlug}`}
+                              onClick={() => setActiveDropdown(null)}
+                              className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200 group text-left"
+                            >
+                              <div className="w-6 h-6 rounded-md bg-slate-100 text-[#0F294A] group-hover:bg-[#0F294A] group-hover:text-[#C59B27] flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                                <PortalIcon name={page.iconName} className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-slate-800 group-hover:text-[#0F294A] flex items-center justify-between">
+                                  <span className="truncate">{pageTitle}</span>
+                                  <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-[#C59B27] group-hover:translate-x-0.5 transition-transform" />
+                                </div>
+                                {pageDesc && (
+                                  <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                                    {pageDesc}
+                                  </p>
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Member Portal Link */}
-            <NavLink
-              to={currentUser ? '/dashboard' : '/login'}
-              className={({ isActive }) =>
-                `text-[13px] uppercase tracking-wider font-semibold py-2 transition-colors relative ${
-                  isActive
-                    ? 'text-[#0F294A] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#C59B27]'
-                    : 'text-slate-600 hover:text-[#0F294A]'
-                } ${isTelugu ? 'font-telugu tracking-normal normal-case' : ''}`
-              }
-            >
-              {t('navMemberPortal')}
-            </NavLink>
+              );
+            })}
           </nav>
 
-          {/* Right Section: Admin Badge, User Profile / Sign In */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right Section: Admin, Member/Login */}
+          <div className="hidden lg:flex items-center gap-2.5">
             {currentUser ? (
-              <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-                {/* Admin Badge */}
+              <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+                {/* Admin Button */}
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -235,7 +273,7 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* Member Avatar / Pill */}
+                {/* Dashboard Button */}
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-50 border border-slate-200/80 transition"
@@ -243,7 +281,7 @@ export default function Navbar() {
                   <div className="w-7 h-7 rounded-full bg-[#0F294A] text-[#C59B27] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
                     {userProfile?.displayName ? userProfile.displayName.charAt(0) : <User className="w-3.5 h-3.5" />}
                   </div>
-                  <span className="text-xs font-bold text-slate-800 max-w-[120px] truncate">
+                  <span className="text-xs font-bold text-slate-800 max-w-[110px] truncate">
                     {userProfile?.displayName || currentUser.email?.split('@')[0]}
                   </span>
                 </Link>
@@ -260,9 +298,9 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0F294A] hover:bg-[#0B1E36] text-[#C59B27] hover:text-amber-300 text-xs uppercase font-bold tracking-wider transition shadow-sm border border-[#C59B27]/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0F294A] hover:bg-[#0B1E36] text-[#C59B27] hover:text-amber-300 text-xs uppercase font-bold tracking-wider transition shadow-sm border border-[#C59B27]/30"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-3.5 h-3.5" />
                 <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
                   {t('navSignIn')}
                 </span>
@@ -271,7 +309,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Hamburger */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex xl:hidden items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2.5 rounded-xl text-slate-700 hover:text-[#0F294A] hover:bg-slate-100 transition focus:outline-none cursor-pointer"
@@ -283,105 +321,48 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu with Accordion */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-5 pt-4 pb-6 space-y-3 shadow-xl">
-          <NavLink
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-base font-bold text-slate-800 hover:text-[#0F294A] py-2"
-          >
-            {t('navHome')}
-          </NavLink>
-
-          <button
-            onClick={() => handleScrollToSection('news-section')}
-            className="block w-full text-left text-base font-bold text-slate-800 hover:text-[#0F294A] py-2 cursor-pointer"
-          >
-            {t('navNewsEvents')}
-          </button>
-
-          <button
-            onClick={() => handleScrollToSection('media-section')}
-            className="block w-full text-left text-base font-bold text-slate-800 hover:text-[#0F294A] py-2 cursor-pointer"
-          >
-            {t('navMediaVideos')}
-          </button>
-
-          <div className="pt-2 border-t border-slate-100">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              {t('navEcosystemApps')}
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <a
-                href="https://eva.sni.org.in"
-                target="_blank"
-                rel="noreferrer"
-                className="p-2.5 rounded-xl bg-slate-50 font-semibold text-slate-800 flex items-center justify-between"
-              >
-                <span>Eva Portal</span>
-                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-              </a>
-              <a href="/evaluation/" className="p-2.5 rounded-xl bg-slate-50 font-semibold text-slate-800">
-                Evaluation
-              </a>
-              <a href="/diary.html" className="p-2.5 rounded-xl bg-slate-50 font-semibold text-slate-800">
-                Gospel Diary
-              </a>
-              <a href="/videos.html" className="p-2.5 rounded-xl bg-slate-50 font-semibold text-slate-800">
-                Videos Library
-              </a>
-              <a href="/wordsearch.html" className="p-2.5 rounded-xl bg-slate-50 font-semibold text-slate-800 col-span-2">
-                Scripture Word Search
-              </a>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-slate-200">
+        <div className="xl:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2 shadow-xl max-h-[85vh] overflow-y-auto">
+          {/* User Status / Login */}
+          <div className="pb-3 border-b border-slate-100">
             {currentUser ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#0F294A] text-[#C59B27] flex items-center justify-center font-bold">
-                      {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'U'}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#C59B27] flex items-center justify-center font-bold">
+                    {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900">
+                      {userProfile?.displayName || currentUser.email}
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-slate-900">
-                        {userProfile?.displayName || currentUser.email}
-                      </div>
-                      <div className="text-xs text-slate-500 uppercase font-semibold">
-                        {userProfile?.role || 'member'}
-                      </div>
+                    <div className="text-[10px] text-slate-500 capitalize">
+                      {userProfile?.role || 'Member'}
                     </div>
                   </div>
-
+                </div>
+                <div className="flex items-center gap-1">
                   {isAdmin && (
                     <Link
                       to="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-xs"
+                      className="p-2 text-[#0F294A] hover:bg-amber-100 rounded-lg text-xs font-bold"
                     >
-                      Admin
+                      <Shield className="w-4 h-4 text-[#C59B27]" />
                     </Link>
                   )}
-                </div>
-
-                <div className="flex gap-2">
                   <Link
                     to="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 py-2.5 text-center rounded-xl bg-[#0F294A] text-[#C59B27] font-bold text-xs"
+                    className="p-2 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold"
                   >
-                    Dashboard
+                    Portal
                   </Link>
                   <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="px-4 py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs"
+                    onClick={handleLogout}
+                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg cursor-pointer"
                   >
-                    Logout
+                    <LogOut className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -389,11 +370,92 @@ export default function Navbar() {
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block w-full py-3 text-center rounded-xl bg-[#0F294A] text-[#C59B27] font-bold text-sm"
+                className="w-full inline-flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#0F294A] text-[#C59B27] font-bold text-xs uppercase"
               >
-                {t('navSignIn')}
+                <LogIn className="w-4 h-4" />
+                <span>{t('navSignIn')}</span>
               </Link>
             )}
+          </div>
+
+          {/* Quick Home Nav */}
+          <Link
+            to="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-bold text-slate-900 hover:text-[#0F294A] py-1.5 px-2 rounded-lg hover:bg-slate-50"
+          >
+            {isTelugu ? 'ముఖ్య హోమ్ పేజీ' : 'Portal Home'}
+          </Link>
+
+          {/* Accordion Categories */}
+          <div className="space-y-1">
+            {portalStructure.map((cat) => {
+              const catTitle = isTelugu ? cat.titleTe : cat.titleEn;
+              const isExpanded = mobileExpandedCat === cat.categorySlug;
+
+              return (
+                <div key={cat.categorySlug} className="border border-slate-100 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() =>
+                      setMobileExpandedCat(isExpanded ? null : cat.categorySlug)
+                    }
+                    className="w-full flex items-center justify-between p-3 bg-slate-50/70 hover:bg-slate-100 text-left font-bold text-xs text-slate-800 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <PortalIcon name={cat.iconName} className="w-4 h-4 text-[#C59B27]" />
+                      <span className={isTelugu ? 'font-telugu' : ''}>{catTitle}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 transition-transform ${
+                        isExpanded ? 'rotate-180 text-[#C59B27]' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded && (
+                    <div className="p-2 bg-white space-y-1 border-t border-slate-100">
+                      {cat.pages.map((page) => {
+                        const pageTitle = isTelugu ? page.titleTe : page.titleEn;
+
+                        if (page.externalUrl) {
+                          return (
+                            <a
+                              key={page.pageSlug}
+                              href={page.externalUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-center justify-between p-2 rounded-lg text-xs text-slate-700 hover:bg-amber-50"
+                            >
+                              <div className="flex items-center gap-2">
+                                <PortalIcon name={page.iconName} className="w-3.5 h-3.5 text-[#C59B27]" />
+                                <span className={isTelugu ? 'font-telugu' : ''}>{pageTitle}</span>
+                              </div>
+                              <ExternalLink className="w-3 h-3 text-slate-400" />
+                            </a>
+                          );
+                        }
+
+                        return (
+                          <Link
+                            key={page.pageSlug}
+                            to={`/page/${cat.categorySlug}/${page.pageSlug}`}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-2 rounded-lg text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            <div className="flex items-center gap-2">
+                              <PortalIcon name={page.iconName} className="w-3.5 h-3.5 text-[#0F294A]" />
+                              <span className={isTelugu ? 'font-telugu' : ''}>{pageTitle}</span>
+                            </div>
+                            <ArrowRight className="w-3 h-3 text-slate-300" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

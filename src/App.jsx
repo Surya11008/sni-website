@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
+import DynamicPage from './pages/DynamicPage';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/page/:categorySlug/:pageSlug" element={<DynamicPage />} />
 
                 {/* Protected Member Route */}
                 <Route

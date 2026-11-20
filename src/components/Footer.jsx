@@ -138,7 +138,7 @@ export default function Footer() {
           {/* Column 2: Portal Navigation */}
           <div>
             <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-4 border-b border-[#1A3860] pb-2 text-[#C59B27]">
-              Portal Directory
+              Portal Categories
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li>
@@ -147,23 +147,23 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="/#news-section" className="hover:text-white transition">
-                  {t('navNewsEvents')}
-                </a>
-              </li>
-              <li>
-                <a href="/#media-section" className="hover:text-white transition">
-                  {t('navMediaVideos')}
-                </a>
-              </li>
-              <li>
-                <Link to="/dashboard" className="hover:text-white transition">
-                  {t('navMemberPortal')}
+                <Link to="/page/worship/sermons" className="hover:text-white transition">
+                  {isTelugu ? 'ఆరాధన & ప్రసంగాలు' : 'Worship & Sermons'}
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-white transition">
-                  {t('navSignIn')}
+                <Link to="/page/bible-truth/father" className="hover:text-white transition">
+                  {isTelugu ? 'బైబిల్ & సత్యం' : 'Bible & Truth'}
+                </Link>
+              </li>
+              <li>
+                <Link to="/page/family/love" className="hover:text-white transition">
+                  {isTelugu ? 'ఆత్మీయ కుటుంబం' : 'Family & Unity'}
+                </Link>
+              </li>
+              <li>
+                <Link to="/page/program/diary" className="hover:text-white transition">
+                  {isTelugu ? 'సువార్త కార్యక్రమాలు' : 'Programs & Diary'}
                 </Link>
               </li>
             </ul>
