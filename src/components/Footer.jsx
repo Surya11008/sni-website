@@ -80,16 +80,6 @@ export default function Footer() {
                 </span>
               </div>
             </div>
-
-            {t('footerDesc') ? (
-              <p
-                className={`text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md ${
-                  isTelugu ? 'font-telugu leading-loose' : ''
-                }`}
-              >
-                {t('footerDesc')}
-              </p>
-            ) : null}
           </div>
 
           {/* Column 2: Categories Navigation */}
@@ -97,30 +87,45 @@ export default function Footer() {
             <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-4 border-b border-[#1A3860] pb-2 text-[#C59B27]">
               {isTelugu ? 'విభాగాలు' : 'Categories'}
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+            <ul className="space-y-2 text-xs text-slate-400">
               <li>
                 <Link to="/" className="hover:text-white transition">
-                  {t('navHome')}
+                  {isTelugu ? 'స్వాగతం' : 'Welcome'}
                 </Link>
               </li>
               <li>
-                <Link to="/page/worship/sermons" className="hover:text-white transition">
-                  {isTelugu ? 'ఆరాధన & ప్రసంగాలు' : 'Worship & Sermons'}
+                <Link to="/category/worship" className="hover:text-white transition">
+                  {isTelugu ? 'ఆరాధన' : 'Worship'}
                 </Link>
               </li>
               <li>
-                <Link to="/page/bible-truth/father" className="hover:text-white transition">
+                <Link to="/category/bible-truth" className="hover:text-white transition">
                   {isTelugu ? 'సత్యం' : 'Truth'}
                 </Link>
               </li>
               <li>
-                <Link to="/page/family/love" className="hover:text-white transition">
-                  {isTelugu ? 'ఆత్మీయ కుటుంబం' : 'Family & Unity'}
+                <Link to="/category/family" className="hover:text-white transition">
+                  {isTelugu ? 'కుటుంబం' : 'Family'}
                 </Link>
               </li>
               <li>
-                <Link to="/page/program/diary" className="hover:text-white transition">
-                  {isTelugu ? 'సువార్త కార్యక్రమాలు' : 'Programs & Diary'}
+                <Link to="/category/grow" className="hover:text-white transition">
+                  {isTelugu ? 'ఎదుగుదల' : 'Grow'}
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/go-come" className="hover:text-white transition">
+                  {isTelugu ? 'గో & కమ్' : 'Go & Come'}
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/program" className="hover:text-white transition">
+                  {isTelugu ? 'కార్యక్రమాలు' : 'Program'}
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/more" className="hover:text-white transition">
+                  {isTelugu ? 'మరిన్ని' : 'More'}
                 </Link>
               </li>
             </ul>

@@ -68,7 +68,39 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/home"
+                  element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/Home"
+                  element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/category/:categorySlug"
+                  element={
+                    <ProtectedRoute>
+                      <CategoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/Home/:categorySlug"
+                  element={
+                    <ProtectedRoute>
+                      <CategoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/home/:categorySlug"
                   element={
                     <ProtectedRoute>
                       <CategoryPage />
@@ -84,11 +116,43 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/Home/:categorySlug/:pageSlug"
+                  element={
+                    <ProtectedRoute>
+                      <DynamicPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/home/:categorySlug/:pageSlug"
+                  element={
+                    <ProtectedRoute>
+                      <DynamicPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/program/stars"
                   element={<Navigate to="/page/program/stars" replace />}
                 />
                 <Route
                   path="/content/:contentId"
+                  element={
+                    <ProtectedRoute>
+                      <ContentDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/Home/:categorySlug/:pageSlug/:contentId"
+                  element={
+                    <ProtectedRoute>
+                      <ContentDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/home/:categorySlug/:pageSlug/:contentId"
                   element={
                     <ProtectedRoute>
                       <ContentDetailPage />

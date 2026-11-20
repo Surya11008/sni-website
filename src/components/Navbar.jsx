@@ -207,7 +207,8 @@ export default function Navbar() {
               const isCategoryActive =
                 location.pathname.startsWith(`/category/${cat.categorySlug}`) ||
                 location.pathname.startsWith(`/page/${cat.categorySlug}`) ||
-                (cat.categorySlug === 'home' && location.pathname === '/');
+                location.pathname.toLowerCase().startsWith(`/home/${cat.categorySlug.toLowerCase()}`) ||
+                (cat.categorySlug === 'home' && (location.pathname === '/' || location.pathname.toLowerCase() === '/home'));
 
               return (
                 <div key={cat.categorySlug} className="relative">

@@ -137,7 +137,7 @@ export default function CategoryPage() {
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
             <Link to="/" className="hover:text-[#F4B942] transition">
-              <span>Welcome</span>
+              <span>Home</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-[#F4B942] font-bold">{categoryTitle}</span>
@@ -148,10 +148,7 @@ export default function CategoryPage() {
               <div className="w-16 h-16 rounded-2xl bg-[#040E1E] text-[#F4B942] border border-[#F4B942]/40 flex items-center justify-center shrink-0 shadow-lg">
                 <PortalIcon name={currentCategory.iconName || 'BookOpen'} className="w-8 h-8" />
               </div>
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#F4B942]">
-                  <span>SNI Ministry Directory</span>
-                </div>
+              <div>
                 <h1
                   className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight ${
                     isTelugu ? 'font-krishna text-4xl sm:text-5xl' : 'font-serif'
@@ -159,9 +156,6 @@ export default function CategoryPage() {
                 >
                   {categoryTitle}
                 </h1>
-                <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                  {categoryDesc}
-                </p>
               </div>
             </div>
 
@@ -177,6 +171,26 @@ export default function CategoryPage() {
           </div>
         </div>
       </section>
+
+      {/* 2nd Header: Subpage Navigation Bar for this Category */}
+      {currentCategory.pages?.length > 0 && (
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27] shrink-0">
+              {isTelugu ? 'అన్ని' : 'All'}
+            </span>
+            {currentCategory.pages.map((sp) => (
+              <Link
+                key={sp.pageSlug}
+                to={`/page/${categorySlug}/${sp.pageSlug}`}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition whitespace-nowrap shrink-0"
+              >
+                {isTelugu ? sp.titleTe : sp.titleEn}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-14">
@@ -311,7 +325,7 @@ export default function CategoryPage() {
                       return (
                         <article
                           key={item.id}
-                          onClick={() => navigate(`/content/${item.id}`)}
+                          onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${subPage.pageSlug || item.pageSlug || 'content'}/${item.id}`)}
                           className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1 hover:border-[#C59B27]/60"
                         >
                           <div>
@@ -419,7 +433,7 @@ export default function CategoryPage() {
                       return (
                         <article
                           key={item.id}
-                          onClick={() => navigate(`/content/${item.id}`)}
+                          onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${subPage.pageSlug || item.pageSlug || 'content'}/${item.id}`)}
                           className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 group cursor-pointer hover:border-amber-400"
                         >
                           {item.imageUrl && (
@@ -481,7 +495,7 @@ export default function CategoryPage() {
                       return (
                         <div
                           key={item.id}
-                          onClick={() => navigate(`/content/${item.id}`)}
+                          onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${subPage.pageSlug || item.pageSlug || 'content'}/${item.id}`)}
                           className="flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-amber-50/30 rounded-xl border border-slate-200 hover:border-amber-400 transition group cursor-pointer gap-3"
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">

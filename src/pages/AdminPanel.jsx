@@ -49,28 +49,24 @@ const DEFAULT_ROLES = [
   {
     id: 'admin',
     nameEn: 'Administrator',
-    nameTe: 'ప్రధాన అధికారి (Admin)',
     description: 'Full access to all pages, content editing, user approvals, and settings.',
     allowedCategories: ['*'],
   },
   {
     id: 'pastor',
     nameEn: 'Pastor / Minister',
-    nameTe: 'కాపరి / సేవకుడు',
     description: 'Access to worship, truth, sermon materials, and family guidance.',
     allowedCategories: ['worship', 'bible-truth', 'family', 'grow', 'program'],
   },
   {
     id: 'worker',
     nameEn: 'Gospel Worker',
-    nameTe: 'సువార్త సేవకుడు',
     description: 'Access to gospel activities, outreach, and preaching guides.',
     allowedCategories: ['bible-truth', 'go-come', 'program', 'grow'],
   },
   {
     id: 'member',
     nameEn: 'General Member',
-    nameTe: 'సాధారణ సభ్యుడు',
     description: 'Standard access to general assembly announcements and studies.',
     allowedCategories: ['home', 'worship', 'bible-truth', 'family'],
   },
@@ -93,6 +89,7 @@ export default function AdminPanel() {
   // 2. Roles State
   const [rolesList, setRolesList] = useState(DEFAULT_ROLES);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
+  const [editingRoleId, setEditingRoleId] = useState(null);
   const [newRole, setNewRole] = useState({
     id: '',
     name: '',
@@ -341,10 +338,44 @@ export default function AdminPanel() {
     }
   };
 
-  // Add New Custom Role
+  const handleOpenAddRole = () => {
+    setEditingRoleId(null);
+    setNewRole({
+      id: '',
+      name: '',
+      description: '',
+      allowedCategories: ['home', 'worship', 'bible-truth'],
+    });
+    setIsAddRoleOpen(true);
+  };
+
+  const handleOpenEditRole = (role) => {
+    setEditingRoleId(role.id);
+    setNewRole({
+      id: role.id,
+      name: role.nameEn || role.name || role.id,
+      description: role.description || '',
+      allowedCategories: role.allowedCategories || ['*'],
+    });
+    setIsAddRoleOpen(true);
+  };
+
+  const handleDeleteRole = async (role) => {
+    if (!window.confirm(`Are you sure you want to remove role "${role.nameEn || role.name || role.id}"?`)) return;
+    try {
+      await deleteDoc(doc(db, 'roles', role.id));
+      setRolesList((prev) => prev.filter((r) => r.id !== role.id));
+      showFeedback('success', `Role "${role.nameEn || role.name}" removed successfully.`);
+    } catch (err) {
+      setRolesList((prev) => prev.filter((r) => r.id !== role.id));
+      showFeedback('success', `Role removed from active configuration.`);
+    }
+  };
+
+  // Add / Edit Ministerial Role
   const handleCreateRole = async (e) => {
     e.preventDefault();
-    const roleId = newRole.id.trim().toLowerCase().replace(/\s+/g, '_');
+    const roleId = (editingRoleId || newRole.id).trim().toLowerCase().replace(/\s+/g, '_');
     if (!roleId || !newRole.name.trim()) {
       alert('Please provide a Role ID and Role Name.');
       return;
@@ -356,15 +387,15 @@ export default function AdminPanel() {
         id: roleId,
         name: cleanName,
         nameEn: cleanName,
-        nameTe: cleanName,
         description: newRole.description.trim(),
         allowedCategories: newRole.allowedCategories,
-        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
 
-      await setDoc(doc(db, 'roles', roleId), payload);
-      showFeedback('success', `Role "${cleanName}" created successfully!`);
+      await setDoc(doc(db, 'roles', roleId), payload, { merge: true });
+      showFeedback('success', `Role "${cleanName}" saved successfully!`);
       setIsAddRoleOpen(false);
+      setEditingRoleId(null);
       setNewRole({
         id: '',
         name: '',
@@ -373,7 +404,7 @@ export default function AdminPanel() {
       });
       await fetchRoles();
     } catch (err) {
-      showFeedback('error', 'Failed to create role: ' + err.message);
+      showFeedback('error', 'Failed to save role: ' + err.message);
     }
   };
 
@@ -816,8 +847,8 @@ export default function AdminPanel() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsAddRoleOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition"
+                  onClick={handleOpenAddRole}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer"
                 >
                   + Add Role
                 </button>
@@ -828,26 +859,43 @@ export default function AdminPanel() {
                 {rolesList.map((r) => (
                   <div
                     key={r.id}
-                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition"
+                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition flex flex-col justify-between"
                   >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
-                        {r.nameEn}
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
-                        {r.id}
-                      </span>
-                    </div>
-                    {r.nameTe && (
-                      <div className="text-[11px] font-telugu text-slate-600 mb-1">
-                        {r.nameTe}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
+                          {r.nameEn || r.name}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
+                          {r.id}
+                        </span>
                       </div>
-                    )}
-                    <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
-                      {r.description || 'Custom ministerial role'}
-                    </p>
-                    <div className="text-[9px] font-mono text-slate-400">
-                      Access: {r.allowedCategories?.includes('*') ? 'ALL PAGES (*)' : r.allowedCategories?.join(', ')}
+                      <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
+                        {r.description || 'Custom ministerial role'}
+                      </p>
+                      <div className="text-[9px] font-mono text-slate-400">
+                        Access: {r.allowedCategories?.includes('*') ? 'ALL PAGES (*)' : r.allowedCategories?.join(', ')}
+                      </div>
+                    </div>
+
+                    {/* Role Edit & Remove Actions */}
+                    <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditRole(r)}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-[#0F294A] px-2 py-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer"
+                      >
+                        <Pencil className="w-3 h-3 text-[#C59B27]" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRole(r)}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -861,11 +909,14 @@ export default function AdminPanel() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
                       <KeyRound className="w-5 h-5 text-[#C59B27]" />
-                      <span>Create New Ministerial Role</span>
+                      <span>{editingRoleId ? 'Edit Ministerial Role' : 'Create New Ministerial Role'}</span>
                     </h3>
                     <button
-                      onClick={() => setIsAddRoleOpen(false)}
-                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
+                      onClick={() => {
+                        setIsAddRoleOpen(false);
+                        setEditingRoleId(null);
+                      }}
+                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -879,10 +930,11 @@ export default function AdminPanel() {
                       <input
                         type="text"
                         required
+                        disabled={!!editingRoleId}
                         value={newRole.id}
                         onChange={(e) => setNewRole({ ...newRole, id: e.target.value })}
                         placeholder="e.g. choir"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs font-mono"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs font-mono disabled:bg-slate-100 disabled:text-slate-500"
                       />
                     </div>
 
@@ -1198,14 +1250,14 @@ export default function AdminPanel() {
                     onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
                   >
-                    <option value="home">Welcome (స్వాగతం)</option>
-                    <option value="worship">Worship (ఆరాధన)</option>
-                    <option value="bible-truth">Truth (సత్యం)</option>
-                    <option value="family">Family (ఆత్మీయ కుటుంబం)</option>
-                    <option value="grow">Grow (ఆత్మీయ ఎదుగుదల)</option>
-                    <option value="go-come">Go & Come (సువార్త సేవ & గమ్యం)</option>
-                    <option value="program">Program (కార్యక్రమాలు)</option>
-                    <option value="more">More (మరిన్ని విభాగాలు)</option>
+                    <option value="home">Welcome</option>
+                    <option value="worship">Worship</option>
+                    <option value="bible-truth">Truth</option>
+                    <option value="family">Family</option>
+                    <option value="grow">Grow</option>
+                    <option value="go-come">Go & Come</option>
+                    <option value="program">Program</option>
+                    <option value="more">More</option>
                     <option value="custom">+ Create Brand New Category</option>
                   </select>
                 </div>
@@ -1230,7 +1282,7 @@ export default function AdminPanel() {
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Page Title / పేజీ శీర్షిక *
+                    Page Title *
                   </label>
                   <input
                     type="text"
@@ -1619,7 +1671,7 @@ export default function AdminPanel() {
               <PhotoGalleryManager
                 targetPage="home"
                 sectionTitleEn="Welcome Page Featured Photos"
-                sectionTitleTe="స్వాగత పేజీ విశేష ఛాయాచిత్రాలు"
+                sectionTitleTe=""
               />
             </div>
           </div>
@@ -1642,20 +1694,20 @@ export default function AdminPanel() {
 
               <form onSubmit={handleSaveAnnouncement} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Title / ప్రకటన శీర్షిక *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Title *</label>
                   <input
                     type="text"
                     required
                     value={newAnnouncement.title}
                     onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                    placeholder="Announcement Title / శీర్షిక"
+                    placeholder="Announcement Title"
                     className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
                   />
                 </div>
 
                 {/* Single Unified Rich Description */}
                 <RichTextEditor
-                  label="Description / వివరాలు (Rich Text Editor)"
+                  label="Description (Rich Text Editor)"
                   value={newAnnouncement.desc}
                   onChange={(val) => setNewAnnouncement({ ...newAnnouncement, desc: val })}
                   rows={5}

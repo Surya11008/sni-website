@@ -20,6 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
+import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import {
   Calendar,
   ArrowLeft,
@@ -45,7 +46,7 @@ import {
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
-  const { contentId } = useParams();
+  const { contentId, categorySlug: paramCategorySlug, pageSlug: paramPageSlug } = useParams();
   const { currentUser, userProfile } = useAuth();
   const { isTelugu, getText, getDesc } = useLanguage();
   const navigate = useNavigate();
@@ -101,6 +102,14 @@ export default function ContentDetailPage() {
             setAudioUrl(data.audioUrl || '');
             setFileUrl(data.fileUrl || '');
             setDownloadUrl(data.downloadUrl || '');
+
+            // Keep address bar in clean semantic format: sni.org.in/Home/:category/:page/:contentId
+            const cat = data.categorySlug || paramCategorySlug || 'worship';
+            const page = data.pageSlug || paramPageSlug || 'sermons';
+            const desiredUrl = `/Home/${cat}/${page}/${data.id}`;
+            if (window.location.pathname !== desiredUrl && !window.location.pathname.toLowerCase().startsWith('/home/')) {
+              window.history.replaceState(null, '', desiredUrl);
+            }
           }
         } else {
           // Check announcements collection as fallback
@@ -353,8 +362,26 @@ export default function ContentDetailPage() {
 
   const articleTitle = getText(article, 'title');
   const articleDesc = getDesc(article);
+  const currentCategorySlug = article?.categorySlug || paramCategorySlug || 'worship';
+  const currentCategory = DEFAULT_PORTAL_STRUCTURE.find(
+    (c) => c.categorySlug === currentCategorySlug
+  ) || {
+    categorySlug: currentCategorySlug,
+    titleEn: currentCategorySlug.toUpperCase(),
+    titleTe: currentCategorySlug,
+    pages: [],
+  };
+  const categoryTitle = isTelugu ? currentCategory.titleTe : currentCategory.titleEn;
+  const subPages = currentCategory.pages || [];
+  const currentSubpage = subPages.find((p) => p.pageSlug === article?.pageSlug) || {
+    pageSlug: article?.pageSlug || paramPageSlug || 'sermons',
+    titleEn: (article?.pageSlug || paramPageSlug || 'sermons').toUpperCase(),
+    titleTe: article?.pageSlug || paramPageSlug || 'sermons',
+  };
+  const subPageTitle = isTelugu ? currentSubpage.titleTe : currentSubpage.titleEn;
+
   const backUrl = article.pageSlug
-    ? `/page/${article.categorySlug || 'worship'}/${article.pageSlug}`
+    ? `/page/${currentCategorySlug}/${article.pageSlug}`
     : article.categorySlug
     ? `/category/${article.categorySlug}`
     : '/';
@@ -362,32 +389,28 @@ export default function ContentDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
       {/* Top Banner Navigation Header */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
+      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
         <div className="max-w-4xl mx-auto space-y-4">
-          {/* Breadcrumb Links: Welcome > Category > Page > Content Title */}
+          {/* Breadcrumb Links: Home > Category > Page > Content Title */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition">
-              Welcome
+            <Link to="/" className="hover:text-[#F4B942] transition font-bold text-white">
+              Home
             </Link>
-            {article.categorySlug && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                <Link
-                  to={`/category/${article.categorySlug}`}
-                  className="hover:text-[#F4B942] uppercase font-bold text-[#F4B942] transition"
-                >
-                  {article.categorySlug}
-                </Link>
-              </>
-            )}
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+            <Link
+              to={`/category/${currentCategorySlug}`}
+              className="hover:text-[#F4B942] uppercase font-bold text-[#F4B942] transition"
+            >
+              {categoryTitle}
+            </Link>
             {article.pageSlug && (
               <>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
                 <Link
-                  to={`/page/${article.categorySlug || 'worship'}/${article.pageSlug}`}
+                  to={`/page/${currentCategorySlug}/${article.pageSlug}`}
                   className="hover:text-[#F4B942] capitalize font-medium text-slate-200 transition"
                 >
-                  {article.pageSlug}
+                  {subPageTitle}
                 </Link>
               </>
             )}
@@ -461,6 +484,36 @@ export default function ContentDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* 2nd Header: Subpage Navigation Bar for this Category */}
+      {subPages.length > 0 && (
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            <Link
+              to={`/category/${currentCategorySlug}`}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
+            >
+              {isTelugu ? 'అన్ని' : 'All'}
+            </Link>
+            {subPages.map((sp) => {
+              const isCurrent = sp.pageSlug === article?.pageSlug;
+              return (
+                <Link
+                  key={sp.pageSlug}
+                  to={`/page/${currentCategorySlug}/${sp.pageSlug}`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
+                    isCurrent
+                      ? 'bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {isTelugu ? sp.titleTe : sp.titleEn}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">

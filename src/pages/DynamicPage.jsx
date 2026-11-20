@@ -21,7 +21,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
-import StarsProgramTracker from '../components/StarsProgramTracker';
+import StarGalaxyApp from '../star-galaxy/App';
 import {
   ChevronRight,
   Plus,
@@ -272,7 +272,7 @@ export default function DynamicPage() {
           {/* Breadcrumb Navigation */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 mb-6 flex-wrap">
             <Link to="/" className="hover:text-[#F4B942] transition flex items-center gap-1">
-              <span>Welcome</span>
+              <span>Home</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-[#F4B942] font-semibold">{categoryTitle}</span>
@@ -311,6 +311,36 @@ export default function DynamicPage() {
           </div>
         </div>
       </section>
+
+      {/* 2nd Header: Subpage Navigation Bar for this Category */}
+      {category?.pages && category.pages.length > 0 && (
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            <Link
+              to={`/category/${categorySlug}`}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
+            >
+              {isTelugu ? 'అన్ని' : 'All'}
+            </Link>
+            {category.pages.map((sp) => {
+              const isCurrent = sp.pageSlug === pageSlug;
+              return (
+                <Link
+                  key={sp.pageSlug}
+                  to={`/page/${categorySlug}/${sp.pageSlug}`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
+                    isCurrent
+                      ? 'bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {isTelugu ? sp.titleTe : sp.titleEn}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 2. Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -537,9 +567,9 @@ export default function DynamicPage() {
           </div>
         )}
 
-        {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Stars Tracker */}
+        {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Complete Star Galaxy */}
         {isStarsPage && starsViewTab === 'tracker' && !activeArticle && !isFormOpen ? (
-          <StarsProgramTracker />
+          <StarGalaxyApp initialUser={userProfile || currentUser} />
         ) : activeArticle ? (
           <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-12 shadow-md max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
             {/* Top Bar: Back Button & Admin Controls */}
@@ -796,7 +826,7 @@ export default function DynamicPage() {
                   return (
                     <article
                       key={item.id}
-                      onClick={() => navigate(`/content/${item.id}`)}
+                      onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
                       className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:-translate-y-1 hover:border-[#C59B27]/60"
                     >
                       <div>
@@ -920,7 +950,7 @@ export default function DynamicPage() {
                   return (
                     <article
                       key={item.id}
-                      onClick={() => navigate(`/content/${item.id}`)}
+                      onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 group cursor-pointer hover:border-amber-400"
                     >
                       {item.imageUrl && (
@@ -1021,7 +1051,7 @@ export default function DynamicPage() {
                   return (
                     <div
                       key={item.id}
-                      onClick={() => navigate(`/content/${item.id}`)}
+                      onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
                       className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/20 transition group cursor-pointer gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
