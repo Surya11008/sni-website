@@ -136,16 +136,6 @@ export default function Header() {
 
           {/* 🌐 Globe Language Selector Button */}
           <LanguageSwitcher showTranslateBadge={false} />
-
-          {/* 🚪 Logout Button (Right side last) */}
-          <button
-            onClick={logout}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 transition-colors flex items-center gap-1.5 text-xs font-bold shadow-2xs"
-            title={t('logout') || 'Logout'}
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t('logout') || 'Logout'}</span>
-          </button>
         </div>
       </div>
 

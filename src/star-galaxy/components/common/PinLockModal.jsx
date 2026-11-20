@@ -309,18 +309,6 @@ export default function PinLockModal() {
                 ⌫
               </button>
             </div>
-
-            {/* Switch Account / Login with Password option */}
-            <div className="pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={logout}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1.5 mx-auto transition-colors"
-              >
-                <LogOut className="w-3.5 h-3.5 text-slate-400" />
-                <span>Switch Account / Login with ID & Password</span>
-              </button>
-            </div>
           </div>
         )}
       </div>

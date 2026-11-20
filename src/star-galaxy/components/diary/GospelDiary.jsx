@@ -63,8 +63,8 @@ export default function GospelDiary({ onBack }) {
   const userEntries = useMemo(() => {
     if (!currentUser?.id) return [];
     const entries = data.gospelDiary?.[currentUser.id] || [];
-    // Strict isolation: only entries belonging to currentUser
-    return entries.filter(e => !e.userId || e.userId === currentUser.id);
+    // Strict isolation: only entries belonging strictly to currentUser.id
+    return entries.filter(e => String(e.userId) === String(currentUser.id));
   }, [data.gospelDiary, currentUser?.id]);
 
   // Map of dates with entries -> set of 'YYYY-MM-DD'

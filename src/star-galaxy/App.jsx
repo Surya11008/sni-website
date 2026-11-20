@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import SniTopHeader from './components/common/SniTopHeader';
 import Header from './components/common/Header';
@@ -6,7 +6,6 @@ import BottomNav from './components/common/BottomNav';
 import PinLockModal from './components/common/PinLockModal';
 import AuthPage from './components/auth/AuthPage';
 import AdminPendingApprovalsModal from './components/admin/AdminPendingApprovalsModal';
-import NotificationBanner from './components/common/NotificationBanner';
 
 import ActivitiesTab from './components/tabs/ActivitiesTab';
 import StatusTab from './components/tabs/StatusTab';
@@ -15,7 +14,6 @@ import AdminTab from './components/admin/AdminTab';
 
 import {
   playCuteClick,
-  playNotificationSound,
   speakWelcomeVoice,
 } from './utils/soundEffects';
 
@@ -25,112 +23,18 @@ function MainApp() {
     activeTab,
     setActiveTab,
     data,
-    unviewedNotices,
-    unviewedNews,
-    markNoticeAsViewed,
-    markNewsAsViewed,
   } = useApp();
-  const [activeNotification, setActiveNotification] = useState(null);
-  const alertedIds = useRef(new Set());
 
-  // 🔔 Real-time Notifications: ONLY trigger if member has NOT viewed the post or notice!
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // 1. Check unviewed notices
-    if (unviewedNotices && unviewedNotices.length > 0) {
-      const noticeToAlert = unviewedNotices.find(n => {
-        const id = n.id || n._id || n.date;
-        return !alertedIds.current.has(id);
-      });
-      if (noticeToAlert) {
-        const id = noticeToAlert.id || noticeToAlert._id || noticeToAlert.date;
-        alertedIds.current.add(id);
-        setActiveNotification({
-          type: 'notice',
-          id,
-          title: noticeToAlert.title || 'New Notice from Overseer',
-          author: 'Overseer',
-          item: noticeToAlert,
-        });
-        playNotificationSound();
-        return;
-      }
-    }
-
-    // 2. Check unviewed news posts
-    if (unviewedNews && unviewedNews.length > 0) {
-      const postToAlert = unviewedNews.find(p => {
-        const id = p.id || p._id || p.timestamp;
-        return !alertedIds.current.has(id);
-      });
-      if (postToAlert) {
-        const id = postToAlert.id || postToAlert._id || postToAlert.timestamp;
-        alertedIds.current.add(id);
-        setActiveNotification({
-          type: 'news',
-          id,
-          title: postToAlert.title || 'New Fellowship Moment',
-          author: postToAlert.author || postToAlert.authorName || 'Fellow Member',
-          item: postToAlert,
-        });
-        playNotificationSound();
-      }
-    }
-  }, [unviewedNotices, unviewedNews, currentUser?.id]);
-
-  // Auto-dismiss notification after 7 seconds
-  useEffect(() => {
-    if (activeNotification) {
-      const timer = setTimeout(() => {
-        setActiveNotification(null);
-      }, 7000);
-      return () => clearTimeout(timer);
-    }
-  }, [activeNotification]);
-
-  const handleNotificationClick = () => {
-    if (!activeNotification) return;
-    if (activeNotification.type === 'notice') {
-      markNoticeAsViewed(activeNotification.id);
-      setActiveTab('home');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (activeNotification.type === 'news') {
-      markNewsAsViewed(activeNotification.id);
-      setActiveTab('news');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    setActiveNotification(null);
-  };
-
-  const handleNotificationClose = () => {
-    if (!activeNotification) return;
-    if (activeNotification.type === 'notice') {
-      markNoticeAsViewed(activeNotification.id);
-    } else if (activeNotification.type === 'news') {
-      markNewsAsViewed(activeNotification.id);
-    }
-    setActiveNotification(null);
-  };
-
-  // If user is not logged in, render the Login / Create ID & Password page
+  // If user is not logged in, redirect directly to the ONLY SNI Master Login page
   if (!currentUser) {
-    return (
-      <div className="w-full max-w-lg mx-auto py-8 px-4 flex flex-col justify-center">
-        <AuthPage />
-      </div>
-    );
+    if (typeof window !== 'undefined') {
+      window.location.replace('/auth.html');
+    }
+    return null;
   }
 
   return (
     <div className="w-full flex flex-col selection:bg-amber-300">
-      {/* Floating In-App Notification Banner */}
-      <NotificationBanner
-        notification={activeNotification}
-        onClose={handleNotificationClose}
-        onClick={handleNotificationClick}
-      />
-
       {/* Top Header with Desktop Navigation Bar */}
       <Header />
 

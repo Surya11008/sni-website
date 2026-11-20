@@ -97,9 +97,9 @@
                     <i id="themeIcon" class="fa-solid fa-moon"></i>
                 </button>
 
-                <button type="button" id="logoutBtn" onclick="handleLogout()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 font-bold rounded-2xl text-xs border border-rose-200 dark:border-rose-800/60 transition" title="Sign Out">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
+                <a href="/" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition flex items-center gap-1.5" title="Back to SNI">
+                    <span>← Back to SNI</span>
+                </a>
             </div>
         </div>
 
@@ -183,76 +183,6 @@
         </div>
     </div>
 
-    <!-- Auth / Login Modal -->
-    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-4 overflow-y-auto hidden" style="z-index: 100000;">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-md w-full border border-violet-500/40 max-h-[calc(100vh-6rem)] overflow-y-auto my-auto sm:my-0">
-            
-            <div class="flex justify-center mb-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg border border-violet-300">
-                    📔
-                </div>
-            </div>
-
-            <h2 id="authTitle" class="text-xl font-black text-center text-violet-600 dark:text-violet-400 mb-1">Gospel Diary Login</h2>
-            <p id="authSubtitle" class="text-center text-xs text-slate-500 dark:text-slate-400 mb-6">Use your Star Galaxy, Counter or Word Search credentials</p>
-
-            <!-- Tabs: Login vs Register -->
-            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700">
-                <button type="button" id="tabLoginBtn" onclick="switchAuthMode('login')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition">
-                    Sign In
-                </button>
-                <button type="button" id="tabRegisterBtn" onclick="switchAuthMode('register')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
-                    Register
-                </button>
-            </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">User ID, Phone or Contact</label>
-                    <input type="text" id="loginUserId" required placeholder="e.g. David1948 or surya11008" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div id="loginErrorMsg" class="hidden text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs p-2.5 rounded-xl text-center font-medium"></div>
-                <button type="submit" id="loginSubmitBtn" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">
-                    Sign In
-                </button>
-            </form>
-
-            <!-- Register Form -->
-            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-                    <input type="text" id="regFullName" required placeholder="e.g. David" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">User ID / Username</label>
-                    <input type="text" id="regUserId" required placeholder="e.g. David1948" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone / Contact</label>
-                    <input type="text" id="regPhone" required placeholder="e.g. 9876543210" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
-                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Place / Fellowship</label>
-                    <input type="text" id="regPlace" placeholder="e.g. Nellore" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-violet-500 focus:outline-none">
-                </div>
-                <div id="regErrorMsg" class="hidden text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs p-2 rounded-xl text-center font-medium"></div>
-                <button type="submit" id="regSubmitBtn" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">
-                    Create Account
-                </button>
-            </form>
-
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="text-center py-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 transition-colors duration-300">
         SNI Gospel Diary &bull; Connected with Star Galaxy Cloud Firestore
@@ -295,22 +225,29 @@
             document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon';
         }
 
-        // Check Unified Session across Star Galaxy, Counter, Word Search, and Gospel Diary
+        // Check Unified Session: Strictly SNI Login Only
         async function checkUnifiedSession() {
             try {
-                // Check unified session key
-                const sess = localStorage.getItem('sni_unified_session');
-                if (sess) {
-                    const parsed = JSON.parse(sess);
-                    if (parsed && parsed.userId) {
-                        currentUser = parsed;
+                // 1. Check SNI session
+                const rawSni =
+                    localStorage.getItem('sni_user_session') ||
+                    localStorage.getItem('sni_current_user') ||
+                    localStorage.getItem('sni_unified_session');
+                if (rawSni) {
+                    const parsed = JSON.parse(rawSni);
+                    if (parsed && (parsed.userId || parsed.uid)) {
+                        currentUser = {
+                            userId: parsed.userId || parsed.uid,
+                            fullName: parsed.fullName || parsed.displayName || parsed.userId || parsed.uid,
+                            role: parsed.role || 'member'
+                        };
                         onUserAuthenticated();
                         return;
                     }
                 }
 
-                // Check Star Galaxy logged in user
-                const starMember = localStorage.getItem('star_galaxy_current_member_id') || localStorage.getItem('star_galaxy_selected_member');
+                // 2. Check Star Galaxy active member
+                const starMember = localStorage.getItem('star_galaxy_active_user_id') || localStorage.getItem('star_galaxy_current_member_id');
                 if (starMember) {
                     currentUser = {
                         userId: starMember,
@@ -320,241 +257,17 @@
                     onUserAuthenticated();
                     return;
                 }
-
-                // Check Counter user
-                const counterUser = localStorage.getItem('sni_counter_current_user');
-                if (counterUser) {
-                    const parsed = JSON.parse(counterUser);
-                    if (parsed && parsed.userId) {
-                        currentUser = parsed;
-                        onUserAuthenticated();
-                        return;
-                    }
-                }
             } catch(e) {}
 
-            // Show auth modal if not authenticated
-            showAuthModal();
+            // Only SNI Login page exists: redirect if not logged in!
+            window.location.replace('/auth.html');
         }
 
         function onUserAuthenticated() {
-            hideAuthModal();
             const displayName = currentUser.fullName || currentUser.userId;
-            document.getElementById('userDisplayName').textContent = displayName;
-            
-            // Save to unified session
-            try {
-                localStorage.setItem('sni_unified_session', JSON.stringify(currentUser));
-            } catch(e) {}
-
-            // Load diary entries
+            const el = document.getElementById('userDisplayName');
+            if (el) el.textContent = displayName;
             loadDiaryEntries();
-        }
-
-        // Show/Hide Modals
-        function showAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
-        function hideAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
-
-        function switchAuthMode(mode) {
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const tabLoginBtn = document.getElementById('tabLoginBtn');
-            const tabRegisterBtn = document.getElementById('tabRegisterBtn');
-
-            if (mode === 'login') {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                tabLoginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition';
-                tabRegisterBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
-            } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                tabRegisterBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-violet-600 text-white shadow transition';
-                tabLoginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
-            }
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const uInput = document.getElementById('loginUserId').value.trim();
-            const pInput = document.getElementById('loginPassword').value.trim();
-            const errEl = document.getElementById('loginErrorMsg');
-            const btn = document.getElementById('loginSubmitBtn');
-
-            errEl.classList.add('hidden');
-            btn.disabled = true;
-            btn.textContent = 'Verifying...';
-
-            if (isUserAdmin(uInput, pInput)) {
-                currentUser = {
-                    userId: 'surya11008',
-                    fullName: 'Admin (Surya)',
-                    role: 'admin'
-                };
-                onUserAuthenticated();
-                btn.disabled = false;
-                btn.textContent = 'Sign In';
-                return;
-            }
-
-            try {
-                // Verify with Firestore
-                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users?pageSize=150&key=${FIREBASE_API_KEY}`;
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    const q = uInput.toLowerCase();
-                    let match = null;
-
-                    for (const doc of (data.documents || [])) {
-                        const f = doc.fields || {};
-                        const uId = (f.username?.stringValue || f.id?.stringValue || '').toLowerCase();
-                        const uPhone = (f.phone?.stringValue || f.contact?.stringValue || '').toLowerCase();
-                        const uEmail = (f.email?.stringValue || '').toLowerCase();
-                        const uPass = f.plainPassword?.stringValue || f.password?.stringValue || f.personalPin?.stringValue || '';
-
-                        if (uId === q || uPhone === q || uEmail === q) {
-                            if (uPass === pInput) {
-                                match = {
-                                    userId: f.username?.stringValue || f.id?.stringValue || q,
-                                    fullName: f.name?.stringValue || f.nickname?.stringValue || uInput,
-                                    role: f.role?.stringValue || 'member',
-                                    status: f.status?.stringValue || 'approved'
-                                };
-                                break;
-                            }
-                        }
-                    }
-
-                    if (match) {
-                        if (match.status === 'pending') {
-                            errEl.textContent = 'Your account is pending Admin approval. Please wait for admin approval.';
-                            errEl.classList.remove('hidden');
-                            btn.disabled = false;
-                            btn.textContent = 'Sign In';
-                            return;
-                        }
-                        currentUser = match;
-                        onUserAuthenticated();
-                        btn.disabled = false;
-                        btn.textContent = 'Sign In';
-                        return;
-                    }
-                }
-            } catch(err) {
-                console.warn('Network error during login:', err);
-            }
-
-            // Fallback check against local cache
-            try {
-                const starState = JSON.parse(localStorage.getItem('star_galaxy_saved_state') || '{}');
-                const users = starState.users || [];
-                const q = uInput.toLowerCase();
-                const localMatch = users.find(u => {
-                    const uid = (u.username || u.id || '').toLowerCase();
-                    const phone = (u.phone || u.contact || '').toLowerCase();
-                    const pass = u.plainPassword || u.password || u.personalPin || '';
-                    return (uid === q || phone === q) && pass === pInput;
-                });
-                if (localMatch) {
-                    currentUser = {
-                        userId: localMatch.username || localMatch.id,
-                        fullName: localMatch.name || localMatch.nickname || uInput,
-                        role: localMatch.role || 'member'
-                    };
-                    onUserAuthenticated();
-                    btn.disabled = false;
-                    btn.textContent = 'Sign In';
-                    return;
-                }
-            } catch(e) {}
-
-            errEl.textContent = 'Invalid User ID or Password. Please try again.';
-            errEl.classList.remove('hidden');
-            btn.disabled = false;
-            btn.textContent = 'Sign In';
-        }
-
-        async function handleRegister(e) {
-            e.preventDefault();
-            const fullName = document.getElementById('regFullName').value.trim();
-            const userId = document.getElementById('regUserId').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-            const pass = document.getElementById('regPassword').value.trim();
-            const place = document.getElementById('regPlace').value.trim();
-            const errEl = document.getElementById('regErrorMsg');
-            const btn = document.getElementById('regSubmitBtn');
-
-            errEl.classList.add('hidden');
-            btn.disabled = true;
-            btn.textContent = 'Creating account...';
-
-            // Check auto approval setting
-            let autoApprove = true;
-            try {
-                const stored = localStorage.getItem('star_galaxy_auto_user_approval');
-                if (stored !== null) autoApprove = JSON.parse(stored);
-            } catch(e) {}
-
-            const newUser = {
-                id: 'usr-' + Date.now(),
-                username: userId,
-                name: fullName,
-                phone: phone,
-                contact: phone,
-                password: pass,
-                plainPassword: pass,
-                place: place,
-                role: 'member',
-                status: autoApprove ? 'approved' : 'pending',
-                createdAt: new Date().toISOString()
-            };
-
-            // Sync to Firestore users
-            try {
-                const docId = encodeURIComponent(newUser.id);
-                const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/users/${docId}?key=${FIREBASE_API_KEY}`;
-                await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fields: {
-                            id: { stringValue: newUser.id },
-                            username: { stringValue: newUser.username },
-                            name: { stringValue: newUser.name },
-                            phone: { stringValue: newUser.phone },
-                            contact: { stringValue: newUser.contact },
-                            password: { stringValue: newUser.password },
-                            plainPassword: { stringValue: newUser.plainPassword },
-                            place: { stringValue: newUser.place || '' },
-                            role: { stringValue: 'member' },
-                            status: { stringValue: newUser.status },
-                            createdAt: { stringValue: newUser.createdAt }
-                        }
-                    })
-                });
-            } catch(e) {}
-
-            if (!autoApprove) {
-                alert('Registration submitted! Since Auto Approval is currently OFF, an Admin will review and approve your account shortly.');
-                btn.disabled = false;
-                btn.textContent = 'Create Account';
-                switchAuthMode('login');
-                return;
-            }
-
-            currentUser = {
-                userId: newUser.username,
-                fullName: newUser.name,
-                role: 'member'
-            };
-            onUserAuthenticated();
-            btn.disabled = false;
-            btn.textContent = 'Create Account';
         }
 
         function handleLogout() {
