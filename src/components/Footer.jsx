@@ -104,9 +104,11 @@ export default function Footer() {
           {/* Column 1: Organization Seal & Mission (Spans 2 columns on desktop) */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-full bg-[#0F294A] border-2 border-[#C59B27] flex items-center justify-center text-[#C59B27] font-serif font-black text-base shadow-sm">
-                SNI
-              </div>
+              <img
+                src="/logo.png"
+                alt="Super Natural Intelligence"
+                className="w-12 h-12 object-contain"
+              />
               <div>
                 <div
                   className={`text-xl font-bold text-white tracking-tight ${
@@ -245,7 +247,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-[#132A4A] flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Spiritual Nature of India (SNI). {t('footerRights')}</p>
+          <p>© {new Date().getFullYear()} Super Natural Intelligence (SNI). {t('footerRights')}</p>
           <div className="flex items-center gap-6">
             <span className="hover:text-slate-400 transition cursor-pointer">Terms of Assembly</span>
             <span className="hover:text-slate-400 transition cursor-pointer">Privacy Policy</span>

@@ -169,17 +169,22 @@ export default function Login() {
         {/* Header card */}
         <div className="bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/50 p-8">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-              {isRegistering ? <UserPlus className="w-6 h-6" /> : <LogIn className="w-6 h-6" />}
-            </div>
-            <h2 className={`text-2xl font-bold text-slate-900 ${isTelugu ? 'font-krishna text-3xl' : ''}`}>
+            <img
+              src="/logo.png"
+              alt="Super Natural Intelligence"
+              className="w-16 h-16 object-contain mx-auto mb-2 drop-shadow-sm"
+            />
+            <h2 className={`text-2xl font-bold text-[#0F294A] ${isTelugu ? 'font-krishna text-3xl' : 'font-serif'}`}>
+              Super Natural Intelligence
+            </h2>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#C59B27] mt-0.5">
               {isRegistering
                 ? (isTelugu ? 'కొత్త ఖాతా సృష్టించండి' : 'Create Portal Account')
-                : (isTelugu ? 'పోర్టల్ లాగిన్' : 'Sign in to Organization')}
-            </h2>
-            <p className={`text-xs sm:text-sm text-slate-500 mt-1 ${isTelugu ? 'font-telugu' : ''}`}>
+                : (isTelugu ? 'పోర్టల్ లాగిన్' : 'Official Portal Login')}
+            </p>
+            <p className={`text-xs text-slate-500 mt-1 ${isTelugu ? 'font-telugu' : ''}`}>
               {isRegistering
-                ? (isTelugu ? 'మీ వివరాలను నమోదు చేసి సంస్థ పోర్టల్‌లో చేరండి' : 'Join your organization team and access resources')
+                ? (isTelugu ? 'మీ వివరాలను నమోదు చేసి సంస్థ పోర్టల్‌లో చేరండి' : 'Join our organization team and access ministerial resources')
                 : (isTelugu ? 'మీ SNI ID లేదా ఈమెయిల్ ద్వారా డాష్‌బోర్డ్ ప్రవేశించండి' : 'Enter your SNI ID or Work Email to access your dashboard')}
             </p>
           </div>

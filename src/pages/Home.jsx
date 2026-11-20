@@ -8,13 +8,9 @@ import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
 import {
   Calendar,
-  Clock,
   ArrowRight,
   ChevronRight,
-  ShieldCheck,
   ChevronDown,
-  Sparkles,
-  BookOpen,
   Bell,
   X,
   ExternalLink,
@@ -58,7 +54,7 @@ const DEFAULT_UPDATES = [
 ];
 
 export default function Home() {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const { t, getText, getDesc, isTelugu } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('all');

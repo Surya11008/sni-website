@@ -21,7 +21,6 @@ import {
   PlusCircle,
   X,
   Calendar,
-  ExternalLink,
   Trash2,
   FileText,
   Play,

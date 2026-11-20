@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
+import { mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
 import {
   collection,
@@ -32,8 +32,6 @@ import {
   FolderTree,
   ExternalLink,
   Eye,
-  BookOpen,
-  Layers,
 } from 'lucide-react';
 
 export default function AdminPanel() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
@@ -91,8 +91,8 @@ export default function Navbar() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#C59B27] animate-pulse"></span>
             <span className={isTelugu ? 'font-telugu' : ''}>
               {isTelugu
-                ? 'పరిశుద్ధ సత్య మార్గం • దేవుని సంఘ సమాఖ్య అధికారిక పోర్టల్'
-                : 'Spiritual Nature of India • Official Global Assembly Portal'}
+                ? 'పరిశుద్ధ సత్య మార్గం • సూపర్ నేచురల్ ఇంటెలిజెన్స్ (SNI) అధికారిక పోర్టల్'
+                : 'Super Natural Intelligence (SNI) • Official Global Assembly Portal'}
             </span>
           </div>
 
@@ -117,15 +117,18 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Brand Emblem & Title */}
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="relative w-11 h-11 rounded-full bg-[#0F294A] border-2 border-[#C59B27] flex items-center justify-center text-[#C59B27] shadow-md group-hover:scale-105 transition-transform">
-              <span className="font-serif font-black text-base tracking-tighter">SNI</span>
-              <div className="absolute -inset-0.5 rounded-full border border-[#C59B27]/40 pointer-events-none"></div>
+          <Link to="/" className="flex items-center gap-3.5 group shrink-0">
+            <div className="relative w-12 h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img
+                src="/logo.png"
+                alt="Super Natural Intelligence Logo"
+                className="w-12 h-12 object-contain drop-shadow-sm"
+              />
             </div>
 
             <div className="flex flex-col">
               <span
-                className={`text-xl font-bold tracking-tight text-[#0F294A] ${
+                className={`text-lg sm:text-xl font-bold tracking-tight text-[#0F294A] leading-tight ${
                   isTelugu ? 'font-krishna text-2xl' : 'font-serif'
                 }`}
               >

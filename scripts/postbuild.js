@@ -29,3 +29,17 @@ if (fs.existsSync(distIndex)) {
   fs.writeFileSync(root404, htmlContent, 'utf8');
   console.log('[postbuild] Synced dist/index.html -> index.html & 404.html');
 }
+
+// 4. Copy static root files (logo.png, favicon, etc.) from dist to root
+if (fs.existsSync(distDir)) {
+  const rootFiles = fs.readdirSync(distDir);
+  for (const file of rootFiles) {
+    if (file !== 'assets' && file !== 'index.html') {
+      const srcPath = path.join(distDir, file);
+      if (fs.statSync(srcPath).isFile()) {
+        fs.copyFileSync(srcPath, path.resolve(file));
+        console.log(`[postbuild] Synced dist/${file} -> ${file}`);
+      }
+    }
+  }
+}
