@@ -1,95 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Check if user is Admin
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'surya11008@sni.org.in' ||
-        request.auth.token.email == 'admin@sni.org.in' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
-    }
-
-    // Users Collection
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Public Content (News, Announcements, Videos) & Comments
-    match /announcements/{docId} {
-      allow read: if true;
-      allow write: if true;
-
-      match /comments/{commentId} {
-        allow read, write: if true;
-      }
-    }
-
-    match /media/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Private Member Resources
-    match /member_docs/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Dynamic Sub-pages Content & Comments
-    match /page_contents/{docId} {
-      allow read: if true;
-      allow write: if true;
-
-      match /comments/{commentId} {
-        allow read, write: if true;
-      }
-    }
-
-    // Comments collection (global or direct)
-    match /comments/{commentId} {
+    // Allow full read and write access to all documents and subcollections
+    match /{document=**} {
       allow read, write: if true;
     }
-
-    // Dynamic Navigation Page Hierarchy
-    match /portal_pages/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Site Photos & Banners (Home & Page photo galleries)
-    match /site_photos/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Site Settings (Hero Banner photo & content)
-    match /site_settings/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Custom Roles & Permissions
-    match /roles/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // Star Galaxy Collections
-    match /activities/{docId} { allow read, write: if true; }
-    match /newsPosts/{docId} { allow read, write: if true; }
-    match /adminNotices/{docId} { allow read, write: if true; }
-    match /galleryMedia/{docId} { allow read, write: if true; }
-    match /encouragementMessages/{docId} { allow read, write: if true; }
-    match /gospelDiary/{docId} { allow read, write: if true; }
-    match /sharedFiles/{docId} { allow read, write: if true; }
-    match /globalState/{docId} { allow read, write: if true; }
-    match /presence/{docId} { allow read, write: if true; }
-    match /childrenMedia/{docId} { allow read, write: if true; }
-    match /mediaCategories/{docId} { allow read, write: if true; }
-    match /manager_roles/{docId} { allow read, write: if true; }
   }
 }
