@@ -103,11 +103,12 @@ export default function ContentDetailPage() {
             setFileUrl(data.fileUrl || '');
             setDownloadUrl(data.downloadUrl || '');
 
-            // Keep address bar in clean semantic format: sni.org.in/Home/:category/:page/:contentId
-            const cat = data.categorySlug || paramCategorySlug || 'worship';
-            const page = data.pageSlug || paramPageSlug || 'sermons';
+            // Keep address bar in clean semantic format: sni.org.in/Home/Worship/Sermons/:contentId
+            const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+            const cat = cap(data.categorySlug || paramCategorySlug || 'worship');
+            const page = cap(data.pageSlug || paramPageSlug || 'sermons');
             const desiredUrl = `/Home/${cat}/${page}/${data.id}`;
-            if (window.location.pathname !== desiredUrl && !window.location.pathname.toLowerCase().startsWith('/home/')) {
+            if (window.location.pathname !== desiredUrl) {
               window.history.replaceState(null, '', desiredUrl);
             }
           }
@@ -388,107 +389,10 @@ export default function ContentDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
-      {/* Top Banner Navigation Header */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {/* Breadcrumb Links: Home > Category > Page > Content Title */}
-          <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition font-bold text-white">
-              Home
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <Link
-              to={`/category/${currentCategorySlug}`}
-              className="hover:text-[#F4B942] uppercase font-bold text-[#F4B942] transition"
-            >
-              {categoryTitle}
-            </Link>
-            {article.pageSlug && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                <Link
-                  to={`/page/${currentCategorySlug}/${article.pageSlug}`}
-                  className="hover:text-[#F4B942] capitalize font-medium text-slate-200 transition"
-                >
-                  {subPageTitle}
-                </Link>
-              </>
-            )}
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-[#F4B942] font-bold truncate max-w-xs">{articleTitle}</span>
-          </nav>
-
-          <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
-            <Link
-              to={backUrl}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10"
-            >
-              <ArrowLeft className="w-4 h-4 text-[#F4B942]" />
-              <span>← Back</span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              {/* Heart Symbol / Like Button with Live Count and Floating Hearts */}
-              <div className="relative">
-                <button
-                  onClick={handleToggleLike}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                    isLiked
-                      ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
-                      : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
-                  }`}
-                  title={isLiked ? 'Liked' : 'Like'}
-                >
-                  <Heart
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isLiked ? 'fill-current text-white scale-110' : 'text-rose-400'
-                    }`}
-                  />
-                  <span>{likesCount}</span>
-                </button>
-                {floatingHearts.map((h) => (
-                  <span
-                    key={h.id}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-sm select-none"
-                    style={{
-                      '--tw-translate-x': `${h.x}px`,
-                      animationDelay: `${h.delay}s`,
-                    }}
-                  >
-                    ❤️
-                  </span>
-                ))}
-              </div>
-
-              <AudioSpeakerButton text={articleDesc} title={articleTitle} />
-
-              {isAdmin && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#071B3B] text-xs font-bold transition cursor-pointer"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    <span>{isEditing ? 'Cancel Edit' : 'Edit'}</span>
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="p-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white transition cursor-pointer"
-                    title="Delete Article"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2nd Header: Subpage Navigation Bar for this Category */}
+      {/* 2nd Header: Subpage Navigation Bar for this Category (Positioned directly under Main Navbar) */}
       {subPages.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[65px] z-40 shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
             <Link
               to={`/category/${currentCategorySlug}`}
               className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
@@ -503,7 +407,7 @@ export default function ContentDetailPage() {
                   to={`/page/${currentCategorySlug}/${sp.pageSlug}`}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
                     isCurrent
-                      ? 'bg-[#C59B27] text-[#071B3B] shadow-md ring-1 ring-[#C59B27]'
+                      ? 'bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27]'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -515,8 +419,101 @@ export default function ContentDetailPage() {
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+      {/* Main Page Container (Clean, Open, Dedicated Page Layout - NO POPUP LOOK) */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Breadcrumb & Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          {/* Breadcrumb Links: Home > Category > Page > Content Title */}
+          <nav className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+            <Link to="/" className="hover:text-[#0F294A] font-bold text-slate-700 transition">
+              Home
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            <Link
+              to={`/category/${currentCategorySlug}`}
+              className="hover:text-[#0F294A] uppercase font-bold text-[#C59B27] transition"
+            >
+              {categoryTitle}
+            </Link>
+            {article.pageSlug && (
+              <>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                <Link
+                  to={`/page/${currentCategorySlug}/${article.pageSlug}`}
+                  className="hover:text-[#0F294A] capitalize font-medium text-slate-700 transition"
+                >
+                  {subPageTitle}
+                </Link>
+              </>
+            )}
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-900 font-bold truncate max-w-xs">{articleTitle}</span>
+          </nav>
+
+          {/* Action Tools */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              to={backUrl}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition shadow-xs"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#C59B27]" />
+              <span>← Back</span>
+            </Link>
+
+            {/* Like Button */}
+            <div className="relative">
+              <button
+                onClick={handleToggleLike}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                  isLiked
+                    ? 'bg-rose-50 text-rose-600 border-rose-300 shadow-xs'
+                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+                }`}
+                title={isLiked ? 'Liked' : 'Like'}
+              >
+                <Heart
+                  className={`w-3.5 h-3.5 transition-transform ${
+                    isLiked ? 'fill-current text-rose-500 scale-110' : 'text-slate-400'
+                  }`}
+                />
+                <span>{likesCount}</span>
+              </button>
+              {floatingHearts.map((h) => (
+                <span
+                  key={h.id}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-sm select-none"
+                  style={{
+                    '--tw-translate-x': `${h.x}px`,
+                    animationDelay: `${h.delay}s`,
+                  }}
+                >
+                  ❤️
+                </span>
+              ))}
+            </div>
+
+            <AudioSpeakerButton text={articleDesc} title={articleTitle} />
+
+            {isAdmin && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#071B3B] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-[#C59B27]" />
+                  <span>{isEditing ? 'Cancel Edit' : 'Edit'}</span>
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer border border-transparent hover:border-rose-200"
+                  title="Delete Article"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         {/* Admin In-Page Edit Drawer */}
         {isEditing && (
           <div className="mb-8 p-6 rounded-3xl bg-white border border-[#C59B27]/50 shadow-2xl animate-in fade-in duration-200">
@@ -620,7 +617,7 @@ export default function ContentDetailPage() {
         )}
 
         {/* The Dedicated Full Page Article View */}
-        <article className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-12 shadow-xl space-y-8 animate-in fade-in duration-200">
+        <article className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-12 shadow-sm space-y-8 animate-in fade-in duration-150">
           {/* Header Metadata */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">

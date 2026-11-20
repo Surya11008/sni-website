@@ -1,13 +1,11 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Home, Newspaper, Target, BarChart3, MoreHorizontal, Settings, ShieldCheck } from 'lucide-react';
+import { Target, BarChart3, MoreHorizontal, Settings, ShieldCheck } from 'lucide-react';
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab, currentUser, unreadNoticeCount, unreadNewsCount, t } = useApp();
+  const { activeTab, setActiveTab, currentUser, t } = useApp();
 
   const tabs = [
-    { id: 'home', label: t('navHome') || 'Home', icon: Home, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
-    { id: 'news', label: t('navNews') || 'News', icon: Newspaper, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
     { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
     { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
     { id: 'more', label: t('navMore') || 'More', icon: MoreHorizontal, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
@@ -32,12 +30,6 @@ export default function BottomNav() {
               <span className="text-[11px] mt-0.5 tracking-tight font-medium">
                 {tab.label}
               </span>
-              {tab.id === 'home' && unreadNoticeCount > 0 && (
-                <span className="absolute top-1 right-2.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse ring-2 ring-white" />
-              )}
-              {tab.id === 'news' && unreadNewsCount > 0 && (
-                <span className="absolute top-1 right-2.5 w-2 h-2 rounded-full bg-pink-500 animate-pulse ring-2 ring-white" />
-              )}
             </button>
           );
         })}

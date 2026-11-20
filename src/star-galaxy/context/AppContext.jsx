@@ -284,11 +284,11 @@ export function AppProvider({ children, initialUser }) {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const saved = localStorage.getItem('star_galaxy_active_tab');
-      if (saved && ['home', 'news', 'activities', 'status', 'more', 'settings', 'admin'].includes(saved)) {
+      if (saved && ['activities', 'status', 'more', 'settings', 'admin'].includes(saved)) {
         return saved;
       }
     } catch (e) {}
-    return 'home';
+    return 'activities';
   });
 
   const setActiveTab = (tab) => {
@@ -1407,7 +1407,7 @@ export function AppProvider({ children, initialUser }) {
       ...prev,
       gospelDiary: {},
     }));
-    setActiveTabState('home');
+    setActiveTabState('activities');
   };
 
   // Change Password

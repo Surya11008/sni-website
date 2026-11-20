@@ -5,8 +5,6 @@ import {
   Users,
   LogOut,
   User,
-  Home,
-  Newspaper,
   Target,
   BarChart3,
   MoreHorizontal,
@@ -63,8 +61,6 @@ export default function Header() {
 
   // Desktop Navigation Tabs
   const navTabs = [
-    { id: 'home', label: t('navHome') || 'Home', icon: Home },
-    { id: 'news', label: t('navNews') || 'News', icon: Newspaper },
     { id: 'activities', label: t('navActivities') || 'Activities', icon: Target },
     { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3 },
     { id: 'more', label: t('navMore') || 'More', icon: MoreHorizontal },
@@ -108,12 +104,6 @@ export default function Header() {
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
-                {tab.id === 'home' && unreadNoticeCount > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" title={`${unreadNoticeCount} new notice`} />
-                )}
-                {tab.id === 'news' && unreadNewsCount > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" title={`${unreadNewsCount} new post`} />
-                )}
               </button>
             );
           })}

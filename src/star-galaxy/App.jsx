@@ -8,8 +8,6 @@ import AuthPage from './components/auth/AuthPage';
 import AdminPendingApprovalsModal from './components/admin/AdminPendingApprovalsModal';
 import NotificationBanner from './components/common/NotificationBanner';
 
-import HomeTab from './components/tabs/HomeTab';
-import NewsTab from './components/tabs/NewsTab';
 import ActivitiesTab from './components/tabs/ActivitiesTab';
 import StatusTab from './components/tabs/StatusTab';
 import MoreTab from './components/tabs/MoreTab';
@@ -142,8 +140,6 @@ function MainApp() {
 
           {/* Main Content Area */}
           <main className="flex-1 px-3 sm:px-6 md:px-8 pt-3 md:pt-6 pb-24 md:pb-12 overflow-y-auto min-h-[600px]">
-            {activeTab === 'home' && <HomeTab />}
-            {activeTab === 'news' && <NewsTab />}
             {activeTab === 'activities' && <ActivitiesTab />}
             {activeTab === 'status' && <StatusTab />}
             {activeTab === 'more' && <MoreTab />}
