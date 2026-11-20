@@ -90,7 +90,7 @@ export default function Footer() {
             <ul className="space-y-2 text-xs text-slate-400">
               <li>
                 <Link to="/" className="hover:text-white transition">
-                  {isTelugu ? 'స్వాగతం' : 'Welcome'}
+                  {isTelugu ? 'స్వాగతం' : 'Home'}
                 </Link>
               </li>
               <li>

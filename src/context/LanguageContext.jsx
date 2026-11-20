@@ -8,7 +8,7 @@ export const translations = {
     // Nav & Brand
     brandName: 'Super Natural Intelligence',
     brandTag: 'SNI Official',
-    navHome: 'Welcome',
+    navHome: 'Home',
     navNewsEvents: 'News & Events',
     navMediaVideos: 'Media & Videos',
     navEcosystemApps: 'Ecosystem Apps',

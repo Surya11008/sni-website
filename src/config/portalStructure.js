@@ -3,7 +3,7 @@
 export const DEFAULT_PORTAL_STRUCTURE = [
   {
     categorySlug: 'home',
-    titleEn: 'Welcome',
+    titleEn: 'Home',
     titleTe: 'స్వాగతం',
     descriptionEn: 'Central assembly announcements, event highlights, and ministry schedule.',
     descriptionTe: 'కేంద్ర సమాఖ్య నూతన తాజా సమాచారం, సంఘ విశేషాలు మరియు సమయ పట్టిక.',

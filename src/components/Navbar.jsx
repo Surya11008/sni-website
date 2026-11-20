@@ -465,13 +465,13 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Quick Welcome Nav */}
+          {/* Quick Home Nav */}
           <Link
             to="/"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-bold text-slate-200 hover:text-[#F4B942] py-1.5 px-2 rounded-lg hover:bg-white/5"
           >
-            {isTelugu ? 'స్వాగతం' : 'Welcome'}
+            {isTelugu ? 'స్వాగతం' : 'Home'}
           </Link>
 
           {/* Accordion Categories - Role Filtered */}

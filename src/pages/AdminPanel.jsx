@@ -973,7 +973,7 @@ export default function AdminPanel() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
                         {[
                           { id: '*', label: 'Full Access (All)' },
-                          { id: 'home', label: 'Welcome' },
+                          { id: 'home', label: 'Home' },
                           { id: 'worship', label: 'Worship' },
                           { id: 'bible-truth', label: 'Truth' },
                           { id: 'family', label: 'Family' },
@@ -1250,7 +1250,7 @@ export default function AdminPanel() {
                     onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
                   >
-                    <option value="home">Welcome</option>
+                    <option value="home">Home</option>
                     <option value="worship">Worship</option>
                     <option value="bible-truth">Truth</option>
                     <option value="family">Family</option>
@@ -1407,7 +1407,7 @@ export default function AdminPanel() {
                   className="p-2 rounded-xl border border-slate-300 text-xs font-semibold bg-white"
                 >
                   <option value="all">All Categories</option>
-                  <option value="home">Welcome</option>
+                  <option value="home">Home</option>
                   <option value="worship">Worship</option>
                   <option value="bible-truth">Truth</option>
                   <option value="family">Family</option>
@@ -1469,7 +1469,7 @@ export default function AdminPanel() {
                         onChange={(e) => setNewContent({ ...newContent, categorySlug: e.target.value })}
                         className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold"
                       >
-                        <option value="home">home (Welcome)</option>
+                        <option value="home">home (Home)</option>
                         <option value="worship">worship</option>
                         <option value="bible-truth">bible-truth (Truth)</option>
                         <option value="family">family</option>
