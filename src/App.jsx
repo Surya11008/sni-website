@@ -15,6 +15,21 @@ import DynamicPage from './pages/DynamicPage';
 import CategoryPage from './pages/CategoryPage';
 import ContentDetailPage from './pages/ContentDetailPage';
 
+function RedirectToAuthSignIn() {
+  useEffect(() => {
+    window.location.replace('/auth.html');
+  }, []);
+
+  return (
+    <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-slate-600">
+      <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        Opening Sign In page...
+      </p>
+    </div>
+  );
+}
+
 function RedirectToAuthJoin() {
   useEffect(() => {
     window.location.replace('/auth.html?mode=join');
@@ -39,8 +54,8 @@ export default function App() {
             <Navbar />
             <main className="flex-1">
               <Routes>
-                {/* Login & Join Routes redirect to auth.html?mode=join */}
-                <Route path="/login" element={<RedirectToAuthJoin />} />
+                {/* Login redirects to Sign In, Join redirects to Join */}
+                <Route path="/login" element={<RedirectToAuthSignIn />} />
                 <Route path="/join" element={<RedirectToAuthJoin />} />
 
                 {/* Gated Behind Login - Only Authenticated & Approved Users Can Access */}

@@ -18,14 +18,14 @@ export default function ProtectedRoute({ children, requiredRole }) {
     );
   }
 
-  // 1. Not logged in -> redirect directly to auth.html?mode=join
+  // 1. Not logged in -> redirect directly to auth.html (Sign In)
   if (!currentUser) {
-    window.location.replace('/auth.html?mode=join');
+    window.location.replace('/auth.html');
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-slate-600">
         <Loader2 className="w-10 h-10 animate-spin text-[#C59B27] mb-3" />
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          Redirecting to Join page...
+          Redirecting to Sign In...
         </p>
       </div>
     );

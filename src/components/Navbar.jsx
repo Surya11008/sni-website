@@ -94,7 +94,7 @@ export default function Navbar() {
     try {
       setUserMenuOpen(false);
       await logout();
-      window.location.href = '/auth.html?mode=join';
+      window.location.href = '/auth.html';
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -377,7 +377,7 @@ export default function Navbar() {
               </div>
             ) : (
               <a
-                href="/auth.html?mode=join"
+                href="/auth.html"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs uppercase font-bold tracking-wider transition shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5" />
@@ -454,7 +454,7 @@ export default function Navbar() {
               </div>
             ) : (
               <a
-                href="/auth.html?mode=join"
+                href="/auth.html"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full inline-flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#F4B942] text-[#071B3B] font-bold text-xs uppercase"
               >

@@ -1081,10 +1081,10 @@
         // INITIAL CHECK
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
-        if (mode === 'signin') {
-            switchMode('signin');
-        } else {
+        if (mode === 'join' || window.location.pathname.includes('join')) {
             switchMode('join');
+        } else {
+            switchMode('signin');
         }
         checkExistingSession();
     </script>

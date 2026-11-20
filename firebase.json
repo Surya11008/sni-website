@@ -12,12 +12,12 @@
     "redirects": [
       {
         "source": "/login",
-        "destination": "/auth.html?mode=join",
+        "destination": "/auth.html",
         "type": 302
       },
       {
         "source": "/login.html",
-        "destination": "/auth.html?mode=join",
+        "destination": "/auth.html",
         "type": 302
       },
       {
