@@ -40,6 +40,8 @@ import {
   MessageSquare,
   Send,
   MessageCircle,
+  Music,
+  Download,
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
@@ -64,7 +66,9 @@ export default function ContentDetailPage() {
   const [desc, setDesc] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
+  const [downloadUrl, setDownloadUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const isAdmin =
@@ -93,7 +97,9 @@ export default function ContentDetailPage() {
             setDesc(data.desc || data.content || data.descEn || data.descTe || '');
             setImageUrl(data.imageUrl || '');
             setVideoUrl(data.videoUrl || '');
+            setAudioUrl(data.audioUrl || '');
             setFileUrl(data.fileUrl || '');
+            setDownloadUrl(data.downloadUrl || '');
           }
         } else {
           // Check announcements collection as fallback
@@ -273,7 +279,9 @@ export default function ContentDetailPage() {
         descTe: desc.trim(),
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
+        audioUrl: audioUrl.trim() || null,
         fileUrl: fileUrl.trim() || null,
+        downloadUrl: downloadUrl.trim() || null,
         updatedAt: serverTimestamp(),
       };
 
@@ -377,7 +385,7 @@ export default function ContentDetailPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10"
             >
               <ArrowLeft className="w-4 h-4 text-[#F4B942]" />
-              <span>{isTelugu ? '← వెనుకకు వెళ్ళండి' : '← Back'}</span>
+              <span>← Back</span>
             </Link>
 
             <div className="flex items-center gap-2">
@@ -389,7 +397,7 @@ export default function ContentDetailPage() {
                     ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
                     : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
                 }`}
-                title={isLiked ? 'Liked / ఇష్టం' : 'Like this content / లైక్ చేయండి'}
+                title={isLiked ? 'Liked' : 'Like this content'}
               >
                 <Heart
                   className={`w-3.5 h-3.5 transition-transform ${
@@ -437,7 +445,7 @@ export default function ContentDetailPage() {
             <form onSubmit={handleUpdate} className="space-y-4 text-xs">
               {/* Single Unified Title */}
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Title / శీర్షిక *</label>
+                <label className="block font-bold text-slate-700 mb-1">Title *</label>
                 <input
                   type="text"
                   value={title}
@@ -449,37 +457,60 @@ export default function ContentDetailPage() {
 
               {/* Single Unified Rich Content Editor */}
               <RichTextEditor
-                label="Content / మేటర్ (Rich Text Editor)"
+                label="Content (Rich Text Editor)"
                 value={desc}
                 onChange={setDesc}
                 rows={8}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Image URL</label>
+                  <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
                   <input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
                     className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
+                  <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
                   <input
                     type="url"
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
                     className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">File / PDF URL</label>
+                  <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
+                  <input
+                    type="url"
+                    value={audioUrl}
+                    onChange={(e) => setAudioUrl(e.target.value)}
+                    placeholder="https://example.com/audio.mp3"
+                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive link)</label>
                   <input
                     type="url"
                     value={fileUrl}
                     onChange={(e) => setFileUrl(e.target.value)}
+                    placeholder="https://example.com/document.pdf"
+                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">Direct Download URL (Instant download link)</label>
+                  <input
+                    type="url"
+                    value={downloadUrl}
+                    onChange={(e) => setDownloadUrl(e.target.value)}
+                    placeholder="https://drive.google.com/uc?export=download&id=..."
                     className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
                   />
                 </div>
@@ -591,6 +622,43 @@ export default function ContentDetailPage() {
             </div>
           )}
 
+          {/* Audio Player */}
+          {article.audioUrl && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#071B3B] to-[#0F294A] text-white border border-[#1A3860] shadow-md space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-[#F4B942] flex items-center justify-center">
+                    <Music className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-white">Audio Stream</h4>
+                    <p className="text-[10px] text-slate-300">Listen to attached audio broadcast</p>
+                  </div>
+                </div>
+              </div>
+              {getYouTubeEmbedUrl(article.audioUrl) ? (
+                <div className="aspect-video w-full max-h-48 rounded-xl overflow-hidden">
+                  <iframe
+                    src={getYouTubeEmbedUrl(article.audioUrl)}
+                    title="Audio Broadcast"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                </div>
+              ) : (
+                <audio
+                  controls
+                  className="w-full h-10 rounded-lg outline-none"
+                  src={article.audioUrl}
+                  preload="metadata"
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              )}
+            </div>
+          )}
+
           {/* Rich Content Body */}
           <div className="pt-2">
             <RichContentRenderer
@@ -599,6 +667,35 @@ export default function ContentDetailPage() {
               className="text-base sm:text-lg"
             />
           </div>
+
+          {/* Direct Download Button (Prominently displayed) */}
+          {article.downloadUrl && (
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-[#F4B942] flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-[#F4B942] text-[#071B3B] flex items-center justify-center shrink-0 shadow-md">
+                  <Download className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-[#071B3B]">
+                    Direct Download Available
+                  </h4>
+                  <p className="text-xs text-slate-600">
+                    Click to download the attached resource instantly
+                  </p>
+                </div>
+              </div>
+              <a
+                href={article.downloadUrl}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shrink-0 inline-flex items-center gap-2 shadow-md hover:scale-102 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Now</span>
+              </a>
+            </div>
+          )}
 
           {/* File Attachment Card */}
           {article.fileUrl && (
@@ -635,7 +732,7 @@ export default function ContentDetailPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-[#C59B27]" />
-              <span>{isTelugu ? '← పేజీ జాబితాకు తిరిగి వెళ్ళండి' : '← Back to Sub-Page'}</span>
+              <span>← Back to Page</span>
             </Link>
 
             <div className="flex items-center gap-3">
@@ -690,10 +787,10 @@ export default function ContentDetailPage() {
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
-                  {isTelugu ? `వ్యాఖ్యలు & స్పందనలు (${comments.length})` : `Comments & Fellowship (${comments.length})`}
+                  Comments & Fellowship ({comments.length})
                 </h3>
                 <p className="text-[11px] text-slate-400">
-                  {isTelugu ? 'ఈ సందేశం లేదా అంశంపై మీ అభిప్రాయాన్ని పంచుకోండి' : 'Share your thoughts, reflections, or questions on this content.'}
+                  Share your thoughts, reflections, or questions on this content.
                 </p>
               </div>
             </div>
@@ -710,7 +807,7 @@ export default function ContentDetailPage() {
                   rows={3}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={isTelugu ? 'మీ వ్యాఖ్య లేదా స్పందనను ఇక్కడ రాయండి...' : 'Write your comment or reflection here...'}
+                  placeholder="Write your comment or reflection here..."
                   className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-[#C59B27] transition"
                   required
                 />
@@ -724,7 +821,7 @@ export default function ContentDetailPage() {
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-40"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{submittingComment ? 'Posting...' : (isTelugu ? 'పోస్ట్ చేయండి' : 'Post Comment')}</span>
+                    <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
                   </button>
                 </div>
               </div>
@@ -737,7 +834,7 @@ export default function ContentDetailPage() {
               <div className="text-center py-8 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 text-slate-400">
                 <MessageCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                 <p className="text-xs font-medium">
-                  {isTelugu ? 'ఇంకా ఎలాంటి వ్యాఖ్యలు లేవు. మొదటి వ్యాఖ్య మీరే రాయండి!' : 'No comments yet. Be the first to share your reflection!'}
+                  No comments yet. Be the first to share your reflection!
                 </p>
               </div>
             ) : (

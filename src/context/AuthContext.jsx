@@ -5,8 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   updateProfile,
+  updatePassword,
 } from 'firebase/auth';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
 const AuthContext = createContext(null);
@@ -25,13 +26,63 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Auto-expire timer for 3-hour temporary password sessions
   useEffect(() => {
+    let logoutTimer = null;
+
+    // Check if there is an active temporary password session in storage
+    const storedTempSession = localStorage.getItem('sni_temp_session');
+    if (storedTempSession) {
+      try {
+        const session = JSON.parse(storedTempSession);
+        const expiresAt = new Date(session.expiresAt).getTime();
+        const remainingMs = expiresAt - Date.now();
+
+        if (remainingMs > 0) {
+          // Valid temp session
+          const tempUser = {
+            uid: session.uid,
+            email: session.email,
+            displayName: session.displayName || session.email?.split('@')[0],
+            isTempSession: true,
+            expiresAt: session.expiresAt,
+          };
+          setCurrentUser((prev) => prev || tempUser);
+
+          // Listen to user profile
+          const userDocRef = doc(db, 'users', session.uid);
+          const unsubProfile = onSnapshot(userDocRef, (snap) => {
+            if (snap.exists()) {
+              setUserProfile({ uid: snap.id, ...snap.data() });
+            }
+          });
+
+          // Set timer to automatically log out when 3 hours elapse
+          logoutTimer = setTimeout(() => {
+            alert('Your 3-hour temporary password session has expired. Please sign in again or request a new reset from the Administrator.');
+            logout();
+          }, remainingMs);
+
+          setLoading(false);
+          return () => {
+            if (logoutTimer) clearTimeout(logoutTimer);
+            unsubProfile();
+          };
+        } else {
+          // Expired
+          localStorage.removeItem('sni_temp_session');
+        }
+      } catch (err) {
+        console.warn('Failed to parse temporary session:', err);
+        localStorage.removeItem('sni_temp_session');
+      }
+    }
+
     let unsubscribeFirestore = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-
       if (user) {
+        setCurrentUser(user);
         try {
           const userDocRef = doc(db, 'users', user.uid);
           
@@ -74,7 +125,6 @@ export const AuthProvider = ({ children }) => {
             },
             (error) => {
               console.error('Firestore user profile snapshot error:', error);
-              // Fallback basic profile
               setUserProfile({
                 uid: user.uid,
                 email: user.email || '',
@@ -95,11 +145,14 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         }
       } else {
-        if (unsubscribeFirestore) {
-          unsubscribeFirestore();
-          unsubscribeFirestore = null;
+        if (!localStorage.getItem('sni_temp_session')) {
+          if (unsubscribeFirestore) {
+            unsubscribeFirestore();
+            unsubscribeFirestore = null;
+          }
+          setCurrentUser(null);
+          setUserProfile(null);
         }
-        setUserProfile(null);
         setLoading(false);
       }
     });
@@ -109,6 +162,9 @@ export const AuthProvider = ({ children }) => {
       if (unsubscribeFirestore) {
         unsubscribeFirestore();
       }
+      if (logoutTimer) {
+        clearTimeout(logoutTimer);
+      }
     };
   }, []);
 
@@ -117,8 +173,31 @@ export const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
+  // Login with Temporary 3-Hour Password
+  const loginWithTempPassword = async (userDoc) => {
+    const session = {
+      uid: userDoc.uid || userDoc.id,
+      email: userDoc.email,
+      displayName: userDoc.displayName || userDoc.fullName || userDoc.email?.split('@')[0],
+      role: userDoc.role || 'member',
+      expiresAt: userDoc.tempPasswordExpiresAt,
+    };
+    localStorage.setItem('sni_temp_session', JSON.stringify(session));
+
+    const tempUser = {
+      uid: session.uid,
+      email: session.email,
+      displayName: session.displayName,
+      isTempSession: true,
+      expiresAt: session.expiresAt,
+    };
+    setCurrentUser(tempUser);
+    setUserProfile({ ...userDoc, uid: session.uid });
+    return { user: tempUser };
+  };
+
   // Register new account with optional role and initial profile
-  const signup = async (email, password, displayName, role = 'member') => {
+  const signup = async (email, password, displayName, role = 'member', phone = '') => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const user = cred.user;
 
@@ -134,8 +213,10 @@ export const AuthProvider = ({ children }) => {
 
     const newProfile = {
       uid: user.uid,
+      id: user.uid,
       email: user.email || email,
       displayName: displayName || email.split('@')[0],
+      phone: phone || '',
       role: isAdmin ? 'admin' : role || 'member',
       status: isAdmin ? 'approved' : 'pending',
       createdAt: new Date().toISOString(),
@@ -151,9 +232,39 @@ export const AuthProvider = ({ children }) => {
     return cred;
   };
 
+  // Update Password
+  const updateUserPassword = async (newPassword) => {
+    if (auth.currentUser) {
+      await updatePassword(auth.currentUser, newPassword);
+    }
+    // Also clear temporary password in Firestore if it existed
+    if (currentUser?.uid) {
+      try {
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          tempPassword: null,
+          tempPasswordExpiresAt: null,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('Could not clear temp password on password update:', e);
+      }
+    }
+    // If it was a temp session, remove temp session flag
+    if (localStorage.getItem('sni_temp_session')) {
+      localStorage.removeItem('sni_temp_session');
+    }
+  };
+
   // Sign out
   const logout = async () => {
-    return signOut(auth);
+    localStorage.removeItem('sni_temp_session');
+    setCurrentUser(null);
+    setUserProfile(null);
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.warn('SignOut error:', e);
+    }
   };
 
   const value = {
@@ -161,7 +272,9 @@ export const AuthProvider = ({ children }) => {
     userProfile,
     loading,
     login,
+    loginWithTempPassword,
     signup,
+    updateUserPassword,
     logout,
   };
 

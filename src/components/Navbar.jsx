@@ -18,19 +18,33 @@ import {
   User,
   ArrowRight,
   ExternalLink,
+  Lock,
+  KeyRound,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, updateUserPassword, logout } = useAuth();
   const { language, toggleLanguage, t, isTelugu } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
   const [mobileExpandedCat, setMobileExpandedCat] = useState(null);
 
+  // User Dropdown & Change Password Modal states
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   // Subscribe to custom pages from Firestore `portal_pages`
   useEffect(() => {
@@ -60,12 +74,16 @@ export default function Navbar() {
   useEffect(() => {
     setActiveDropdown(null);
     setMobileMenuOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setActiveDropdown(null);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -74,10 +92,44 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
+      setUserMenuOpen(false);
       await logout();
       navigate('/login');
     } catch (err) {
       console.error('Logout error:', err);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      await updateUserPassword(newPassword);
+      setPasswordSuccess('Password successfully updated!');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setPasswordModalOpen(false);
+        setPasswordSuccess('');
+      }, 1500);
+    } catch (err) {
+      console.error('Password update failed:', err);
+      setPasswordError(err.message || 'Failed to update password. Please re-login and try again.');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -195,7 +247,7 @@ export default function Navbar() {
                           </div>
                         </div>
                         <span className="text-[10px] font-bold text-[#C59B27] flex items-center gap-0.5">
-                          <span>{isTelugu ? 'పేజీ' : 'Main'}</span>
+                          <span>Main</span>
                           <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </span>
                       </Link>
@@ -265,27 +317,60 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* Dashboard Button */}
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 border border-white/15 transition"
-                >
-                  <div className="w-6 h-6 rounded-full bg-[#F4B942] text-[#071B3B] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
-                    {userProfile?.displayName ? userProfile.displayName.charAt(0) : <User className="w-3 h-3" />}
-                  </div>
-                  <span className="text-xs font-bold text-slate-200 max-w-[100px] truncate">
-                    {userProfile?.displayName || currentUser.email?.split('@')[0]}
-                  </span>
-                </Link>
+                {/* User Profile Menu Button (No direct dashboard redirect) */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 border border-white/15 transition cursor-pointer text-left"
+                    title="User account settings"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-[#F4B942] text-[#071B3B] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
+                      {userProfile?.displayName ? userProfile.displayName.charAt(0) : <User className="w-3 h-3" />}
+                    </div>
+                    <span className="text-xs font-bold text-slate-200 max-w-[110px] truncate">
+                      {userProfile?.displayName || currentUser.email?.split('@')[0]}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-300 transition-transform ${userMenuOpen ? 'rotate-180 text-[#F4B942]' : ''}`} />
+                  </button>
 
-                {/* Logout Button */}
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-white/10 rounded-xl transition cursor-pointer"
-                  title="Sign out / లాగౌట్"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+                  {/* User Dropdown Menu: Only Change Password & Logout */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-3 py-2 border-b border-slate-100">
+                        <div className="text-xs font-bold text-[#071B3B] truncate">
+                          {userProfile?.displayName || 'User'}
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {currentUser.email}
+                        </div>
+                        <div className="mt-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 uppercase tracking-wider">
+                          {userProfile?.role || 'Member'}
+                        </div>
+                      </div>
+
+                      <div className="pt-1.5 space-y-1">
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            setPasswordModalOpen(true);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:text-[#071B3B] hover:bg-slate-100 rounded-xl transition text-left cursor-pointer"
+                        >
+                          <KeyRound className="w-4 h-4 text-amber-600" />
+                          <span>Change Password</span>
+                        </button>
+
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition text-left cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-500" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <Link
@@ -344,16 +429,21 @@ export default function Navbar() {
                       <Shield className="w-4 h-4 text-[#F4B942]" />
                     </Link>
                   )}
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 text-slate-200 hover:bg-white/10 rounded-lg text-xs font-bold"
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setPasswordModalOpen(true);
+                    }}
+                    className="p-2 text-slate-200 hover:bg-white/10 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    title="Change Password"
                   >
-                    {t('navDashboard')}
-                  </Link>
+                    <KeyRound className="w-4 h-4 text-amber-400" />
+                    <span>Password</span>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="p-2 text-rose-400 hover:bg-white/10 rounded-lg cursor-pointer"
+                    title="Sign Out"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -455,6 +545,109 @@ export default function Navbar() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {passwordModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#0B1E36] border border-[#1E3A5F] rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => {
+                setPasswordModalOpen(false);
+                setPasswordError('');
+                setPasswordSuccess('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-[#F4B942] flex items-center justify-center border border-[#F4B942]/30">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Change Password</h3>
+                <p className="text-xs text-slate-400">Set a new secure password for your account</p>
+              </div>
+            </div>
+
+            {passwordError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <span>{passwordSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min. 6 characters)"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#071324] border border-[#1A3353] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-[#F4B942]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#071324] border border-[#1A3353] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-[#F4B942]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasswordModalOpen(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {passwordLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

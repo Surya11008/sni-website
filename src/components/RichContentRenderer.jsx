@@ -15,6 +15,17 @@ import { ExternalLink, Play } from 'lucide-react';
 export default function RichContentRenderer({ content = '', isTelugu = false, className = '' }) {
   if (!content) return null;
 
+  // Check if content is HTML (from Google Docs copy-paste or Rich WYSIWYG Editor)
+  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+  if (isHtml) {
+    return (
+      <div
+        className={`rich-html-content text-slate-800 text-sm sm:text-base leading-relaxed ${className}`}
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+
   // Split into blocks by double newlines or single newlines
   const lines = content.split('\n');
 

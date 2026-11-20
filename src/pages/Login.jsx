@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { syncSSOSession } from '../utils/sso';
@@ -9,6 +11,7 @@ import {
   Mail,
   Lock,
   User,
+  Phone,
   Shield,
   AlertCircle,
   Loader2,
@@ -35,12 +38,13 @@ export default function Login() {
   const [identifier, setIdentifier] = useState(''); // Email or SNI User ID
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState('member'); // 'member' or 'admin'
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, signup } = useAuth();
+  const { login, signup, loginWithTempPassword } = useAuth();
   const { isTelugu } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,23 +57,15 @@ export default function Login() {
       case 'auth/invalid-credential':
       case 'auth/user-not-found':
       case 'auth/wrong-password':
-        return isTelugu
-          ? 'యూజర్ ID లేదా పాస్‌వర్డ్ సరిపోలలేదు. దయచేసి వివరాలు సరిచూడండి లేదా "Use surya11008" బటన్ నొక్కండి.'
-          : 'Invalid credentials. Please verify your details or use the "Use surya11008" quick button.';
+        return 'Invalid credentials. Please verify your details or use the "Use surya11008" quick button.';
       case 'auth/email-already-in-use':
-        return isTelugu
-          ? 'ఈ ID / ఈమెయిల్‌తో ఇప్పటికే ఖాతా ఉంది. దయచేసి "Sign In" చేయండి.'
-          : 'An account already exists with this ID. Please sign in.';
+        return 'An account already exists with this ID. Please sign in.';
       case 'auth/weak-password':
-        return isTelugu
-          ? 'పాస్‌వర్డ్ కనీసం 6 అక్షరాలు ఉండాలి.'
-          : 'Password should be at least 6 characters.';
+        return 'Password should be at least 6 characters.';
       case 'auth/invalid-email':
-        return isTelugu
-          ? 'దయచేసి సరైన ఈమెయిల్ లేదా SNI ID నమోదు చేయండి.'
-          : 'Please enter a valid email or SNI ID.';
+        return 'Please enter a valid email or SNI ID.';
       default:
-        return err.message || (isTelugu ? 'లాగిన్ విఫలమైంది.' : 'Authentication failed.');
+        return err.message || 'Authentication failed.';
     }
   };
 
@@ -96,43 +92,83 @@ export default function Login() {
 
     try {
       if (isRegistering) {
-        await signup(emailToUse, password, displayName || cleanInput, role);
+        await signup(emailToUse, password, displayName || cleanInput, role, phone);
       } else {
         let authResult = null;
-        try {
-          authResult = await login(emailToUse, password);
-        } catch (loginErr) {
-          // If admin, attempt with canonical password Surya742766.
-          if (isAdminAuth) {
-            try {
-              authResult = await login(emailToUse, 'Surya742766.');
-            } catch {
-              // If account doesn't exist yet, create it
-              authResult = await signup(emailToUse, 'Surya742766.', 'Surya', 'admin');
+
+        // 1. Check for 3-Hour Temporary Password (123456)
+        if (password.trim() === '123456') {
+          try {
+            const usersRef = collection(db, 'users');
+            let q = query(usersRef, where('email', '==', emailToUse));
+            let snap = await getDocs(q);
+            if (snap.empty) {
+              q = query(usersRef, where('email', '==', cleanInput));
+              snap = await getDocs(q);
             }
-          } else {
-            // Check legacy RTDB
-            try {
-              const res = await fetch(
-                `https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanInput.toLowerCase())}.json`
-              );
-              if (res.ok) {
-                const rtdbUser = await res.json();
-                if (rtdbUser && rtdbUser.password === password) {
-                  authResult = await signup(
-                    emailToUse,
-                    password,
-                    rtdbUser.fullName || cleanInput,
-                    rtdbUser.role || 'member'
+            if (snap.empty) {
+              q = query(usersRef, where('phone', '==', cleanInput));
+              snap = await getDocs(q);
+            }
+            if (!snap.empty) {
+              const uData = { id: snap.docs[0].id, uid: snap.docs[0].id, ...snap.docs[0].data() };
+              if (uData.tempPassword === '123456') {
+                const expiresAt = uData.tempPasswordExpiresAt
+                  ? new Date(uData.tempPasswordExpiresAt).getTime()
+                  : 0;
+                const now = Date.now();
+                if (now > expiresAt) {
+                  throw new Error(
+                    'Temporary password (123456) has expired. The 3-hour limit has exceeded. Please request a new password reset from the Administrator.'
                   );
+                }
+                authResult = await loginWithTempPassword(uData);
+              }
+            }
+          } catch (tempErr) {
+            if (tempErr.message.includes('expired')) {
+              throw tempErr;
+            }
+            console.warn('Temp password check error:', tempErr);
+          }
+        }
+
+        if (!authResult) {
+          try {
+            authResult = await login(emailToUse, password);
+          } catch (loginErr) {
+            // If admin, attempt with canonical password Surya742766.
+            if (isAdminAuth) {
+              try {
+                authResult = await login(emailToUse, 'Surya742766.');
+              } catch {
+                // If account doesn't exist yet, create it
+                authResult = await signup(emailToUse, 'Surya742766.', 'Surya', 'admin');
+              }
+            } else {
+              // Check legacy RTDB
+              try {
+                const res = await fetch(
+                  `https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanInput.toLowerCase())}.json`
+                );
+                if (res.ok) {
+                  const rtdbUser = await res.json();
+                  if (rtdbUser && rtdbUser.password === password) {
+                    authResult = await signup(
+                      emailToUse,
+                      password,
+                      rtdbUser.fullName || cleanInput,
+                      rtdbUser.role || 'member'
+                    );
+                  } else {
+                    throw loginErr;
+                  }
                 } else {
                   throw loginErr;
                 }
-              } else {
+              } catch {
                 throw loginErr;
               }
-            } catch {
-              throw loginErr;
             }
           }
         }
@@ -146,11 +182,7 @@ export default function Login() {
         }
       }
 
-      setSuccessMsg(
-        isTelugu
-          ? 'లాగిన్ విజయవంతమైంది! డాష్‌బోర్డ్‌కు రీడైరెక్ట్ అవుతోంది...'
-          : 'Login successful! Redirecting to dashboard...'
-      );
+      setSuccessMsg('Login successful! Redirecting...');
 
       setTimeout(() => {
         navigate(destination, { replace: true });
@@ -261,27 +293,45 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegistering && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  {isTelugu ? 'పూర్తి పేరు (Full Name)' : 'Full Name'}
-                </label>
-                <div className="relative">
-                  <User className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. John David"
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
-                  />
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="e.g. John David"
+                      className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Phone Number (Optional)
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 9876543210"
+                      className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                {isTelugu ? 'SNI ID లేదా వర్క్ ఈమెయిల్' : 'SNI ID or Work Email'}
+                SNI ID or Email
               </label>
               <div className="relative">
                 <Mail className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -290,21 +340,19 @@ export default function Login() {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. surya11008 or name@sni.org.in"
+                  placeholder="e.g. surya11008 or user@sni.org.in"
                   className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm text-slate-800 transition"
                   autoComplete="username"
                 />
               </div>
               <p className="text-[10px] text-slate-500 mt-1">
-                {isTelugu
-                  ? 'మీరు మీ SNI User ID (ఉదా: surya11008) లేదా ఏదైనా ఈమెయిల్ ఉపయోగించవచ్చు.'
-                  : 'You can enter your SNI User ID (e.g. surya11008) or standard email.'}
+                Enter your SNI User ID (e.g. surya11008) or registered email.
               </p>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                {isTelugu ? 'పాస్‌వర్డ్' : 'Password'}
+                Password
               </label>
               <div className="relative">
                 <Lock className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

@@ -19,6 +19,11 @@ import {
   Loader2,
   FolderTree,
   Heart,
+  LayoutGrid,
+  List,
+  AlignJustify,
+  Music,
+  Download,
 } from 'lucide-react';
 
 export default function CategoryPage() {
@@ -30,6 +35,7 @@ export default function CategoryPage() {
   const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
   const [categoryContents, setCategoryContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('grid');
 
   const isAdmin =
     userProfile?.role === 'admin' ||
@@ -68,25 +74,26 @@ export default function CategoryPage() {
     }
   }, []);
 
-  // Fetch all contents for this category
+  // Fetch all contents for this category (matching categorySlug or targetPages)
   useEffect(() => {
     let isMounted = true;
     async function fetchContents() {
       if (!categorySlug) return;
       setLoading(true);
       try {
-        const q = query(
-          collection(db, 'page_contents'),
-          where('categorySlug', '==', categorySlug)
-        );
-        const snap = await getDocs(q);
+        const snap = await getDocs(collection(db, 'page_contents'));
         const items = [];
-        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        snap.forEach((d) => {
+          const data = d.data();
+          if (data.categorySlug === categorySlug || (Array.isArray(data.targetPages) && data.targetPages.length > 0)) {
+            items.push({ id: d.id, ...data });
+          }
+        });
 
         // Sort by date or createdAt desc
         items.sort((a, b) => {
-          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds || 0);
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds || 0);
           return timeB - timeA;
         });
 
@@ -130,7 +137,7 @@ export default function CategoryPage() {
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
             <Link to="/" className="hover:text-[#F4B942] transition">
-              {isTelugu ? 'స్వాగతం' : 'Welcome'}
+              <span>Welcome</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-[#F4B942] font-bold">{categoryTitle}</span>
@@ -194,7 +201,11 @@ export default function CategoryPage() {
           currentCategory.pages.map((subPage) => {
             const subTitle = isTelugu ? subPage.titleTe : subPage.titleEn;
             const subPageContents = categoryContents
-              .filter((item) => item.pageSlug === subPage.pageSlug)
+              .filter(
+                (item) =>
+                  item.pageSlug === subPage.pageSlug ||
+                  (Array.isArray(item.targetPages) && item.targetPages.includes(subPage.pageSlug))
+              )
               .slice(0, 3); // Take the last 3 contents added!
 
             return (
@@ -202,7 +213,7 @@ export default function CategoryPage() {
                 key={subPage.pageSlug}
                 className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-sm space-y-6"
               >
-                {/* Section Header with "All ->" Arrow Button on top right */}
+                {/* Section Header with View Switcher (Options only, no extra text) and "All ->" */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-wrap gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#0F294A] text-[#C59B27] flex items-center justify-center shadow-xs">
@@ -222,23 +233,63 @@ export default function CategoryPage() {
                     </div>
                   </div>
 
-                  {/* Top Right "All ->" Button */}
-                  <Link
-                    to={`/page/${categorySlug}/${subPage.pageSlug}`}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 hover:bg-[#0F294A] hover:text-[#F4B942] text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition shadow-xs group"
-                  >
-                    <span>{isTelugu ? 'అన్నీ చూడండి' : 'All'}</span>
-                    <ArrowRight className="w-4 h-4 text-[#C59B27] group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    {/* View Switcher: ONLY options/icons, NO extra explanation */}
+                    <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('grid')}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          viewMode === 'grid'
+                            ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                        title="Grid View"
+                      >
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('list')}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          viewMode === 'list'
+                            ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                        title="List View"
+                      >
+                        <List className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('compact')}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          viewMode === 'compact'
+                            ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                        title="Compact View"
+                      >
+                        <AlignJustify className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Top Right "All ->" Button */}
+                    <Link
+                      to={`/page/${categorySlug}/${subPage.pageSlug}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 hover:bg-[#0F294A] hover:text-[#F4B942] text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition shadow-xs group"
+                    >
+                      <span>All</span>
+                      <ArrowRight className="w-4 h-4 text-[#C59B27] group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Last 3 Added Content Cards */}
+                {/* Content Cards */}
                 {subPageContents.length === 0 ? (
                   <div className="py-8 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center flex flex-col items-center justify-center gap-2">
                     <p className="text-xs text-slate-400 font-medium">
-                      {isTelugu
-                        ? 'ఈ సబ్‌పేజీలో ఇంకా ఆర్టికల్స్ ప్రచురించబడలేదు.'
-                        : `No articles published in ${subTitle} yet.`}
+                      No articles published in {subTitle} yet.
                     </p>
                     {isAdmin && (
                       <Link
@@ -250,7 +301,8 @@ export default function CategoryPage() {
                       </Link>
                     )}
                   </div>
-                ) : (
+                ) : viewMode === 'grid' ? (
+                  /* GRID VIEW */
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {subPageContents.map((item) => {
                       const itemTitle = getText(item, 'title');
@@ -316,7 +368,7 @@ export default function CategoryPage() {
                             </div>
                           </div>
 
-                          {/* Card Footer: Audio Speaker + Read Story Link */}
+                          {/* Card Footer */}
                           <div className="px-5 pb-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <AudioSpeakerButton
@@ -328,6 +380,16 @@ export default function CategoryPage() {
                                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                                   <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
                                   <span>{item.likesCount || item.likedBy?.length}</span>
+                                </span>
+                              )}
+                              {item.audioUrl && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px]">
+                                  <Music className="w-2.5 h-2.5" />
+                                </span>
+                              )}
+                              {item.downloadUrl && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px]">
+                                  <Download className="w-2.5 h-2.5" />
                                 </span>
                               )}
                               {item.fileUrl && (
@@ -344,6 +406,104 @@ export default function CategoryPage() {
                             </span>
                           </div>
                         </article>
+                      );
+                    })}
+                  </div>
+                ) : viewMode === 'list' ? (
+                  /* LIST VIEW */
+                  <div className="space-y-4">
+                    {subPageContents.map((item) => {
+                      const itemTitle = getText(item, 'title');
+                      const itemDesc = getDesc(item);
+
+                      return (
+                        <article
+                          key={item.id}
+                          onClick={() => navigate(`/content/${item.id}`)}
+                          className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 group cursor-pointer hover:border-amber-400"
+                        >
+                          {item.imageUrl && (
+                            <div className="w-full sm:w-44 sm:h-28 aspect-video sm:aspect-auto rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                              <img
+                                src={item.imageUrl}
+                                alt={itemTitle}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              />
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-3 text-xs text-slate-400">
+                              <span className="font-bold text-[#C59B27] uppercase text-[10px]">
+                                {subTitle}
+                              </span>
+                              {item.createdAt && (
+                                <span className="flex items-center gap-1 text-[11px]">
+                                  <Calendar className="w-3 h-3 text-[#C59B27]" />
+                                  <span>
+                                    {item.createdAt?.toDate
+                                      ? item.createdAt.toDate().toLocaleDateString()
+                                      : 'Recent'}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+
+                            <h3 className="text-base font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors truncate">
+                              {itemTitle}
+                            </h3>
+
+                            <p className="text-slate-600 text-xs line-clamp-2">
+                              {itemDesc}
+                            </p>
+                          </div>
+
+                          <div className="flex sm:flex-col items-center gap-2 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
+                            <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
+                            {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
+                                <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                                <span>{item.likesCount || item.likedBy?.length}</span>
+                              </span>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* COMPACT VIEW */
+                  <div className="space-y-1.5">
+                    {subPageContents.map((item) => {
+                      const itemTitle = getText(item, 'title');
+                      const itemDesc = getDesc(item);
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => navigate(`/content/${item.id}`)}
+                          className="flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-amber-50/30 rounded-xl border border-slate-200 hover:border-amber-400 transition group cursor-pointer gap-3"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-7 h-7 rounded-lg bg-amber-100/60 text-[#C59B27] flex items-center justify-center shrink-0">
+                              <FileText className="w-3.5 h-3.5" />
+                            </div>
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-[#071B3B] truncate">
+                              {itemTitle}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 shrink-0 text-xs">
+                            <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
+                            {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
+                                <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                                <span>{item.likesCount || item.likedBy?.length}</span>
+                              </span>
+                            )}
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#C59B27] group-hover:translate-x-0.5 transition-transform" />
+                          </div>
+                        </div>
                       );
                     })}
                   </div>

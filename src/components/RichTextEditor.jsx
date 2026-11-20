@@ -1,272 +1,498 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Bold,
   Italic,
+  Underline,
+  Strikethrough,
   Heading1,
   Heading2,
-  Quote,
+  Heading3,
   List,
   ListOrdered,
-  Highlighter,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
   Link as LinkIcon,
   Image as ImageIcon,
+  Table as TableIcon,
   Minus,
-  Eye,
-  Edit3,
-  HelpCircle,
+  Quote,
+  RemoveFormatting,
+  Undo2,
+  Redo2,
+  Code,
+  Maximize2,
+  Minimize2,
+  Palette,
+  Highlighter,
+  ChevronDown,
+  Sparkles,
 } from 'lucide-react';
-import RichContentRenderer from './RichContentRenderer';
 
 export default function RichTextEditor({
   value = '',
   onChange,
   label = 'Content',
-  placeholder = 'Write detailed article content, sermon notes, circulars, or instructions...',
-  isTelugu = false,
-  rows = 8,
+  placeholder = 'Type your article here or paste from Google Docs, Word, or web pages...',
+  rows = 10,
 }) {
-  const [tab, setTab] = useState('write'); // 'write' or 'preview'
-  const [showHelp, setShowHelp] = useState(false);
-  const textareaRef = useRef(null);
+  const editorRef = useRef(null);
+  const [showHtmlSource, setShowHtmlSource] = useState(false);
+  const [htmlSource, setHtmlSource] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showInsertMenu, setShowInsertMenu] = useState(false);
+  const [showTableModal, setShowTableModal] = useState(false);
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+  const [wordCount, setWordCount] = useState(0);
 
-  // Insert formatting wrapper or prefix at cursor selection
-  const insertFormat = (before, after = '', defaultPlaceholder = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  // Sync incoming value to contentEditable div
+  useEffect(() => {
+    if (editorRef.current && !showHtmlSource) {
+      if (editorRef.current.innerHTML !== value) {
+        // If value is plain text without tags, convert newlines to <p>
+        if (value && !/<[a-z][\s\S]*>/i.test(value)) {
+          const htmlParagraphs = value
+            .split('\n\n')
+            .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+            .join('');
+          editorRef.current.innerHTML = htmlParagraphs;
+        } else {
+          editorRef.current.innerHTML = value || '';
+        }
+      }
+      calculateStats();
+    }
+  }, [value, showHtmlSource]);
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const currentText = textarea.value;
-    const selected = currentText.substring(start, end) || defaultPlaceholder;
-
-    const newText =
-      currentText.substring(0, start) +
-      before +
-      selected +
-      after +
-      currentText.substring(end);
-
-    onChange(newText);
-
-    // Restore focus & selection
-    setTimeout(() => {
-      textarea.focus();
-      const newCursor = start + before.length + selected.length;
-      textarea.setSelectionRange(newCursor, newCursor);
-    }, 0);
+  const calculateStats = () => {
+    if (!editorRef.current) return;
+    const text = editorRef.current.innerText || '';
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    setWordCount(words);
   };
 
-  const insertLinePrefix = (prefix) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  const handleInput = () => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML;
+      onChange(html);
+      calculateStats();
+    }
+  };
 
-    const start = textarea.selectionStart;
-    const currentText = textarea.value;
+  // Execute formatting commands
+  const execCmd = (cmd, val = null) => {
+    document.execCommand(cmd, false, val);
+    if (editorRef.current) {
+      editorRef.current.focus();
+      handleInput();
+    }
+  };
 
-    // Find the start of the current line
-    const lineStart = currentText.lastIndexOf('\n', start - 1) + 1;
-    const newText =
-      currentText.substring(0, lineStart) +
-      prefix +
-      currentText.substring(lineStart);
-
-    onChange(newText);
+  // Handle Pasting: Keep rich HTML structure from Google Docs, Word, or websites
+  const handlePaste = (e) => {
+    // When pasting into contentEditable, browser naturally takes the text/html clipboardData
+    // We let it happen naturally and calculate stats immediately after
     setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
-    }, 0);
+      handleInput();
+    }, 10);
+  };
+
+  // Insert Table
+  const handleInsertTable = () => {
+    let tableHtml = '<table style="width:100%; border-collapse: collapse; margin: 1rem 0;"><thead><tr>';
+    for (let c = 0; c < tableCols; c++) {
+      tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 8px; background-color: #f8fafc; font-weight: bold;">Header ${c + 1}</th>`;
+    }
+    tableHtml += '</tr></thead><tbody>';
+    for (let r = 0; r < tableRows; r++) {
+      tableHtml += '<tr>';
+      for (let c = 0; c < tableCols; c++) {
+        tableHtml += '<td style="border: 1px solid #cbd5e1; padding: 8px;">Cell</td>';
+      }
+      tableHtml += '</tr>';
+    }
+    tableHtml += '</tbody></table><p><br/></p>';
+    execCmd('insertHTML', tableHtml);
+    setShowTableModal(false);
+  };
+
+  // Insert Link
+  const handleInsertLink = () => {
+    const url = prompt('Enter link URL (e.g. https://...):');
+    if (url) {
+      execCmd('createLink', url);
+    }
+  };
+
+  // Insert Image
+  const handleInsertImage = () => {
+    const url = prompt('Enter Image URL (e.g. https://...):');
+    if (url) {
+      execCmd('insertHTML', `<img src="${url}" alt="Embedded Image" style="max-width:100%; border-radius: 12px; margin: 12px 0;" /><p><br/></p>`);
+    }
+  };
+
+  // Insert Blockquote / Callout
+  const handleInsertCallout = () => {
+    execCmd(
+      'insertHTML',
+      '<blockquote style="border-left: 4px solid #C59B27; background-color: #fffbeb; padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #334155;">Quote or Scripture passage here...</blockquote><p><br/></p>'
+    );
+  };
+
+  // Toggle Source Code
+  const handleToggleSource = () => {
+    if (showHtmlSource) {
+      // Apply source changes
+      onChange(htmlSource);
+      setShowHtmlSource(false);
+    } else {
+      setHtmlSource(editorRef.current?.innerHTML || '');
+      setShowHtmlSource(true);
+    }
   };
 
   return (
-    <div className="border border-slate-300 rounded-2xl overflow-hidden bg-white focus-within:border-[#C59B27] focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-xs">
-      {/* Editor Header: Label + Write / Preview Switcher */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50 border-b border-slate-200">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-          <span>{label}</span>
-        </label>
+    <div
+      className={`border border-slate-300 rounded-2xl overflow-hidden bg-white shadow-xs transition-all ${
+        isFullscreen ? 'fixed inset-4 z-50 flex flex-col shadow-2xl' : 'relative'
+      }`}
+    >
+      {/* Editor Header: Title + Features */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 text-white border-b border-slate-800">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#F4B942]" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+            {label}
+          </span>
+          <span className="text-[10px] text-slate-400 hidden sm:inline">
+            (Supports Google Docs copy-paste with tables, bold, and colors)
+          </span>
+        </div>
 
-        <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-lg text-xs">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setTab('write')}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
-              tab === 'write'
-                ? 'bg-white text-[#0F294A] shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            onClick={handleToggleSource}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
+              showHtmlSource
+                ? 'bg-[#F4B942] text-[#071B3B]'
+                : 'bg-white/10 text-slate-200 hover:bg-white/20'
             }`}
+            title="Toggle HTML Source"
           >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Write</span>
+            <Code className="w-3.5 h-3.5" />
+            <span>{showHtmlSource ? 'Visual Editor' : 'HTML Source'}</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setTab('preview')}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
-              tab === 'preview'
-                ? 'bg-white text-[#0F294A] shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 transition cursor-pointer"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
-            <Eye className="w-3.5 h-3.5 text-[#C59B27]" />
-            <span>Live Preview</span>
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
-      {/* Formatting Toolbar (Active when tab is 'write') */}
-      {tab === 'write' && (
-        <div className="flex items-center flex-wrap gap-1 px-3 py-1.5 bg-slate-100/70 border-b border-slate-200 text-slate-700 text-xs">
+      {/* Formatting & Insert Toolbar */}
+      {!showHtmlSource && (
+        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-100 border-b border-slate-200 text-slate-700 text-xs">
+          {/* Headings */}
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                execCmd('formatBlock', `<${e.target.value}>`);
+                e.target.value = '';
+              }
+            }}
+            className="px-2 py-1 rounded-lg border border-slate-300 bg-white text-xs font-semibold focus:outline-none"
+            defaultValue=""
+          >
+            <option value="" disabled>Style</option>
+            <option value="p">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+          </select>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Text Formatting */}
           <button
             type="button"
-            onClick={() => insertFormat('**', '**', 'bold text')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Bold (**text**)"
+            onClick={() => execCmd('bold')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Bold"
           >
-            <Bold className="w-4 h-4" />
+            <Bold className="w-4 h-4 font-bold" />
           </button>
           <button
             type="button"
-            onClick={() => insertFormat('*', '*', 'italic text')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Italic (*text*)"
+            onClick={() => execCmd('italic')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Italic"
           >
             <Italic className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => insertFormat('==', '==', 'highlighted text')}
-            className="p-1.5 hover:bg-amber-100 hover:text-amber-800 rounded transition cursor-pointer"
-            title="Gold Highlight (==text==)"
+            onClick={() => execCmd('underline')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Underline"
           >
-            <Highlighter className="w-4 h-4 text-[#C59B27]" />
-          </button>
-
-          <span className="w-px h-4 bg-slate-300 mx-1"></span>
-
-          <button
-            type="button"
-            onClick={() => insertLinePrefix('# ')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer font-bold"
-            title="Main Heading (# Heading)"
-          >
-            <Heading1 className="w-4 h-4" />
+            <Underline className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => insertLinePrefix('## ')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer font-bold"
-            title="Sub Heading (## Subheading)"
+            onClick={() => execCmd('strikeThrough')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Strikethrough"
           >
-            <Heading2 className="w-4 h-4" />
+            <Strikethrough className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Color Pickers */}
+          <label className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer flex items-center gap-1" title="Text Color">
+            <Palette className="w-4 h-4 text-slate-700" />
+            <input
+              type="color"
+              onChange={(e) => execCmd('foreColor', e.target.value)}
+              className="w-3.5 h-3.5 border-0 p-0 rounded cursor-pointer opacity-0 absolute"
+            />
+          </label>
+          <label className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer flex items-center gap-1" title="Highlight Color">
+            <Highlighter className="w-4 h-4 text-amber-500" />
+            <input
+              type="color"
+              onChange={(e) => execCmd('hiliteColor', e.target.value)}
+              className="w-3.5 h-3.5 border-0 p-0 rounded cursor-pointer opacity-0 absolute"
+            />
+          </label>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Alignment */}
+          <button
+            type="button"
+            onClick={() => execCmd('justifyLeft')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Align Left"
+          >
+            <AlignLeft className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => insertLinePrefix('> ')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Quote / Verse Box (> verse text)"
+            onClick={() => execCmd('justifyCenter')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Align Center"
           >
-            <Quote className="w-4 h-4 text-[#C59B27]" />
+            <AlignCenter className="w-4 h-4" />
           </button>
-
-          <span className="w-px h-4 bg-slate-300 mx-1"></span>
-
           <button
             type="button"
-            onClick={() => insertLinePrefix('- ')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Bullet List (- item)"
+            onClick={() => execCmd('justifyRight')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Align Right"
+          >
+            <AlignRight className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('justifyFull')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Justify"
+          >
+            <AlignJustify className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Lists */}
+          <button
+            type="button"
+            onClick={() => execCmd('insertUnorderedList')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Bullet List"
           >
             <List className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => insertLinePrefix('1. ')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Numbered List (1. item)"
+            onClick={() => execCmd('insertOrderedList')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Numbered List"
           >
             <ListOrdered className="w-4 h-4" />
           </button>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Insert Options (Google Docs Style) */}
           <button
             type="button"
-            onClick={() => insertLinePrefix('---\n')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Divider Line (---)"
+            onClick={() => setShowTableModal(true)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white transition cursor-pointer font-semibold text-slate-800"
+            title="Insert Table"
+          >
+            <TableIcon className="w-4 h-4 text-indigo-600" />
+            <span>Table</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInsertImage}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white transition cursor-pointer font-semibold text-slate-800"
+            title="Insert Image"
+          >
+            <ImageIcon className="w-4 h-4 text-emerald-600" />
+            <span>Image</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInsertLink}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Insert Link"
+          >
+            <LinkIcon className="w-4 h-4 text-blue-600" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInsertCallout}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Insert Quote / Callout"
+          >
+            <Quote className="w-4 h-4 text-amber-600" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => execCmd('insertHorizontalRule')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Horizontal Line"
           >
             <Minus className="w-4 h-4" />
           </button>
 
-          <span className="w-px h-4 bg-slate-300 mx-1"></span>
-
           <button
             type="button"
-            onClick={() => insertFormat('[', '](https://example.com)', 'Link Title')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Insert Link [text](url)"
+            onClick={() => execCmd('removeFormat')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer text-slate-500 hover:text-rose-600"
+            title="Clear Formatting"
           >
-            <LinkIcon className="w-4 h-4" />
+            <RemoveFormatting className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-slate-300 mx-1"></div>
+
+          {/* Undo / Redo */}
+          <button
+            type="button"
+            onClick={() => execCmd('undo')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Undo"
+          >
+            <Undo2 className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => insertFormat('![Image caption](', ')', 'https://images.unsplash.com/...')}
-            className="p-1.5 hover:bg-white hover:text-[#0F294A] rounded transition cursor-pointer"
-            title="Insert Image ![caption](url)"
+            onClick={() => execCmd('redo')}
+            className="p-1.5 hover:bg-white rounded-lg transition cursor-pointer"
+            title="Redo"
           >
-            <ImageIcon className="w-4 h-4" />
+            <Redo2 className="w-4 h-4" />
           </button>
-
-          <div className="ml-auto">
-            <button
-              type="button"
-              onClick={() => setShowHelp(!showHelp)}
-              className="p-1 text-slate-400 hover:text-slate-700 transition"
-              title="Formatting tips"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Formatting Help Dropdown */}
-      {showHelp && (
-        <div className="p-3 bg-amber-50/90 border-b border-amber-200 text-xs text-slate-800 space-y-1">
-          <p className="font-bold text-[#0F294A]">💡 Formatting Shortcuts:</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600">
-            <div><code>**Bold Text**</code></div>
-            <div><code>*Italic Text*</code></div>
-            <div><code>==Gold Highlight==</code></div>
-            <div><code># Main Heading</code></div>
-            <div><code>## Sub Heading</code></div>
-            <div><code>&gt; Quote / Scripture</code></div>
-            <div><code>- Bullet Point</code></div>
-            <div><code>[Link](https://...)</code></div>
-          </div>
         </div>
       )}
 
       {/* Editor Body */}
-      {tab === 'write' ? (
+      {showHtmlSource ? (
         <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          rows={rows}
-          className={`w-full p-4 text-xs sm:text-sm text-slate-900 focus:outline-none resize-y leading-relaxed font-sans ${
-            isTelugu ? 'font-telugu leading-loose' : ''
-          }`}
+          rows={isFullscreen ? 28 : rows}
+          value={htmlSource}
+          onChange={(e) => setHtmlSource(e.target.value)}
+          className="w-full p-4 font-mono text-xs text-slate-800 bg-slate-50 focus:outline-none flex-1 resize-y"
+          placeholder="Raw HTML code..."
         />
       ) : (
-        <div className="p-6 min-h-[220px] bg-slate-50/50">
-          {value.trim() ? (
-            <RichContentRenderer content={value} isTelugu={isTelugu} />
-          ) : (
-            <div className="text-slate-400 italic text-xs py-8 text-center">
-              Nothing to preview yet. Switch to "Write" and enter your text.
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onPaste={handlePaste}
+          className={`w-full p-4 text-slate-800 text-sm focus:outline-none overflow-y-auto leading-relaxed rich-html-content ${
+            isFullscreen ? 'flex-1' : ''
+          }`}
+          style={{ minHeight: `${rows * 26}px` }}
+          data-placeholder={placeholder}
+        />
+      )}
+
+      {/* Table Insertion Modal Dialog */}
+      {showTableModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <TableIcon className="w-4 h-4 text-indigo-600" />
+              <span>Insert Table</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Rows</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={tableRows}
+                  onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
+                  className="w-full p-2 rounded-xl border border-slate-300"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Columns</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={tableCols}
+                  onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
+                  className="w-full p-2 rounded-xl border border-slate-300"
+                />
+              </div>
             </div>
-          )}
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowTableModal(false)}
+                className="px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertTable}
+                className="px-4 py-1.5 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase shadow-sm cursor-pointer"
+              >
+                Insert Table
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Editor Footer: Word Count */}
+      <div className="px-3.5 py-1.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+        <span>Google Docs-grade rich paste enabled</span>
+        <span>{wordCount} words</span>
+      </div>
     </div>
   );
 }

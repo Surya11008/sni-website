@@ -120,11 +120,14 @@ export default function AdminPanel() {
   const [newContent, setNewContent] = useState({
     categorySlug: 'worship',
     pageSlug: 'sermons',
+    targetPages: ['sermons'],
     title: '',
     desc: '',
     imageUrl: '',
     videoUrl: '',
+    audioUrl: '',
     fileUrl: '',
+    downloadUrl: '',
   });
 
   // 5. Announcements State
@@ -270,6 +273,42 @@ export default function AdminPanel() {
       await fetchUsers();
     } catch (err) {
       showFeedback('error', 'Failed to update user: ' + err.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleRevokeUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to revoke this user account? They will lose access to the portal.')) return;
+    setUpdatingUserId(userId);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        status: 'revoked',
+        revokedAt: serverTimestamp(),
+      });
+      showFeedback('success', 'User access revoked.');
+      await fetchUsers();
+    } catch (err) {
+      showFeedback('error', 'Failed to revoke user: ' + err.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleResetTempPassword = async (userId, userEmail) => {
+    if (!window.confirm(`Reset temporary password for ${userEmail || 'this user'}? It will be set to "123456" valid for exactly 3 hours.`)) return;
+    setUpdatingUserId(userId);
+    try {
+      const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+      await updateDoc(doc(db, 'users', userId), {
+        tempPassword: '123456',
+        tempPasswordExpiresAt: expiresAt,
+        updatedAt: serverTimestamp(),
+      });
+      showFeedback('success', `Temporary password "123456" enabled for 3 hours (expires at ${new Date(expiresAt).toLocaleTimeString()}).`);
+      await fetchUsers();
+    } catch (err) {
+      showFeedback('error', 'Failed to set temporary password: ' + err.message);
     } finally {
       setUpdatingUserId(null);
     }
@@ -424,6 +463,7 @@ export default function AdminPanel() {
       const payload = {
         categorySlug: newContent.categorySlug,
         pageSlug: newContent.pageSlug,
+        targetPages: Array.isArray(newContent.targetPages) && newContent.targetPages.length > 0 ? newContent.targetPages : [newContent.pageSlug],
         title: cleanTitle,
         titleEn: cleanTitle,
         titleTe: cleanTitle,
@@ -432,7 +472,9 @@ export default function AdminPanel() {
         descTe: cleanDesc,
         imageUrl: newContent.imageUrl.trim() || null,
         videoUrl: newContent.videoUrl.trim() || null,
+        audioUrl: newContent.audioUrl.trim() || null,
         fileUrl: newContent.fileUrl.trim() || null,
+        downloadUrl: newContent.downloadUrl.trim() || null,
         updatedAt: serverTimestamp(),
       };
 
@@ -451,11 +493,14 @@ export default function AdminPanel() {
       setNewContent({
         categorySlug: 'worship',
         pageSlug: 'sermons',
+        targetPages: ['sermons'],
         title: '',
         desc: '',
         imageUrl: '',
         videoUrl: '',
+        audioUrl: '',
         fileUrl: '',
+        downloadUrl: '',
       });
       await fetchContents();
     } catch (err) {
@@ -470,11 +515,14 @@ export default function AdminPanel() {
     setNewContent({
       categorySlug: item.categorySlug || 'worship',
       pageSlug: item.pageSlug || 'sermons',
+      targetPages: item.targetPages || [item.pageSlug || 'sermons'],
       title: item.title || item.titleEn || item.titleTe || '',
       desc: item.desc || item.content || item.descEn || item.descTe || '',
       imageUrl: item.imageUrl || '',
       videoUrl: item.videoUrl || '',
+      audioUrl: item.audioUrl || '',
       fileUrl: item.fileUrl || '',
+      downloadUrl: item.downloadUrl || '',
     });
     setIsContentFormOpen(true);
   };
@@ -580,17 +628,11 @@ export default function AdminPanel() {
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Administrative Central Console</span>
             </div>
-            <h1
-              className={`text-3xl sm:text-4xl font-extrabold text-white tracking-tight ${
-                isTelugu ? 'font-krishna text-4xl' : 'font-serif'
-              }`}
-            >
-              {isTelugu ? 'అడ్మిన్ డాష్‌బోర్డ్' : 'Administration & Governance'}
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-serif">
+              Administration & Governance
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm max-w-2xl">
-              {isTelugu
-                ? 'యూజర్ల ఆమోదం, రోల్స్ కేటాయింపు, పేజీలు, కంటెంట్, ఫోటో గ్యాలరీ మరియు అధికారిక ప్రకటనల పూర్తి నియంత్రణ.'
-                : 'Approve new users, assign ministerial roles, manage website navigation, publish rich articles, manage photo galleries, and post announcements.'}
+              Approve new users, assign ministerial roles, manage website navigation, publish rich articles, manage photo galleries, and post announcements.
             </p>
           </div>
 
@@ -600,7 +642,7 @@ export default function AdminPanel() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/20"
             >
               <Eye className="w-4 h-4 text-[#F4B942]" />
-              <span>{isTelugu ? 'సైట్‌ను చూడండి' : 'View Public Website'}</span>
+              <span>View Public Website</span>
             </Link>
           </div>
         </div>
@@ -619,7 +661,7 @@ export default function AdminPanel() {
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>{isTelugu ? 'యూజర్లు & ఆమోదం' : 'Users & Approvals'}</span>
+            <span>Users & Approvals</span>
             {pendingUsersCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white font-mono text-[10px] animate-pulse">
                 {pendingUsersCount} pending
@@ -637,7 +679,7 @@ export default function AdminPanel() {
             }`}
           >
             <FolderTree className="w-4 h-4" />
-            <span>{isTelugu ? 'పేజీలు & మెనూలు' : 'Categories & Pages'}</span>
+            <span>Categories & Pages</span>
             <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono">
               {customPagesList.length}
             </span>
@@ -653,7 +695,7 @@ export default function AdminPanel() {
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>{isTelugu ? 'కంటెంట్ & ఆర్టికల్స్' : 'Articles & Content'}</span>
+            <span>Articles & Content</span>
             <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono">
               {contentsList.length}
             </span>
@@ -669,7 +711,7 @@ export default function AdminPanel() {
             }`}
           >
             <ImageIcon className="w-4 h-4" />
-            <span>{isTelugu ? 'ఫొటోలు & బ్యానర్లు' : 'Photos & Banners'}</span>
+            <span>Photos & Banners</span>
           </button>
 
           {/* Tab 5: Announcements */}
@@ -682,7 +724,7 @@ export default function AdminPanel() {
             }`}
           >
             <Megaphone className="w-4 h-4" />
-            <span>{isTelugu ? 'ప్రకటనలు' : 'Announcements'}</span>
+            <span>Announcements</span>
             <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono">
               {announcements.length}
             </span>
@@ -846,14 +888,14 @@ export default function AdminPanel() {
 
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        Role Title / పాత్ర పేరు *
+                        Role Title *
                       </label>
                       <input
                         type="text"
                         required
                         value={newRole.name}
                         onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                        placeholder="e.g. Choir Ministry / గానబృందం"
+                        placeholder="e.g. Choir Ministry"
                         className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
                       />
                     </div>
@@ -963,17 +1005,18 @@ export default function AdminPanel() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
-                      <th className="py-3 px-6">User / Email</th>
-                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-5">Full Name & ID</th>
+                      <th className="py-3 px-4">Contact (Email / Phone)</th>
+                      <th className="py-3 px-4">Approval Status</th>
                       <th className="py-3 px-4">Ministerial Role</th>
-                      <th className="py-3 px-4">Registered On</th>
-                      <th className="py-3 px-6 text-right">Approval Actions</th>
+                      <th className="py-3 px-4">Temp Pass (123456 - 3h)</th>
+                      <th className="py-3 px-5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                        <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
                           No users found matching current filter.
                         </td>
                       </tr>
@@ -981,12 +1024,18 @@ export default function AdminPanel() {
                       filteredUsers.map((u) => {
                         const isUserAdmin = u.role === 'admin' || u.email?.startsWith('surya');
                         const isApproved = isUserAdmin || u.status === 'approved';
-                        const isPending = !isApproved && u.status !== 'rejected';
-                        const isRejected = u.status === 'rejected';
+                        const isRevoked = u.status === 'revoked';
+                        const isPending = !isApproved && !isRevoked;
+
+                        const isTempPassActive =
+                          u.tempPassword === '123456' &&
+                          u.tempPasswordExpiresAt &&
+                          new Date(u.tempPasswordExpiresAt) > new Date();
 
                         return (
                           <tr key={u.id} className="hover:bg-slate-50 transition">
-                            <td className="py-4 px-6">
+                            {/* Full Name & User ID */}
+                            <td className="py-4 px-5">
                               <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#F4B942] font-bold flex items-center justify-center shrink-0 text-xs">
                                   {(u.displayName || u.email || 'U')[0].toUpperCase()}
@@ -995,32 +1044,44 @@ export default function AdminPanel() {
                                   <div className="font-bold text-slate-900 truncate">
                                     {u.displayName || 'Unnamed User'}
                                   </div>
-                                  <div className="text-[11px] text-slate-500 font-mono truncate">
-                                    {u.email}
+                                  <div className="text-[10px] text-slate-400 font-mono truncate">
+                                    ID: {u.id || u.uid}
                                   </div>
                                 </div>
                               </div>
                             </td>
 
+                            {/* Contact: Email & Phone */}
+                            <td className="py-4 px-4">
+                              <div className="text-xs text-slate-800 font-medium truncate">
+                                {u.email}
+                              </div>
+                              <div className="text-[11px] text-slate-500 font-mono">
+                                {u.phone ? `Ph: ${u.phone}` : 'No phone'}
+                              </div>
+                            </td>
+
+                            {/* Approval Status */}
                             <td className="py-4 px-4">
                               {isApproved ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
                                   <Check className="w-3 h-3 text-emerald-600" />
                                   <span>Approved</span>
                                 </span>
-                              ) : isPending ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-bold uppercase tracking-wider animate-pulse">
-                                  <Clock className="w-3 h-3 text-amber-600" />
-                                  <span>Pending Approval</span>
-                                </span>
-                              ) : (
+                              ) : isRevoked ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold uppercase tracking-wider">
                                   <UserX className="w-3 h-3 text-rose-600" />
-                                  <span>Rejected</span>
+                                  <span>Revoked</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                                  <Clock className="w-3 h-3 text-amber-600" />
+                                  <span>Pending</span>
                                 </span>
                               )}
                             </td>
 
+                            {/* Role Selector */}
                             <td className="py-4 px-4">
                               <select
                                 value={u.role || 'member'}
@@ -1036,47 +1097,65 @@ export default function AdminPanel() {
                               </select>
                             </td>
 
-                            <td className="py-4 px-4 text-[11px] text-slate-500">
-                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Active'}
+                            {/* Temporary Password Status */}
+                            <td className="py-4 px-4">
+                              {isTempPassActive ? (
+                                <div>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold text-[10px]">
+                                    <Lock className="w-3 h-3 text-amber-600" />
+                                    <span>123456</span>
+                                  </span>
+                                  <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
+                                    Expires {new Date(u.tempPasswordExpiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-slate-400">Regular</span>
+                              )}
                             </td>
 
-                            <td className="py-4 px-6 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                {isPending ? (
-                                  <>
-                                    <button
-                                      onClick={() => handleApproveUser(u.id, u.role || 'member')}
-                                      disabled={updatingUserId === u.id}
-                                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-                                      title="Approve Account"
-                                    >
-                                      <Check className="w-3.5 h-3.5" />
-                                      <span>Approve</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleRejectUser(u.id)}
-                                      disabled={updatingUserId === u.id}
-                                      className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
-                                      title="Reject Registration"
-                                    >
-                                      <UserX className="w-3.5 h-3.5" />
-                                    </button>
-                                  </>
-                                ) : (
+                            {/* Actions: Approve / Revoke / Reset Temp Pass (3h) / Delete */}
+                            <td className="py-4 px-5 text-right">
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {!isApproved && (
                                   <button
                                     onClick={() => handleApproveUser(u.id, u.role || 'member')}
                                     disabled={updatingUserId === u.id}
-                                    className="px-2.5 py-1 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-slate-100 text-[11px] font-semibold"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer"
+                                    title="Approve User"
                                   >
-                                    Re-Approve
+                                    <Check className="w-3 h-3" />
+                                    <span>Approve</span>
                                   </button>
                                 )}
+
+                                {isApproved && !isUserAdmin && (
+                                  <button
+                                    onClick={() => handleRevokeUser(u.id)}
+                                    disabled={updatingUserId === u.id}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition cursor-pointer"
+                                    title="Revoke access"
+                                  >
+                                    <UserX className="w-3 h-3 text-rose-600" />
+                                    <span>Revoke</span>
+                                  </button>
+                                )}
+
+                                <button
+                                  onClick={() => handleResetTempPassword(u.id, u.email)}
+                                  disabled={updatingUserId === u.id}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-300 transition cursor-pointer"
+                                  title="Reset password to 123456 valid for 3 hours"
+                                >
+                                  <KeyRound className="w-3 h-3 text-amber-600" />
+                                  <span>Reset 123456 (3h)</span>
+                                </button>
 
                                 {!isUserAdmin && (
                                   <button
                                     onClick={() => handleDeleteUser(u.id)}
-                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                                    title="Delete User"
+                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                    title="Delete User Record"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1293,13 +1372,14 @@ export default function AdminPanel() {
                   setNewContent({
                     categorySlug: 'worship',
                     pageSlug: 'sermons',
-                    titleEn: '',
-                    titleTe: '',
-                    descEn: '',
-                    descTe: '',
+                    targetPages: ['sermons'],
+                    title: '',
+                    desc: '',
                     imageUrl: '',
                     videoUrl: '',
+                    audioUrl: '',
                     fileUrl: '',
+                    downloadUrl: '',
                   });
                   setIsContentFormOpen(true);
                 }}
@@ -1366,28 +1446,28 @@ export default function AdminPanel() {
                   {/* Single Unified Title */}
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      Article Title / శీర్షిక *
+                      Article Title *
                     </label>
                     <input
                       type="text"
                       required
                       value={newContent.title}
                       onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
-                      placeholder="Enter article title / శీర్షిక..."
+                      placeholder="Enter article title..."
                       className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
                     />
                   </div>
 
                   {/* Single Unified Rich Content Editor */}
                   <RichTextEditor
-                    label="Article Content / వ్యాసం మేటర్ (Rich Text Editor)"
+                    label="Article Content (Google Docs Styled Editor)"
                     value={newContent.desc}
                     onChange={(val) => setNewContent({ ...newContent, desc: val })}
-                    placeholder="Write article content here. Headings (#), bold (**), quotes (>), etc. are supported..."
+                    placeholder="Write article content here. Formatting, tables, font styles, colors, and lists are preserved natively..."
                     rows={8}
                   />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">Image URL</label>
                       <input
@@ -1409,12 +1489,32 @@ export default function AdminPanel() {
                       />
                     </div>
                     <div>
+                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube / Direct)</label>
+                      <input
+                        type="url"
+                        value={newContent.audioUrl}
+                        onChange={(e) => setNewContent({ ...newContent, audioUrl: e.target.value })}
+                        placeholder="https://example.com/audio.mp3"
+                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
+                      />
+                    </div>
+                    <div>
                       <label className="block font-bold text-slate-700 mb-1">File / PDF URL</label>
                       <input
                         type="url"
                         value={newContent.fileUrl}
                         onChange={(e) => setNewContent({ ...newContent, fileUrl: e.target.value })}
                         placeholder="https://drive.google..."
+                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
+                      <input
+                        type="url"
+                        value={newContent.downloadUrl}
+                        onChange={(e) => setNewContent({ ...newContent, downloadUrl: e.target.value })}
+                        placeholder="https://drive.google.com/uc?export=download&id=..."
                         className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
                       />
                     </div>
