@@ -150,49 +150,44 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* 1. Category Hero Banner */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
-        <div className="max-w-7xl mx-auto space-y-5">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition font-bold">
-              <span>Home</span>
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-[#F4B942] font-bold">{categoryTitle}</span>
-          </nav>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#040E1E] text-[#F4B942] border border-[#F4B942]/40 flex items-center justify-center shrink-0 shadow-lg">
-                <PortalIcon name={currentCategory.iconName || 'BookOpen'} className="w-8 h-8" />
-              </div>
-              <div>
-                <h1
-                  className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight ${
-                    isTelugu ? 'font-krishna text-4xl sm:text-5xl' : 'font-serif'
-                  }`}
-                >
-                  {categoryTitle}
-                </h1>
-              </div>
-            </div>
-
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-amber-400 text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-md shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Add Page or Content</span>
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-14">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        {/* Clean, Lightweight Top Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div>
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2 flex-wrap">
+              <Link to="/" className="hover:text-[#0F294A] transition font-bold text-slate-600">
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-[#C59B27] font-bold uppercase">{categoryTitle}</span>
+            </nav>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-[#C59B27] flex items-center justify-center shrink-0">
+                <PortalIcon name={currentCategory.iconName || 'BookOpen'} className="w-5 h-5" />
+              </div>
+              <h1
+                className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F294A] tracking-tight ${
+                  isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
+                }`}
+              >
+                {categoryTitle}
+              </h1>
+            </div>
+          </div>
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-amber-400 text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Page or Content</span>
+            </Link>
+          )}
+        </div>
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
             <Loader2 className="w-10 h-10 animate-spin text-[#C59B27] mb-3" />

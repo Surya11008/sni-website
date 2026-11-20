@@ -302,56 +302,46 @@ export default function DynamicPage() {
         </div>
       )}
 
-      {/* 1. Cinematic Header Banner */}
-      <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#14294A] text-white pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
-        <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-xs text-slate-300 mb-6 flex-wrap">
-            <Link to="/" className="hover:text-[#F4B942] transition flex items-center gap-1 font-bold">
-              <span>Home</span>
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <Link to={`/category/${categorySlug}`} className="text-[#F4B942] font-semibold uppercase hover:underline">
-              {categoryTitle}
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-white font-bold">{pageTitle}</span>
-          </nav>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#F4B942] border border-[#F4B942]/40 text-xs font-semibold uppercase tracking-wider">
-                <PortalIcon name={page?.iconName || 'FileText'} className="w-3.5 h-3.5 text-[#F4B942]" />
-                <span>{categoryTitle}</span>
-              </div>
-
-              <h1
-                className={`text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight ${
-                  isTelugu ? 'font-krishna' : 'font-serif'
-                }`}
-              >
-                {pageTitle}
-              </h1>
-            </div>
-
-            {/* Quick Action Buttons for Admin */}
-            {isAdmin && (
-              <div className="shrink-0 flex items-center gap-3">
-                <button
-                  onClick={handleOpenAddForm}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-lg cursor-pointer"
-                >
-                  <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>+ Add Content to This Page</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* 2. Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Clean, Lightweight Top Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div>
+            {/* Breadcrumb Navigation */}
+            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2 flex-wrap">
+              <Link to="/" className="hover:text-[#0F294A] transition flex items-center gap-1 font-bold text-slate-600">
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <Link to={`/category/${categorySlug}`} className="text-[#C59B27] font-bold uppercase hover:underline">
+                {categoryTitle}
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-900 font-bold">{pageTitle}</span>
+            </nav>
+
+            <h1
+              className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0F294A] leading-tight ${
+                isTelugu ? 'font-krishna' : 'font-serif'
+              }`}
+            >
+              {pageTitle}
+            </h1>
+          </div>
+
+          {/* Quick Action Buttons for Admin */}
+          {isAdmin && (
+            <div className="shrink-0 flex items-center gap-3">
+              <button
+                onClick={handleOpenAddForm}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Add Content to This Page</span>
+              </button>
+            </div>
+          )}
+        </div>
         {/* Special Stars Program Mode Switcher (Tracker vs Articles) */}
         {isStarsPage && !activeArticle && !isFormOpen && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
