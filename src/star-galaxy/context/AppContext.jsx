@@ -284,7 +284,7 @@ export function AppProvider({ children, initialUser }) {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const saved = localStorage.getItem('star_galaxy_active_tab');
-      if (saved && ['activities', 'status', 'more', 'settings', 'admin'].includes(saved)) {
+      if (saved && ['activities', 'status', 'settings', 'admin'].includes(saved)) {
         return saved;
       }
     } catch (e) {}

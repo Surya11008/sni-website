@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Target, BarChart3, MoreHorizontal, Settings, ShieldCheck } from 'lucide-react';
+import { Target, BarChart3, Settings, ShieldCheck } from 'lucide-react';
 
 export default function BottomNav() {
   const { activeTab, setActiveTab, currentUser, t } = useApp();
@@ -8,7 +8,6 @@ export default function BottomNav() {
   const tabs = [
     { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
     { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
-    { id: 'more', label: t('navMore') || 'More', icon: MoreHorizontal, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
     { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings, color: 'text-slate-600', activeBg: 'bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/30 shadow-sm font-black' },
   ];
 

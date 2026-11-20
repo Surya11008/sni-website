@@ -10,7 +10,6 @@ import NotificationBanner from './components/common/NotificationBanner';
 
 import ActivitiesTab from './components/tabs/ActivitiesTab';
 import StatusTab from './components/tabs/StatusTab';
-import MoreTab from './components/tabs/MoreTab';
 import SettingsTab from './components/tabs/SettingsTab';
 import AdminTab from './components/admin/AdminTab';
 
@@ -125,38 +124,32 @@ function MainApp() {
 
   return (
     <div className="w-full flex flex-col selection:bg-amber-300">
-      <div className="flex-1 flex justify-center">
-        {/* Universal Responsive Container: compact mobile frame on phone, expansive modern portal on PC */}
-        <div className="w-full bg-white/95 rounded-3xl shadow-xl relative border-2 border-indigo-100 transition-all overflow-hidden">
-          {/* Floating In-App Notification Banner */}
-          <NotificationBanner
-            notification={activeNotification}
-            onClose={handleNotificationClose}
-            onClick={handleNotificationClick}
-          />
+      {/* Floating In-App Notification Banner */}
+      <NotificationBanner
+        notification={activeNotification}
+        onClose={handleNotificationClose}
+        onClick={handleNotificationClick}
+      />
 
-          {/* Top Header with Desktop Navigation Bar */}
-          <Header />
+      {/* Top Header with Desktop Navigation Bar */}
+      <Header />
 
-          {/* Main Content Area */}
-          <main className="flex-1 px-3 sm:px-6 md:px-8 pt-3 md:pt-6 pb-24 md:pb-12 overflow-y-auto min-h-[600px]">
-            {activeTab === 'activities' && <ActivitiesTab />}
-            {activeTab === 'status' && <StatusTab />}
-            {activeTab === 'more' && <MoreTab />}
-            {activeTab === 'settings' && <SettingsTab />}
-            {activeTab === 'admin' && <AdminTab />}
-          </main>
+      {/* Main Content Area - Native Full Page Flow */}
+      <main className="w-full px-2 sm:px-4 md:px-6 pt-4 pb-24 md:pb-12 min-h-[600px]">
+        {activeTab === 'activities' && <ActivitiesTab />}
+        {activeTab === 'status' && <StatusTab />}
+        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === 'admin' && <AdminTab />}
+      </main>
 
-          {/* Bottom Navigation for Mobile (hidden on PC/desktop screens) */}
-          <BottomNav />
+      {/* Bottom Navigation for Mobile (hidden on PC/desktop screens) */}
+      <BottomNav />
 
-          {/* PIN Security Modal */}
-          <PinLockModal />
+      {/* PIN Security Modal */}
+      <PinLockModal />
 
-          {/* 👑 Admin New User Pending Approvals Popup Modal */}
-          <AdminPendingApprovalsModal />
-        </div>
-      </div>
+      {/* 👑 Admin New User Pending Approvals Popup Modal */}
+      <AdminPendingApprovalsModal />
     </div>
   );
 }

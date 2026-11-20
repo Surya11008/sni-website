@@ -7,7 +7,6 @@ import {
   User,
   Target,
   BarChart3,
-  MoreHorizontal,
   Settings,
   ShieldCheck,
   Languages,
@@ -63,7 +62,6 @@ export default function Header() {
   const navTabs = [
     { id: 'activities', label: t('navActivities') || 'Activities', icon: Target },
     { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3 },
-    { id: 'more', label: t('navMore') || 'More', icon: MoreHorizontal },
     { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings },
   ];
 
@@ -72,7 +70,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-[58px] sm:top-[64px] z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-3 sm:px-6 md:px-8 py-2.5 sm:py-3 font-sans">
+    <header className="sticky top-[58px] sm:top-[64px] z-30 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-xs px-3 sm:px-6 py-2.5 sm:py-3 mb-6 font-sans">
       {/* Main Top Header: Logo on Left, Desktop Nav in Center, Stars, Language & Logout on Right */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Brand Logo & Title: ONE SINGLE LINE, NO "WELCOME TO" */}
