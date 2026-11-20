@@ -95,8 +95,7 @@ export default function AdminPanel() {
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [newRole, setNewRole] = useState({
     id: '',
-    nameEn: '',
-    nameTe: '',
+    name: '',
     description: '',
     allowedCategories: ['home', 'worship', 'bible-truth'],
   });
@@ -105,13 +104,10 @@ export default function AdminPanel() {
   const [customPagesList, setCustomPagesList] = useState([]);
   const [newPage, setNewPage] = useState({
     categorySlug: 'home',
-    customCategoryTitleEn: '',
-    customCategoryTitleTe: '',
-    titleEn: '',
-    titleTe: '',
+    customCategoryTitle: '',
+    title: '',
     pageSlug: '',
-    descEn: '',
-    descTe: '',
+    desc: '',
     externalUrl: '',
     iconName: 'FileText',
   });
@@ -124,10 +120,8 @@ export default function AdminPanel() {
   const [newContent, setNewContent] = useState({
     categorySlug: 'worship',
     pageSlug: 'sermons',
-    titleEn: '',
-    titleTe: '',
-    descEn: '',
-    descTe: '',
+    title: '',
+    desc: '',
     imageUrl: '',
     videoUrl: '',
     fileUrl: '',
@@ -137,10 +131,8 @@ export default function AdminPanel() {
   const [announcements, setAnnouncements] = useState([]);
   const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
   const [newAnnouncement, setNewAnnouncement] = useState({
-    titleEn: '',
-    titleTe: '',
-    descEn: '',
-    descTe: '',
+    title: '',
+    desc: '',
     imageUrl: '',
     date: new Date().toISOString().split('T')[0],
   });
@@ -314,28 +306,29 @@ export default function AdminPanel() {
   const handleCreateRole = async (e) => {
     e.preventDefault();
     const roleId = newRole.id.trim().toLowerCase().replace(/\s+/g, '_');
-    if (!roleId || !newRole.nameEn.trim()) {
-      alert('Please provide a Role ID and English Name.');
+    if (!roleId || !newRole.name.trim()) {
+      alert('Please provide a Role ID and Role Name.');
       return;
     }
 
     try {
+      const cleanName = newRole.name.trim();
       const payload = {
         id: roleId,
-        nameEn: newRole.nameEn.trim(),
-        nameTe: newRole.nameTe.trim() || newRole.nameEn.trim(),
+        name: cleanName,
+        nameEn: cleanName,
+        nameTe: cleanName,
         description: newRole.description.trim(),
         allowedCategories: newRole.allowedCategories,
         createdAt: serverTimestamp(),
       };
 
       await setDoc(doc(db, 'roles', roleId), payload);
-      showFeedback('success', `Role "${newRole.nameEn}" created successfully!`);
+      showFeedback('success', `Role "${cleanName}" created successfully!`);
       setIsAddRoleOpen(false);
       setNewRole({
         id: '',
-        nameEn: '',
-        nameTe: '',
+        name: '',
         description: '',
         allowedCategories: ['home', 'worship', 'bible-truth'],
       });
@@ -350,46 +343,48 @@ export default function AdminPanel() {
   // ----------------------------------------------------
   const handleAddPage = async (e) => {
     e.preventDefault();
-    if (!newPage.titleEn.trim()) {
-      alert('Please provide a page title in English.');
+    if (!newPage.title.trim()) {
+      alert('Please provide a page title.');
       return;
     }
 
     setLoading(true);
     try {
+      const cleanTitle = newPage.title.trim();
       const generatedSlug =
         newPage.pageSlug.trim() ||
-        newPage.titleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
       const payload = {
         categorySlug: newPage.categorySlug,
         pageSlug: generatedSlug,
-        titleEn: newPage.titleEn.trim(),
-        titleTe: newPage.titleTe.trim() || newPage.titleEn.trim(),
-        descEn: newPage.descEn.trim(),
-        descTe: newPage.descTe.trim() || newPage.descEn.trim(),
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        desc: newPage.desc.trim(),
+        descEn: newPage.desc.trim(),
+        descTe: newPage.desc.trim(),
         externalUrl: newPage.externalUrl.trim() || null,
         iconName: newPage.iconName.trim() || 'FileText',
         createdAt: serverTimestamp(),
       };
 
       if (newPage.categorySlug === 'custom') {
-        payload.customCategorySlug = newPage.customCategoryTitleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        payload.customCategoryTitleEn = newPage.customCategoryTitleEn.trim();
-        payload.customCategoryTitleTe = newPage.customCategoryTitleTe.trim() || newPage.customCategoryTitleEn.trim();
+        const catName = newPage.customCategoryTitle.trim() || 'Custom';
+        payload.customCategorySlug = catName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        payload.customCategoryTitle = catName;
+        payload.customCategoryTitleEn = catName;
+        payload.customCategoryTitleTe = catName;
       }
 
       await addDoc(collection(db, 'portal_pages'), payload);
-      showFeedback('success', `Page "${newPage.titleEn}" added to navigation!`);
+      showFeedback('success', `Page "${cleanTitle}" added to navigation!`);
       setNewPage({
         categorySlug: 'home',
-        customCategoryTitleEn: '',
-        customCategoryTitleTe: '',
-        titleEn: '',
-        titleTe: '',
+        customCategoryTitle: '',
+        title: '',
         pageSlug: '',
-        descEn: '',
-        descTe: '',
+        desc: '',
         externalUrl: '',
         iconName: 'FileText',
       });
@@ -417,20 +412,24 @@ export default function AdminPanel() {
   // ----------------------------------------------------
   const handleSaveContent = async (e) => {
     e.preventDefault();
-    if (!newContent.titleEn.trim() && !newContent.titleTe.trim()) {
-      alert('Please provide a title in English or Telugu.');
+    if (!newContent.title.trim()) {
+      alert('Please provide a title for the content.');
       return;
     }
 
     setLoading(true);
     try {
+      const cleanTitle = newContent.title.trim();
+      const cleanDesc = newContent.desc.trim();
       const payload = {
         categorySlug: newContent.categorySlug,
         pageSlug: newContent.pageSlug,
-        titleEn: newContent.titleEn.trim(),
-        titleTe: newContent.titleTe.trim() || newContent.titleEn.trim(),
-        descEn: newContent.descEn.trim(),
-        descTe: newContent.descTe.trim() || newContent.descEn.trim(),
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        desc: cleanDesc,
+        descEn: cleanDesc,
+        descTe: cleanDesc,
         imageUrl: newContent.imageUrl.trim() || null,
         videoUrl: newContent.videoUrl.trim() || null,
         fileUrl: newContent.fileUrl.trim() || null,
@@ -452,10 +451,8 @@ export default function AdminPanel() {
       setNewContent({
         categorySlug: 'worship',
         pageSlug: 'sermons',
-        titleEn: '',
-        titleTe: '',
-        descEn: '',
-        descTe: '',
+        title: '',
+        desc: '',
         imageUrl: '',
         videoUrl: '',
         fileUrl: '',
@@ -473,10 +470,8 @@ export default function AdminPanel() {
     setNewContent({
       categorySlug: item.categorySlug || 'worship',
       pageSlug: item.pageSlug || 'sermons',
-      titleEn: item.titleEn || item.title || '',
-      titleTe: item.titleTe || '',
-      descEn: item.descEn || item.desc || item.content || '',
-      descTe: item.descTe || '',
+      title: item.title || item.titleEn || item.titleTe || '',
+      desc: item.desc || item.content || item.descEn || item.descTe || '',
       imageUrl: item.imageUrl || '',
       videoUrl: item.videoUrl || '',
       fileUrl: item.fileUrl || '',
@@ -500,18 +495,22 @@ export default function AdminPanel() {
   // ----------------------------------------------------
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
-    if (!newAnnouncement.titleEn.trim() && !newAnnouncement.titleTe.trim()) {
-      alert('Please provide a title in English or Telugu.');
+    if (!newAnnouncement.title.trim()) {
+      alert('Please provide an announcement title.');
       return;
     }
 
     setLoading(true);
     try {
+      const cleanTitle = newAnnouncement.title.trim();
+      const cleanDesc = newAnnouncement.desc.trim();
       const payload = {
-        titleEn: newAnnouncement.titleEn.trim(),
-        titleTe: newAnnouncement.titleTe.trim() || newAnnouncement.titleEn.trim(),
-        descEn: newAnnouncement.descEn.trim(),
-        descTe: newAnnouncement.descTe.trim() || newAnnouncement.descEn.trim(),
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        desc: cleanDesc,
+        descEn: cleanDesc,
+        descTe: cleanDesc,
         imageUrl: newAnnouncement.imageUrl.trim() || null,
         date: newAnnouncement.date || new Date().toISOString().split('T')[0],
         category: 'New Updates',
@@ -529,10 +528,8 @@ export default function AdminPanel() {
 
       setEditingAnnouncementId(null);
       setNewAnnouncement({
-        titleEn: '',
-        titleTe: '',
-        descEn: '',
-        descTe: '',
+        title: '',
+        desc: '',
         imageUrl: '',
         date: new Date().toISOString().split('T')[0],
       });
@@ -847,32 +844,18 @@ export default function AdminPanel() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">
-                          Role Title (English) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newRole.nameEn}
-                          onChange={(e) => setNewRole({ ...newRole, nameEn: e.target.value })}
-                          placeholder="e.g. Choir Ministry"
-                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                          Role Title (Telugu - తెలుగు)
-                        </label>
-                        <input
-                          type="text"
-                          value={newRole.nameTe}
-                          onChange={(e) => setNewRole({ ...newRole, nameTe: e.target.value })}
-                          placeholder="ఉదా: గానబృందం"
-                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
-                        />
-                      </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Role Title / పాత్ర పేరు *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newRole.name}
+                        onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                        placeholder="e.g. Choir Ministry / గానబృందం"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
+                      />
                     </div>
 
                     <div>
@@ -1149,63 +1132,34 @@ export default function AdminPanel() {
                 </div>
 
                 {newPage.categorySlug === 'custom' && (
-                  <div className="space-y-3 p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        New Category Name (English) *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={newPage.customCategoryTitleEn}
-                        onChange={(e) =>
-                          setNewPage({ ...newPage, customCategoryTitleEn: e.target.value })
-                        }
-                        placeholder="e.g. Fellowship"
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                        New Category Name (Telugu)
-                      </label>
-                      <input
-                        type="text"
-                        value={newPage.customCategoryTitleTe}
-                        onChange={(e) =>
-                          setNewPage({ ...newPage, customCategoryTitleTe: e.target.value })
-                        }
-                        placeholder="విభాగం పేరు (తెలుగులో)"
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white font-telugu"
-                      />
-                    </div>
+                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40">
+                    <label className="block font-bold text-slate-700 mb-1">
+                      New Category Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newPage.customCategoryTitle}
+                      onChange={(e) =>
+                        setNewPage({ ...newPage, customCategoryTitle: e.target.value })
+                      }
+                      placeholder="e.g. Fellowship"
+                      className="w-full p-2 rounded-xl border border-slate-300 bg-white"
+                    />
                   </div>
                 )}
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Page Title (English) *
+                    Page Title / పేజీ శీర్షిక *
                   </label>
                   <input
                     type="text"
                     required
-                    value={newPage.titleEn}
-                    onChange={(e) => setNewPage({ ...newPage, titleEn: e.target.value })}
+                    value={newPage.title}
+                    onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
                     placeholder="e.g. Doctrine Studies"
                     className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                    Page Title (Telugu - తెలుగు)
-                  </label>
-                  <input
-                    type="text"
-                    value={newPage.titleTe}
-                    onChange={(e) => setNewPage({ ...newPage, titleTe: e.target.value })}
-                    placeholder="పేజీ శీర్షిక (తెలుగులో)"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
                   />
                 </div>
 
@@ -1409,49 +1363,28 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Article Title (English) *
-                      </label>
-                      <input
-                        type="text"
-                        value={newContent.titleEn}
-                        onChange={(e) => setNewContent({ ...newContent, titleEn: e.target.value })}
-                        placeholder="Article Headline"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                        Article Title (Telugu - తెలుగు)
-                      </label>
-                      <input
-                        type="text"
-                        value={newContent.titleTe}
-                        onChange={(e) => setNewContent({ ...newContent, titleTe: e.target.value })}
-                        placeholder="వార్త లేదా సందేశ శీర్షిక"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
-                      />
-                    </div>
+                  {/* Single Unified Title */}
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Article Title / శీర్షిక *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newContent.title}
+                      onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
+                      placeholder="Enter article title / శీర్షిక..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
+                    />
                   </div>
 
-                  {/* Rich Text Editor: English */}
+                  {/* Single Unified Rich Content Editor */}
                   <RichTextEditor
-                    label="Article Body Content (English) - Supports Headings, Bold, Lists, Quotes"
-                    value={newContent.descEn}
-                    onChange={(val) => setNewContent({ ...newContent, descEn: val })}
-                    rows={6}
-                  />
-
-                  {/* Rich Text Editor: Telugu */}
-                  <RichTextEditor
-                    label="Article Body Content (Telugu - తెలుగు)"
-                    value={newContent.descTe}
-                    onChange={(val) => setNewContent({ ...newContent, descTe: val })}
-                    isTelugu={true}
-                    rows={6}
+                    label="Article Content / వ్యాసం మేటర్ (Rich Text Editor)"
+                    value={newContent.desc}
+                    onChange={(val) => setNewContent({ ...newContent, desc: val })}
+                    placeholder="Write article content here. Headings (#), bold (**), quotes (>), etc. are supported..."
+                    rows={8}
                   />
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
@@ -1519,7 +1452,7 @@ export default function AdminPanel() {
                       <div className="aspect-video w-full overflow-hidden bg-slate-100">
                         <img
                           src={item.imageUrl}
-                          alt={item.titleEn}
+                          alt={item.title || item.titleEn || 'Article'}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -1529,15 +1462,10 @@ export default function AdminPanel() {
                         <span>{item.categorySlug} / {item.pageSlug}</span>
                       </div>
                       <h4 className="text-sm font-bold text-slate-900 line-clamp-2">
-                        {item.titleEn || item.titleTe}
+                        {item.title || item.titleEn || item.titleTe}
                       </h4>
-                      {item.titleTe && item.titleEn && (
-                        <p className="text-xs font-telugu text-slate-600 truncate mt-0.5">
-                          {item.titleTe}
-                        </p>
-                      )}
                       <p className="text-xs text-slate-500 line-clamp-3 mt-2 leading-relaxed">
-                        {item.descEn || item.descTe}
+                        {item.desc || item.content || item.descEn || item.descTe}
                       </p>
                     </div>
                   </div>
@@ -1614,41 +1542,23 @@ export default function AdminPanel() {
 
               <form onSubmit={handleSaveAnnouncement} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Title (English) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Title / ప్రకటన శీర్షిక *</label>
                   <input
                     type="text"
-                    value={newAnnouncement.titleEn}
-                    onChange={(e) => setNewAnnouncement({ ...newAnnouncement, titleEn: e.target.value })}
-                    placeholder="Announcement Title"
+                    required
+                    value={newAnnouncement.title}
+                    onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                    placeholder="Announcement Title / శీర్షిక"
                     className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 font-telugu">Title (Telugu)</label>
-                  <input
-                    type="text"
-                    value={newAnnouncement.titleTe}
-                    onChange={(e) => setNewAnnouncement({ ...newAnnouncement, titleTe: e.target.value })}
-                    placeholder="ప్రకటన శీర్షిక (తెలుగు)"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
-                  />
-                </div>
-
-                {/* Rich Description */}
+                {/* Single Unified Rich Description */}
                 <RichTextEditor
-                  label="Description (English)"
-                  value={newAnnouncement.descEn}
-                  onChange={(val) => setNewAnnouncement({ ...newAnnouncement, descEn: val })}
-                  rows={4}
-                />
-
-                <RichTextEditor
-                  label="Description (Telugu - తెలుగు)"
-                  value={newAnnouncement.descTe}
-                  onChange={(val) => setNewAnnouncement({ ...newAnnouncement, descTe: val })}
-                  isTelugu={true}
-                  rows={4}
+                  label="Description / వివరాలు (Rich Text Editor)"
+                  value={newAnnouncement.desc}
+                  onChange={(val) => setNewAnnouncement({ ...newAnnouncement, desc: val })}
+                  rows={5}
                 />
 
                 <div>
@@ -1679,10 +1589,8 @@ export default function AdminPanel() {
                       onClick={() => {
                         setEditingAnnouncementId(null);
                         setNewAnnouncement({
-                          titleEn: '',
-                          titleTe: '',
-                          descEn: '',
-                          descTe: '',
+                          title: '',
+                          desc: '',
                           imageUrl: '',
                           date: new Date().toISOString().split('T')[0],
                         });
@@ -1721,10 +1629,10 @@ export default function AdminPanel() {
                           {a.date || 'Update'}
                         </span>
                         <h4 className="text-xs sm:text-sm font-bold text-slate-900 mt-0.5">
-                          {a.titleEn || a.titleTe}
+                          {a.title || a.titleEn || a.titleTe}
                         </h4>
                         <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                          {a.descEn || a.descTe}
+                          {a.desc || a.descEn || a.descTe}
                         </p>
                       </div>
 
@@ -1733,10 +1641,8 @@ export default function AdminPanel() {
                           onClick={() => {
                             setEditingAnnouncementId(a.id);
                             setNewAnnouncement({
-                              titleEn: a.titleEn || a.title || '',
-                              titleTe: a.titleTe || '',
-                              descEn: a.descEn || a.desc || '',
-                              descTe: a.descTe || '',
+                              title: a.title || a.titleEn || a.titleTe || '',
+                              desc: a.desc || a.descEn || a.descTe || '',
                               imageUrl: a.imageUrl || '',
                               date: a.date || new Date().toISOString().split('T')[0],
                             });

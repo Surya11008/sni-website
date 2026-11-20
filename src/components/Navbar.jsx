@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from './PortalIcon';
+import WorldLanguageTranslator from './WorldLanguageTranslator';
 import {
   Globe,
   LogIn,
@@ -128,18 +129,8 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Language toggle pill */}
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-[#F4B942] hover:text-[#071B3B] transition-all text-[11px] font-semibold text-slate-200 cursor-pointer"
-              title="Switch Language / భాష మార్చండి"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#F4B942]" />
-              <span>{language === 'en' ? 'తెలుగు' : 'English'}</span>
-              <span className="text-[9px] px-1 bg-white/20 rounded font-mono">
-                {language.toUpperCase()}
-              </span>
-            </button>
+            {/* World Language Translator Globe Button */}
+            <WorldLanguageTranslator />
           </div>
         </div>
       </div>

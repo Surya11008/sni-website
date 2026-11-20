@@ -42,12 +42,10 @@ export default function PhotoGalleryManager({
   const [editingPhoto, setEditingPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form states
+  // Form states - Unified Single Language Input
   const [imageUrl, setImageUrl] = useState('');
-  const [titleEn, setTitleEn] = useState('');
-  const [titleTe, setTitleTe] = useState('');
-  const [captionEn, setCaptionEn] = useState('');
-  const [captionTe, setCaptionTe] = useState('');
+  const [title, setTitle] = useState('');
+  const [caption, setCaption] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
 
   // Active enlarged photo view
@@ -93,10 +91,8 @@ export default function PhotoGalleryManager({
   const handleOpenAdd = () => {
     setEditingPhoto(null);
     setImageUrl('');
-    setTitleEn('');
-    setTitleTe('');
-    setCaptionEn('');
-    setCaptionTe('');
+    setTitle('');
+    setCaption('');
     setLinkUrl('');
     setIsFormOpen(true);
   };
@@ -105,10 +101,8 @@ export default function PhotoGalleryManager({
     if (e) e.stopPropagation();
     setEditingPhoto(photo);
     setImageUrl(photo.imageUrl || '');
-    setTitleEn(photo.titleEn || photo.title || '');
-    setTitleTe(photo.titleTe || '');
-    setCaptionEn(photo.captionEn || photo.caption || '');
-    setCaptionTe(photo.captionTe || '');
+    setTitle(photo.title || photo.titleEn || photo.titleTe || '');
+    setCaption(photo.caption || photo.captionEn || photo.captionTe || '');
     setLinkUrl(photo.linkUrl || '');
     setIsFormOpen(true);
   };
@@ -133,13 +127,17 @@ export default function PhotoGalleryManager({
 
     setSubmitting(true);
     try {
+      const cleanTitle = title.trim() || 'Featured Photo';
+      const cleanCaption = caption.trim();
       const payload = {
         targetPage,
         imageUrl: imageUrl.trim(),
-        titleEn: titleEn.trim() || 'Featured Photo',
-        titleTe: titleTe.trim() || titleEn.trim() || 'విశేష చిత్రం',
-        captionEn: captionEn.trim(),
-        captionTe: captionTe.trim() || captionEn.trim(),
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        caption: cleanCaption,
+        captionEn: cleanCaption,
+        captionTe: cleanCaption,
         linkUrl: linkUrl.trim() || null,
         updatedAt: serverTimestamp(),
       };
@@ -237,60 +235,30 @@ export default function PhotoGalleryManager({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Title (English)
-                </label>
-                <input
-                  type="text"
-                  value={titleEn}
-                  onChange={(e) => setTitleEn(e.target.value)}
-                  placeholder="e.g. Fellowship Gathering"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                  Title (Telugu - తెలుగు)
-                </label>
-                <input
-                  type="text"
-                  value={titleTe}
-                  onChange={(e) => setTitleTe(e.target.value)}
-                  placeholder="ఉదాహరణ: సమాజ సహవాసం"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs font-telugu"
-                />
-              </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Title / శీర్షిక
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Photo title / శీర్షిక..."
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Caption / Description (English)
-                </label>
-                <textarea
-                  rows={2}
-                  value={captionEn}
-                  onChange={(e) => setCaptionEn(e.target.value)}
-                  placeholder="Short description or context..."
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 font-telugu">
-                  Caption / Description (Telugu - తెలుగు)
-                </label>
-                <textarea
-                  rows={2}
-                  value={captionTe}
-                  onChange={(e) => setCaptionTe(e.target.value)}
-                  placeholder="వివరణ లేదా సమాచారం..."
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs font-telugu"
-                />
-              </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Caption / Description (వివరణ)
+              </label>
+              <textarea
+                rows={2}
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Photo caption or description..."
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+              />
             </div>
 
             <div>

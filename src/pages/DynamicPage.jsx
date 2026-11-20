@@ -55,11 +55,9 @@ export default function DynamicPage() {
   const [editingItem, setEditingItem] = useState(null); // null if new, or item object
   const [formSubmitting, setFormSubmitting] = useState(false);
 
-  // Form Fields
-  const [titleEn, setTitleEn] = useState('');
-  const [titleTe, setTitleTe] = useState('');
-  const [descEn, setDescEn] = useState('');
-  const [descTe, setDescTe] = useState('');
+  // Form Fields - Unified Single Language Input
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
@@ -123,10 +121,8 @@ export default function DynamicPage() {
   // Open Form for Adding New Content
   const handleOpenAddForm = () => {
     setEditingItem(null);
-    setTitleEn('');
-    setTitleTe('');
-    setDescEn('');
-    setDescTe('');
+    setTitle('');
+    setDesc('');
     setImageUrl('');
     setVideoUrl('');
     setFileUrl('');
@@ -138,10 +134,8 @@ export default function DynamicPage() {
   const handleOpenEditForm = (item, e) => {
     if (e) e.stopPropagation();
     setEditingItem(item);
-    setTitleEn(item.titleEn || '');
-    setTitleTe(item.titleTe || '');
-    setDescEn(item.descEn || item.desc || item.content || '');
-    setDescTe(item.descTe || '');
+    setTitle(item.title || item.titleEn || item.titleTe || '');
+    setDesc(item.desc || item.content || item.descEn || item.descTe || '');
     setImageUrl(item.imageUrl || '');
     setVideoUrl(item.videoUrl || '');
     setFileUrl(item.fileUrl || '');
@@ -152,8 +146,8 @@ export default function DynamicPage() {
   // Handle Save (Add or Update)
   const handleSaveContent = async (e) => {
     e.preventDefault();
-    if (!titleEn.trim() && !titleTe.trim()) {
-      alert('Please provide a title in English or Telugu.');
+    if (!title.trim()) {
+      alert('Please provide a title for the content.');
       return;
     }
 
@@ -162,10 +156,12 @@ export default function DynamicPage() {
       const payload = {
         categorySlug: categorySlug || '',
         pageSlug: pageSlug || '',
-        titleEn: titleEn.trim(),
-        titleTe: titleTe.trim() || titleEn.trim(),
-        descEn: descEn.trim(),
-        descTe: descTe.trim() || descEn.trim(),
+        title: title.trim(),
+        titleEn: title.trim(),
+        titleTe: title.trim(),
+        desc: desc.trim(),
+        descEn: desc.trim(),
+        descTe: desc.trim(),
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
         fileUrl: fileUrl.trim() || null,
@@ -361,52 +357,28 @@ export default function DynamicPage() {
             </div>
 
             <form onSubmit={handleSaveContent} className="space-y-6">
-              {/* Titles: English & Telugu */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Title (English) *
-                  </label>
-                  <input
-                    type="text"
-                    value={titleEn}
-                    onChange={(e) => setTitleEn(e.target.value)}
-                    placeholder="Enter article title in English..."
-                    className="w-full p-3 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Title (Telugu - తెలుగు) *
-                  </label>
-                  <input
-                    type="text"
-                    value={titleTe}
-                    onChange={(e) => setTitleTe(e.target.value)}
-                    placeholder="ఆర్టికల్ శీర్షికను తెలుగులో నమోదు చేయండి..."
-                    className="w-full p-3 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 font-telugu"
-                  />
-                </div>
+              {/* Single Unified Title */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Title / శీర్షిక *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter title here / శీర్షికను ఇక్కడ నమోదు చేయండి..."
+                  className="w-full p-3 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 font-medium"
+                  required
+                />
               </div>
 
-              {/* Rich Content Editor: English */}
+              {/* Single Unified Rich Content Editor */}
               <RichTextEditor
-                label="Article Body (English)"
-                value={descEn}
-                onChange={setDescEn}
-                placeholder="Write article content in English. Use # for Headings, > for Quotes/Scripture, **bold**, etc."
-                rows={7}
-              />
-
-              {/* Rich Content Editor: Telugu */}
-              <RichTextEditor
-                label="Article Body (Telugu - తెలుగు)"
-                value={descTe}
-                onChange={setDescTe}
-                isTelugu={true}
-                placeholder="తెలుగు వివరణ లేదా సందేశాన్ని ఇక్కడ రాయండి. ముఖ్యాంశాలు, లేఖన వాక్యాలు, కొటేషన్లు..."
-                rows={7}
+                label="Content / సమాచారం (Rich Text Editor)"
+                value={desc}
+                onChange={setDesc}
+                placeholder="Write your article, sermon, or update content here. You can format with Headings, Quotes, Bold, Bullet points, etc..."
+                rows={9}
               />
 
               {/* Media Attachments: Image, Video, File */}

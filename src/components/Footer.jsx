@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { launchEcosystemApp } from '../utils/sso';
+import WorldLanguageTranslator from './WorldLanguageTranslator';
 import {
   Award,
   ClipboardCheck,
@@ -75,7 +76,7 @@ export default function Footer() {
                   SNI
                 </span>
                 <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] text-white/95 uppercase leading-none mt-1">
-                  {isTelugu ? 'సూపర్ నేచురల్ ఇంటెలిజెన్స్' : 'SUPER NATURAL INTELLIGENCE'}
+                  SUPER NATURAL INTELLIGENCE
                 </span>
               </div>
             </div>
@@ -185,15 +186,7 @@ export default function Footer() {
                 <span className="text-slate-400">Member Verification Policy</span>
               </li>
               <li className="pt-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="inline-flex items-center gap-1.5 text-xs text-[#C59B27] hover:underline cursor-pointer"
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>
-                    Language: {language === 'en' ? 'English (Switch to తెలుగు)' : 'తెలుగు (Switch to English)'}
-                  </span>
-                </button>
+                <WorldLanguageTranslator />
               </li>
             </ul>
           </div>

@@ -208,18 +208,19 @@ export const LanguageProvider = ({ children }) => {
 
   const getText = (docItem, fieldPrefix = 'title') => {
     if (!docItem) return '';
-    if (language === 'te') {
-      const teKey = `${fieldPrefix}Te`;
-      if (docItem[teKey]) return docItem[teKey];
+    if (docItem[fieldPrefix]) return docItem[fieldPrefix];
+    if (language === 'te' && docItem[`${fieldPrefix}Te`]) {
+      return docItem[`${fieldPrefix}Te`];
     }
-    const enKey = `${fieldPrefix}En`;
-    return docItem[enKey] || docItem[fieldPrefix] || '';
+    return docItem[`${fieldPrefix}En`] || docItem[`${fieldPrefix}Te`] || '';
   };
 
   const getDesc = (docItem) => {
     if (!docItem) return '';
+    if (docItem.desc) return docItem.desc;
+    if (docItem.content) return docItem.content;
     if (language === 'te' && docItem.descTe) return docItem.descTe;
-    return docItem.descEn || docItem.desc || docItem.description || '';
+    return docItem.descEn || docItem.descTe || docItem.description || '';
   };
 
   return (

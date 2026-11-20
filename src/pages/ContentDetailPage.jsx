@@ -35,12 +35,10 @@ export default function ContentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Admin edit form state
+  // Admin edit form state - Unified Single Language Input
   const [isEditing, setIsEditing] = useState(false);
-  const [titleEn, setTitleEn] = useState('');
-  const [titleTe, setTitleTe] = useState('');
-  const [descEn, setDescEn] = useState('');
-  const [descTe, setDescTe] = useState('');
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
@@ -67,10 +65,8 @@ export default function ContentDetailPage() {
           const data = { id: snap.id, ...snap.data() };
           if (isMounted) {
             setArticle(data);
-            setTitleEn(data.titleEn || data.title || '');
-            setTitleTe(data.titleTe || '');
-            setDescEn(data.descEn || data.desc || data.content || '');
-            setDescTe(data.descTe || '');
+            setTitle(data.title || data.titleEn || data.titleTe || '');
+            setDesc(data.desc || data.content || data.descEn || data.descTe || '');
             setImageUrl(data.imageUrl || '');
             setVideoUrl(data.videoUrl || '');
             setFileUrl(data.fileUrl || '');
@@ -83,10 +79,8 @@ export default function ContentDetailPage() {
             const data = { id: annSnap.id, ...annSnap.data(), categorySlug: 'home', pageSlug: 'announcements' };
             if (isMounted) {
               setArticle(data);
-              setTitleEn(data.titleEn || data.title || '');
-              setTitleTe(data.titleTe || '');
-              setDescEn(data.descEn || data.desc || '');
-              setDescTe(data.descTe || '');
+              setTitle(data.title || data.titleEn || data.titleTe || '');
+              setDesc(data.desc || data.content || data.descEn || data.descTe || '');
               setImageUrl(data.imageUrl || '');
             }
           } else {
@@ -119,18 +113,20 @@ export default function ContentDetailPage() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!titleEn.trim() && !titleTe.trim()) {
-      alert('Please provide a title in English or Telugu.');
+    if (!title.trim()) {
+      alert('Please provide a title for the content.');
       return;
     }
 
     setSubmitting(true);
     try {
       const payload = {
-        titleEn: titleEn.trim(),
-        titleTe: titleTe.trim() || titleEn.trim(),
-        descEn: descEn.trim(),
-        descTe: descTe.trim() || descEn.trim(),
+        title: title.trim(),
+        titleEn: title.trim(),
+        titleTe: title.trim(),
+        desc: desc.trim(),
+        descEn: desc.trim(),
+        descTe: desc.trim(),
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
         fileUrl: fileUrl.trim() || null,
@@ -277,40 +273,24 @@ export default function ContentDetailPage() {
             </h3>
 
             <form onSubmit={handleUpdate} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Title (English)</label>
-                  <input
-                    type="text"
-                    value={titleEn}
-                    onChange={(e) => setTitleEn(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 font-telugu">Title (Telugu)</label>
-                  <input
-                    type="text"
-                    value={titleTe}
-                    onChange={(e) => setTitleTe(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
-                  />
-                </div>
+              {/* Single Unified Title */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Title / శీర్షిక *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500/20"
+                  required
+                />
               </div>
 
+              {/* Single Unified Rich Content Editor */}
               <RichTextEditor
-                label="Article Body (English)"
-                value={descEn}
-                onChange={setDescEn}
-                rows={6}
-              />
-
-              <RichTextEditor
-                label="Article Body (Telugu - తెలుగు)"
-                value={descTe}
-                onChange={setDescTe}
-                isTelugu={true}
-                rows={6}
+                label="Content / మేటర్ (Rich Text Editor)"
+                value={desc}
+                onChange={setDesc}
+                rows={8}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
