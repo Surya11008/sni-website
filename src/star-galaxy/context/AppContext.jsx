@@ -31,6 +31,7 @@ import {
   saveEncouragementMessageToFirestore,
   deleteEncouragementMessageFromFirestore,
   subscribeUserGospelDiary,
+  subscribeAllGospelDiaries,
   saveUserGospelDiaryToFirestore,
   subscribeSharedFiles,
   saveSharedFileToFirestore,
@@ -1059,42 +1060,80 @@ export function AppProvider({ children, initialUser }) {
     };
   }, [currentUser?.id]);
 
-  // Realtime Gospel Diary Sync for the active member (User-Isolated)
+  // Realtime Gospel Diary Sync
   useEffect(() => {
     if (!isFirebaseConfigured() || !currentUser?.id) return;
-    const unsubDiary = subscribeUserGospelDiary(currentUser.id, (entries) => {
-      if (Array.isArray(entries)) {
+    const isAdmin = currentUser.role === 'admin' ||
+      currentUser.email === 'surya11008@sni.org.in' ||
+      String(currentUser.id).toLowerCase() === 'surya11008';
+
+    if (isAdmin) {
+      // 👑 Admin sees everyone's diary in real time
+      const unsubAllDiary = subscribeAllGospelDiaries((allDiaries) => {
         setData(prev => ({
           ...prev,
           gospelDiary: {
             ...prev.gospelDiary,
-            [currentUser.id]: entries,
+            ...allDiaries,
           },
         }));
-      }
-    });
-    return () => unsubDiary();
-  }, [currentUser?.id]);
+      });
+      return () => unsubAllDiary();
+    } else {
+      // Normal Member gets only their own isolated diary
+      const unsubDiary = subscribeUserGospelDiary(currentUser.id, (entries) => {
+        if (Array.isArray(entries)) {
+          setData(prev => ({
+            ...prev,
+            gospelDiary: {
+              ...prev.gospelDiary,
+              [currentUser.id]: entries,
+            },
+          }));
+        }
+      });
+      return () => unsubDiary();
+    }
+  }, [currentUser?.id, currentUser?.role]);
 
-  // Realtime User-Isolated Activities Sync (100% Confidential to Active Member)
+  // Realtime Activities Sync
   useEffect(() => {
     if (!isFirebaseConfigured() || !currentUser?.id) return;
-    const unsubUserActivities = subscribeUserActivities(currentUser.id, (cloudData) => {
-      if (cloudData) {
+    const isAdmin = currentUser.role === 'admin' ||
+      currentUser.email === 'surya11008@sni.org.in' ||
+      String(currentUser.id).toLowerCase() === 'surya11008';
+
+    if (isAdmin) {
+      // 👑 Admin sees all members' activities in real time
+      const unsubAllActivities = subscribeAllActivities((allActs) => {
         setData(prev => ({
           ...prev,
           activitiesData: {
             ...prev.activitiesData,
-            [currentUser.id]: cloudData,
+            ...allActs,
           },
         }));
-        try {
-          localStorage.setItem(`star_galaxy_activities_${currentUser.id}`, JSON.stringify(cloudData));
-        } catch (e) {}
-      }
-    });
-    return () => unsubUserActivities();
-  }, [currentUser?.id]);
+      });
+      return () => unsubAllActivities();
+    } else {
+      // Normal Member gets only their own isolated activities
+      const unsubUserActivities = subscribeUserActivities(currentUser.id, (cloudData) => {
+        if (cloudData) {
+          setData(prev => ({
+            ...prev,
+            activitiesData: {
+              ...prev.activitiesData,
+              [currentUser.id]: cloudData,
+            },
+          }));
+          try {
+            localStorage.setItem(`star_galaxy_activities_${currentUser.id}`, JSON.stringify(cloudData));
+          } catch (e) {}
+        }
+      });
+      return () => unsubUserActivities();
+    }
+  }, [currentUser?.id, currentUser?.role]);
 
   // 🎨 Realtime Lights (Theme) & Font Engine
   useEffect(() => {
@@ -3482,20 +3521,25 @@ export function AppProvider({ children, initialUser }) {
     }));
   };
 
-  // 📖 Gospel Diary Actions (Strictly User Isolated)
-  const saveGospelDiaryEntry = async (entry) => {
+  // 📖 Gospel Diary Actions (Admin full control + per-user isolation)
+  const saveGospelDiaryEntry = async (entry, targetUserId = null) => {
     if (!currentUser) return { success: false, error: 'No active user' };
     const entryId = entry.id || ('diary-' + Date.now());
+    const ownerId = targetUserId || entry.userId || currentUser.id;
+    const ownerUser = (data.users || []).find(u => String(u.id) === String(ownerId));
+    const authorName = entry.authorName || (ownerId === currentUser.id ? currentUser.name : (ownerUser?.name || ownerId));
+
     const fullEntry = {
       ...entry,
       id: entryId,
-      userId: currentUser.id,
-      authorName: currentUser.name,
+      userId: ownerId,
+      authorName: authorName,
       createdAt: entry.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     setData(prev => {
-      const userDiary = prev.gospelDiary?.[currentUser.id] || [];
+      const userDiary = prev.gospelDiary?.[ownerId] || [];
       const existingIdx = userDiary.findIndex(d => d.id === entryId);
       let updatedUserDiary;
       if (existingIdx !== -1) {
@@ -3508,7 +3552,7 @@ export function AppProvider({ children, initialUser }) {
         ...prev,
         gospelDiary: {
           ...prev.gospelDiary,
-          [currentUser.id]: updatedUserDiary,
+          [ownerId]: updatedUserDiary,
         },
       };
     });
@@ -3517,26 +3561,37 @@ export function AppProvider({ children, initialUser }) {
       await fetch('/api/diary/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, entry: fullEntry }),
+        body: JSON.stringify({ userId: ownerId, entry: fullEntry }),
       });
     } catch (e) {}
 
-    const curEntries = data.gospelDiary?.[currentUser.id] || [];
+    const curEntries = data.gospelDiary?.[ownerId] || [];
     const updatedForCloud = [fullEntry, ...curEntries.filter(d => d.id !== entryId)];
-    saveUserGospelDiaryToFirestore(currentUser.id, updatedForCloud);
+    saveUserGospelDiaryToFirestore(ownerId, updatedForCloud);
 
     return { success: true, entry: fullEntry };
   };
 
-  const deleteGospelDiaryEntry = async (entryId) => {
+  const deleteGospelDiaryEntry = async (entryId, targetUserId = null) => {
     if (!currentUser) return;
+    let ownerId = targetUserId;
+    if (!ownerId) {
+      for (const [uid, entries] of Object.entries(data.gospelDiary || {})) {
+        if (Array.isArray(entries) && entries.some(d => d.id === entryId)) {
+          ownerId = uid;
+          break;
+        }
+      }
+    }
+    ownerId = ownerId || currentUser.id;
+
     setData(prev => {
-      const userDiary = prev.gospelDiary?.[currentUser.id] || [];
+      const userDiary = prev.gospelDiary?.[ownerId] || [];
       return {
         ...prev,
         gospelDiary: {
           ...prev.gospelDiary,
-          [currentUser.id]: userDiary.filter(d => d.id !== entryId),
+          [ownerId]: userDiary.filter(d => d.id !== entryId),
         },
       };
     });
@@ -3545,12 +3600,12 @@ export function AppProvider({ children, initialUser }) {
       await fetch('/api/diary/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, entryId }),
+        body: JSON.stringify({ userId: ownerId, entryId }),
       });
     } catch (e) {}
 
-    const curEntries = data.gospelDiary?.[currentUser.id] || [];
-    saveUserGospelDiaryToFirestore(currentUser.id, curEntries.filter(d => d.id !== entryId));
+    const curEntries = data.gospelDiary?.[ownerId] || [];
+    saveUserGospelDiaryToFirestore(ownerId, curEntries.filter(d => d.id !== entryId));
   };
 
   return (

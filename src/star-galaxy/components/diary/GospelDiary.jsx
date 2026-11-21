@@ -41,7 +41,16 @@ export default function GospelDiary({ onBack }) {
   const canModifyDates = canUserModifyPastDates(currentUser);
   const isTodayOnlyUser = !canModifyDates;
   const isMember = currentUser?.role === 'member';
-  const isAdminOrManager = currentUser?.role === 'admin' || currentUser?.role === 'manager';
+  const isAdmin = currentUser?.role === 'admin' ||
+    currentUser?.email === 'surya11008@sni.org.in' ||
+    String(currentUser?.id).toLowerCase() === 'surya11008';
+  const isAdminOrManager = isAdmin || currentUser?.role === 'manager';
+
+  // Admin filter & assignment state
+  const [adminMemberFilter, setAdminMemberFilter] = useState('ALL'); // 'ALL' or specific userId
+  const [authorTargetId, setAuthorTargetId] = useState(currentUser?.id);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingUserId, setEditingUserId] = useState(null);
 
   // Diary Form state
   const [entryDate, setEntryDate] = useState(todayStr);
@@ -57,13 +66,68 @@ export default function GospelDiary({ onBack }) {
   const [activeDate, setActiveDate] = useState(new Date()); // Controls calendar page
   const [filterDate, setFilterDate] = useState(null); // Optional date filter clicked on calendar
 
-  // Get user's diary entries - strictly private to currentUser only
+  // All approved users for Admin selector
+  const allApprovedUsers = useMemo(() => {
+    return (data.users || []).filter(u => u.status === 'approved' || u.role === 'admin');
+  }, [data.users]);
+
+  // Get user's diary entries:
+  // - For Admin: views ALL members' entries or filtered by member, with search & sort
+  // - For Member: views strictly their own private entries
   const userEntries = useMemo(() => {
     if (!currentUser?.id) return [];
-    const entries = data.gospelDiary?.[currentUser.id] || [];
-    // Strict isolation: only entries belonging strictly to currentUser.id
-    return entries.filter(e => String(e.userId) === String(currentUser.id));
-  }, [data.gospelDiary, currentUser?.id]);
+    if (!isAdmin) {
+      const entries = data.gospelDiary?.[currentUser.id] || [];
+      return entries.filter(e => String(e.userId) === String(currentUser.id));
+    }
+
+    // 👑 Admin view: full visibility
+    let list = [];
+    if (adminMemberFilter === 'ALL') {
+      Object.entries(data.gospelDiary || {}).forEach(([uid, entries]) => {
+        if (Array.isArray(entries)) {
+          entries.forEach(e => {
+            const author = allApprovedUsers.find(u => String(u.id) === String(e.userId || uid));
+            list.push({
+              ...e,
+              userId: e.userId || uid,
+              authorName: e.authorName || author?.name || (e.userId || uid),
+            });
+          });
+        }
+      });
+    } else {
+      const entries = data.gospelDiary?.[adminMemberFilter] || [];
+      const author = allApprovedUsers.find(u => String(u.id) === String(adminMemberFilter));
+      list = entries.map(e => ({
+        ...e,
+        userId: e.userId || adminMemberFilter,
+        authorName: e.authorName || author?.name || adminMemberFilter,
+      }));
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(e =>
+        (e.title && e.title.toLowerCase().includes(q)) ||
+        (e.writing && e.writing.toLowerCase().includes(q)) ||
+        (e.authorName && e.authorName.toLowerCase().includes(q)) ||
+        (e.date && e.date.includes(q))
+      );
+    }
+
+    // Sort by date desc, then createdAt desc
+    list.sort((a, b) => {
+      const dateA = a.date || '';
+      const dateB = b.date || '';
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    return list;
+  }, [data.gospelDiary, currentUser?.id, isAdmin, adminMemberFilter, searchTerm, allApprovedUsers]);
 
   // Map of dates with entries -> set of 'YYYY-MM-DD'
   const datesWithEntries = useMemo(() => {
@@ -77,15 +141,18 @@ export default function GospelDiary({ onBack }) {
     return map;
   }, [userEntries]);
 
-  // Handle Form Submit
+  // Handle Form Submit (Admin can save for any member or themselves)
   const handleSaveEntry = async (e) => {
     e.preventDefault();
     if (!entryTitle.trim() && !entryWriting.trim() && entryMediaItems.length === 0) return;
 
+    const ownerId = editingUserId || (isAdmin ? (authorTargetId || currentUser?.id) : currentUser?.id);
+    const ownerUser = allApprovedUsers.find(u => String(u.id) === String(ownerId));
+
     const entry = {
       id: editingId || ('diary-' + Date.now()),
-      userId: currentUser?.id,
-      authorName: currentUser?.name,
+      userId: ownerId,
+      authorName: ownerUser?.name || (ownerId === currentUser?.id ? currentUser?.name : ownerId),
       date: isTodayOnlyUser ? todayStr : (entryDate || todayStr),
       title: entryTitle.trim() || 'Daily Reflection',
       writing: entryWriting.trim(),
@@ -94,9 +161,10 @@ export default function GospelDiary({ onBack }) {
       createdAt: new Date().toISOString(),
     };
 
-    await saveGospelDiaryEntry(entry);
+    await saveGospelDiaryEntry(entry, ownerId);
     setSaveToast(editingId ? 'Diary note updated!' : 'Diary note saved with checkmark ✓');
     setEditingId(null);
+    setEditingUserId(null);
     setEntryTitle('');
     setEntryWriting('');
     setSelectedMood('😊');
@@ -107,6 +175,7 @@ export default function GospelDiary({ onBack }) {
 
   const handleEdit = (entry) => {
     setEditingId(entry.id);
+    setEditingUserId(entry.userId || currentUser?.id);
     setEntryDate(entry.date || todayStr);
     setEntryTitle(entry.title || '');
     setEntryWriting(entry.writing || '');
@@ -119,11 +188,13 @@ export default function GospelDiary({ onBack }) {
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this diary entry?')) {
-      deleteGospelDiaryEntry(id);
-      if (editingId === id) {
+  const handleDelete = (entry) => {
+    const title = entry.title || 'Untitled Note';
+    if (window.confirm(`Are you sure you want to delete diary entry "${title}"?`)) {
+      deleteGospelDiaryEntry(entry.id, entry.userId);
+      if (editingId === entry.id) {
         setEditingId(null);
+        setEditingUserId(null);
         setEntryTitle('');
         setEntryWriting('');
         setEntryMediaItems([]);
@@ -305,6 +376,82 @@ export default function GospelDiary({ onBack }) {
         </div>
       )}
 
+      {/* 👑 Admin Master Control Panel Bar */}
+      {isAdmin && (
+        <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100/60 p-4 sm:p-5 rounded-3xl border-2 border-amber-300 shadow-sm space-y-3 animate-in fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-9 h-9 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-lg shadow-xs">
+                👑
+              </span>
+              <div>
+                <h3 className="font-extrabold text-xs sm:text-sm text-amber-950 flex items-center gap-2">
+                  <span>Admin Master Control: Gospel Diary</span>
+                  <span className="text-[10px] bg-amber-300/80 text-amber-900 px-2 py-0.5 rounded-full font-black uppercase">
+                    Full Control Active
+                  </span>
+                </h3>
+                <p className="text-[11px] text-amber-800 font-medium">
+                  Full visibility & control: view all members' notes, edit, change, and remove any entry.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-900 font-extrabold text-xs border border-amber-300">
+                Total Notes: {userEntries.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Filter & Search Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2.5 border-t border-amber-200/70">
+            <div>
+              <label className="text-[11px] font-bold text-amber-950 block mb-1">
+                Filter by Member (సభ్యుని ఎంచుకోండి):
+              </label>
+              <select
+                value={adminMemberFilter}
+                onChange={(e) => setAdminMemberFilter(e.target.value)}
+                className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-400 focus:outline-none cursor-pointer"
+              >
+                <option value="ALL">👥 All Members (అందరి డైరీలు ఒకేచోట)</option>
+                {allApprovedUsers.map(u => {
+                  const count = (data.gospelDiary?.[u.id] || []).length;
+                  return (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role || 'member'}) - {count} notes
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-amber-950 block mb-1">
+                Search Notes (వెతకండి):
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by title, reflection, author, date..."
+                  className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-amber-400 focus:outline-none pr-12"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-800 hover:text-amber-950 px-1.5 py-0.5 rounded bg-amber-100"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 📝 Diary Input Form (Today Date, Title, Writing, Mood/Feel Emoji) */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -319,6 +466,7 @@ export default function GospelDiary({ onBack }) {
               type="button"
               onClick={() => {
                 setEditingId(null);
+                setEditingUserId(null);
                 setEntryTitle('');
                 setEntryWriting('');
                 setEntryMediaItems([]);
@@ -338,6 +486,36 @@ export default function GospelDiary({ onBack }) {
         )}
 
         <form onSubmit={handleSaveEntry} className="space-y-4">
+          {/* Admin Member Target Assignment */}
+          {isAdmin && (
+            <div className="p-3 bg-amber-50/70 rounded-2xl border border-amber-200">
+              <label className="text-xs font-bold text-amber-950 block mb-1">
+                👑 Create / Assign Note for Member:
+              </label>
+              <select
+                value={editingUserId || authorTargetId}
+                disabled={!!editingId}
+                onChange={(e) => setAuthorTargetId(e.target.value)}
+                className={`w-full px-3 py-2 text-xs font-bold bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-400 ${
+                  editingId ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                <option value={currentUser?.id}>Me ({currentUser?.name || 'Admin'})</option>
+                {allApprovedUsers
+                  .filter(u => String(u.id) !== String(currentUser?.id))
+                  .map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role || 'member'})
+                    </option>
+                  ))}
+              </select>
+              {editingId && (
+                <span className="text-[10px] text-amber-800 mt-1 block font-semibold">
+                  Note is owned by: {allApprovedUsers.find(u => String(u.id) === String(editingUserId))?.name || editingUserId}
+                </span>
+              )}
+            </div>
+          )}
           {/* Row 1: Date & Mood Emoji Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
             <div className="sm:col-span-4">
@@ -684,15 +862,29 @@ export default function GospelDiary({ onBack }) {
               >
                 {/* Note Header */}
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl p-1.5 bg-amber-50 rounded-2xl border border-amber-200" title="Mood">
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-2xl p-1.5 bg-amber-50 rounded-2xl border border-amber-200 shrink-0" title="Mood">
                       {entry.mood || '😊'}
                     </span>
                     <div>
+                      {/* Author badge if Admin or multiple members */}
+                      {(isAdmin || entry.authorName) && (
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span className="text-[10px] font-black text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 inline-flex items-center gap-1">
+                            <span>👤</span>
+                            <span>{entry.authorName || entry.userId || 'Member'}</span>
+                          </span>
+                          {entry.userId === currentUser?.id && (
+                            <span className="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded-full">
+                              You
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <h5 className="font-black text-xs sm:text-sm text-slate-900 leading-tight">
                         <LinkifiedText text={entry.title} />
                       </h5>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
                         <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                           {entry.date}
                         </span>
@@ -704,25 +896,27 @@ export default function GospelDiary({ onBack }) {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(entry)}
-                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 transition-colors"
-                      title="Edit Note"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(entry.id)}
-                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 transition-colors"
-                      title="Delete Note"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {/* Actions (Admin can edit/delete ANY note, Members can edit/delete their own) */}
+                  {(isAdmin || entry.userId === currentUser?.id) && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(entry)}
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 transition-colors cursor-pointer"
+                        title="Edit / Change Note"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(entry)}
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 transition-colors cursor-pointer"
+                        title="Delete / Remove Note"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Note Body */}

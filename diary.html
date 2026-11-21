@@ -323,7 +323,50 @@
 
         async function syncDiaryFromCloud() {
             if (!currentUser) return;
+            const isAdmin = currentUser.role === 'admin' ||
+                currentUser.userId === 'surya11008' ||
+                (currentUser.email && currentUser.email.toLowerCase().startsWith('surya'));
+
             try {
+                if (isAdmin) {
+                    // Admin fetches all members' diary documents
+                    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/gospel_diary?key=${FIREBASE_API_KEY}`;
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const allDocs = data.documents || [];
+                        const allList = [];
+                        allDocs.forEach(d => {
+                            const pathParts = d.name.split('/');
+                            const docOwnerId = decodeURIComponent(pathParts[pathParts.length - 1]);
+                            const raw = d.fields?.entries?.arrayValue?.values || [];
+                            raw.forEach(v => {
+                                const m = v.mapValue?.fields || {};
+                                allList.push({
+                                    id: m.id?.stringValue || ('diary-' + Date.now()),
+                                    userId: docOwnerId,
+                                    title: m.title?.stringValue || 'Gospel Note',
+                                    date: m.date?.stringValue || new Date().toISOString().slice(0, 10),
+                                    writing: m.writing?.stringValue || '',
+                                    authorName: m.authorName?.stringValue || (docOwnerId === currentUser.userId ? (currentUser.fullName || docOwnerId) : docOwnerId),
+                                    createdAt: m.createdAt?.stringValue || new Date().toISOString()
+                                });
+                            });
+                        });
+
+                        if (allList.length > 0) {
+                            allList.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                            diaryEntries = allList;
+                            try {
+                                localStorage.setItem(getStorageKey(), JSON.stringify(diaryEntries));
+                            } catch(e) {}
+                            renderEntries();
+                            return;
+                        }
+                    }
+                }
+
+                // Regular member fetches their own doc
                 const docId = encodeURIComponent(currentUser.userId);
                 const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/gospel_diary/${docId}?key=${FIREBASE_API_KEY}`;
                 const res = await fetch(url);
@@ -334,6 +377,7 @@
                         const m = v.mapValue?.fields || {};
                         return {
                             id: m.id?.stringValue || ('diary-' + Date.now()),
+                            userId: currentUser.userId,
                             title: m.title?.stringValue || 'Gospel Note',
                             date: m.date?.stringValue || new Date().toISOString().slice(0, 10),
                             writing: m.writing?.stringValue || '',
@@ -356,20 +400,23 @@
             renderEntries();
         }
 
-        async function saveDiaryToCloud(entries) {
+        async function saveDiaryToCloud(entries, targetUserId = null) {
             if (!currentUser) return;
+            const ownerId = targetUserId || currentUser.userId;
             try {
-                const docId = encodeURIComponent(currentUser.userId);
+                const docId = encodeURIComponent(ownerId);
                 const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/gospel_diary/${docId}?key=${FIREBASE_API_KEY}`;
                 
-                const firestoreValues = entries.map(item => ({
+                // Only save entries belonging to this owner
+                const ownerEntries = entries.filter(e => !e.userId || e.userId === ownerId);
+                const firestoreValues = ownerEntries.map(item => ({
                     mapValue: {
                         fields: {
                             id: { stringValue: item.id || ('diary-' + Date.now()) },
                             title: { stringValue: item.title || '' },
                             date: { stringValue: item.date || '' },
                             writing: { stringValue: item.writing || '' },
-                            authorName: { stringValue: item.authorName || currentUser.fullName || currentUser.userId },
+                            authorName: { stringValue: item.authorName || currentUser.fullName || ownerId },
                             createdAt: { stringValue: item.createdAt || new Date().toISOString() }
                         }
                     }
@@ -378,6 +425,18 @@
                 await fetch(url, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            entries: {
+                                arrayValue: { values: firestoreValues }
+                            }
+                        }
+                    })
+                });
+            } catch(e) {
+                console.warn('Cloud save error:', e);
+            }
+        }
                     body: JSON.stringify({
                         fields: {
                             entries: {
@@ -523,18 +582,22 @@
                 // Edit existing
                 const idx = diaryEntries.findIndex(e => e.id === idInput);
                 if (idx !== -1) {
+                    const targetOwner = diaryEntries[idx].userId || currentUser.userId;
                     diaryEntries[idx] = {
                         ...diaryEntries[idx],
                         date: dateInput,
                         title: titleInput,
                         writing: writingInput,
+                        userId: targetOwner,
                         updatedAt: new Date().toISOString()
                     };
+                    saveDiaryToCloud(diaryEntries, targetOwner);
                 }
             } else {
                 // Add new
                 const newEntry = {
                     id: 'diary-' + Date.now(),
+                    userId: currentUser.userId,
                     date: dateInput,
                     title: titleInput,
                     writing: writingInput,
@@ -542,6 +605,7 @@
                     createdAt: new Date().toISOString()
                 };
                 diaryEntries.unshift(newEntry);
+                saveDiaryToCloud(diaryEntries, currentUser.userId);
             }
 
             // Save locally
@@ -551,9 +615,6 @@
 
             renderEntries();
             closeEntryModal();
-
-            // Sync with Cloud Firestore
-            await saveDiaryToCloud(diaryEntries);
 
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save Entry';
@@ -565,13 +626,15 @@
         }
 
         async function deleteEntry(id) {
+            const entryToDelete = diaryEntries.find(e => e.id === id);
             if (confirm('Are you sure you want to delete this diary entry?')) {
+                const targetOwner = entryToDelete?.userId || currentUser.userId;
                 diaryEntries = diaryEntries.filter(e => e.id !== id);
                 try {
                     localStorage.setItem(getStorageKey(), JSON.stringify(diaryEntries));
                 } catch(e) {}
                 renderEntries();
-                await saveDiaryToCloud(diaryEntries);
+                await saveDiaryToCloud(diaryEntries, targetOwner);
             }
         }
 

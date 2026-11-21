@@ -30,16 +30,22 @@ export default function Header() {
     t,
   } = useApp();
 
+  const isAdmin = currentUser?.role === 'admin' ||
+    currentUser?.email === 'surya11008@sni.org.in' ||
+    String(currentUser?.id).toLowerCase() === 'surya11008';
+
   const pendingApprovalsCount = (data?.users || []).filter(u => {
     if (!u || u.role === 'admin' || u.id === 'surya11008') return false;
     const s = (u.status || '').toLowerCase().trim();
     return (s === 'pending' || s === 'waiting') && s !== 'approved';
   }).length;
 
-  // Every user strictly operates in their OWN personal world
-  const targetMemberId = currentUser?.id;
-  const selectedMember = currentUser;
-  const starsBreakdown = getMemberStarsBreakdown(currentUser?.id);
+  // Admin can select and control ANY member; regular users operate in their own personal world
+  const targetMemberId = (isAdmin && selectedMemberId) ? selectedMemberId : currentUser?.id;
+  const selectedMember = (isAdmin && selectedMemberId)
+    ? ((data?.users || []).find(u => String(u.id) === String(selectedMemberId)) || currentUser)
+    : currentUser;
+  const starsBreakdown = getMemberStarsBreakdown(targetMemberId);
 
   // Desktop Navigation Tabs
   const navTabs = [
@@ -135,11 +141,33 @@ export default function Header() {
         {/* ⏰ Live 11:59:59 PM Midnight Clock (Always visible at the top as requested!) */}
         <TodayDeadlineCountdown variant="compact" />
 
-        {/* 100% Personal & Confidential World Indicator */}
-        <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 shadow-2xs flex items-center gap-1.5 ml-auto sm:ml-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Personal World Active</span>
-        </div>
+        {/* Admin Member Switcher or Member Personal World Indicator */}
+        {isAdmin ? (
+          <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
+            <span className="font-extrabold text-amber-950 flex items-center gap-1">
+              👑 Manage:
+            </span>
+            <select
+              value={selectedMemberId || currentUser?.id}
+              onChange={(e) => setSelectedMemberId(e.target.value)}
+              className="bg-white border border-amber-300 rounded-lg px-2 py-0.5 font-bold text-slate-800 text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none cursor-pointer"
+            >
+              <option value={currentUser?.id}>Me ({currentUser?.name || 'Admin'})</option>
+              {(data?.users || [])
+                .filter(u => String(u.id) !== String(currentUser?.id) && u.status === 'approved')
+                .map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.role || 'member'})
+                  </option>
+                ))}
+            </select>
+          </div>
+        ) : (
+          <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 shadow-2xs flex items-center gap-1.5 ml-auto sm:ml-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Personal World Active</span>
+          </div>
+        )}
       </div>
     </header>
   );

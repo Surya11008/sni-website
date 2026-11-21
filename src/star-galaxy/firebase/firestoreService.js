@@ -587,6 +587,26 @@ export function subscribeUserGospelDiary(userId, onUpdate) {
   }
 }
 
+/**
+ * Sync ALL Gospel Diaries across all members (for Admin full visibility & control)
+ */
+export function subscribeAllGospelDiaries(onUpdate) {
+  if (!isFirebaseConfigured() || !db) return () => {};
+  try {
+    const colRef = collection(db, 'gospel_diary');
+    return onSnapshot(colRef, (snapshot) => {
+      const allDiaries = {};
+      snapshot.forEach(docSnap => {
+        allDiaries[docSnap.id] = docSnap.data().entries || [];
+      });
+      onUpdate(allDiaries);
+    }, (err) => console.error('Firestore all diaries error:', err));
+  } catch (e) {
+    console.error('Failed to subscribe all diaries:', e);
+    return () => {};
+  }
+}
+
 export async function saveUserGospelDiaryToFirestore(userId, entries) {
   if (!isFirebaseConfigured() || !db || !userId) return false;
   try {

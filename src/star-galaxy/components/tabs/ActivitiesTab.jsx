@@ -30,7 +30,7 @@ import PreachingAcademy from '../activities/PreachingAcademy';
 import NewSongAcademy from '../activities/NewSongAcademy';
 
 export default function ActivitiesTab() {
-  const { selectedMemberId, data, getMemberStarsBreakdown, getMemberOverallStarsBreakdown, currentUser, t } = useApp();
+  const { selectedMemberId, setSelectedMemberId, data, getMemberStarsBreakdown, getMemberOverallStarsBreakdown, currentUser, t } = useApp();
   const [selectedActivity, setSelectedActivityState] = useState(() => {
     try {
       return localStorage.getItem('star_galaxy_selected_activity') || null;
@@ -61,11 +61,17 @@ export default function ActivitiesTab() {
     return () => window.removeEventListener('star-galaxy-select-activity', handleSelectAct);
   }, []);
 
-  // 100% Personal World: Target is ALWAYS the logged-in member's own account
-  const targetMemberId = currentUser?.id;
-  const selectedMember = currentUser;
-  const breakdown = getMemberStarsBreakdown(currentUser?.id);
-  const overallBreakdown = getMemberOverallStarsBreakdown(currentUser?.id);
+  const isAdmin = currentUser?.role === 'admin' ||
+    currentUser?.email === 'surya11008@sni.org.in' ||
+    String(currentUser?.id).toLowerCase() === 'surya11008';
+
+  // Admin can view and edit ANY member's activities; regular members view their own
+  const targetMemberId = (isAdmin && selectedMemberId) ? selectedMemberId : currentUser?.id;
+  const selectedMember = (isAdmin && selectedMemberId)
+    ? ((data.users || []).find(u => String(u.id) === String(selectedMemberId)) || currentUser)
+    : currentUser;
+  const breakdown = getMemberStarsBreakdown(targetMemberId);
+  const overallBreakdown = getMemberOverallStarsBreakdown(targetMemberId);
 
   // 10 Clean Activities list with pure translated names
   const activities = [
@@ -207,6 +213,32 @@ export default function ActivitiesTab() {
     <div className="space-y-4 pb-20 pt-1 animate-in fade-in duration-300">
       {/* ⏰ Continuous Today 11:59:59 PM Input Deadline Countdown Banner */}
       <TodayDeadlineCountdown variant="banner" />
+
+      {/* 👑 Admin Managing Member Notice Banner */}
+      {isAdmin && selectedMemberId && selectedMemberId !== currentUser?.id && (
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-sm shadow-xs shrink-0">
+              👑
+            </span>
+            <div>
+              <span className="font-extrabold text-xs sm:text-sm text-amber-950 block">
+                Admin Control Active: Managing Activities & Stars for "{selectedMember?.name}"
+              </span>
+              <p className="text-[11px] text-amber-800">
+                Any stars, activities, checkboxes, or scores you modify below directly update this member's official record.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedMemberId(currentUser?.id)}
+            className="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs transition cursor-pointer shrink-0 shadow-2xs"
+          >
+            Switch to My Account
+          </button>
+        </div>
+      )}
 
       {/* 🌟 Cute Colorful Top Bar: Total Stars on Left, Cute Date Filter on Right */}
       <div className="bg-gradient-to-r from-white via-amber-50/40 to-white border-2 border-amber-200/80 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
