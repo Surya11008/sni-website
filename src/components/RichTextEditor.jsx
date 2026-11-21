@@ -225,12 +225,17 @@ export default function RichTextEditor({
   const [zoomLevel, setZoomLevel] = useState(100);
   const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (spacious modern) or 'pages' (standard sheet)
   const [textWidth, setTextWidth] = useState('wide'); // 'wide', 'full', 'standard'
+  const [theme, setTheme] = useState('paper'); // 'paper' (pristine white), 'parchment' (sacred sepia), 'midnight' (deep zen dark)
+  const [zenMode, setZenMode] = useState(false); // Distraction-free writing mode
   const [docTitle, setDocTitle] = useState(label || 'Untitled document');
+
+  // Floating selection bubble
+  const [bubbleToolbar, setBubbleToolbar] = useState({ visible: false, x: 0, y: 0 });
 
   // Active Formatting States
   const [currentStyle, setCurrentStyle] = useState('p');
   const [currentFont, setCurrentFont] = useState('Sri Krushnadevaraya');
-  const [fontSize, setFontSize] = useState(11);
+  const [fontSize, setFontSize] = useState(12);
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
@@ -253,14 +258,13 @@ export default function RichTextEditor({
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showAlignMenu, setShowAlignMenu] = useState(false);
   const [showLineSpacingMenu, setShowLineSpacingMenu] = useState(false);
-  const [showListMenu, setShowListMenu] = useState(false);
+  const [showBlocksMenu, setShowBlocksMenu] = useState(false);
 
   // Modals
   const [showFontManagerModal, setShowFontManagerModal] = useState(false);
   const [showTableModal, setShowTableModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
   const [showFindReplaceModal, setShowFindReplaceModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showSearchMenusModal, setShowSearchMenusModal] = useState(false);
@@ -272,7 +276,6 @@ export default function RichTextEditor({
   const [linkText, setLinkText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageCaption, setImageCaption] = useState('');
-  const [videoInput, setVideoInput] = useState('');
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchMenuQuery, setSearchMenuQuery] = useState('');
@@ -316,6 +319,7 @@ export default function RichTextEditor({
     loadGoogleFont('Playfair Display');
     loadGoogleFont('Cinzel');
     loadGoogleFont('Caveat');
+    loadGoogleFont('Inter');
   }, []);
 
   // Sync value to contentEditable div
@@ -339,7 +343,7 @@ export default function RichTextEditor({
   // Click outside to close menus
   useEffect(() => {
     const handleGlobalClick = (e) => {
-      if (!e.target.closest('.gdocs-dropdown-container')) {
+      if (!e.target.closest('.gdocs-dropdown-container') && !e.target.closest('.gdocs-bubble-toolbar')) {
         setActiveMenu(null);
         setShowZoomMenu(false);
         setShowStyleMenu(false);
@@ -349,7 +353,7 @@ export default function RichTextEditor({
         setShowHighlightMenu(false);
         setShowAlignMenu(false);
         setShowLineSpacingMenu(false);
-        setShowListMenu(false);
+        setShowBlocksMenu(false);
       }
     };
     window.addEventListener('mousedown', handleGlobalClick);
@@ -417,8 +421,30 @@ export default function RichTextEditor({
     }
   };
 
-  const handleMouseUp = () => {
+  // Floating Medium/Notion Bubble Selection Detector
+  const handleSelectionBubble = () => {
     updateActiveFormatting();
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && editorRef.current?.contains(selection.anchorNode)) {
+      const text = selection.toString().trim();
+      if (text.length > 0) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0) {
+          setBubbleToolbar({
+            visible: true,
+            x: Math.max(16, rect.left + rect.width / 2 - 140),
+            y: Math.max(10, rect.top - 46),
+          });
+          return;
+        }
+      }
+    }
+    setBubbleToolbar({ visible: false, x: 0, y: 0 });
+  };
+
+  const handleMouseUp = () => {
+    handleSelectionBubble();
     if (paintFormatActive && copiedFormat) {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
@@ -451,7 +477,7 @@ export default function RichTextEditor({
 
   // Font Size
   const handleSetFontSize = (size) => {
-    const num = Math.max(6, Math.min(120, parseInt(size) || 11));
+    const num = Math.max(6, Math.min(120, parseInt(size) || 12));
     setFontSize(num);
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
@@ -471,10 +497,10 @@ export default function RichTextEditor({
     if (style === 'p') {
       execCmd('formatBlock', '<p>');
     } else if (style === 'title') {
-      const html = `<h1 style="font-size: 26pt; font-weight: bold; line-height: 1.2; margin: 16px 0; color: #1e293b;">Title</h1><p><br/></p>`;
+      const html = `<h1 style="font-size: 28pt; font-weight: bold; line-height: 1.25; margin: 20px 0 10px 0; color: inherit;">Title</h1><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (style === 'subtitle') {
-      const html = `<p style="font-size: 15pt; color: #5f6368; line-height: 1.35; margin: 8px 0;">Subtitle</p><p><br/></p>`;
+      const html = `<p style="font-size: 16pt; opacity: 0.7; line-height: 1.4; margin: 8px 0;">Subtitle</p><p><br/></p>`;
       execCmd('insertHTML', html);
     } else {
       execCmd('formatBlock', `<${style}>`);
@@ -528,17 +554,35 @@ export default function RichTextEditor({
     localStorage.setItem('sni_gdocs_active_fonts', JSON.stringify(updated));
   };
 
+  // Insert Special Blocks (World-Class Spiritual & Sermon Layouts)
+  const handleInsertBlock = (type) => {
+    setShowBlocksMenu(false);
+    if (type === 'scripture') {
+      const html = `<div style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(197,155,39,0.12);"><div style="font-family: 'Sri Krushnadevaraya', serif; font-size: 20px; line-height: 1.85; color: #1e293b; font-style: italic;">"నీ వాక్యము నా పాదములకు దీపమును నా త్రోవకు వెలుగునై యున్నది."</div><div style="text-align: right; font-weight: 700; color: #b45309; font-size: 13px; margin-top: 10px;">— కీర్తనలు 119:105</div></div><p><br/></p>`;
+      execCmd('insertHTML', html);
+    } else if (type === 'prayer') {
+      const html = `<div style="border-left: 4px solid #3b82f6; background: #eff6ff; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(59,130,246,0.12);"><div style="font-weight: 700; color: #1d4ed8; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">🕊️ ప్రార్థనాంశము (Prayer Focus)</div><div style="font-size: 16px; color: #1e3a8a; line-height: 1.8;">దేవా, మీ అద్భుతమైన జ్ఞానముతో మమ్ములను నింపి, అనుదినము మీ పరిశుద్ధాత్మ ద్వారా నడిపించుము. ఆమెన్.</div></div><p><br/></p>`;
+      execCmd('insertHTML', html);
+    } else if (type === 'insight') {
+      const html = `<div style="border-left: 4px solid #10b981; background: #f0fdf4; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(16,185,129,0.12);"><div style="font-weight: 700; color: #047857; font-size: 14px; margin-bottom: 8px;">💡 ముఖ్యాంశము (Key Spiritual Insight)</div><div style="font-size: 16px; color: #064e3b; line-height: 1.8;">విశ్వాసము ద్వారా మాత్రమే మనము దేవునికి ఇష్టులుగా ఉండగలము. ప్రతి శోధనలో ఆయన కృప మనకు చాలును.</div></div><p><br/></p>`;
+      execCmd('insertHTML', html);
+    } else if (type === 'sermon-outline') {
+      const html = `<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 24px; margin: 24px 0;"><h3 style="color:#0f172a; font-weight:800; font-size: 18px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📜 సందేశ ప్రసంగ క్రమము (Sermon Outline)</h3><ol style="margin-left: 20px; line-height: 1.9; font-size: 15px; color:#334155;"><li><strong>1. పరిచయము (Introduction):</strong> దేవుని వాక్య ప్రాముఖ్యత</li><li><strong>2. లేఖన భాగము (Scripture Reading):</strong> పరిశుద్ధ గ్రంథ వివరణ</li><li><strong>3. ప్రధాన అంశము (Main Message):</strong> విశ్వాస నడక మరియు అనుదిన ప్రార్థన</li><li><strong>4. కార్యాచరణ (Application):</strong> వ్యక్తిగత ఆత్మీయ ఎదుగుదల</li><li><strong>5. ముగింపు ప్రార్థన (Closing Prayer):</strong> సమర్పణ మరియు దీవెన</li></ol></div><p><br/></p>`;
+      execCmd('insertHTML', html);
+    }
+  };
+
   // Table
   const handleInsertTable = () => {
-    let tableHtml = '<table style="width:100%; border-collapse: collapse; margin: 1.25rem 0;"><thead><tr>';
+    let tableHtml = '<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 8px; overflow: hidden;"><thead><tr>';
     for (let c = 0; c < tableCols; c++) {
-      tableHtml += `<th style="border: 1px solid #9aa0a6; padding: 8px 12px; background-color: #f1f3f4; font-weight: bold; text-align: left;">Header ${c + 1}</th>`;
+      tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 10px 14px; background-color: #f8fafc; font-weight: bold; text-align: left; color:#1e293b;">Header ${c + 1}</th>`;
     }
     tableHtml += '</tr></thead><tbody>';
     for (let r = 0; r < tableRows; r++) {
       tableHtml += '<tr>';
       for (let c = 0; c < tableCols; c++) {
-        tableHtml += '<td style="border: 1px solid #dadce0; padding: 8px 12px;">Cell</td>';
+        tableHtml += '<td style="border: 1px solid #cbd5e1; padding: 10px 14px; color:#334155;">Text</td>';
       }
       tableHtml += '</tr>';
     }
@@ -552,7 +596,7 @@ export default function RichTextEditor({
     if (!linkUrl) return;
     const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
     if (linkText) {
-      execCmd('insertHTML', `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; text-decoration: underline;">${linkText}</a>`);
+      execCmd('insertHTML', `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; font-weight: 500;">${linkText}</a>`);
     } else {
       execCmd('createLink', url);
     }
@@ -564,8 +608,8 @@ export default function RichTextEditor({
   // Image
   const handleInsertImage = () => {
     if (!imageUrl) return;
-    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 12px; color: #5f6368; margin-top: 4px;">${imageCaption}</figcaption>` : '';
-    const imgHtml = `<figure style="margin: 1.2rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
+    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 13px; color: #64748b; margin-top: 6px;">${imageCaption}</figcaption>` : '';
+    const imgHtml = `<figure style="margin: 1.5rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
     execCmd('insertHTML', imgHtml);
     setShowImageModal(false);
     setImageUrl('');
@@ -574,9 +618,8 @@ export default function RichTextEditor({
 
   // Checklist
   const handleInsertChecklist = () => {
-    const checklistHtml = `<div class="docs-checklist-item" style="display:flex; align-items:center; gap:8px; margin: 4px 0;"><input type="checkbox" style="width:15px; height:15px; cursor:pointer;" /> <span>Checklist item</span></div><p><br/></p>`;
+    const checklistHtml = `<div class="docs-checklist-item" style="display:flex; align-items:flex-start; gap:10px; margin: 6px 0;"><input type="checkbox" style="width:16px; height:16px; margin-top: 4px; cursor:pointer;" /> <span>Checklist task</span></div><p><br/></p>`;
     execCmd('insertHTML', checklistHtml);
-    setShowListMenu(false);
   };
 
   // Print
@@ -591,11 +634,10 @@ export default function RichTextEditor({
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sri+Krushnadevaraya&family=Noto+Sans+Telugu&display=swap">
             <style>
               @page { size: A4; margin: 20mm; }
-              body { font-family: 'Sri Krushnadevaraya', 'Noto Sans Telugu', Arial, sans-serif; line-height: 1.5; color: #1e293b; padding: 20px; }
+              body { font-family: 'Sri Krushnadevaraya', 'Noto Sans Telugu', Arial, sans-serif; line-height: 1.8; color: #1e293b; padding: 20px; }
               table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
               th, td { border: 1px solid #dadce0; padding: 8px 10px; }
               img { max-width: 100%; height: auto; }
-              blockquote { border-left: 4px solid #1a73e8; padding-left: 14px; margin: 14px 0; color: #475569; }
             </style>
           </head>
           <body>
@@ -608,7 +650,33 @@ export default function RichTextEditor({
     }
   };
 
-  // Colors
+  // Theme Styling definitions
+  const themeStyles = {
+    paper: {
+      canvas: 'bg-white',
+      text: 'text-[#0f172a]',
+      border: 'border-[#e2e8f0]',
+      caret: '#2563eb',
+      desc: 'Pristine White Studio',
+    },
+    parchment: {
+      canvas: 'bg-[#fcf9f2]',
+      text: 'text-[#262626]',
+      border: 'border-[#e7e1d3]',
+      caret: '#b45309',
+      desc: 'Sacred Parchment / Sepia',
+    },
+    midnight: {
+      canvas: 'bg-[#0f172a]',
+      text: 'text-[#f8fafc]',
+      border: 'border-[#334155]',
+      caret: '#60a5fa',
+      desc: 'Midnight Zen Dark',
+    },
+  };
+
+  const currentTheme = themeStyles[theme] || themeStyles.paper;
+
   const googleColorSwatches = [
     '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
     '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
@@ -635,561 +703,669 @@ export default function RichTextEditor({
 
   return (
     <div
-      className={`border border-[#dadce0] rounded-lg overflow-hidden bg-[#f9fbfd] transition-all font-sans select-none ${
-        isFullscreen ? 'fixed inset-0 z-50 flex flex-col bg-[#f9fbfd] rounded-none' : 'relative'
+      className={`border ${currentTheme.border} rounded-2xl overflow-hidden ${currentTheme.canvas} transition-all font-sans select-none shadow-xs ${
+        isFullscreen ? 'fixed inset-0 z-50 flex flex-col rounded-none shadow-none' : 'relative'
       }`}
     >
       {/* ============================================================== */}
-      {/* 1. AUTHENTIC GOOGLE DOCS TOP HEADER (Icon, Title, Menus, Share) */}
+      {/* FLOATING NOTION / MEDIUM STYLE SELECTION BUBBLE TOOLBAR        */}
       {/* ============================================================== */}
-      <div className="bg-[#f9fbfd] px-4 pt-2.5 pb-1 flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#dadce0]/70 gdocs-dropdown-container">
-        {/* Left: Docs Icon + Title + Menus */}
-        <div className="flex items-start gap-2.5">
-          <div className="pt-0.5 cursor-pointer" title="Google Docs">
-            <DocsLogo />
-          </div>
-
-          <div className="flex flex-col">
-            {/* Document Title Bar */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={docTitle}
-                onChange={(e) => setDocTitle(e.target.value)}
-                className="text-[17px] font-medium text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
-              />
-              <span className="text-xs text-[#444746] hidden md:inline-flex items-center gap-1 cursor-default" title="Document status">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Saved
-              </span>
-            </div>
-
-            {/* Menu Bar: File, Edit, View, Insert, Format, Tools, Extensions, Help */}
-            <div className="flex items-center gap-0.5 text-[13px] text-[#444746] font-normal -ml-1 mt-0.5">
-              {/* File */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'file' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  File
-                </button>
-                {activeMenu === 'file' && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm('Clear editor to start a new document?')) {
-                          onChange('');
-                          if (editorRef.current) editorRef.current.innerHTML = '';
-                        }
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      New Document
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handlePrint();
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                    >
-                      <span>Print</span>
-                      <span className="text-[11px] text-[#747775]">Ctrl+P</span>
-                    </button>
-                    <div className="my-1 border-t border-[#e0e0e0]"></div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const blob = new Blob([editorRef.current?.innerHTML || ''], { type: 'text/html' });
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = `${docTitle || 'document'}.html`;
-                        a.click();
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Download HTML (.html)
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Edit */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'edit' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Edit
-                </button>
-                {activeMenu === 'edit' && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('undo');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                    >
-                      <span>Undo</span>
-                      <span className="text-[11px] text-[#747775]">Ctrl+Z</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('redo');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                    >
-                      <span>Redo</span>
-                      <span className="text-[11px] text-[#747775]">Ctrl+Y</span>
-                    </button>
-                    <div className="my-1 border-t border-[#e0e0e0]"></div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('selectAll');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                    >
-                      <span>Select all</span>
-                      <span className="text-[11px] text-[#747775]">Ctrl+A</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowFindReplaceModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                    >
-                      <span>Find and replace</span>
-                      <span className="text-[11px] text-[#747775]">Ctrl+H</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* View */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'view' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  View
-                </button>
-                {activeMenu === 'view' && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
-                      Text Space Layout
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPageFormat('pageless');
-                        setActiveMenu(null);
-                      }}
-                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                        pageFormat === 'pageless' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                      }`}
-                    >
-                      <span>Spacious (Pageless)</span>
-                      {pageFormat === 'pageless' && <span>✓</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPageFormat('pages');
-                        setActiveMenu(null);
-                      }}
-                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                        pageFormat === 'pages' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                      }`}
-                    >
-                      <span>Standard Page (Print)</span>
-                      {pageFormat === 'pages' && <span>✓</span>}
-                    </button>
-
-                    <div className="my-1 border-t border-[#e0e0e0]"></div>
-                    <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
-                      Text Width
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTextWidth('wide');
-                        setActiveMenu(null);
-                      }}
-                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                        textWidth === 'wide' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                      }`}
-                    >
-                      <span>Wide (Comfortable)</span>
-                      {textWidth === 'wide' && <span>✓</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTextWidth('full');
-                        setActiveMenu(null);
-                      }}
-                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                        textWidth === 'full' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                      }`}
-                    >
-                      <span>Full Width (100%)</span>
-                      {textWidth === 'full' && <span>✓</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTextWidth('standard');
-                        setActiveMenu(null);
-                      }}
-                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                        textWidth === 'standard' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                      }`}
-                    >
-                      <span>Standard Reading Width</span>
-                      {textWidth === 'standard' && <span>✓</span>}
-                    </button>
-
-                    <div className="my-1 border-t border-[#e0e0e0]"></div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsFullscreen(!isFullscreen);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen view'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowHtmlSource(!showHtmlSource);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      {showHtmlSource ? 'Visual Document' : 'View HTML source'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Insert */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'insert' ? null : 'insert')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'insert' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Insert
-                </button>
-                {activeMenu === 'insert' && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowImageModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Image
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowTableModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Table
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowLinkModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Link (Ctrl+K)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('insertHorizontalRule');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Horizontal line
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Format */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'format' ? null : 'format')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'format' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Format
-                </button>
-                {activeMenu === 'format' && (
-                  <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('bold');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] font-bold"
-                    >
-                      Bold
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('italic');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] italic"
-                    >
-                      Italic
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('underline');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] underline"
-                    >
-                      Underline
-                    </button>
-                    <div className="my-1 border-t border-[#e0e0e0]"></div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        execCmd('removeFormat');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600"
-                    >
-                      Clear formatting
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Tools */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'tools' ? null : 'tools')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'tools' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Tools
-                </button>
-                {activeMenu === 'tools' && (
-                  <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowStatsModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Word count
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Gemini */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'gemini' ? null : 'gemini')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#1a73e8] font-medium ${
-                    activeMenu === 'gemini' ? 'bg-[#c2e7ff]' : ''
-                  }`}
-                >
-                  Gemini
-                </button>
-                {activeMenu === 'gemini' && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        alert('Gemini AI: Telugu & English text refinement ready.');
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                    >
-                      Help me write
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Extensions */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'extensions' ? null : 'extensions')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'extensions' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Extensions
-                </button>
-                {activeMenu === 'extensions' && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowFontManagerModal(true);
-                        setActiveMenu(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-[#1a73e8] font-medium"
-                    >
-                      + Add New Fonts / Library
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Help */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu(activeMenu === 'help' ? null : 'help')}
-                  className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                    activeMenu === 'help' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                  }`}
-                >
-                  Help
-                </button>
-              </div>
-            </div>
-          </div>
+      {bubbleToolbar.visible && (
+        <div
+          className="fixed z-50 gdocs-bubble-toolbar flex items-center gap-1 bg-[#1e293b] text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in zoom-in-95 duration-100"
+          style={{
+            top: `${bubbleToolbar.y}px`,
+            left: `${bubbleToolbar.x}px`,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => execCmd('bold')}
+            className={`px-2 py-1 rounded hover:bg-slate-700 font-bold text-xs ${isBold ? 'text-amber-400' : ''}`}
+            title="Bold"
+          >
+            B
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('italic')}
+            className={`px-2 py-1 rounded hover:bg-slate-700 italic text-xs ${isItalic ? 'text-amber-400' : ''}`}
+            title="Italic"
+          >
+            I
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('underline')}
+            className={`px-2 py-1 rounded hover:bg-slate-700 underline text-xs ${isUnderline ? 'text-amber-400' : ''}`}
+            title="Underline"
+          >
+            U
+          </button>
+          <div className="w-px h-3.5 bg-slate-700 mx-0.5"></div>
+          <button
+            type="button"
+            onClick={() => handleSetParagraphStyle('h1')}
+            className="px-2 py-1 rounded hover:bg-slate-700 font-bold text-xs"
+            title="Heading 1"
+          >
+            H1
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetParagraphStyle('h2')}
+            className="px-2 py-1 rounded hover:bg-slate-700 font-semibold text-xs"
+            title="Heading 2"
+          >
+            H2
+          </button>
+          <button
+            type="button"
+            onClick={() => handleInsertBlock('scripture')}
+            className="px-2 py-1 rounded hover:bg-slate-700 text-xs text-amber-300 font-medium"
+            title="Insert Scripture Quote"
+          >
+            📖 Quote
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowLinkModal(true)}
+            className="px-2 py-1 rounded hover:bg-slate-700 text-xs text-blue-300"
+            title="Link"
+          >
+            🔗
+          </button>
         </div>
+      )}
 
-        {/* Right: Quick Layout Pill + Fullscreen + Share */}
-        <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
-          {/* Quick Layout Mode Pill */}
-          <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
-            <button
-              type="button"
-              onClick={() => setPageFormat('pageless')}
-              className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
-              }`}
-              title="Spacious text space without restrictive margins"
-            >
-              Spacious
-            </button>
-            <button
-              type="button"
-              onClick={() => setPageFormat('pages')}
-              className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
-              }`}
-              title="Page print layout"
-            >
-              Page
-            </button>
+      {/* ============================================================== */}
+      {/* 1. TOP HEADER (Google Docs Logo, Title, Menus, Atmosphere Bar)  */}
+      {/* ============================================================== */}
+      {!zenMode && (
+        <div className="bg-white/90 backdrop-blur-md px-4 pt-2.5 pb-1 flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#dadce0]/70 gdocs-dropdown-container">
+          {/* Left: Docs Icon + Title + Menus */}
+          <div className="flex items-start gap-2.5">
+            <div className="pt-0.5 cursor-pointer" title="Google Docs Studio">
+              <DocsLogo />
+            </div>
+
+            <div className="flex flex-col">
+              {/* Document Title Bar */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={docTitle}
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  className="text-[17px] font-medium text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
+                />
+                <span className="text-xs text-emerald-600 font-medium hidden md:inline-flex items-center gap-1.5 cursor-default bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Ready to Write
+                </span>
+              </div>
+
+              {/* Menu Bar: File, Edit, View, Insert, Format, Tools, Gemini, Extensions, Help */}
+              <div className="flex items-center gap-0.5 text-[13px] text-[#444746] font-normal -ml-1 mt-0.5">
+                {/* File */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'file' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    File
+                  </button>
+                  {activeMenu === 'file' && (
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm('Clear editor to start a new document?')) {
+                            onChange('');
+                            if (editorRef.current) editorRef.current.innerHTML = '';
+                          }
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        New Document
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handlePrint();
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                      >
+                        <span>Print</span>
+                        <span className="text-[11px] text-[#747775]">Ctrl+P</span>
+                      </button>
+                      <div className="my-1 border-t border-[#e0e0e0]"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const blob = new Blob([editorRef.current?.innerHTML || ''], { type: 'text/html' });
+                          const a = document.createElement('a');
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `${docTitle || 'document'}.html`;
+                          a.click();
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Download HTML (.html)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Edit */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'edit' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    Edit
+                  </button>
+                  {activeMenu === 'edit' && (
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('undo');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                      >
+                        <span>Undo</span>
+                        <span className="text-[11px] text-[#747775]">Ctrl+Z</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('redo');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                      >
+                        <span>Redo</span>
+                        <span className="text-[11px] text-[#747775]">Ctrl+Y</span>
+                      </button>
+                      <div className="my-1 border-t border-[#e0e0e0]"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('selectAll');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                      >
+                        <span>Select all</span>
+                        <span className="text-[11px] text-[#747775]">Ctrl+A</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowFindReplaceModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                      >
+                        <span>Find and replace</span>
+                        <span className="text-[11px] text-[#747775]">Ctrl+H</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* View */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'view' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    View
+                  </button>
+                  {activeMenu === 'view' && (
+                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                      <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                        Canvas Theme
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme('paper');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          theme === 'paper' ? 'text-[#1a73e8] font-bold bg-[#e8f0fe]' : ''
+                        }`}
+                      >
+                        <span>☀️ Pristine White</span>
+                        {theme === 'paper' && <span>✓</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme('parchment');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          theme === 'parchment' ? 'text-amber-800 font-bold bg-amber-50' : ''
+                        }`}
+                      >
+                        <span>📜 Sacred Parchment / Sepia</span>
+                        {theme === 'parchment' && <span>✓</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme('midnight');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          theme === 'midnight' ? 'text-blue-600 font-bold bg-blue-50' : ''
+                        }`}
+                      >
+                        <span>🌙 Midnight Zen Dark</span>
+                        {theme === 'midnight' && <span>✓</span>}
+                      </button>
+
+                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
+                      <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                        Writing Width
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTextWidth('wide');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          textWidth === 'wide' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                        }`}
+                      >
+                        <span>Wide Studio</span>
+                        {textWidth === 'wide' && <span>✓</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTextWidth('full');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          textWidth === 'full' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                        }`}
+                      >
+                        <span>Full Canvas (100%)</span>
+                        {textWidth === 'full' && <span>✓</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTextWidth('standard');
+                          setActiveMenu(null);
+                        }}
+                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                          textWidth === 'standard' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                        }`}
+                      >
+                        <span>Focused Reading Column</span>
+                        {textWidth === 'standard' && <span>✓</span>}
+                      </button>
+
+                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFullscreen(!isFullscreen);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen view'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowHtmlSource(!showHtmlSource);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        {showHtmlSource ? 'Visual Document' : 'View HTML source'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Insert */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'insert' ? null : 'insert')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'insert' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    Insert
+                  </button>
+                  {activeMenu === 'insert' && (
+                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                      <div className="px-4 py-1 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+                        Spiritual & Content Blocks
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('scripture');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-amber-50 text-amber-900 flex items-center gap-2"
+                      >
+                        <span>📖</span>
+                        <span>Scripture Card (వాక్యము)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('prayer');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-blue-50 text-blue-900 flex items-center gap-2"
+                      >
+                        <span>🕊️</span>
+                        <span>Prayer Focus (ప్రార్థన)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('insight');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-emerald-50 text-emerald-900 flex items-center gap-2"
+                      >
+                        <span>💡</span>
+                        <span>Key Insight (ముఖ్యాంశము)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('sermon-outline');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-purple-50 text-purple-900 flex items-center gap-2"
+                      >
+                        <span>📜</span>
+                        <span>Sermon Outline (ప్రసంగ క్రమం)</span>
+                      </button>
+                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowImageModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowTableModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Table
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowLinkModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Link (Ctrl+K)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Format */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'format' ? null : 'format')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'format' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    Format
+                  </button>
+                  {activeMenu === 'format' && (
+                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('bold');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] font-bold"
+                      >
+                        Bold
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('italic');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] italic"
+                      >
+                        Italic
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('underline');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] underline"
+                      >
+                        Underline
+                      </button>
+                      <div className="my-1 border-t border-[#e0e0e0]"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('removeFormat');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600"
+                      >
+                        Clear formatting
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tools */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'tools' ? null : 'tools')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'tools' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    Tools
+                  </button>
+                  {activeMenu === 'tools' && (
+                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowStatsModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Word count
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Extensions */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu(activeMenu === 'extensions' ? null : 'extensions')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
+                      activeMenu === 'extensions' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    }`}
+                  >
+                    Extensions
+                  </button>
+                  {activeMenu === 'extensions' && (
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowFontManagerModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-[#1a73e8] font-medium"
+                      >
+                        + Add New Fonts / Library
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Width Pill if in spacious pageless mode */}
-          {pageFormat === 'pageless' && (
-            <div className="hidden sm:inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+          {/* Right: Atmosphere & Focus Controls */}
+          <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
+            {/* Theme Selector (☀️ Paper, 📜 Parchment, 🌙 Midnight) */}
+            <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
               <button
                 type="button"
-                onClick={() => setTextWidth('wide')}
+                onClick={() => setTheme('paper')}
                 className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
-                  textWidth === 'wide' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746]'
+                  theme === 'paper' ? 'bg-white shadow-2xs font-bold text-slate-900' : 'text-slate-600'
                 }`}
-                title="Wide text area"
+                title="Pristine Studio"
               >
-                Wide
+                ☀️ White
               </button>
               <button
                 type="button"
-                onClick={() => setTextWidth('full')}
+                onClick={() => setTheme('parchment')}
                 className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
-                  textWidth === 'full' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746]'
+                  theme === 'parchment' ? 'bg-amber-100/80 shadow-2xs font-bold text-amber-950' : 'text-slate-600'
                 }`}
-                title="Full width text area"
+                title="Sacred Parchment / Sepia"
               >
-                Full
+                📜 Sepia
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme('midnight')}
+                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
+                  theme === 'midnight' ? 'bg-slate-900 text-white shadow-2xs font-bold' : 'text-slate-600'
+                }`}
+                title="Midnight Zen Dark"
+              >
+                🌙 Dark
               </button>
             </div>
-          )}
 
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="px-2.5 py-1 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
-            title="Toggle Fullscreen Google Docs Mode"
-          >
-            {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen'}
-          </button>
+            {/* Quick Layout Mode Pill */}
+            <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+              <button
+                type="button"
+                onClick={() => setPageFormat('pageless')}
+                className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
+                  pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+                }`}
+                title="Spacious text space without restrictive margins"
+              >
+                Spacious
+              </button>
+              <button
+                type="button"
+                onClick={() => setPageFormat('pages')}
+                className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
+                  pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+                }`}
+                title="Page print layout"
+              >
+                Page
+              </button>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              navigator.clipboard?.writeText(window.location.href);
-              alert('Document link copied to clipboard!');
-            }}
-            className="px-3.5 py-1 rounded-full bg-[#c2e7ff] hover:bg-[#b3ddfc] text-[#001d35] font-medium text-xs flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-            </svg>
-            <span className="hidden sm:inline">Share</span>
-          </button>
+            {/* Zen Mode Button */}
+            <button
+              type="button"
+              onClick={() => setZenMode(true)}
+              className="px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition cursor-pointer border border-indigo-200"
+              title="Focus Zen Writing Mode (Press Esc or exit button to leave)"
+            >
+              🎯 Zen Flow
+            </button>
+
+            {/* Fullscreen */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="px-2.5 py-1 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
+              title="Toggle Fullscreen"
+            >
+              {isFullscreen ? 'Exit' : '⛶ Full'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Floating Zen Mode Exit Pill when Zen Mode is active */}
+      {zenMode && (
+        <div className="sticky top-3 z-50 flex justify-center">
+          <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-3 text-xs border border-slate-700">
+            <span className="font-semibold text-amber-400">🎯 Deep Flow Mode Active</span>
+            <span className="text-slate-400">|</span>
+            <span>{wordCount} words</span>
+            <span className="text-slate-400">|</span>
+            <button
+              type="button"
+              onClick={() => setZenMode(false)}
+              className="bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer"
+            >
+              Exit Zen Mode (Show Tools)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* 2. AUTHENTIC GOOGLE DOCS TOOLBAR PILL (Matching Screenshot)   */}
       {/* ============================================================== */}
-      {!showHtmlSource && (
-        <div className="px-2 py-1 bg-[#f9fbfd] flex justify-center gdocs-dropdown-container">
+      {!showHtmlSource && !zenMode && (
+        <div className="px-2 py-1.5 bg-inherit flex justify-center gdocs-dropdown-container">
           <div className="bg-[#edf2fa] rounded-[24px] px-2.5 py-0.5 flex flex-wrap items-center gap-0.5 text-[#444746] shadow-2xs border border-[#d3e3fd]/40">
             {/* Search Menus Pill */}
             <button
@@ -1370,7 +1546,7 @@ export default function RichTextEditor({
                 <ArrowDropDown />
               </button>
               {showFontMenu && (
-                <div className="absolute top-full left-0 mt-1 w-64 max-h-80 overflow-y-auto bg-white rounded-md shadow-xl border border-[#dadce0] py-1 z-50 text-[13px]">
+                <div className="absolute top-full left-0 mt-1 w-64 max-h-80 overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1 z-50 text-[13px]">
                   {/* Top: + More fonts */}
                   <button
                     type="button"
@@ -1408,7 +1584,7 @@ export default function RichTextEditor({
             {/* Divider */}
             <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
 
-            {/* Font Size: - [ 11 ] + */}
+            {/* Font Size: - [ 12 ] + */}
             <div className="flex items-center">
               <button
                 type="button"
@@ -1575,6 +1751,67 @@ export default function RichTextEditor({
             {/* Divider */}
             <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
 
+            {/* ✨ World-Class Spiritual Blocks Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowBlocksMenu(!showBlocksMenu)}
+                className="flex items-center gap-1 px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition text-[11px] font-bold cursor-pointer shadow-2xs"
+                title="Insert Signature Spiritual & Sermon Blocks"
+              >
+                <span>✨ Blocks</span>
+                <ArrowDropDown />
+              </button>
+              {showBlocksMenu && (
+                <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-amber-200 py-1.5 z-50 text-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => handleInsertBlock('scripture')}
+                    className="w-full text-left px-3.5 py-2 hover:bg-amber-50 flex items-center gap-2 text-slate-800"
+                  >
+                    <span className="text-base">📖</span>
+                    <div>
+                      <div className="font-bold text-amber-950">వాక్యము (Scripture Box)</div>
+                      <div className="text-[10px] text-slate-500">Gold bordered scripture card</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertBlock('prayer')}
+                    className="w-full text-left px-3.5 py-2 hover:bg-blue-50 flex items-center gap-2 text-slate-800"
+                  >
+                    <span className="text-base">🕊️</span>
+                    <div>
+                      <div className="font-bold text-blue-950">ప్రార్థనాంశము (Prayer Focus)</div>
+                      <div className="text-[10px] text-slate-500">Highlighted prayer intention</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertBlock('insight')}
+                    className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 flex items-center gap-2 text-slate-800"
+                  >
+                    <span className="text-base">💡</span>
+                    <div>
+                      <div className="font-bold text-emerald-950">ముఖ్యాంశము (Key Insight)</div>
+                      <div className="text-[10px] text-slate-500">Core revelation takeaway</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertBlock('sermon-outline')}
+                    className="w-full text-left px-3.5 py-2 hover:bg-purple-50 flex items-center gap-2 text-slate-800"
+                  >
+                    <span className="text-base">📜</span>
+                    <div>
+                      <div className="font-bold text-purple-950">ప్రసంగ క్రమము (Sermon Outline)</div>
+                      <div className="text-[10px] text-slate-500">Structured sermon points</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Insert Link */}
             <button
               type="button"
@@ -1710,6 +1947,13 @@ export default function RichTextEditor({
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleSetLineSpacing('1.85')}
+                    className="w-full text-left px-3 py-1.5 hover:bg-[#f1f3f4] font-semibold text-blue-600"
+                  >
+                    1.85 (Ideal Telugu)
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleSetLineSpacing('2.0')}
                     className="w-full text-left px-3 py-1.5 hover:bg-[#f1f3f4]"
                   >
@@ -1783,7 +2027,7 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 3. AUTHENTIC GOOGLE DOCS CANVAS & DOCUMENT SHEET               */}
+      {/* 3. WORLD-CLASS WRITING CONTENT CANVAS                          */}
       {/* ============================================================== */}
       {showHtmlSource ? (
         <div className="flex-1 bg-slate-900 p-4">
@@ -1812,15 +2056,15 @@ export default function RichTextEditor({
           />
         </div>
       ) : pageFormat === 'pageless' ? (
-        /* PAGELESS / SPACIOUS TEXT SPACE (Modern Google Docs, Wide & Comfortable) */
-        <div className="flex-1 overflow-y-auto bg-white py-4 px-3 sm:px-6 flex flex-col items-center">
+        /* WORLD'S BEST WRITING CANVAS (Spacious, Fluid, Distraction-Free) */
+        <div className={`flex-1 overflow-y-auto ${currentTheme.canvas} py-6 px-4 sm:px-10 flex flex-col items-center transition-colors duration-200`}>
           <div
-            className={`w-full transition-all duration-150 origin-top ${
+            className={`w-full transition-all duration-200 origin-top ${
               textWidth === 'full'
-                ? 'max-w-none px-2'
+                ? 'max-w-none px-2 sm:px-6'
                 : textWidth === 'standard'
                 ? 'max-w-3xl px-4 sm:px-8'
-                : 'max-w-5xl px-3 sm:px-8'
+                : 'max-w-5xl px-4 sm:px-10'
             }`}
             style={{
               transform: `scale(${zoomLevel / 100})`,
@@ -1832,13 +2076,14 @@ export default function RichTextEditor({
               contentEditable
               onInput={handleInput}
               onMouseUp={handleMouseUp}
-              onKeyUp={updateActiveFormatting}
-              className="w-full min-h-[380px] focus:outline-none rich-html-content text-[#1f1f1f] text-base"
+              onKeyUp={handleSelectionBubble}
+              className={`w-full min-h-[460px] focus:outline-none rich-html-content ${currentTheme.text} transition-colors duration-200`}
               style={{
                 fontFamily: currentFont,
                 fontSize: `${fontSize}pt`,
-                caretColor: '#1a73e8',
-                lineHeight: 1.75,
+                caretColor: currentTheme.caret,
+                lineHeight: 1.85,
+                letterSpacing: '0.01em',
               }}
               data-placeholder={placeholder}
             />
@@ -1852,13 +2097,8 @@ export default function RichTextEditor({
             className="w-full max-w-[816px] h-4 bg-[#f8fafd] border-b border-[#dadce0] flex items-center justify-between px-16 text-[9px] text-[#70757a] relative select-none shadow-2xs"
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
           >
-            {/* Blue Margin Markers */}
-            <div className="absolute left-[72px] top-0 text-[#1a73e8] text-[8px] leading-none select-none">
-              ▼
-            </div>
-            <div className="absolute right-[72px] top-0 text-[#1a73e8] text-[8px] leading-none select-none">
-              ▼
-            </div>
+            <div className="absolute left-[72px] top-0 text-[#1a73e8] text-[8px] leading-none select-none">▼</div>
+            <div className="absolute right-[72px] top-0 text-[#1a73e8] text-[8px] leading-none select-none">▼</div>
             <span>1</span>
             <span>2</span>
             <span>3</span>
@@ -1882,13 +2122,13 @@ export default function RichTextEditor({
               contentEditable
               onInput={handleInput}
               onMouseUp={handleMouseUp}
-              onKeyUp={updateActiveFormatting}
-              className="w-full min-h-[500px] focus:outline-none leading-relaxed rich-html-content text-base"
+              onKeyUp={handleSelectionBubble}
+              className="w-full min-h-[500px] focus:outline-none rich-html-content"
               style={{
                 fontFamily: currentFont,
                 fontSize: `${fontSize}pt`,
                 caretColor: '#1a73e8',
-                lineHeight: 1.75,
+                lineHeight: 1.85,
               }}
               data-placeholder={placeholder}
             />
@@ -1901,7 +2141,7 @@ export default function RichTextEditor({
       {/* ============================================================== */}
       {showFontManagerModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[88vh] border border-[#dadce0]">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[88vh] border border-[#dadce0]">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#dadce0]">
               <h3 className="text-[18px] font-medium text-[#1f1f1f]">Fonts</h3>
@@ -1915,7 +2155,7 @@ export default function RichTextEditor({
             </div>
 
             {/* Custom Font Name Input Box */}
-            <div className="bg-[#f0f4f9] p-3 rounded-md mt-3 border border-[#dadce0]">
+            <div className="bg-[#f0f4f9] p-3 rounded-xl mt-3 border border-[#dadce0]">
               <label className="block text-[12px] font-semibold text-[#1f1f1f] mb-1">
                 + Add any Google Font by name:
               </label>
@@ -1925,12 +2165,12 @@ export default function RichTextEditor({
                   value={customFontInput}
                   onChange={(e) => setCustomFontInput(e.target.value)}
                   placeholder="e.g. Cinzel Decorative, Alex Brush, Tangerine, Kalam, Anek Telugu..."
-                  className="flex-1 px-3 py-1.5 rounded border border-[#dadce0] bg-white text-[12px] focus:outline-[#1a73e8]"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-[#dadce0] bg-white text-[12px] focus:outline-[#1a73e8]"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomFont}
-                  className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[12px] rounded transition cursor-pointer"
+                  className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[12px] rounded-lg transition cursor-pointer"
                 >
                   Add Font
                 </button>
@@ -1981,7 +2221,7 @@ export default function RichTextEditor({
                   value={fontSearchQuery}
                   onChange={(e) => setFontSearchQuery(e.target.value)}
                   placeholder="Search fonts..."
-                  className="px-3 py-1 rounded border border-[#dadce0] text-[12px] w-48 focus:outline-[#1a73e8]"
+                  className="px-3 py-1 rounded-lg border border-[#dadce0] text-[12px] w-48 focus:outline-[#1a73e8]"
                 />
               </div>
             </div>
@@ -1994,7 +2234,7 @@ export default function RichTextEditor({
                 return (
                   <div
                     key={font.family}
-                    className="pt-2 flex items-center justify-between hover:bg-[#f8fafd] p-2 rounded transition cursor-pointer"
+                    className="pt-2 flex items-center justify-between hover:bg-[#f8fafd] p-2 rounded-xl transition cursor-pointer"
                     onClick={() => handleToggleFontActive(font.family)}
                   >
                     <div className="flex-1 pr-4">
@@ -2022,12 +2262,12 @@ export default function RichTextEditor({
                           handleSelectFont(font.family);
                           setShowFontManagerModal(false);
                         }}
-                        className="px-2.5 py-1 rounded bg-[#f1f3f4] hover:bg-[#e8f0fe] text-[#444746] hover:text-[#1a73e8] text-[12px] font-medium cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#f1f3f4] hover:bg-[#e8f0fe] text-[#444746] hover:text-[#1a73e8] text-[12px] font-medium cursor-pointer"
                       >
                         Select
                       </button>
                       <div
-                        className={`w-6 h-6 rounded flex items-center justify-center border transition ${
+                        className={`w-6 h-6 rounded-md flex items-center justify-center border transition ${
                           isSelected
                             ? 'bg-[#1a73e8] border-[#1a73e8] text-white font-bold text-xs'
                             : 'border-[#747775] text-transparent'
@@ -2049,7 +2289,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setShowFontManagerModal(false)}
-                className="px-5 py-2 rounded bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[13px] transition cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[13px] transition cursor-pointer shadow-sm"
               >
                 OK
               </button>
@@ -2061,7 +2301,7 @@ export default function RichTextEditor({
       {/* Insert Table Dialog */}
       {showTableModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+          <div className="bg-white rounded-xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
             <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert table</h4>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
@@ -2072,7 +2312,7 @@ export default function RichTextEditor({
                   max="50"
                   value={tableRows}
                   onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
-                  className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                  className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
                 />
               </div>
               <div>
@@ -2083,7 +2323,7 @@ export default function RichTextEditor({
                   max="12"
                   value={tableCols}
                   onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
-                  className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                  className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
                 />
               </div>
             </div>
@@ -2091,14 +2331,14 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setShowTableModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded"
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleInsertTable}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Insert
               </button>
@@ -2110,7 +2350,7 @@ export default function RichTextEditor({
       {/* Insert Link Dialog */}
       {showLinkModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
             <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert link</h4>
             <div>
               <label className="block text-xs text-[#444746] mb-1">Text (optional)</label>
@@ -2119,7 +2359,7 @@ export default function RichTextEditor({
                 value={linkText}
                 onChange={(e) => setLinkText(e.target.value)}
                 placeholder="Display text"
-                className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div>
@@ -2129,21 +2369,21 @@ export default function RichTextEditor({
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowLinkModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded"
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleInsertLink}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Apply
               </button>
@@ -2155,7 +2395,7 @@ export default function RichTextEditor({
       {/* Insert Image Dialog */}
       {showImageModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
             <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert image</h4>
             <div>
               <label className="block text-xs text-[#444746] mb-1">Image URL</label>
@@ -2164,7 +2404,7 @@ export default function RichTextEditor({
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://images.unsplash..."
-                className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div>
@@ -2174,21 +2414,21 @@ export default function RichTextEditor({
                 value={imageCaption}
                 onChange={(e) => setImageCaption(e.target.value)}
                 placeholder="Caption"
-                className="w-full p-1.5 rounded border border-[#dadce0] text-xs"
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowImageModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded"
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleInsertImage}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Insert
               </button>
@@ -2200,7 +2440,7 @@ export default function RichTextEditor({
       {/* Search Menus Dialog */}
       {showSearchMenusModal && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-24 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-3 shadow-2xl space-y-2 border border-[#dadce0]">
+          <div className="bg-white rounded-xl max-w-md w-full p-3 shadow-2xl space-y-2 border border-[#dadce0]">
             <div className="flex items-center gap-2 border-b border-[#dadce0] pb-2">
               <SearchIcon />
               <input
@@ -2226,7 +2466,7 @@ export default function RichTextEditor({
                   setShowFontManagerModal(true);
                   setShowSearchMenusModal(false);
                 }}
-                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded flex justify-between"
+                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
               >
                 <span>Add new fonts / Font manager</span>
                 <span className="text-[#1a73e8]">Extensions</span>
@@ -2237,7 +2477,7 @@ export default function RichTextEditor({
                   handlePrint();
                   setShowSearchMenusModal(false);
                 }}
-                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded flex justify-between"
+                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
               >
                 <span>Print</span>
                 <span className="text-[#747775]">Ctrl+P</span>
@@ -2248,7 +2488,7 @@ export default function RichTextEditor({
                   setShowTableModal(true);
                   setShowSearchMenusModal(false);
                 }}
-                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded flex justify-between"
+                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
               >
                 <span>Insert table</span>
                 <span className="text-[#747775]">Insert</span>
@@ -2261,8 +2501,8 @@ export default function RichTextEditor({
       {/* Word Count & Stats Dialog */}
       {showStatsModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Word count</h4>
+          <div className="bg-white rounded-xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Document Statistics</h4>
             <div className="space-y-1.5 text-xs text-[#444746]">
               <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
                 <span>Words:</span>
@@ -2281,7 +2521,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setShowStatsModal(false)}
-                className="px-4 py-1.5 rounded bg-[#1a73e8] text-white text-xs font-medium cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white text-xs font-medium cursor-pointer"
               >
                 OK
               </button>
@@ -2290,26 +2530,83 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Footer Status Bar */}
-      <div className="px-4 py-1.5 bg-white border-t border-[#dadce0] flex flex-wrap items-center justify-between text-[11px] text-[#5f6368] gap-2">
+      {/* Find and Replace Dialog */}
+      {showFindReplaceModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Find and Replace</h4>
+            <div>
+              <label className="block font-medium text-[#444746] text-xs mb-1">Find</label>
+              <input
+                type="text"
+                value={findText}
+                onChange={(e) => setFindText(e.target.value)}
+                placeholder="Text to find..."
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-[#444746] text-xs mb-1">Replace with</label>
+              <input
+                type="text"
+                value={replaceText}
+                onChange={(e) => setReplaceText(e.target.value)}
+                placeholder="Replacement text..."
+                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowFindReplaceModal(false)}
+                className="px-3 py-1.5 rounded-lg text-xs text-[#5f6368] hover:bg-[#f1f3f4]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!findText || !editorRef.current) return;
+                  const content = editorRef.current.innerHTML;
+                  const regex = new RegExp(findText, 'gi');
+                  editorRef.current.innerHTML = content.replace(regex, replaceText);
+                  handleInput();
+                  setShowFindReplaceModal(false);
+                }}
+                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white font-medium text-xs hover:bg-[#1557b0]"
+              >
+                Replace All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 5. WORLD-CLASS FOOTER ATMOSPHERE BAR                           */}
+      {/* ============================================================== */}
+      <div className={`px-4 py-2 ${currentTheme.canvas} border-t ${currentTheme.border} flex flex-wrap items-center justify-between text-[11px] text-[#5f6368] gap-2 transition-colors duration-200`}>
         <div className="flex items-center gap-2">
-          <span className="font-medium text-[#1f1f1f]">Google Docs</span>
+          <span className="font-semibold text-[#0f172a] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            World-Class Studio
+          </span>
           <span>•</span>
-          <span className="capitalize">{pageFormat === 'pageless' ? `Spacious (${textWidth})` : 'Page (Print)'}</span>
+          <span className="capitalize">{currentTheme.desc}</span>
           <span>•</span>
-          <span>{currentFont}</span>
+          <span className="font-medium text-blue-600">{currentFont}</span>
           <span>•</span>
           <span>{fontSize} pt</span>
         </div>
         <div className="flex items-center gap-3">
-          <span>{wordCount} words</span>
+          <span className="font-medium">{wordCount} words</span>
           <span>•</span>
-          <span>{charCount} characters</span>
+          <span>{Math.max(1, Math.ceil(wordCount / 200))} min read</span>
           <span>•</span>
           <button
             type="button"
             onClick={() => setShowFontManagerModal(true)}
-            className="text-[#1a73e8] hover:underline font-medium cursor-pointer"
+            className="text-[#1a73e8] hover:underline font-semibold cursor-pointer"
           >
             + Add New Fonts
           </button>
