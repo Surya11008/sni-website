@@ -54,13 +54,13 @@ import {
 
 const OFFICIAL_ROLES = [
   { id: 'MEM', name: 'Member (MEM) — Default', nameEn: 'Member (MEM)' },
-  { id: 'EVE', name: 'Evangelist (EVE)', nameEn: 'Evangelist (EVE)' },
-  { id: 'CW', name: 'Church Worker (CW)', nameEn: 'Church Worker (CW)' },
+  { id: 'EVA', name: 'Evangelist (EVA)', nameEn: 'Evangelist (EVA)' },
+  { id: 'CW', name: 'Co-Worker (CW)', nameEn: 'Co-Worker (CW)' },
   { id: 'UL', name: 'Unit Leader (UL)', nameEn: 'Unit Leader (UL)' },
   { id: 'GL', name: 'Group Leader (GL)', nameEn: 'Group Leader (GL)' },
-  { id: 'PTS', name: 'Pastoral Team Staff (PTS)', nameEn: 'Pastoral Team Staff (PTS)' },
-  { id: 'TS', name: 'Team Supervisor (TS)', nameEn: 'Team Supervisor (TS)' },
-  { id: 'PBCL', name: 'Public Bible Class Leader (PBCL)', nameEn: 'Public Bible Class Leader (PBCL)' },
+  { id: 'PTS', name: 'Pre-Theological Student (PTS)', nameEn: 'Pre-Theological Student (PTS)' },
+  { id: 'TS', name: 'Theological Student (TS)', nameEn: 'Theological Student (TS)' },
+  { id: 'PBCL', name: 'Pre-Branch Church Leader (PBCL)', nameEn: 'Pre-Branch Church Leader (PBCL)' },
   { id: 'DEA', name: 'Deacon / Deaconess (DEA)', nameEn: 'Deacon / Deaconess (DEA)' },
   { id: '(D) OS', name: 'Deputy Overseer ((D) OS)', nameEn: 'Deputy Overseer ((D) OS)' },
   { id: 'OS', name: 'Overseer (OS)', nameEn: 'Overseer (OS)' },
