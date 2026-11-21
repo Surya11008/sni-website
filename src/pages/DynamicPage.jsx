@@ -96,8 +96,6 @@ export default function DynamicPage() {
     setPageInfo(info);
     setActiveArticle(null);
     setIsFormOpen(false);
-    setStarsViewTab('tracker');
-    setDiaryViewTab('diary');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [categorySlug, pageSlug]);
 
