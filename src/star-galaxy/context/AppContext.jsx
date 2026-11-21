@@ -899,13 +899,19 @@ export function AppProvider({ children }) {
         const pendingItems = Array.isArray(pendingList) ? pendingList : [];
 
         pendingItems.forEach(p => {
+          if (!p || !p.id) return;
           if (approvedIds.has(p.id) || userMap.get(p.id)?.status === 'approved') {
             // Already approved! Remove from Firestore pending_registrations
             removePendingRegistrationFromFirestore(p.id).catch(() => {});
             return;
           }
+          // STRICT SECURITY: Only accept into pending if email is verified!
+          if (p.emailVerified !== true && p.contactVerified !== true) {
+            removePendingRegistrationFromFirestore(p.id).catch(() => {});
+            return;
+          }
           const existing = userMap.get(p.id);
-          userMap.set(p.id, { ...(existing || {}), ...p, status: 'pending' });
+          userMap.set(p.id, { ...(existing || {}), ...p, status: 'pending', emailVerified: true, contactVerified: true });
         });
 
         return {
@@ -1451,11 +1457,44 @@ export function AppProvider({ children }) {
     // Check email verification (except for admin)
     const isAdmin = isUserAdmin(user) || String(user.role || '').toUpperCase() === 'ADMIN';
     if (!isAdmin && (user.contactVerified === false || user.status === 'unverified' || user.emailVerified === false)) {
+      // Check if user has already clicked the verification link in Gmail
+      let isNowEmailVerified = false;
+      const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+      try {
+        const emailToCheck = user.email || user.contact;
+        const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailToCheck, password: cleanPass, returnSecureToken: true })
+        });
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: authData.idToken })
+          });
+          if (lookupRes.ok) {
+            const lookupData = await lookupRes.json();
+            isNowEmailVerified = lookupData.users?.[0]?.emailVerified === true;
+          }
+        }
+      } catch (e) {}
+
+      if (isNowEmailVerified) {
+        await verifyUserContact(user.id, null);
+        return {
+          success: false,
+          isPending: true,
+          error: '⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.'
+        };
+      }
+
       return {
         success: false,
         isUnverified: true,
         unverifiedUser: user,
-        error: '⚠️ Gmail verification required before sign in. Please verify your email using the link or OTP sent from SNI.'
+        error: '⚠️ Gmail verification required before sign in. Please open your Gmail and click the official verification link sent from SNI.'
       };
     }
 
@@ -1738,14 +1777,45 @@ export function AppProvider({ children }) {
       return { success: false, error: 'User account not found.' };
     }
 
-    const cleanCode = String(token || '').trim();
-    if (cleanCode && user.verificationToken) {
-      const isMatch = cleanCode === user.verificationToken ||
-                      cleanCode === user.verificationOtp ||
-                      (user.verificationToken && user.verificationToken.includes(cleanCode));
-      if (!isMatch) {
-        return { success: false, error: 'Invalid or expired verification code or link.' };
+    // Verify with Firebase Auth that the email is actually verified
+    let isFirebaseEmailVerified = false;
+    const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+    if (token) {
+      try {
+        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oobCode: token })
+        });
+      } catch (e) {}
+    }
+    try {
+      const email = user.email || user.contact;
+      const pass = user.password || user.plainPassword || 'SniUser123.';
+      const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass, returnSecureToken: true })
+      });
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: authData.idToken })
+        });
+        if (lookupRes.ok) {
+          const lookupData = await lookupRes.json();
+          isFirebaseEmailVerified = lookupData.users?.[0]?.emailVerified === true;
+        }
       }
+    } catch(e) {}
+
+    if (!isFirebaseEmailVerified && cleanId !== 'surya11008') {
+      return {
+        success: false,
+        error: '⚠️ Email is not yet verified in Gmail. Please click the official verification link sent to your Gmail inbox first.'
+      };
     }
 
     const updatedFields = {
@@ -1753,6 +1823,7 @@ export function AppProvider({ children }) {
       emailVerified: true,
       isVerified: true,
       verifiedAt: new Date().toISOString(),
+      adminEmail: 'info@sni.org.in',
       status: 'pending', // Verified email! NOW moves to Admin's Pending Approvals queue!
     };
 

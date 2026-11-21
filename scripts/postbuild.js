@@ -62,5 +62,8 @@ if (fs.existsSync(rootAuth)) {
   fs.writeFileSync(path.join(distDir, 'signin.html'), authHtml, 'utf8');
   fs.writeFileSync(path.join(distDir, 'join.html'), authHtml, 'utf8');
   fs.writeFileSync(path.join(distDir, 'auth.html'), authHtml, 'utf8');
-  console.log('[postbuild] Synced auth.html -> signin.html, join.html in root & dist');
+  fs.writeFileSync(path.join(publicDir, 'signin.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.join(publicDir, 'join.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.join(publicDir, 'auth.html'), authHtml, 'utf8');
+  console.log('[postbuild] Synced auth.html -> signin.html, join.html in root, dist & public');
 }

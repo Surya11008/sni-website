@@ -1118,10 +1118,14 @@
                                 userData = {
                                     userId: f.userId?.stringValue || f.username?.stringValue || userId,
                                     fullName: f.fullName?.stringValue || f.name?.stringValue || userId,
-                                    contact: f.contact?.stringValue || f.phone?.stringValue || '',
+                                    contact: f.contact?.stringValue || f.email?.stringValue || '',
+                                    email: f.email?.stringValue || f.contact?.stringValue || '',
                                     password: f.password?.stringValue || f.plainPassword?.stringValue || '',
                                     role: f.role?.stringValue || 'member',
-                                    status: f.status?.stringValue || 'approved',
+                                    status: f.status?.stringValue || 'unverified',
+                                    contactVerified: f.contactVerified?.booleanValue ?? false,
+                                    emailVerified: f.emailVerified?.booleanValue ?? false,
+                                    isVerified: f.isVerified?.booleanValue ?? false,
                                     joinedAt: f.registeredAt?.stringValue || f.createdAt?.stringValue || new Date().toISOString()
                                 };
                                 // Auto cache to RTDB
@@ -1141,6 +1145,39 @@
 
                         // Check Gmail / Email Verification for members
                         if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified' || userData.emailVerified === false)) {
+                            // First, check if user has verified their email in Gmail
+                            let isNowVerifiedInFirebase = false;
+                            const emailToCheck = userData.email || userData.contact;
+                            if (emailToCheck) {
+                                try {
+                                    const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ email: emailToCheck, password: pass, returnSecureToken: true })
+                                    });
+                                    if (authRes.ok) {
+                                        const authData = await authRes.json();
+                                        const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ idToken: authData.idToken })
+                                        });
+                                        if (lookupRes.ok) {
+                                            const lookupData = await lookupRes.json();
+                                            isNowVerifiedInFirebase = lookupData.users?.[0]?.emailVerified === true;
+                                        }
+                                    }
+                                } catch(e) {}
+                            }
+
+                            if (isNowVerifiedInFirebase) {
+                                await handleEmailVerifiedSuccess(userId);
+                                showAlert('⏳ Waiting for Admin Approval: Email verified! Your application has been submitted to Admin (info@sni.org.in). You will be able to sign in once approved.', 'info');
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                                return;
+                            }
+
                             showVerificationModal({
                                 userId,
                                 fullName: userData.fullName || userId,
@@ -1231,7 +1268,7 @@
                     return { success: false, error: 'Could not acquire authentication token' };
                 }
 
-                const continueUrl = `${window.location.origin}/auth.html?mode=email_verified&uid=${encodeURIComponent(userId)}`;
+                const continueUrl = `${window.location.origin}/signin?mode=email_verified&uid=${encodeURIComponent(userId)}`;
                 const oobRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1494,9 +1531,22 @@
         }
 
         // VERIFY ACCOUNT FROM EMAIL LINK
-        async function handleEmailVerifiedSuccess(uid) {
-            showAlert('Verifying your email with SNI...', 'info');
+        async function handleEmailVerifiedSuccess(uid, code = null) {
+            showAlert('Verifying your email with SNI & Google Firebase...', 'info');
             try {
+                // If oobCode is passed from Firebase email, apply it first
+                if (code) {
+                    try {
+                        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ oobCode: code })
+                        });
+                    } catch(e) {
+                        console.warn('oobCode apply error:', e);
+                    }
+                }
+
                 const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`);
                 let userData = null;
                 if (res.ok) {
@@ -1513,6 +1563,7 @@
                                 fullName: fsDoc.fields.fullName?.stringValue || uid,
                                 contact: fsDoc.fields.contact?.stringValue || fsDoc.fields.email?.stringValue || '',
                                 email: fsDoc.fields.email?.stringValue || fsDoc.fields.contact?.stringValue || '',
+                                password: fsDoc.fields.password?.stringValue || fsDoc.fields.plainPassword?.stringValue || '',
                                 status: fsDoc.fields.status?.stringValue || 'unverified'
                             };
                         }
@@ -1521,6 +1572,51 @@
 
                 if (!userData) {
                     showAlert('❌ Account not found for verification.', 'error');
+                    return false;
+                }
+
+                // STRICT VERIFICATION CHECK: Verify directly with Firebase Auth that email is truly verified!
+                let isFirebaseEmailVerified = false;
+                const emailToVerify = userData.email || userData.contact;
+                const passToVerify = userData.password || userData.plainPassword || 'SniUser123.';
+
+                if (emailToVerify) {
+                    try {
+                        const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: emailToVerify,
+                                password: passToVerify,
+                                returnSecureToken: true
+                            })
+                        });
+                        if (authRes.ok) {
+                            const authData = await authRes.json();
+                            const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ idToken: authData.idToken })
+                            });
+                            if (lookupRes.ok) {
+                                const lookupData = await lookupRes.json();
+                                isFirebaseEmailVerified = lookupData.users?.[0]?.emailVerified === true;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Firebase Auth lookup error:', e);
+                    }
+                }
+
+                // STOP! If email is NOT verified in Gmail, block immediately!
+                if (!isFirebaseEmailVerified && uid !== 'surya11008') {
+                    showAlert('⚠️ Gmail verification required! Please open your Gmail inbox and click the official verification link first.', 'error');
+                    showVerificationModal({
+                        userId: uid,
+                        fullName: userData.fullName || uid,
+                        email: emailToVerify,
+                        pass: passToVerify
+                    }, true);
                     return false;
                 }
 
@@ -1535,13 +1631,14 @@
                         emailVerified: true,
                         isVerified: true,
                         status: targetStatus,
-                        verifiedAt: new Date().toISOString()
+                        verifiedAt: new Date().toISOString(),
+                        adminEmail: 'info@sni.org.in'
                     })
                 });
 
                 // 2. Update Firestore users collection
                 try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&updateMask.fieldPaths=adminEmail&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1550,7 +1647,8 @@
                                 emailVerified: { booleanValue: true },
                                 isVerified: { booleanValue: true },
                                 status: { stringValue: targetStatus },
-                                verifiedAt: { stringValue: new Date().toISOString() }
+                                verifiedAt: { stringValue: new Date().toISOString() },
+                                adminEmail: { stringValue: 'info@sni.org.in' }
                             }
                         })
                     });
@@ -1577,7 +1675,8 @@
                                     contactVerified: { booleanValue: true },
                                     emailVerified: { booleanValue: true },
                                     isVerified: { booleanValue: true },
-                                    verifiedAt: { stringValue: new Date().toISOString() }
+                                    verifiedAt: { stringValue: new Date().toISOString() },
+                                    adminEmail: { stringValue: 'info@sni.org.in' }
                                 }
                             })
                         });
@@ -1603,21 +1702,7 @@
         if (mode === 'email_verified' && uidParam) {
             handleEmailVerifiedSuccess(uidParam);
         } else if (mode === 'verifyEmail' && oobCode) {
-            (async () => {
-                showAlert('Applying verification code from email...', 'info');
-                try {
-                    await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${FIREBASE_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ oobCode: oobCode })
-                    });
-                    if (uidParam) handleEmailVerifiedSuccess(uidParam);
-                } catch(e) {
-                    if (uidParam) handleEmailVerifiedSuccess(uidParam);
-                }
-            })();
-        } else if (mode === 'verify' && uidParam) {
-            handleEmailVerifiedSuccess(uidParam);
+            handleEmailVerifiedSuccess(uidParam, oobCode);
         } else if (mode === 'join' || window.location.pathname.includes('join')) {
             switchMode('join');
         } else {

@@ -34,12 +34,23 @@ export default function AdminTab() {
     currentUser,
     approveUser,
     rejectUser,
+    revokeUser,
+    changeUserRole,
+    OFFICIAL_ROLES,
+    OFFICIAL_ROLE_IDS,
+    normalizeRole,
     quickAddAndApproveMember,
     refreshRegistrations,
     deleteUser,
     resetPassword,
+    adminResetPassword,
     setManagerRole,
     assignMemberToManager,
+    addManagerToUser,
+    removeManagerFromUser,
+    manualVerifyContact,
+    setManagersForUser,
+    setMembersForManager,
     updateManagerPermission,
     updateMemberPermission,
     updateAllMembersPermissions,
@@ -52,6 +63,11 @@ export default function AdminTab() {
 
   const [activeSection, setActiveSection] = useState('members'); // 'members' | 'online' | 'approvals' | 'managers' | 'members_perm' | 'feedback'
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Multi-assignment modal state (assigning multiple managers to user OR multiple members to manager)
+  const [multiAssignTargetUser, setMultiAssignTargetUser] = useState(null);
+  const [multiAssignSelectedIds, setMultiAssignSelectedIds] = useState([]);
+  const [multiAssignSearch, setMultiAssignSearch] = useState('');
 
   const handleToggleAutoApproval = async () => {
     const nextVal = !autoApprovalEnabled;
@@ -123,12 +139,16 @@ export default function AdminTab() {
   const [membersInfoSearch, setMembersInfoSearch] = useState('');
   const [membersInfoRoleFilter, setMembersInfoRoleFilter] = useState('all');
 
+  const leadershipRoleIds = ['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'manager'];
+
   const filteredMembersInfo = (data?.users || []).filter(u => {
     if (!u) return false;
-    if (membersInfoRoleFilter === 'admin' && u.role !== 'admin') return false;
-    if (membersInfoRoleFilter === 'manager' && u.role !== 'manager') return false;
-    if (membersInfoRoleFilter === 'member' && u.role !== 'member') return false;
+    if (membersInfoRoleFilter === 'admin' && u.role !== 'ADMIN' && u.role !== 'admin') return false;
+    if (membersInfoRoleFilter === 'manager' && !leadershipRoleIds.includes(u.role)) return false;
+    if (membersInfoRoleFilter === 'member' && u.role !== 'MEM' && u.role !== 'member') return false;
     if (membersInfoRoleFilter === 'pending' && u.status !== 'pending') return false;
+    if (membersInfoRoleFilter === 'revoked' && u.status !== 'revoked') return false;
+    if (OFFICIAL_ROLE_IDS?.includes(membersInfoRoleFilter) && u.role !== membersInfoRoleFilter) return false;
 
     if (!membersInfoSearch.trim()) return true;
     const q = membersInfoSearch.toLowerCase().trim();
@@ -143,8 +163,8 @@ export default function AdminTab() {
     );
   });
 
-  const managers = data.users.filter(u => u.role === 'manager');
-  const regularMembers = (data?.users || []).filter(u => u && u.role === 'member');
+  const managers = (data?.users || []).filter(u => leadershipRoleIds.includes(u.role) || (Array.isArray(u.assignedMembers) && u.assignedMembers.length > 0));
+  const regularMembers = (data?.users || []).filter(u => u && (u.role === 'MEM' || u.role === 'member'));
 
   const filteredMembersBySearch = regularMembers.filter(m => {
     if (!memberPermSearch.trim()) return true;
@@ -171,9 +191,19 @@ export default function AdminTab() {
   });
 
   const pendingUsers = (data?.users || []).filter(u => {
-    if (!u || u.role === 'admin' || u.id === 'surya11008') return false;
+    if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     const s = (u.status || '').toLowerCase().trim();
-    return s === 'pending' || s === 'waiting' || (s !== 'approved' && u.role === 'member');
+    if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
+    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
+    return isEmailVerified && (s === 'pending' || s === 'waiting');
+  });
+
+  const unverifiedUsers = (data?.users || []).filter(u => {
+    if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
+    const s = (u.status || '').toLowerCase().trim();
+    if (s === 'approved' || s === 'revoked' || s === 'rejected') return false;
+    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
+    return !isEmailVerified || s === 'unverified';
   });
   const feedbackList = data.feedbackList || [];
 
@@ -191,9 +221,44 @@ export default function AdminTab() {
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  const handleApprove = (userId) => {
-    approveUser(userId);
-    flashSuccess('User approved successfully!');
+  const handleManualVerify = async (userId) => {
+    if (!manualVerifyContact) return;
+    const res = await manualVerifyContact(userId);
+    if (res?.success) {
+      flashSuccess(`Contact for "${userId}" verified successfully!`);
+    } else {
+      alert(res?.error || 'Failed to verify contact.');
+    }
+  };
+
+  const handleApprove = async (userId, targetRole = 'MEM') => {
+    await approveUser(userId, targetRole);
+    flashSuccess(`User approved with role "${targetRole}". Synced across SNI Website & Star Galaxy.`);
+  };
+
+  const handleRevoke = async (userId) => {
+    if (userId === 'surya11008') {
+      alert('Administrator account cannot be revoked!');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to revoke this user account? They will lose access to the portal.')) return;
+    const res = await revokeUser(userId);
+    if (res?.success) {
+      flashSuccess('User access revoked. Synced across SNI Website & Star Galaxy.');
+    }
+  };
+
+  const handleChangeRole = async (userId, newRole) => {
+    if (userId === 'surya11008' && newRole !== 'ADMIN') {
+      alert('Administrator (surya11008) cannot be demoted.');
+      return;
+    }
+    const res = await changeUserRole(userId, newRole);
+    if (res?.success) {
+      flashSuccess(`Role changed to "${newRole}". Synced across SNI Website & Star Galaxy.`);
+    } else {
+      alert(res?.error || 'Failed to update role.');
+    }
   };
 
   const handleReject = (userId) => {
@@ -204,7 +269,7 @@ export default function AdminTab() {
 
   const handleApproveAll = () => {
     if (!confirm(`Approve all ${pendingUsers.length} pending members?`)) return;
-    pendingUsers.forEach(u => approveUser(u.id));
+    pendingUsers.forEach(u => approveUser(u.id, u.role || 'MEM'));
     flashSuccess(`All ${pendingUsers.length} members approved!`);
   };
 
@@ -256,18 +321,18 @@ export default function AdminTab() {
     }
   };
 
-  const handleDeleteUser = (user) => {
-    if (user.role === 'admin' || user.id === 'surya11008') {
-      alert('Admin account cannot be deleted!');
+  const handleDeleteUser = async (user) => {
+    if (user.role === 'ADMIN' || user.id === 'surya11008') {
+      alert('Super Administrator (surya11008) cannot be deleted!');
       return;
     }
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${user.name}" (${user.username || user.phone}) permanently?\n\n⚠️ All records for this user will be removed.`
+      `Are you sure you want to delete "${user.name}" (${user.username || user.phone}) permanently?\n\n⚠️ This will permanently remove the user from BOTH Firestore and Realtime Database across all SNI platforms.`
     );
     if (!confirmed) return;
 
-    deleteUser(user.id);
-    flashSuccess(`User "${user.name}" deleted permanently.`);
+    await deleteUser(user.id);
+    flashSuccess(`User "${user.name}" deleted permanently from all databases.`);
   };
 
   const handleResetPass = async (user) => {
@@ -277,9 +342,9 @@ export default function AdminTab() {
     );
     if (!entered || !entered.trim()) return;
     const cleanNewPass = entered.trim();
-    const res = await resetPassword(user.id, cleanNewPass);
-    if (res.success) {
-      flashSuccess(`Password for "${user.name}" updated to: "${cleanNewPass}"`);
+    const res = await (adminResetPassword || resetPassword)(user.id, cleanNewPass);
+    if (res?.success) {
+      flashSuccess(`Password for "${user.name}" updated to: "${cleanNewPass}" (Synced across all databases)`);
     }
   };
 
@@ -292,6 +357,45 @@ export default function AdminTab() {
   const handleAssignChange = async (memberId, managerId) => {
     await assignMemberToManager(memberId, managerId);
     flashSuccess('Member assigned to manager successfully!');
+  };
+
+  const handleAddManagerToUser = async (userId, managerId) => {
+    if (!managerId) return;
+    await addManagerToUser(userId, managerId);
+    flashSuccess('Manager assigned successfully!');
+  };
+
+  const handleRemoveManagerFromUser = async (userId, managerId) => {
+    await removeManagerFromUser(userId, managerId);
+    flashSuccess('Manager assignment removed!');
+  };
+
+  const handleOpenMultiAssignForUser = (user) => {
+    const mgrIds = Array.isArray(user.assignedManagerIds)
+      ? user.assignedManagerIds
+      : (user.assignedManagerId ? [user.assignedManagerId] : []);
+    setMultiAssignTargetUser({ type: 'user_managers', user });
+    setMultiAssignSelectedIds(mgrIds);
+    setMultiAssignSearch('');
+  };
+
+  const handleOpenMultiAssignForManager = (manager) => {
+    const memberIds = Array.isArray(manager.assignedMembers) ? manager.assignedMembers : [];
+    setMultiAssignTargetUser({ type: 'manager_members', manager });
+    setMultiAssignSelectedIds(memberIds);
+    setMultiAssignSearch('');
+  };
+
+  const handleSaveMultiAssign = async () => {
+    if (!multiAssignTargetUser) return;
+    if (multiAssignTargetUser.type === 'user_managers') {
+      await setManagersForUser(multiAssignTargetUser.user.id, multiAssignSelectedIds);
+      flashSuccess(`Managers updated for ${multiAssignTargetUser.user.name}!`);
+    } else if (multiAssignTargetUser.type === 'manager_members') {
+      await setMembersForManager(multiAssignTargetUser.manager.id, multiAssignSelectedIds);
+      flashSuccess(`Assigned members updated for Manager ${multiAssignTargetUser.manager.name}!`);
+    }
+    setMultiAssignTargetUser(null);
   };
 
   const handleQuickToggleManagerPerm = (mgrId) => {
@@ -643,7 +747,7 @@ export default function AdminTab() {
                       : 'bg-amber-50 text-amber-800 border border-amber-200'
                   }`}
                 >
-                  👑 Admin ({data.users.filter(u => u.role === 'admin').length})
+                  👑 Admin ({data.users.filter(u => u.role === 'ADMIN' || u.role === 'admin').length})
                 </button>
                 <button
                   type="button"
@@ -654,7 +758,7 @@ export default function AdminTab() {
                       : 'bg-purple-50 text-purple-800 border border-purple-200'
                   }`}
                 >
-                  ⭐ Managers ({data.users.filter(u => u.role === 'manager').length})
+                  ⭐ Leaders ({data.users.filter(u => leadershipRoleIds.includes(u.role)).length})
                 </button>
                 <button
                   type="button"
@@ -665,19 +769,45 @@ export default function AdminTab() {
                       : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                   }`}
                 >
-                  👤 Members ({data.users.filter(u => u.role === 'member').length})
+                  👤 Members ({data.users.filter(u => u.role === 'MEM' || u.role === 'member').length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setMembersInfoRoleFilter('pending')}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
                     membersInfoRoleFilter === 'pending'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200'
                   }`}
                 >
                   ⏳ Pending ({data.users.filter(u => u.status === 'pending').length})
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMembersInfoRoleFilter('revoked')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                    membersInfoRoleFilter === 'revoked'
+                      ? 'bg-rose-700 text-white shadow-xs'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}
+                >
+                  🚫 Revoked ({data.users.filter(u => u.status === 'revoked').length})
+                </button>
+              </div>
+
+              {/* Specific Role Dropdown filter */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-slate-400 font-bold">Role:</span>
+                <select
+                  value={OFFICIAL_ROLE_IDS?.includes(membersInfoRoleFilter) ? membersInfoRoleFilter : ''}
+                  onChange={(e) => setMembersInfoRoleFilter(e.target.value || 'all')}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  <option value="">Specific Role...</option>
+                  {(OFFICIAL_ROLES || []).map(r => (
+                    <option key={r.id} value={r.id}>{r.id} ({data.users.filter(u => u.role === r.id).length})</option>
+                  ))}
+                </select>
               </div>
 
               <span className="text-[11px] text-slate-500 font-semibold">
@@ -728,14 +858,26 @@ export default function AdminTab() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase ${
-                        u.role === 'admin' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
-                        u.role === 'manager' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
-                        'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                      }`}>
-                        {u.role}
-                      </span>
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {/* Official Role Selector Dropdown */}
+                      <select
+                        value={u.role || 'MEM'}
+                        disabled={u.id === 'surya11008'}
+                        onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase border cursor-pointer ${
+                          u.role === 'ADMIN' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                          leadershipRoleIds.includes(u.role) ? 'bg-purple-100 text-purple-900 border-purple-300' :
+                          'bg-emerald-50 text-emerald-900 border-emerald-300'
+                        }`}
+                        title="Change user official role"
+                      >
+                        {(OFFICIAL_ROLES || []).map(r => (
+                          <option key={r.id} value={r.id}>
+                            {r.id}
+                          </option>
+                        ))}
+                      </select>
+
                       {onlineUsers.some(ou => ou.id === u.id) && (
                         <span className="px-2 py-0.5 rounded-lg text-[10px] bg-emerald-100 text-emerald-800 font-black border border-emerald-300 flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -743,8 +885,18 @@ export default function AdminTab() {
                         </span>
                       )}
                       {u.status === 'pending' && (
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] bg-rose-100 text-rose-800 font-bold border border-rose-300">
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] bg-amber-100 text-amber-800 font-bold border border-amber-300">
                           PENDING
+                        </span>
+                      )}
+                      {u.status === 'revoked' && (
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] bg-rose-100 text-rose-800 font-bold border border-rose-300">
+                          REVOKED
+                        </span>
+                      )}
+                      {u.status === 'approved' && (
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                          APPROVED
                         </span>
                       )}
                     </div>
@@ -765,9 +917,30 @@ export default function AdminTab() {
                       <span className="text-[10px] font-bold text-slate-400 block uppercase">
                         {t('phoneOrGmail') || 'Phone or Gmail'}
                       </span>
-                      <span className="font-bold text-slate-700">
-                        {u.contact || u.phone || 'N/A'}
-                      </span>
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <span className="font-bold text-slate-700 truncate">
+                          {u.contact || u.phone || 'N/A'}
+                        </span>
+                        {u.contactVerified || u.isVerified || u.role === 'ADMIN' ? (
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold">
+                              ⚠️ Unverified
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleManualVerify(u.id)}
+                              className="text-[9px] text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+                              title="Manually mark contact as verified"
+                            >
+                              Verify
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="p-2 rounded-xl bg-slate-50">
@@ -799,27 +972,108 @@ export default function AdminTab() {
                     </span>
                   </div>
 
-                  {/* Assigned Manager (for members) */}
-                  {u.role === 'member' && (
-                    <div className="mt-2.5 flex items-center justify-between text-xs bg-indigo-50/50 p-2 rounded-xl border border-indigo-100">
-                      <span className="text-slate-600 font-semibold">{t('assignedManager') || 'Assigned Manager:'}</span>
-                      <select
-                        value={u.assignedManagerId || ''}
-                        onChange={(e) => handleAssignChange(u.id, e.target.value)}
-                        className="bg-white border border-indigo-200 rounded-lg px-2 py-1 text-xs font-bold text-indigo-900 shadow-2xs"
-                      >
-                        <option value="">{t('unassigned') || 'Unassigned'}</option>
-                        {managers.map(m => (
-                          <option key={m.id} value={m.id}>{m.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  {/* Assigned Managers (for everyone: members and managers alike) */}
+                  {u.role !== 'admin' && u.id !== 'surya11008' && (() => {
+                    const uMgrIds = Array.isArray(u.assignedManagerIds)
+                      ? u.assignedManagerIds
+                      : (u.assignedManagerId ? [u.assignedManagerId] : []);
+                    const assignedMgrs = managers.filter(m => uMgrIds.includes(m.id));
+                    const availableToAdd = managers.filter(m => m.id !== u.id && !uMgrIds.includes(m.id));
+
+                    return (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-gradient-to-br from-indigo-50/80 to-purple-50/60 border border-indigo-100 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-700 font-bold flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>{t('assignedManagers') || 'Assigned Managers'} ({assignedMgrs.length})</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMultiAssignForUser(u)}
+                            className="text-[10px] text-indigo-700 hover:text-indigo-900 font-bold bg-white px-2 py-0.5 rounded-lg border border-indigo-200 shadow-2xs hover:bg-indigo-50 flex items-center gap-1 cursor-pointer transition-all"
+                            title="Multi-select managers with checkboxes"
+                          >
+                            <span>⚡ Multi-Assign</span>
+                          </button>
+                        </div>
+
+                        {/* Chips of assigned managers */}
+                        <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+                          {assignedMgrs.length === 0 ? (
+                            <span className="text-[11px] text-slate-400 italic">No managers assigned yet (Unassigned)</span>
+                          ) : (
+                            assignedMgrs.map(mgr => (
+                              <span
+                                key={mgr.id}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white border border-indigo-200 text-indigo-950 text-xs font-bold shadow-2xs"
+                              >
+                                <span>👔 {mgr.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveManagerFromUser(u.id, mgr.id)}
+                                  className="text-indigo-400 hover:text-rose-600 transition-colors ml-0.5 font-black cursor-pointer text-xs"
+                                  title={`Remove ${mgr.name}`}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))
+                          )}
+                        </div>
+
+                        {/* Dropdown to assign additional manager */}
+                        {availableToAdd.length > 0 && (
+                          <div className="flex items-center gap-2 pt-0.5">
+                            <select
+                              value=""
+                              onChange={(e) => {
+                                if (e.target.value) handleAddManagerToUser(u.id, e.target.value);
+                              }}
+                              className="bg-white border border-indigo-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-indigo-900 shadow-2xs flex-1 cursor-pointer"
+                            >
+                              <option value="">➕ Assign Manager to {u.name}...</option>
+                              {availableToAdd.map(m => (
+                                <option key={m.id} value={m.id}>
+                                  {m.name} ({m.username || m.phone})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Bottom Actions Bar */}
                 <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
-                  {u.role === 'member' && (
+                  {/* Approve / Reactivate Button */}
+                  {u.status !== 'approved' && (
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(u.id, u.role || 'MEM')}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs cursor-pointer transition-all"
+                      title="Approve / Reactivate user"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Approve</span>
+                    </button>
+                  )}
+
+                  {/* Revoke Button */}
+                  {u.status === 'approved' && u.id !== 'surya11008' && u.role !== 'ADMIN' && (
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(u.id)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 flex items-center gap-1 shadow-xs cursor-pointer transition-all"
+                      title="Revoke portal access"
+                    >
+                      <UserX className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Revoke</span>
+                    </button>
+                  )}
+
+                  {(u.role === 'MEM' || u.role === 'member') && (
                     <button
                       type="button"
                       onClick={() => handleQuickToggleMemberPerm(u.id)}
@@ -844,20 +1098,8 @@ export default function AdminTab() {
                     </button>
                   )}
 
-                  {u.role !== 'admin' && (
-                    <button
-                      onClick={() => handleToggleManager(u.id, u.role)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs ${
-                        u.role === 'manager'
-                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {u.role === 'manager' ? (t('removeManager') || 'Demote to Member') : (t('makeManager') || 'Make Manager')}
-                    </button>
-                  )}
-
                   <button
+                    type="button"
                     onClick={() => handleResetPass(u)}
                     className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 flex items-center gap-1 shadow-2xs cursor-pointer"
                     title="Reset member password"
@@ -866,11 +1108,12 @@ export default function AdminTab() {
                     <span>{t('resetPass') || 'Reset Pass'}</span>
                   </button>
 
-                  {u.role !== 'admin' && (
+                  {u.role !== 'ADMIN' && u.id !== 'surya11008' && (
                     <button
+                      type="button"
                       onClick={() => handleDeleteUser(u)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors flex items-center gap-1 shadow-2xs"
-                      title="Permanently remove user"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+                      title="Permanently remove user from all databases"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>{t('deleteUser') || 'Delete'}</span>
@@ -1177,7 +1420,10 @@ export default function AdminTab() {
                         <span className="text-[10px] font-bold text-slate-400 block uppercase">
                           {t('phoneOrGmail') || 'Phone or Gmail'}
                         </span>
-                        <span className="font-bold text-slate-700">{applicant.contact || applicant.phone || 'N/A'}</span>
+                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                          <span className="font-bold text-slate-700">{applicant.contact || applicant.phone || 'N/A'}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[9px]">✓ Email Verified</span>
+                        </div>
                       </div>
                     </div>
 
@@ -1289,8 +1535,15 @@ export default function AdminTab() {
                         {/* Assigned Members List & Quick Assign for Manager m */}
                         <div className="pt-2 border-t border-slate-100 space-y-2">
                           <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
-                            <span>Assigned Members ({m.assignedMembers?.length || 0}):</span>
-                            <span className="text-[10px] text-purple-700">Can input & view records</span>
+                            <span>Assigned Members & Managers ({m.assignedMembers?.length || 0}):</span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenMultiAssignForManager(m)}
+                              className="text-[10px] text-purple-700 hover:text-purple-900 font-bold bg-white px-2 py-0.5 rounded-lg border border-purple-200 shadow-2xs hover:bg-purple-50 flex items-center gap-1 cursor-pointer transition-all"
+                              title="Batch multi-assign members and managers with checkboxes"
+                            >
+                              <span>⚡ Multi-Assign</span>
+                            </button>
                           </div>
 
                           <div className="flex flex-wrap gap-1.5 min-h-[24px]">
@@ -1304,10 +1557,10 @@ export default function AdminTab() {
                                     key={mid}
                                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold shadow-2xs"
                                   >
-                                    <span>{memObj?.name || mid}</span>
+                                    <span>{memObj?.role === 'manager' ? '👔 ' : '👤 '}{memObj?.name || mid}</span>
                                     <button
                                       type="button"
-                                      onClick={() => handleAssignChange(mid, '')}
+                                      onClick={() => handleRemoveManagerFromUser(mid, m.id)}
                                       className="text-purple-400 hover:text-rose-600 transition-colors ml-0.5 font-black cursor-pointer"
                                       title="Unassign member"
                                     >
@@ -1319,26 +1572,93 @@ export default function AdminTab() {
                             )}
                           </div>
 
-                          {/* Quick Assign Member Dropdown */}
+                          {/* Quick Assign Member/Manager Dropdown */}
                           <div className="flex items-center gap-2 pt-1">
                             <select
                               value=""
                               onChange={(e) => {
-                                if (e.target.value) handleAssignChange(e.target.value, m.id);
+                                if (e.target.value) handleAddManagerToUser(e.target.value, m.id);
                               }}
                               className="bg-purple-50/60 border border-purple-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-purple-900 shadow-2xs flex-1 cursor-pointer"
                             >
-                              <option value="">➕ Assign Member to {m.name}...</option>
+                              <option value="">➕ Assign Member or Manager to {m.name}...</option>
                               {data.users
-                                .filter(u => u.role === 'member' && u.status === 'approved' && !(m.assignedMembers || []).includes(u.id))
-                                .map(u => (
-                                  <option key={u.id} value={u.id}>
-                                    {u.name} ({u.username || u.phone}) {u.assignedManagerId ? `[Managed by: ${data.users.find(mgr => mgr.id === u.assignedManagerId)?.name || 'Other'}]` : '[Unassigned]'}
-                                  </option>
-                                ))}
+                                .filter(u => u.id !== m.id && u.role !== 'admin' && u.id !== 'surya11008' && u.status === 'approved' && !(m.assignedMembers || []).includes(u.id))
+                                .map(u => {
+                                  const uMgrIds = Array.isArray(u.assignedManagerIds) ? u.assignedManagerIds : (u.assignedManagerId ? [u.assignedManagerId] : []);
+                                  const mgrNames = managers.filter(mgr => uMgrIds.includes(mgr.id)).map(mgr => mgr.name).join(', ');
+                                  return (
+                                    <option key={u.id} value={u.id}>
+                                      {u.name} [{u.role === 'manager' ? '👔 Manager' : '👤 Member'}] {mgrNames ? `(Managed by: ${mgrNames})` : '(Unassigned)'}
+                                    </option>
+                                  );
+                                })}
                             </select>
                           </div>
                         </div>
+
+                        {/* Hierarchy: Assigned Managers for Manager m */}
+                        {(() => {
+                          const mParentMgrIds = Array.isArray(m.assignedManagerIds)
+                            ? m.assignedManagerIds
+                            : (m.assignedManagerId ? [m.assignedManagerId] : []);
+                          const parentMgrObjs = managers.filter(pm => mParentMgrIds.includes(pm.id));
+                          const availableParents = managers.filter(pm => pm.id !== m.id && !mParentMgrIds.includes(pm.id));
+
+                          return (
+                            <div className="pt-2 border-t border-slate-100 space-y-1.5 bg-indigo-50/40 p-2.5 rounded-xl border border-indigo-100">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                                <span className="flex items-center gap-1 text-indigo-900">
+                                  <Users className="w-3 h-3 text-indigo-600" />
+                                  <span>Assigned Managers for {m.name} ({parentMgrObjs.length}):</span>
+                                </span>
+                                <span className="text-[10px] text-indigo-600 font-semibold">Hierarchy</span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-1.5 min-h-[22px]">
+                                {parentMgrObjs.length === 0 ? (
+                                  <span className="text-[11px] text-slate-400 italic">No parent managers assigned</span>
+                                ) : (
+                                  parentMgrObjs.map(pm => (
+                                    <span
+                                      key={pm.id}
+                                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-100/70 border border-indigo-200 text-indigo-900 text-xs font-bold shadow-2xs"
+                                    >
+                                      <span>👔 {pm.name}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveManagerFromUser(m.id, pm.id)}
+                                        className="text-indigo-400 hover:text-rose-600 transition-colors ml-0.5 font-black cursor-pointer text-xs"
+                                        title={`Remove ${pm.name}`}
+                                      >
+                                        ✕
+                                      </button>
+                                    </span>
+                                  ))
+                                )}
+                              </div>
+
+                              {availableParents.length > 0 && (
+                                <div className="flex items-center gap-2 pt-0.5">
+                                  <select
+                                    value=""
+                                    onChange={(e) => {
+                                      if (e.target.value) handleAddManagerToUser(m.id, e.target.value);
+                                    }}
+                                    className="bg-white border border-indigo-200 rounded-lg px-2 py-1 text-xs font-bold text-indigo-900 shadow-2xs flex-1 cursor-pointer"
+                                  >
+                                    <option value="">➕ Assign {m.name} to another Manager...</option>
+                                    {availableParents.map(other => (
+                                      <option key={other.id} value={other.id}>
+                                        {other.name} ({other.username || other.phone})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
                           <button
@@ -1628,11 +1948,17 @@ export default function AdminTab() {
                                 </h4>
                                 <p className="text-[11px] text-slate-500 font-medium">
                                   {m.nickname || m.username || m.phone || m.contact}
-                                  {m.assignedManagerId && (
-                                    <span className="text-indigo-600 ml-1">
-                                      • Mgr: {managers.find(mgr => mgr.id === m.assignedManagerId)?.name || 'Assigned'}
-                                    </span>
-                                  )}
+                                  {(() => {
+                                    const mgrIds = Array.isArray(m.assignedManagerIds)
+                                      ? m.assignedManagerIds
+                                      : (m.assignedManagerId ? [m.assignedManagerId] : []);
+                                    const names = managers.filter(mgr => mgrIds.includes(mgr.id)).map(mgr => mgr.name).join(', ');
+                                    return names ? (
+                                      <span className="text-indigo-600 ml-1 font-semibold">
+                                        • Mgrs: {names}
+                                      </span>
+                                    ) : null;
+                                  })()}
                                 </p>
                               </div>
                             </div>
@@ -1852,6 +2178,196 @@ export default function AdminTab() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ⚡ Multi-Assignment Modal Dialog */}
+      {multiAssignTargetUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] shadow-2xl border-2 border-indigo-200 flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 p-4 text-white flex items-center justify-between">
+              <div>
+                <h3 className="font-black text-sm sm:text-base flex items-center gap-2">
+                  <span>⚡</span>
+                  <span>
+                    {multiAssignTargetUser.type === 'user_managers'
+                      ? `Assign Managers to ${multiAssignTargetUser.user.name}`
+                      : `Assign Members / Managers to ${multiAssignTargetUser.manager.name}`}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-indigo-100 font-medium">
+                  {multiAssignTargetUser.type === 'user_managers'
+                    ? 'Check all managers who can manage and input records for this user'
+                    : 'Check all members and managers assigned to this manager'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMultiAssignTargetUser(null)}
+                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white font-bold transition-all cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search & Bulk Select Controls */}
+            <div className="p-3 bg-slate-50 border-b border-slate-200 space-y-2">
+              <input
+                type="text"
+                placeholder="Search candidates by name, username, or phone..."
+                value={multiAssignSearch}
+                onChange={(e) => setMultiAssignSearch(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium"
+              />
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="font-bold text-slate-600">
+                  {multiAssignSelectedIds.length} Selected
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (multiAssignTargetUser.type === 'user_managers') {
+                        const allMgrIds = managers.filter(m => m.id !== multiAssignTargetUser.user.id).map(m => m.id);
+                        setMultiAssignSelectedIds(allMgrIds);
+                      } else {
+                        const allUserIds = data.users
+                          .filter(u => u.id !== multiAssignTargetUser.manager.id && u.role !== 'admin' && u.id !== 'surya11008' && u.status === 'approved')
+                          .map(u => u.id);
+                        setMultiAssignSelectedIds(allUserIds);
+                      }
+                    }}
+                    className="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 cursor-pointer"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMultiAssignSelectedIds([])}
+                    className="text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Candidate Checklist */}
+            <div className="p-3 overflow-y-auto space-y-1.5 flex-1 max-h-[50vh]">
+              {(() => {
+                const search = multiAssignSearch.toLowerCase().trim();
+                let candidates = [];
+
+                if (multiAssignTargetUser.type === 'user_managers') {
+                  candidates = managers.filter(m => m.id !== multiAssignTargetUser.user.id);
+                } else {
+                  candidates = data.users.filter(u =>
+                    u.id !== multiAssignTargetUser.manager.id &&
+                    u.role !== 'admin' &&
+                    u.id !== 'surya11008' &&
+                    u.status === 'approved'
+                  );
+                }
+
+                if (search) {
+                  candidates = candidates.filter(c =>
+                    (c.name || '').toLowerCase().includes(search) ||
+                    (c.username || c.id || '').toLowerCase().includes(search) ||
+                    (c.phone || c.contact || '').toLowerCase().includes(search)
+                  );
+                }
+
+                if (candidates.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-xs text-slate-400 italic">
+                      No matching users found.
+                    </div>
+                  );
+                }
+
+                return candidates.map(candidate => {
+                  const isChecked = multiAssignSelectedIds.includes(candidate.id);
+                  return (
+                    <div
+                      key={candidate.id}
+                      onClick={() => {
+                        setMultiAssignSelectedIds(prev =>
+                          prev.includes(candidate.id)
+                            ? prev.filter(id => id !== candidate.id)
+                            : [...prev, candidate.id]
+                        );
+                      }}
+                      className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-indigo-50/90 border-indigo-300 text-indigo-950 font-bold shadow-2xs'
+                          : 'bg-white border-slate-100 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                          candidate.role === 'manager'
+                            ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}>
+                          {candidate.role === 'manager' ? '👔' : '👤'}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold truncate">{candidate.name}</span>
+                            <span className="text-[10px] text-slate-400 font-semibold">({candidate.username || candidate.phone})</span>
+                            <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-extrabold uppercase ${
+                              candidate.role === 'manager' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {candidate.role}
+                            </span>
+                          </div>
+                          {multiAssignTargetUser.type === 'manager_members' && (() => {
+                            const cMgrIds = Array.isArray(candidate.assignedManagerIds)
+                              ? candidate.assignedManagerIds
+                              : (candidate.assignedManagerId ? [candidate.assignedManagerId] : []);
+                            const cMgrNames = managers.filter(m => cMgrIds.includes(m.id)).map(m => m.name).join(', ');
+                            return cMgrNames ? (
+                              <p className="text-[10px] text-indigo-600 font-medium">Managed by: {cMgrNames}</p>
+                            ) : (
+                              <p className="text-[10px] text-slate-400 italic">Unassigned</p>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}} // controlled by container
+                        className="rounded-md text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                      />
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setMultiAssignTargetUser(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveMultiAssign}
+                className="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>💾 Save Assignments ({multiAssignSelectedIds.length})</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

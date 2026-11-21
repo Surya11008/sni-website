@@ -38,13 +38,14 @@ export default function AdminPendingApprovalsModal({ isOpenOverride, onCloseOver
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin' || currentUser?.id === 'surya11008';
   const [sessionApprovedIds, setSessionApprovedIds] = useState(() => new Set());
 
-  // Filter only applicants who have completed email verification and are waiting for Admin approval
+  // Filter only applicants who have completed real email verification and are waiting for Admin approval
   const pendingUsers = (data?.users || []).filter(u => {
     if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     if (sessionApprovedIds.has(u.id)) return false;
     const s = (u.status || '').toLowerCase().trim();
-    const isContactVerified = u.contactVerified === true || u.isVerified === true || u.emailVerified === true;
-    return isContactVerified && (s === 'pending' || s === 'waiting') && s !== 'approved';
+    if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
+    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
+    return isEmailVerified && (s === 'pending' || s === 'waiting');
   });
 
   const [hasSkipped, setHasSkipped] = useState(() => {

@@ -24,11 +24,6 @@
         "source": "/auth",
         "destination": "/signin",
         "type": 301
-      },
-      {
-        "source": "/auth.html",
-        "destination": "/signin",
-        "type": 301
       }
     ],
     "rewrites": [

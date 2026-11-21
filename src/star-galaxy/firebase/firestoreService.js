@@ -53,15 +53,18 @@ export async function saveUserToFirestore(user) {
     const cleanUser = sanitizeForFirestore(user);
     await setDoc(doc(db, 'users', user.id), cleanUser, { merge: true });
 
-    // Guarantee manager role in dedicated manager_roles collection
-    if (user.role === 'manager') {
+    // Guarantee manager/leader role in dedicated manager_roles collection
+    const leadershipRoles = ['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'manager'];
+    const isLeader = leadershipRoles.includes(user.role) || (Array.isArray(user.assignedMembers) && user.assignedMembers.length > 0);
+    if (isLeader) {
       await setDoc(doc(db, 'manager_roles', user.id), {
         id: user.id,
         isManager: true,
+        role: user.role,
         assignedMembers: Array.isArray(user.assignedMembers) ? user.assignedMembers : [],
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-    } else if (user.role === 'member') {
+    } else if (user.role === 'MEM' || user.role === 'member') {
       await deleteDoc(doc(db, 'manager_roles', user.id)).catch(() => {});
     }
 
@@ -214,11 +217,15 @@ export async function getAllUsersFromFirestore() {
   }
 }
 
-export async function deleteUserFromFirestore(userId) {
+export async function deleteUserFromFirestore(userId, extraIds = []) {
   if (!isFirebaseConfigured() || !db || !userId) return false;
   try {
-    await deleteDoc(doc(db, 'users', userId));
-    await deleteDoc(doc(db, 'pending_registrations', userId)).catch(() => {});
+    const idsToDelete = new Set([userId, ...extraIds].filter(Boolean));
+    for (const id of idsToDelete) {
+      await deleteDoc(doc(db, 'users', id)).catch(() => {});
+      await deleteDoc(doc(db, 'pending_registrations', id)).catch(() => {});
+      await deleteDoc(doc(db, 'manager_roles', id)).catch(() => {});
+    }
     return true;
   } catch (e) {
     console.error('Error deleting user from Firestore:', e);
@@ -226,24 +233,25 @@ export async function deleteUserFromFirestore(userId) {
   }
 }
 
-/**
- * Sync User-Isolated Activities Data (100% Confidential to Active Member)
- */
-export function subscribeUserActivities(userId, onUpdate) {
-  if (!isFirebaseConfigured() || !db || !userId) return () => {};
-  try {
-    const docRef = doc(db, 'activities', userId);
-    return onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        onUpdate(docSnap.data());
-      }
-    }, (err) => console.error('Firestore user activities error:', err));
-  } catch (e) {
-    console.error('Failed to subscribe user activities:', e);
-    return () => {};
+export async function deleteUserFromRTDB(userId, extraIds = []) {
+  const idsToDelete = new Set(
+    [userId, ...extraIds]
+      .filter(Boolean)
+      .map(id => String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))
+  );
+  for (const cleanId of idsToDelete) {
+    if (!cleanId) continue;
+    try {
+      await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanId)}.json`, {
+        method: 'DELETE'
+      });
+    } catch (e) {}
   }
 }
 
+/**
+ * Sync Activities Data
+ */
 export function subscribeAllActivities(onUpdate) {
   if (!isFirebaseConfigured() || !db) return () => {};
   try {
@@ -583,26 +591,6 @@ export function subscribeUserGospelDiary(userId, onUpdate) {
     }, (err) => console.error('Firestore diary error:', err));
   } catch (e) {
     console.error('Failed to subscribe user diary:', e);
-    return () => {};
-  }
-}
-
-/**
- * Sync ALL Gospel Diaries across all members (for Admin full visibility & control)
- */
-export function subscribeAllGospelDiaries(onUpdate) {
-  if (!isFirebaseConfigured() || !db) return () => {};
-  try {
-    const colRef = collection(db, 'gospel_diary');
-    return onSnapshot(colRef, (snapshot) => {
-      const allDiaries = {};
-      snapshot.forEach(docSnap => {
-        allDiaries[docSnap.id] = docSnap.data().entries || [];
-      });
-      onUpdate(allDiaries);
-    }, (err) => console.error('Firestore all diaries error:', err));
-  } catch (e) {
-    console.error('Failed to subscribe all diaries:', e);
     return () => {};
   }
 }

@@ -201,8 +201,8 @@ export default function AdminPanel() {
               if (!u) return;
               const existing = userMap.get(key) || {};
               const isAdm = key === 'surya11008' || u.role === 'admin' || u.role === 'ADMIN' || existing.role === 'admin' || existing.role === 'ADMIN';
-              const isVerified = isAdm ? true : (u.contactVerified !== undefined ? Boolean(u.contactVerified) : (existing.contactVerified !== undefined ? Boolean(existing.contactVerified) : (u.isVerified !== undefined ? Boolean(u.isVerified) : false)));
-              const userStatus = isAdm ? 'approved' : (u.status || existing.status || (isVerified ? 'pending' : 'unverified'));
+              const isVerified = isAdm ? true : (u.emailVerified === true && (u.contactVerified === true || u.isVerified === true));
+              const userStatus = isAdm ? 'approved' : (u.status || existing.status || 'unverified');
               userMap.set(key, {
                 ...existing,
                 ...u,
@@ -1174,19 +1174,18 @@ export default function AdminPanel() {
   const isUserPending = (u) => {
     const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
     if (isUserAdmin) return false;
-    if (u.status === 'approved') return false;
-    if (u.status === 'revoked' || u.status === 'rejected') return false;
-    // Strictly requires phone or email contact to be verified first!
-    const isContactVerified = u.contactVerified === true || u.isVerified === true;
-    return isContactVerified && (u.status === 'pending' || !u.status || u.status === 'awaiting_approval');
+    if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected' || u.status === 'unverified') return false;
+    // Strictly requires email to be verified first!
+    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
+    return isEmailVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
   };
 
   const isUserUnverified = (u) => {
     const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
     if (isUserAdmin) return false;
     if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected') return false;
-    const isContactVerified = u.contactVerified === true || u.isVerified === true;
-    return !isContactVerified || u.status === 'unverified' || u.status === 'awaiting_verification';
+    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
+    return !isEmailVerified || u.status === 'unverified' || u.status === 'awaiting_verification';
   };
 
   const isUserApproved = (u) => {
