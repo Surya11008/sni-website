@@ -200,7 +200,9 @@ export default function AdminPanel() {
               const u = rtdbData[key];
               if (!u) return;
               const existing = userMap.get(key) || {};
-              const isVerified = (u.contactVerified !== undefined ? u.contactVerified : (existing.contactVerified !== undefined ? existing.contactVerified : (u.isVerified !== undefined ? u.isVerified : (existing.isVerified !== undefined ? existing.isVerified : (u.role === 'admin' || u.role === 'ADMIN')))));
+              const isAdm = key === 'surya11008' || u.role === 'admin' || u.role === 'ADMIN' || existing.role === 'admin' || existing.role === 'ADMIN';
+              const isVerified = isAdm ? true : (u.contactVerified !== undefined ? Boolean(u.contactVerified) : (existing.contactVerified !== undefined ? Boolean(existing.contactVerified) : (u.isVerified !== undefined ? Boolean(u.isVerified) : false)));
+              const userStatus = isAdm ? 'approved' : (u.status || existing.status || (isVerified ? 'pending' : 'unverified'));
               userMap.set(key, {
                 ...existing,
                 ...u,
@@ -210,8 +212,8 @@ export default function AdminPanel() {
                 email: u.email || existing.email || (u.contact && u.contact.includes('@') ? u.contact : ''),
                 phone: u.phone || existing.phone || (u.contact && !u.contact.includes('@') ? u.contact : ''),
                 password: u.password || existing.password || '',
-                role: u.role || existing.role || 'member',
-                status: u.status || existing.status || (u.role === 'admin' ? 'approved' : 'pending'),
+                role: u.role || existing.role || 'MEM',
+                status: userStatus,
                 contactVerified: isVerified,
                 isVerified: isVerified,
                 createdAt: u.joinedAt || existing.createdAt || existing.joinedAt || '',
