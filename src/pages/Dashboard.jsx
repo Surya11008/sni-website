@@ -105,7 +105,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between text-slate-900">
-      <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
+      <div className="py-8 px-3 sm:px-6 md:px-8 lg:px-12 w-full max-w-[1720px] mx-auto space-y-8">
         {/* Welcome & Profile Summary Header */}
         <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

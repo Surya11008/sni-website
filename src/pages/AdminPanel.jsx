@@ -57,7 +57,30 @@ export default function AdminPanel() {
   const { currentUser, userProfile } = useAuth();
   const { t, isTelugu } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState('users'); // 'users', 'pages', 'contents', 'photos', 'announcements'
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio'].includes(tabParam)) {
+        return tabParam;
+      }
+      const savedTab = localStorage.getItem('sni_admin_active_tab');
+      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio'].includes(savedTab)) {
+        return savedTab;
+      }
+    } catch {}
+    return 'users';
+  });
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    try {
+      localStorage.setItem('sni_admin_active_tab', tabId);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tabId);
+      window.history.replaceState(null, '', url.toString());
+    } catch {}
+  };
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
 
@@ -804,7 +827,7 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-slate-100 font-sans text-slate-800 pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
       {/* 1. Top Header Banner */}
       <section className="bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#122847] text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 border-b border-[#1A3860]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="w-full max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-[#F4B942] border border-[#F4B942]/40 text-xs font-semibold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -831,11 +854,11 @@ export default function AdminPanel() {
       </section>
 
       {/* 2. Main Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+      <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 -mt-8">
         <div className="bg-[#040E1E] border border-[#132A4A] rounded-2xl p-2 shadow-2xl flex items-center gap-2 overflow-x-auto">
           {/* Tab 1: Users & Approvals */}
           <button
-            onClick={() => setActiveTab('users')}
+            onClick={() => handleTabChange('users')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'users'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -853,7 +876,7 @@ export default function AdminPanel() {
 
           {/* Tab 2: Pages & Menus */}
           <button
-            onClick={() => setActiveTab('pages')}
+            onClick={() => handleTabChange('pages')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'pages'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -869,7 +892,7 @@ export default function AdminPanel() {
 
           {/* Tab 3: Articles & Contents */}
           <button
-            onClick={() => setActiveTab('contents')}
+            onClick={() => handleTabChange('contents')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'contents'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -885,7 +908,7 @@ export default function AdminPanel() {
 
           {/* Tab 4: Photo Gallery & Banners */}
           <button
-            onClick={() => setActiveTab('photos')}
+            onClick={() => handleTabChange('photos')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'photos'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -898,7 +921,7 @@ export default function AdminPanel() {
 
           {/* Tab 5: Announcements */}
           <button
-            onClick={() => setActiveTab('announcements')}
+            onClick={() => handleTabChange('announcements')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'announcements'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -914,7 +937,7 @@ export default function AdminPanel() {
 
           {/* Tab 6: SNI Studio */}
           <button
-            onClick={() => setActiveTab('studio')}
+            onClick={() => handleTabChange('studio')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeTab === 'studio'
                 ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
@@ -931,7 +954,7 @@ export default function AdminPanel() {
       </div>
 
       {/* 3. Feedback Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 mt-6">
         {statusMessage.text && (
           <div
             className={`p-4 rounded-2xl flex items-center gap-3 text-xs sm:text-sm font-bold border animate-in fade-in duration-150 ${
@@ -951,7 +974,7 @@ export default function AdminPanel() {
       </div>
 
       {/* 4. Tab Panels */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 mt-6">
         {/* ======================================================== */}
         {/* TAB 1: USERS & APPROVALS (with Roles & + Add Role)       */}
         {/* ======================================================== */}

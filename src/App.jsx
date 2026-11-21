@@ -179,6 +179,7 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/admin.html" element={<Navigate to="/admin" replace />} />
 
                 {/* Fallback Catch-All */}
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -29,12 +29,14 @@ if (fs.existsSync(distAssetsDir)) {
   }
 }
 
-// 3. Copy dist/index.html to root index.html and 404.html
+// 3. Copy dist/index.html to root index.html, 404.html, and admin.html
 if (fs.existsSync(distIndex)) {
   const htmlContent = fs.readFileSync(distIndex, 'utf8');
   fs.writeFileSync(rootIndex, htmlContent, 'utf8');
   fs.writeFileSync(root404, htmlContent, 'utf8');
-  console.log('[postbuild] Synced dist/index.html -> index.html & 404.html');
+  fs.writeFileSync(path.resolve('admin.html'), htmlContent, 'utf8');
+  fs.writeFileSync(path.join(distDir, 'admin.html'), htmlContent, 'utf8');
+  console.log('[postbuild] Synced dist/index.html -> index.html, 404.html & admin.html');
 }
 
 // 4. Copy static public files to dist if missing
