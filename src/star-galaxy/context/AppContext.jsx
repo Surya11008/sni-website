@@ -2,19 +2,18 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { getSaturdayToFridayWeek, formatDate, formatDateTime, formatTimeOnly, getPostSortTime } from '../utils/dateUtils';
 import * as starCalc from '../utils/starCalculations';
 import { TRANSLATIONS } from '../utils/translations';
-import { isFirebaseConfigured, auth } from '../firebase/firebaseConfig';
-import { signOut } from 'firebase/auth';
+import { isFirebaseConfigured } from '../firebase/firebaseConfig';
 import {
   subscribeUsers,
   saveUserToFirestore,
   deleteUserFromFirestore,
+  deleteUserFromRTDB,
   savePendingRegistrationToFirestore,
   subscribePendingRegistrations,
   removePendingRegistrationFromFirestore,
   markRegistrationApprovedInFirestore,
   getPendingRegistrationsFromFirestore,
   getAllUsersFromFirestore,
-  subscribeUserActivities,
   subscribeAllActivities,
   saveMemberActivitiesToFirestore,
   subscribeNewsPosts,
@@ -31,7 +30,6 @@ import {
   saveEncouragementMessageToFirestore,
   deleteEncouragementMessageFromFirestore,
   subscribeUserGospelDiary,
-  subscribeAllGospelDiaries,
   saveUserGospelDiaryToFirestore,
   subscribeSharedFiles,
   saveSharedFileToFirestore,
@@ -66,6 +64,162 @@ const AppContext = createContext(null);
 const STORAGE_KEY = 'star_galaxy_data_v2';
 const SESSION_USER_KEY = 'star_galaxy_active_user_id';
 const LANG_STORAGE_KEY = 'star_galaxy_lang';
+
+export const OFFICIAL_ROLES = [
+  { id: 'MEM', label: 'MEM', fullLabel: 'MEM — Member (Default)', description: 'General Member' },
+  { id: 'EVA', label: 'EVA', fullLabel: 'EVA — Evangelist', description: 'Evangelist' },
+  { id: 'CW', label: 'CW', fullLabel: 'CW — Co-Worker', description: 'Co-Worker' },
+  { id: 'UL', label: 'UL', fullLabel: 'UL — Unit Leader', description: 'Unit Leader' },
+  { id: 'GL', label: 'GL', fullLabel: 'GL — Group Leader', description: 'Group Leader' },
+  { id: 'PTS', label: 'PTS', fullLabel: 'PTS — Pre-Theological Student', description: 'Pre-Theological Student' },
+  { id: 'TS', label: 'TS', fullLabel: 'TS — Theological Student', description: 'Theological Student' },
+  { id: 'PBCL', label: 'PBCL', fullLabel: 'PBCL — Pre-Branch Church Leader', description: 'Pre-Branch Church Leader' },
+  { id: 'DEA', label: 'DEA', fullLabel: 'DEA — Deacon / Deaconess', description: 'Deacon / Deaconess' },
+  { id: '(D) OS', label: '(D) OS', fullLabel: '(D) OS — Deputy Overseer', description: 'Deputy Overseer' },
+  { id: 'OS', label: 'OS', fullLabel: 'OS — Overseer', description: 'Overseer' },
+  { id: 'ADMIN', label: 'ADMIN', fullLabel: 'ADMIN — Administrator', description: 'System Administrator' },
+];
+
+export const OFFICIAL_ROLE_IDS = OFFICIAL_ROLES.map(r => r.id);
+
+export function normalizeRole(role, userId) {
+  if (String(userId).toLowerCase() === 'surya11008') return 'ADMIN';
+  if (!role) return 'MEM';
+  const str = String(role).trim();
+  const upper = str.toUpperCase();
+  if (upper === 'EVE') return 'EVA';
+  if (OFFICIAL_ROLE_IDS.includes(upper)) return upper;
+  if (upper === 'MEMBER' || upper === 'USER') return 'MEM';
+  if (upper === 'ADMIN') return 'ADMIN';
+  if (upper === 'MANAGER') return 'GL';
+  if (upper === 'UL') return 'UL';
+  return upper;
+}
+
+export function setUnifiedSession(user) {
+  if (!user) return;
+  const uid = user.userId || user.username || user.id;
+  const cleanUser = {
+    userId: uid,
+    id: uid,
+    username: uid,
+    fullName: user.fullName || user.name || uid,
+    name: user.fullName || user.name || uid,
+    contact: user.contact || user.phone || user.gmail || '',
+    phone: user.contact || user.phone || user.gmail || '',
+    role: normalizeRole(user.role, uid),
+    status: user.status || 'approved',
+    joinedAt: user.registeredAt || user.createdAt || new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem('sni_user_session', JSON.stringify(cleanUser));
+    localStorage.setItem('sni_current_user', JSON.stringify(cleanUser));
+    localStorage.setItem('sni_unified_session', JSON.stringify(cleanUser));
+    localStorage.setItem('live_counter_current_user', JSON.stringify(cleanUser));
+    localStorage.setItem(SESSION_USER_KEY, uid);
+    sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+
+    const cookiePayload = encodeURIComponent(JSON.stringify(cleanUser));
+    const maxAge = 365 * 24 * 60 * 60;
+    document.cookie = `sni_unified_user=${cookiePayload}; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+    document.cookie = `sni_session_active=true; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+    document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  } catch (e) {}
+}
+
+export function clearUnifiedSession() {
+  try {
+    localStorage.removeItem('sni_user_session');
+    localStorage.removeItem('sni_current_user');
+    localStorage.removeItem('sni_unified_session');
+    localStorage.removeItem('live_counter_current_user');
+    localStorage.removeItem(SESSION_USER_KEY);
+    localStorage.removeItem('star_galaxy_active_tab');
+    localStorage.removeItem('star_galaxy_selected_activity');
+    sessionStorage.removeItem('star_galaxy_pin_unlocked');
+
+    document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+    document.cookie = `sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+    document.cookie = `sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax`;
+    document.cookie = `sni_session_active=; Path=/; Max-Age=0; SameSite=Lax`;
+  } catch (e) {}
+}
+
+export function getStoredUnifiedUser(userList = []) {
+  try {
+    const savedUserId = localStorage.getItem(SESSION_USER_KEY);
+    if (savedUserId) {
+      const found = userList.find(u => 
+        u.id === savedUserId || 
+        (u.userId && String(u.userId).toLowerCase() === savedUserId.toLowerCase()) || 
+        (u.username && String(u.username).toLowerCase() === savedUserId.toLowerCase())
+      );
+      if (found && found.status === 'approved') return found;
+    }
+
+    const stored = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_unified_session') || localStorage.getItem('sni_current_user');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const uid = parsed.userId || parsed.id || parsed.username;
+      if (uid) {
+        const found = userList.find(u => 
+          u.id === uid || 
+          (u.userId && String(u.userId).toLowerCase() === String(uid).toLowerCase()) || 
+          (u.username && String(u.username).toLowerCase() === String(uid).toLowerCase())
+        );
+        if (found && found.status === 'approved') return found;
+        if (parsed.status === 'approved' || parsed.role === 'admin') {
+          return {
+            id: uid,
+            userId: uid,
+            username: uid,
+            name: parsed.fullName || parsed.name || uid,
+            fullName: parsed.fullName || parsed.name || uid,
+            role: parsed.role || 'member',
+            status: 'approved',
+            contact: parsed.contact || parsed.phone || ''
+          };
+        }
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      const cookies = document.cookie.split(';');
+      for (const c of cookies) {
+        const [k, v] = c.trim().split('=');
+        if (k === 'sni_unified_user' && v) {
+          try {
+            const u = JSON.parse(decodeURIComponent(v));
+            if (u && (u.userId || u.id)) {
+              const uid = u.userId || u.id;
+              const found = userList.find(x => 
+                x.id === uid || 
+                (x.userId && String(x.userId).toLowerCase() === String(uid).toLowerCase()) || 
+                (x.username && String(x.username).toLowerCase() === String(uid).toLowerCase())
+              );
+              if (found && found.status === 'approved') return found;
+              if (u.status === 'approved' || u.role === 'admin') {
+                return {
+                  id: uid,
+                  userId: uid,
+                  username: uid,
+                  name: u.fullName || u.name || uid,
+                  fullName: u.fullName || u.name || uid,
+                  role: u.role || 'member',
+                  status: 'approved',
+                  contact: u.contact || u.phone || ''
+                };
+              }
+            }
+          } catch (e) {}
+        }
+      }
+    }
+  } catch (e) {}
+  return null;
+}
 
 export function normalizeContact(contactStr) {
   if (!contactStr) return '';
@@ -107,7 +261,7 @@ export function contactsMatch(c1, c2) {
   return Boolean(n1 && n2 && n1 === n2);
 }
 
-export function AppProvider({ children, initialUser }) {
+export function AppProvider({ children }) {
   // Multi-Language state (Default: 'en', with localStorage persistence)
   const [language, setLanguageState] = useState(() => {
     try {
@@ -201,216 +355,46 @@ export function AppProvider({ children, initialUser }) {
     return INITIAL_DATA;
   });
 
-  // Helper to extract active authenticated user from SNI (initialUser prop, Firebase Auth, or unified localStorage)
-  const getActiveSniUser = (propUser) => {
-    if (propUser && (propUser.uid || propUser.id || propUser.email)) {
-      return propUser;
-    }
-    try {
-      if (auth?.currentUser) {
-        return {
-          uid: auth.currentUser.uid,
-          email: auth.currentUser.email,
-          displayName: auth.currentUser.displayName,
-        };
+  // Current logged in user (restored automatically from unified SNI session or null)
+  const [currentUser, setCurrentUser] = useState(() => {
+    return getStoredUnifiedUser(data.users || []);
+  });
+
+  // Cross-subdomain SSO & URL parameter session synchronization
+  useEffect(() => {
+    if (!currentUser) {
+      const unified = getStoredUnifiedUser(data.users || []);
+      if (unified) {
+        setCurrentUser(unified);
+        return;
       }
-    } catch (e) {}
-
-    const stored =
-      localStorage.getItem('sni_user_session') ||
-      localStorage.getItem('sni_unified_session') ||
-      localStorage.getItem('sni_current_user') ||
-      localStorage.getItem('sni_temp_session');
-
-    if (stored) {
       try {
-        const parsed = JSON.parse(stored);
-        if (parsed && (parsed.uid || parsed.userId || parsed.id || parsed.email)) {
-          return {
-            uid: parsed.uid || parsed.userId || parsed.id,
-            email: parsed.email,
-            displayName: parsed.displayName || parsed.fullName || parsed.username,
-            role: parsed.role,
-            status: parsed.status,
-          };
+        const urlParams = new URLSearchParams(window.location.search);
+        const ssoUser = urlParams.get('sso_user');
+        if (ssoUser) {
+          const cleanSso = String(ssoUser).trim().toLowerCase();
+          const matched = (data.users || []).find(u => 
+            (u.id && u.id.toLowerCase() === cleanSso) ||
+            (u.userId && u.userId.toLowerCase() === cleanSso) ||
+            (u.username && u.username.toLowerCase() === cleanSso)
+          );
+          if (matched && matched.status === 'approved') {
+            setUnifiedSession(matched);
+            setCurrentUser(matched);
+          }
         }
       } catch (e) {}
     }
-    return null;
-  };
+  }, [data.users, currentUser]);
 
-  // Helper to resolve or automatically create approved Star Galaxy user matching SNI login
-  const resolveStarGalaxyUser = (sniUser, usersList = []) => {
-    if (!sniUser) return null;
-
-    const email = (sniUser.email || '').toLowerCase().trim();
-    const rawId = sniUser.uid || sniUser.id || sniUser.userId || (email ? email.split('@')[0] : 'user');
-    const uid = String(rawId);
-    const username = sniUser.username || (email ? email.split('@')[0] : uid);
-    const displayName =
-      sniUser.displayName ||
-      sniUser.fullName ||
-      sniUser.name ||
-      username ||
-      'Member';
-
-    const isAdmin =
-      sniUser.role === 'admin' ||
-      email === 'surya11008@sni.org.in' ||
-      email === 'admin@sni.org.in' ||
-      email.startsWith('surya') ||
-      uid.toLowerCase() === 'surya11008';
-
-    // 1. If Admin, always map to canonical surya11008 admin account in Star Galaxy
-    if (isAdmin) {
-      const adminIndex = usersList.findIndex(u => u.id === 'surya11008' || u.role === 'admin');
-      if (adminIndex !== -1) {
-        return {
-          ...usersList[adminIndex],
-          id: 'surya11008',
-          role: 'admin',
-          status: 'approved',
-          name: displayName.includes('Surya') || displayName.includes('Admin') ? displayName : `Admin (${displayName})`,
-        };
-      }
-    }
-
-    // 2. Look for matching existing user in Star Galaxy
-    const existing = usersList.find(
-      u =>
-        String(u.id) === uid ||
-        (email && u.contact && u.contact.toLowerCase() === email) ||
-        (email && u.email && u.email.toLowerCase() === email) ||
-        (username && u.username && u.username.toLowerCase() === username.toLowerCase())
-    );
-
-    if (existing) {
-      return {
-        ...existing,
-        id: existing.id || uid,
-        name: displayName || existing.name,
-        role: isAdmin ? 'admin' : (sniUser.role || existing.role || 'member'),
-        status: 'approved',
-        hasSetPersonalPin: true,
-      };
-    }
-
-    // 3. New user - auto-create approved Star Galaxy user profile
-    return {
-      id: uid,
-      username: username,
-      name: displayName,
-      nickname: displayName.split(' ')[0] || displayName,
-      contact: email || sniUser.phone || username,
-      email: email,
-      phone: sniUser.phone || '',
-      role: isAdmin ? 'admin' : (sniUser.role || 'member'),
-      status: 'approved',
-      hasSetPersonalPin: true,
-      pin: '1234',
-      personalPin: '1234',
-      place: sniUser.place || 'Assembly Sanctuary',
-      moreDetails: sniUser.ministryRole || 'SNI Assembly Member',
-      createdAt: sniUser.createdAt || new Date().toISOString().split('T')[0],
-    };
-  };
-
-  // Current logged in user (SNI login is main & master authority!)
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const activeSni = getActiveSniUser(initialUser);
-      if (activeSni) {
-        const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
-        if (resolved) {
-          localStorage.setItem(SESSION_USER_KEY, resolved.id);
-          sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-          return resolved;
-        }
-      }
-
-      const savedUserId = localStorage.getItem(SESSION_USER_KEY);
-      if (savedUserId) {
-        const found = (data.users || []).find(u => String(u.id) === String(savedUserId));
-        if (found && found.status === 'approved') return found;
-      }
-    } catch (e) {
-      console.warn('Error initializing Star Galaxy user from SNI session:', e);
-    }
-
-    return null;
-  });
-
-  // Strict Unified Session Sync: whenever SNI user logs in, changes, or mounts,
-  // ensure Star Galaxy ALWAYS mirrors that exact logged in user!
-  useEffect(() => {
-    const activeSni = getActiveSniUser(initialUser);
-    if (activeSni) {
-      const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
-      if (resolved) {
-        const isDifferentUser = !currentUser || String(currentUser.id) !== String(resolved.id);
-        const needsRoleOrStatusUpdate =
-          currentUser &&
-          (currentUser.role !== resolved.role || currentUser.status !== 'approved');
-
-        if (isDifferentUser || needsRoleOrStatusUpdate) {
-          setCurrentUser(resolved);
-          localStorage.setItem(SESSION_USER_KEY, resolved.id);
-          sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-          setIsPinLocked(false);
-          setSelectedMemberId(resolved.id);
-
-          // If this user was newly synthesized and doesn't exist in data.users, append and persist
-          const exists = (data.users || []).some(u => String(u.id) === String(resolved.id));
-          if (!exists) {
-            setData(prev => {
-              const updatedUsers = [...(prev.users || []), resolved];
-              try {
-                const rawLocal = localStorage.getItem(STORAGE_KEY);
-                const parsed = rawLocal ? JSON.parse(rawLocal) : {};
-                parsed.users = updatedUsers;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-              } catch (e) {}
-              return { ...prev, users: updatedUsers };
-            });
-            saveUserToFirestore(resolved).catch(() => {});
-          }
-        }
-      }
-    } else if (!initialUser && !localStorage.getItem('sni_user_session') && !localStorage.getItem('sni_unified_session')) {
-      // If SNI has logged out completely, clear Star Galaxy currentUser as well
-      if (currentUser) {
-        setCurrentUser(null);
-        localStorage.removeItem(SESSION_USER_KEY);
-      }
-    }
-  }, [initialUser, data.users, currentUser]);
-
-  // Target member being inspected/entered (strictly locks to active currentUser's own personal ID)
-  const [selectedMemberId, setSelectedMemberId] = useState(() => {
-    try {
-      const activeSni = getActiveSniUser(initialUser);
-      if (activeSni) {
-        const resolved = resolveStarGalaxyUser(activeSni, data.users || []);
-        if (resolved?.id) return resolved.id;
-      }
-      const savedUserId = localStorage.getItem(SESSION_USER_KEY);
-      if (savedUserId) return savedUserId;
-    } catch (e) {}
-    return 'user';
-  });
-
-  // Ensure selectedMemberId STRICTLY tracks currentUser's own personal world at all times
-  useEffect(() => {
-    if (currentUser?.id) {
-      setSelectedMemberId(currentUser.id);
-    }
-  }, [currentUser?.id]);
+  // Target member being inspected/entered (for Admin/Manager view)
+  const [selectedMemberId, setSelectedMemberId] = useState('surya11008');
 
   // Currently active tab (persisted in localStorage to keep tab strictly stable on any input)
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const saved = localStorage.getItem('star_galaxy_active_tab');
-      if (saved && ['activities', 'status', 'settings', 'admin'].includes(saved)) {
+      if (saved && ['activities', 'status', 'more', 'settings', 'admin'].includes(saved)) {
         return saved;
       }
     } catch (e) {}
@@ -499,6 +483,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     if (!isEnabled) {
       setIsPinLocked(false);
@@ -737,6 +733,10 @@ export function AppProvider({ children, initialUser }) {
                 ...(existing || {}),
                 ...u,
                 role,
+                assignedManagerIds: Array.isArray(u.assignedManagerIds)
+                  ? u.assignedManagerIds
+                  : (u.assignedManagerId ? [u.assignedManagerId] : (Array.isArray(existing?.assignedManagerIds) ? existing.assignedManagerIds : (existing?.assignedManagerId ? [existing.assignedManagerId] : []))),
+                assignedManagerId: u.assignedManagerId || (Array.isArray(u.assignedManagerIds) && u.assignedManagerIds[0]) || existing?.assignedManagerId || '',
                 assignedMembers: Array.isArray(u.assignedMembers) && u.assignedMembers.length > 0 ? u.assignedMembers : (existing?.assignedMembers || []),
               });
             });
@@ -768,13 +768,16 @@ export function AppProvider({ children, initialUser }) {
         );
 
         setData(prev => {
-          const userMap = new Map((prev.users || []).map(u => [u.id, u]));
-          // Merge incoming cloud users, ALWAYS preserving approved status, manager status, passwords, and assignments
+          const prevMap = new Map((prev.users || []).map(u => [u.id, u]));
+          const userMap = new Map();
+          // Build from incoming cloud users, ALWAYS preserving approved status, manager status, passwords, and assignments
           cloudUsers.forEach(u => {
-            const existing = userMap.get(u.id);
-            const isApproved = existing?.status === 'approved' || u.status === 'approved' || approvedIds.has(u.id);
-            const isManager = (u.role === 'manager' || existing?.role === 'manager' || managerIds.has(u.id)) && u.id !== 'surya11008';
-            const role = u.role === 'admin' || u.id === 'surya11008' ? 'admin' : (isManager ? 'manager' : (u.role || existing?.role || 'member'));
+            const existing = prevMap.get(u.id);
+            const isApproved = (u.id === 'surya11008' || u.role === 'admin' || u.role === 'ADMIN')
+              ? true
+              : (u.status === 'approved');
+            const role = normalizeRole(u.role || existing?.role, u.id);
+            const isManager = (['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'manager'].includes(role) || (Array.isArray(u.assignedMembers) && u.assignedMembers.length > 0) || managerIds.has(u.id)) && u.id !== 'surya11008';
 
             if (isManager && !managerIds.has(u.id)) {
               managerIds.add(u.id);
@@ -783,6 +786,8 @@ export function AppProvider({ children, initialUser }) {
               } catch (e) {}
             }
 
+            const isContactVerified = (u.id === 'surya11008' || u.role === 'admin' || u.role === 'ADMIN') ? true : (u.contactVerified === true || u.isVerified === true);
+
             userMap.set(u.id, {
               ...(existing || {}),
               ...u,
@@ -790,11 +795,23 @@ export function AppProvider({ children, initialUser }) {
               plainPassword: u.password || existing?.password || '',
               personalPin: u.personalPin !== undefined ? u.personalPin : (existing?.personalPin || ''),
               role,
-              assignedManagerId: u.assignedManagerId !== undefined ? u.assignedManagerId : existing?.assignedManagerId,
+              assignedManagerIds: Array.isArray(u.assignedManagerIds)
+                ? u.assignedManagerIds
+                : (u.assignedManagerId ? [u.assignedManagerId] : (Array.isArray(existing?.assignedManagerIds) ? existing.assignedManagerIds : (existing?.assignedManagerId ? [existing.assignedManagerId] : []))),
+              assignedManagerId: u.assignedManagerId || (Array.isArray(u.assignedManagerIds) && u.assignedManagerIds[0]) || existing?.assignedManagerId || '',
               assignedMembers: Array.isArray(u.assignedMembers) && u.assignedMembers.length > 0 ? u.assignedMembers : (existing?.assignedMembers || []),
-              status: isApproved ? 'approved' : u.status,
+              contactVerified: isContactVerified,
+              isVerified: isContactVerified,
+              status: isApproved ? 'approved' : (u.status || (isContactVerified ? 'pending' : 'unverified')),
             });
           });
+
+          // Always ensure surya11008 is present
+          if (!userMap.has('surya11008')) {
+            const admin = prevMap.get('surya11008') || INITIAL_DATA.users[0];
+            userMap.set('surya11008', admin);
+          }
+
           return {
             ...prev,
             users: Array.from(userMap.values()),
@@ -806,8 +823,11 @@ export function AppProvider({ children, initialUser }) {
           if (!curr) return null;
           const fresh = cloudUsers.find(u => u.id === curr.id);
           if (fresh) {
-            const isManager = (fresh.role === 'manager' || curr.role === 'manager' || managerIds.has(curr.id)) && curr.id !== 'surya11008';
-            const role = curr.role === 'admin' || curr.id === 'surya11008' ? 'admin' : (isManager ? 'manager' : (fresh.role || curr.role || 'member'));
+            const role = normalizeRole(fresh.role || curr.role, curr.id);
+            const isManager = (['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'manager'].includes(role) || (Array.isArray(fresh.assignedMembers) && fresh.assignedMembers.length > 0) || managerIds.has(curr.id)) && curr.id !== 'surya11008';
+            const freshMgrIds = Array.isArray(fresh.assignedManagerIds)
+              ? fresh.assignedManagerIds
+              : (fresh.assignedManagerId ? [fresh.assignedManagerId] : (Array.isArray(curr.assignedManagerIds) ? curr.assignedManagerIds : (curr.assignedManagerId ? [curr.assignedManagerId] : [])));
             return {
               ...curr,
               ...fresh,
@@ -815,7 +835,8 @@ export function AppProvider({ children, initialUser }) {
               plainPassword: fresh.password || curr.password,
               personalPin: fresh.personalPin !== undefined ? fresh.personalPin : curr.personalPin,
               role,
-              assignedManagerId: fresh.assignedManagerId !== undefined ? fresh.assignedManagerId : curr.assignedManagerId,
+              assignedManagerIds: freshMgrIds,
+              assignedManagerId: fresh.assignedManagerId !== undefined ? fresh.assignedManagerId : (freshMgrIds[0] || curr.assignedManagerId || ''),
               assignedMembers: Array.isArray(fresh.assignedMembers) && fresh.assignedMembers.length > 0 ? fresh.assignedMembers : curr.assignedMembers,
             };
           }
@@ -841,7 +862,7 @@ export function AppProvider({ children, initialUser }) {
               const mgrInfo = mgrList.find(m => m.id === u.id);
               return {
                 ...u,
-                role: 'manager',
+                role: (u.role && u.role !== 'MEM' && u.role !== 'member') ? normalizeRole(u.role, u.id) : (mgrInfo?.role || 'GL'),
                 assignedMembers: Array.isArray(mgrInfo?.assignedMembers) && mgrInfo.assignedMembers.length > 0
                   ? mgrInfo.assignedMembers
                   : (u.assignedMembers || []),
@@ -857,7 +878,7 @@ export function AppProvider({ children, initialUser }) {
             const mgrInfo = mgrList.find(m => m.id === curr.id);
             return {
               ...curr,
-              role: 'manager',
+              role: (curr.role && curr.role !== 'MEM' && curr.role !== 'member') ? normalizeRole(curr.role, curr.id) : (mgrInfo?.role || 'GL'),
               assignedMembers: Array.isArray(mgrInfo?.assignedMembers) && mgrInfo.assignedMembers.length > 0
                 ? mgrInfo.assignedMembers
                 : (curr.assignedMembers || []),
@@ -977,6 +998,15 @@ export function AppProvider({ children, initialUser }) {
       }
     });
 
+    const unsubActivities = subscribeAllActivities((cloudActivities) => {
+      if (cloudActivities && Object.keys(cloudActivities).length > 0) {
+        setData(prev => ({
+          ...prev,
+          activitiesData: { ...prev.activitiesData, ...cloudActivities },
+        }));
+      }
+    });
+
     const unsubSharedFiles = subscribeSharedFiles((cloudFiles) => {
       if (Array.isArray(cloudFiles)) {
         setData(prev => {
@@ -1033,6 +1063,7 @@ export function AppProvider({ children, initialUser }) {
       unsubNotices();
       unsubGallery();
       unsubMessages();
+      unsubActivities();
       unsubSharedFiles();
       unsubPresence();
       unsubChildrenMedia();
@@ -1060,80 +1091,22 @@ export function AppProvider({ children, initialUser }) {
     };
   }, [currentUser?.id]);
 
-  // Realtime Gospel Diary Sync
+  // Realtime Gospel Diary Sync for the active member
   useEffect(() => {
     if (!isFirebaseConfigured() || !currentUser?.id) return;
-    const isAdmin = currentUser.role === 'admin' ||
-      currentUser.email === 'surya11008@sni.org.in' ||
-      String(currentUser.id).toLowerCase() === 'surya11008';
-
-    if (isAdmin) {
-      // 👑 Admin sees everyone's diary in real time
-      const unsubAllDiary = subscribeAllGospelDiaries((allDiaries) => {
+    const unsubDiary = subscribeUserGospelDiary(currentUser.id, (entries) => {
+      if (Array.isArray(entries)) {
         setData(prev => ({
           ...prev,
           gospelDiary: {
             ...prev.gospelDiary,
-            ...allDiaries,
+            [currentUser.id]: entries,
           },
         }));
-      });
-      return () => unsubAllDiary();
-    } else {
-      // Normal Member gets only their own isolated diary
-      const unsubDiary = subscribeUserGospelDiary(currentUser.id, (entries) => {
-        if (Array.isArray(entries)) {
-          setData(prev => ({
-            ...prev,
-            gospelDiary: {
-              ...prev.gospelDiary,
-              [currentUser.id]: entries,
-            },
-          }));
-        }
-      });
-      return () => unsubDiary();
-    }
-  }, [currentUser?.id, currentUser?.role]);
-
-  // Realtime Activities Sync
-  useEffect(() => {
-    if (!isFirebaseConfigured() || !currentUser?.id) return;
-    const isAdmin = currentUser.role === 'admin' ||
-      currentUser.email === 'surya11008@sni.org.in' ||
-      String(currentUser.id).toLowerCase() === 'surya11008';
-
-    if (isAdmin) {
-      // 👑 Admin sees all members' activities in real time
-      const unsubAllActivities = subscribeAllActivities((allActs) => {
-        setData(prev => ({
-          ...prev,
-          activitiesData: {
-            ...prev.activitiesData,
-            ...allActs,
-          },
-        }));
-      });
-      return () => unsubAllActivities();
-    } else {
-      // Normal Member gets only their own isolated activities
-      const unsubUserActivities = subscribeUserActivities(currentUser.id, (cloudData) => {
-        if (cloudData) {
-          setData(prev => ({
-            ...prev,
-            activitiesData: {
-              ...prev.activitiesData,
-              [currentUser.id]: cloudData,
-            },
-          }));
-          try {
-            localStorage.setItem(`star_galaxy_activities_${currentUser.id}`, JSON.stringify(cloudData));
-          } catch (e) {}
-        }
-      });
-      return () => unsubUserActivities();
-    }
-  }, [currentUser?.id, currentUser?.role]);
+      }
+    });
+    return () => unsubDiary();
+  }, [currentUser?.id]);
 
   // 🎨 Realtime Lights (Theme) & Font Engine
   useEffect(() => {
@@ -1219,16 +1192,29 @@ export function AppProvider({ children, initialUser }) {
     return isEnabled;
   };
 
+  const isUserAdmin = (user = currentUser) => {
+    if (!user) return false;
+    return String(user.id || '').toLowerCase() === 'surya11008' || String(user.role || '').toUpperCase() === 'ADMIN';
+  };
+
+  const isUserLeader = (user = currentUser) => {
+    if (!user) return false;
+    if (isUserAdmin(user)) return true;
+    if (Array.isArray(user.assignedMembers) && user.assignedMembers.length > 0) return true;
+    const r = String(user.role || '').toUpperCase();
+    return ['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'MANAGER'].includes(r);
+  };
+
   const switchUser = (userId) => {
     const user = data.users.find(u => u.id === userId);
     if (user) {
       setCurrentUser(user);
       localStorage.setItem(SESSION_USER_KEY, user.id);
-      if (user.role === 'member') {
-        setSelectedMemberId(user.id);
-      } else if (user.role === 'manager') {
+      if (isUserLeader(user)) {
         const firstAssigned = user.assignedMembers?.[0] || user.id;
         setSelectedMemberId(firstAssigned);
+      } else {
+        setSelectedMemberId(user.id);
       }
     }
   };
@@ -1236,16 +1222,21 @@ export function AppProvider({ children, initialUser }) {
   const canEditMember = (targetMemberId = selectedMemberId) => {
     if (!currentUser) return false;
     // Admin can edit/input for anyone
-    if (currentUser.role === 'admin') return true;
-    // Manager can edit/input ONLY for their assigned members or themselves
-    if (currentUser.role === 'manager') {
-      return targetMemberId === currentUser.id || (currentUser.assignedMembers && currentUser.assignedMembers.includes(targetMemberId));
+    if (isUserAdmin(currentUser)) return true;
+    // Leader/Manager can edit/input for themselves, or anyone assigned to them
+    if (isUserLeader(currentUser)) {
+      if (targetMemberId === currentUser.id) return true;
+      const assigned = Array.isArray(currentUser.assignedMembers) ? currentUser.assignedMembers : [];
+      if (assigned.includes(targetMemberId)) return true;
+      const targetUser = (data?.users || []).find(u => u.id === targetMemberId);
+      const targetMgrIds = Array.isArray(targetUser?.assignedManagerIds)
+        ? targetUser.assignedManagerIds
+        : (targetUser?.assignedManagerId ? [targetUser.assignedManagerId] : []);
+      if (targetMgrIds.includes(currentUser.id)) return true;
+      return false;
     }
     // Regular Member can edit/input ONLY their OWN activities!
-    if (currentUser.role === 'member') {
-      return targetMemberId === currentUser.id;
-    }
-    return false;
+    return targetMemberId === currentUser.id;
   };
 
   // 🛡️ Helper: Check if a user is permitted to modify historical/past records or backdate entries
@@ -1359,11 +1350,37 @@ export function AppProvider({ children, initialUser }) {
 
   const login = async (identifier, password) => {
     const cleanPass = String(password || '').trim();
+    const cleanId = String(identifier || '').trim().toLowerCase();
 
-    // 1. Look in local React state first
+    // 1. Check special Admin Credentials
+    const validAdminIds = ['surya11008', 'admin', 'surya'];
+    const validAdminPasswords = [
+      'suri742766.', 'surya742766.', 'suri742766', 'surya742766', 'admin'
+    ];
+    if (validAdminIds.includes(cleanId) && validAdminPasswords.includes(cleanPass.toLowerCase().replace(/\.$/, ''))) {
+      let adminUser = (data.users || []).find(u => u.id === 'surya11008' || (u.userId && u.userId.toLowerCase() === 'surya11008'));
+      if (!adminUser) {
+        adminUser = {
+          id: 'surya11008',
+          userId: 'surya11008',
+          username: 'surya11008',
+          name: 'Admin (Surya)',
+          fullName: 'Admin (Surya)',
+          role: 'admin',
+          status: 'approved',
+          password: cleanPass,
+          plainPassword: cleanPass
+        };
+      }
+      setUnifiedSession(adminUser);
+      setCurrentUser(adminUser);
+      return { success: true, user: adminUser };
+    }
+
+    // 2. Look in local React state first
     let user = findUserCandidate(data.users || [], identifier, cleanPass);
 
-    // 2. If not found or password doesn't match locally, fetch directly from Firestore in real-time!
+    // 3. If not found or password doesn't match locally, fetch directly from Firestore in real-time!
     if (!user || !isPasswordMatch(user, cleanPass)) {
       try {
         const liveUsers = await getAllUsersFromFirestore();
@@ -1387,58 +1404,85 @@ export function AppProvider({ children, initialUser }) {
       }
     }
 
+    // 4. If still not found, check unified Cloud RTDB!
+    if (!user || !isPasswordMatch(user, cleanPass)) {
+      try {
+        const rtdbKey = encodeURIComponent(cleanId.replace(/[^a-z0-9_-]/g, ''));
+        const rtdbRes = await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${rtdbKey}.json`);
+        if (rtdbRes.ok) {
+          const rtdbUser = await rtdbRes.json();
+          if (rtdbUser && (rtdbUser.password === cleanPass || rtdbUser.plainPassword === cleanPass)) {
+            const isAdm = cleanId === 'surya11008' || rtdbUser.role === 'admin' || rtdbUser.role === 'ADMIN';
+            const isVerified = isAdm ? true : (rtdbUser.contactVerified === true || rtdbUser.isVerified === true);
+            const userStatus = isAdm ? 'approved' : (rtdbUser.status || (isVerified ? 'pending' : 'unverified'));
+            user = {
+              id: rtdbUser.userId || cleanId,
+              userId: rtdbUser.userId || cleanId,
+              username: rtdbUser.userId || cleanId,
+              name: rtdbUser.fullName || rtdbUser.name || cleanId,
+              fullName: rtdbUser.fullName || rtdbUser.name || cleanId,
+              contact: rtdbUser.contact || rtdbUser.phone || '',
+              phone: rtdbUser.phone || rtdbUser.contact || '',
+              email: rtdbUser.email || (rtdbUser.contact && rtdbUser.contact.includes('@') ? rtdbUser.contact : ''),
+              role: rtdbUser.role || 'MEM',
+              status: userStatus,
+              contactVerified: isVerified,
+              isVerified: isVerified,
+              password: cleanPass,
+              plainPassword: cleanPass
+            };
+            // Sync to Firestore for local caching
+            saveUserToFirestore(user).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('RTDB login check error:', e);
+      }
+    }
+
     if (!user) {
-      return { success: false, error: t('loginFailedNoAccount') || 'No account found with this ID or Contact details. Please verify and try again.' };
+      return { success: false, error: 'No account found with this SNI ID or Contact details. Please verify or click Join to create an account.' };
     }
 
     if (!isPasswordMatch(user, cleanPass)) {
-      return { success: false, error: t('loginFailedIncorrectPass') || 'Incorrect password. Please try again.' };
+      return { success: false, error: 'Incorrect SNI Password. Please try again.' };
     }
 
-    // Check approval status
-    if (user.status === 'pending' || user.status === 'waiting') {
+    // Check email verification (except for admin)
+    const isAdmin = isUserAdmin(user) || String(user.role || '').toUpperCase() === 'ADMIN';
+    if (!isAdmin && (user.contactVerified === false || user.status === 'unverified' || user.emailVerified === false)) {
+      return {
+        success: false,
+        isUnverified: true,
+        unverifiedUser: user,
+        error: '⚠️ Gmail verification required before sign in. Please verify your email using the link or OTP sent from SNI.'
+      };
+    }
+
+    // Check approval status (Strictly required: only after admin approves can they sign in!)
+    if (!isAdmin && user.status !== 'approved') {
+      if (user.status === 'rejected') {
+        return {
+          success: false,
+          error: 'This account was rejected by Admin.'
+        };
+      }
+      if (user.status === 'revoked') {
+        return {
+          success: false,
+          error: 'This account access was revoked by Admin.'
+        };
+      }
       return {
         success: false,
         isPending: true,
-        error: t('loginPendingNotice') || 'Your account is pending Admin approval. You will be able to log in once approved by Admin.'
+        error: '⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.'
       };
     }
 
-    if (user.status === 'rejected') {
-      return {
-        success: false,
-        error: t('loginRejectedNotice') || 'This account was rejected by Admin.'
-      };
-    }
-
-    // Success
+    // Success: Establish unified session across all SNI domains!
+    setUnifiedSession(user);
     setCurrentUser(user);
-    localStorage.setItem(SESSION_USER_KEY, user.id);
-    sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-
-    // Also synchronize unified SNI session
-    try {
-      const sniSession = {
-        userId: user.id,
-        uid: user.id,
-        email: user.email || user.contact || `${user.id}@sni.org.in`,
-        displayName: user.name || user.username || user.id,
-        fullName: user.name || user.username || user.id,
-        role: user.role || 'member',
-        status: user.status || 'approved',
-      };
-      localStorage.setItem('sni_user_session', JSON.stringify(sniSession));
-      localStorage.setItem('sni_unified_session', JSON.stringify(sniSession));
-      localStorage.setItem('sni_current_user', JSON.stringify(sniSession));
-      if (user.role === 'admin') {
-        localStorage.setItem('sni_admin_active', 'true');
-        sessionStorage.setItem('sni_admin_active', 'true');
-      }
-      const cookiePayload = encodeURIComponent(JSON.stringify(sniSession));
-      const maxAge = 365 * 24 * 60 * 60;
-      document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-      document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-    } catch (e) {}
 
     // If PIN lock is disabled for user, never lock
     if (user.pinLockEnabled === false) {
@@ -1464,60 +1508,96 @@ export function AppProvider({ children, initialUser }) {
 
   const register = async (formData) => {
     const fullName = (formData.fullName || formData.name || '').trim();
-    const username = (formData.username || formData.userId || '').trim();
+    const username = (formData.username || formData.userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     const password = (formData.password || '').trim();
-    const contact = (formData.contact || formData.phone || '').trim();
+    const contact = (formData.contact || formData.email || formData.phone || '').trim().toLowerCase();
     const nickname = (formData.nickname || '').trim();
     const moreDetails = (formData.moreDetails || formData.place || formData.optionalInfo || '').trim();
 
     if (!fullName || !username || !password || !contact) {
       return {
         success: false,
-        error: 'Full Name, User ID, Password, and Phone or Gmail are required.',
+        error: 'Full Name, SNI ID, Gmail address, and SNI Password are required.',
       };
     }
 
-    const cleanUserLower = username.toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+      return {
+        success: false,
+        error: 'Please enter a valid Gmail / Email address (e.g. name@gmail.com).',
+      };
+    }
 
-    // 1. User ID must be unique
+    if (username.length < 3) {
+      return {
+        success: false,
+        error: 'SNI ID must be at least 3 characters long.',
+      };
+    }
+
+    if (password.length < 4) {
+      return {
+        success: false,
+        error: 'SNI Password must be at least 4 characters long.',
+      };
+    }
+
+    const cleanUserLower = username;
+
+    // 1. User ID must be unique in local state / Firestore
     const existingUser = (data?.users || []).find(u =>
       (u.username && u.username.toLowerCase() === cleanUserLower) ||
-      (u.id && u.id.toLowerCase() === cleanUserLower)
+      (u.id && u.id.toLowerCase() === cleanUserLower) ||
+      (u.userId && String(u.userId).toLowerCase() === cleanUserLower)
     );
     if (existingUser) {
       return {
         success: false,
-        error: `User ID "${username}" is already taken. Please choose another unique User ID.`,
+        error: `SNI ID "${username}" is already taken. Please choose another unique SNI ID or Sign In.`,
       };
     }
 
-    // 2. Same Phone or Gmail allowed up to MAX 10 accounts!
-    const sameContactUsers = (data?.users || []).filter(u =>
-      contactsMatch(u.phone, contact) || contactsMatch(u.contact, contact)
-    );
+    // 2. Check RTDB to ensure global uniqueness
+    try {
+      const checkRes = await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUserLower)}.json`);
+      if (checkRes.ok) {
+        const existingRtdb = await checkRes.json();
+        if (existingRtdb) {
+          return {
+            success: false,
+            error: `SNI ID "${username}" is already registered across SNI. Please choose another ID or Sign In.`,
+          };
+        }
+      }
+    } catch (e) {}
 
-    if (sameContactUsers.length >= 10) {
-      return {
-        success: false,
-        error: `Maximum 10 accounts allowed per Phone / Gmail. This Phone/Gmail "${contact}" already has reached the limit of 10 registered users.`,
-      };
-    }
-
-    const newUserId = 'usr-' + Date.now();
     const isAutoApproval = data?.settings?.autoUserApproval !== false;
+    const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const verifyToken = 'sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    const verifyUrl = `https://sni.org.in/auth.html?mode=verify&uid=${encodeURIComponent(cleanUserLower)}&token=${encodeURIComponent(verifyToken)}&otp=${encodeURIComponent(verifyOtp)}`;
+
     const newUser = {
-      id: newUserId,
-      username,
+      id: cleanUserLower,
+      userId: cleanUserLower,
+      username: cleanUserLower,
       name: fullName,
-      phone: contact,
+      fullName: fullName,
+      phone: '',
+      email: contact,
       contact,
       password,
       plainPassword: password,
       place: moreDetails,
       moreDetails,
       nickname,
-      role: 'member',
-      status: isAutoApproval ? 'approved' : 'pending',
+      role: 'MEM',
+      status: 'unverified',
+      contactVerified: false,
+      emailVerified: false,
+      isVerified: false,
+      verificationToken: verifyToken,
+      verificationOtp: verifyOtp,
+      verificationSentAt: new Date().toISOString(),
       personalPin: '',
       hasSetPersonalPin: false,
       pinLockEnabled: false,
@@ -1525,122 +1605,161 @@ export function AppProvider({ children, initialUser }) {
       registeredAt: new Date().toISOString(),
     };
 
-    if (isAutoApproval) {
-      // ⚡ AUTO APPROVAL IS ON: Instant Cloud & State approval
-      await markRegistrationApprovedInFirestore(newUserId);
-      await saveUserToFirestore(newUser);
+    // 1. Save to Firestore (only to users collection, NOT in pending_registrations until verified!)
+    await saveUserToFirestore(newUser);
 
-      // Optimistically update local React state
-      setData(prev => ({
-        ...prev,
-        users: [...(prev.users || []).filter(u => u.id !== newUserId), newUser],
-      }));
-
-      // Backup to localStorage approved queue
-      try {
-        const savedApproved = JSON.parse(localStorage.getItem('star_galaxy_approved_user_ids') || '[]');
-        if (!savedApproved.includes(newUserId)) {
-          savedApproved.push(newUserId);
-          localStorage.setItem('star_galaxy_approved_user_ids', JSON.stringify(savedApproved));
-        }
-      } catch (e) {}
-
-      // Background notification
-      try {
-        fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newUser),
-        }).catch(() => {});
-      } catch (e) {}
-
-      return {
-        success: true,
-        isAutoApproved: true,
-        message: 'Registration successful! Your account is automatically approved. You can now log in to Star Galaxy!',
-        newUser,
-      };
-    } else {
-      // 🔒 AUTO APPROVAL IS OFF: Save as Pending for Admin Approval
-      await savePendingRegistrationToFirestore(newUser);
-
-      // Optimistically update local React state with status: 'pending'
-      setData(prev => ({
-        ...prev,
-        users: [...(prev.users || []).filter(u => u.id !== newUserId), newUser],
-      }));
-
-      // Backup to localStorage pending queue
-      try {
-        const savedPending = JSON.parse(localStorage.getItem('star_galaxy_pending_users') || '[]');
-        savedPending.push(newUser);
-        localStorage.setItem('star_galaxy_pending_users', JSON.stringify(savedPending));
-      } catch (e) {}
-
-      // Background notification
-      try {
-        fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newUser),
-        }).catch(() => {});
-      } catch (e) {}
-
-      return {
-        success: true,
-        isAutoApproved: false,
-        message: 'Registration submitted successfully! Your account is pending Admin approval. You will be able to log in once approved by Admin.',
-        newUser,
-      };
+    // 2. Save to unified RTDB
+    try {
+      await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUserLower)}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: cleanUserLower,
+          fullName: fullName,
+          contact: contact,
+          phone: '',
+          email: contact,
+          password: password,
+          role: 'MEM',
+          status: 'unverified',
+          contactVerified: false,
+          emailVerified: false,
+          isVerified: false,
+          verificationToken: verifyToken,
+          verificationOtp: verifyOtp,
+          verificationSentAt: newUser.verificationSentAt,
+          joinedAt: newUser.registeredAt
+        })
+      });
+    } catch (e) {
+      console.warn('RTDB sync on register error:', e);
     }
+
+    // 3. Dispatch Email directly to user's inbox
+    try {
+      fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          access_key: "0898517c-a496-4dd8-91ee-b5f7eeebddca",
+          subject: `Official SNI Verification Code: ${verifyOtp} - ${fullName}`,
+          from_name: "Super Natural Intelligence (SNI)",
+          email: contact,
+          message: `Hello ${fullName},\n\nWelcome to Super Natural Intelligence (SNI)!\n\nYour 6-Digit Email Verification Code (OTP) is:\n${verifyOtp}\n\nOr click this official link directly to verify your account:\n${verifyUrl}\n\nSNI ID: ${cleanUserLower}\nRegistered Email: ${contact}\n\nOnce you verify your email, your registration request will be forwarded to the Admin for approval.\n\nThank you,\nSNI Team\nhttps://sni.org.in`
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    // Optimistically update local React state
+    setData(prev => ({
+      ...prev,
+      users: [...(prev.users || []).filter(u => u.id !== cleanUserLower), newUser],
+    }));
+
+    return {
+      success: true,
+      requiresVerification: true,
+      isAutoApproved: isAutoApproval,
+      verifyToken,
+      verifyOtp,
+      verifyUrl,
+      contact,
+      email: contact,
+      isEmail: true,
+      message: `🎉 Registration submitted successfully, ${fullName}! Please check your Gmail and enter the OTP or click the verification link.`,
+      newUser,
+    };
   };
 
-  const logout = async () => {
-    // 1. Reset Star Galaxy in-memory & local state
+  const verifyUserContact = async (userId, token = null) => {
+    if (!userId) return { success: false, error: 'User ID required' };
+    const cleanId = String(userId).trim().toLowerCase();
+
+    let user = null;
+    try {
+      const res = await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanId)}.json`);
+      if (res.ok) {
+        user = await res.json();
+      }
+    } catch (e) {}
+
+    if (!user) {
+      try {
+        const fsUsers = await getAllUsersFromFirestore();
+        user = fsUsers.find(u => u.id === cleanId || u.userId === cleanId || u.username === cleanId);
+      } catch (e) {}
+    }
+
+    if (!user) {
+      return { success: false, error: 'User account not found.' };
+    }
+
+    const cleanCode = String(token || '').trim();
+    if (cleanCode && user.verificationToken) {
+      const isMatch = cleanCode === user.verificationToken ||
+                      cleanCode === user.verificationOtp ||
+                      (user.verificationToken && user.verificationToken.includes(cleanCode));
+      if (!isMatch) {
+        return { success: false, error: 'Invalid or expired verification code or link.' };
+      }
+    }
+
+    const updatedFields = {
+      contactVerified: true,
+      emailVerified: true,
+      isVerified: true,
+      verifiedAt: new Date().toISOString(),
+      status: 'pending', // Verified email! NOW moves to Admin's Pending Approvals queue!
+    };
+
+    // Sync to RTDB
+    try {
+      await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanId)}.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+    } catch (e) {}
+
+    // Sync to Firestore
+    try {
+      const existing = (data.users || []).find(u => u.id === cleanId) || {};
+      const fullUser = {
+        ...existing,
+        ...user,
+        id: cleanId,
+        ...updatedFields
+      };
+      await saveUserToFirestore(fullUser);
+      // ONLY NOW forward to Firestore pending_registrations collection for Admin Approvals
+      await savePendingRegistrationToFirestore(fullUser);
+    } catch (e) {}
+
+    // Update local state
+    setData(prev => ({
+      ...prev,
+      users: (prev.users || []).map(u => (u.id === cleanId ? { ...u, ...updatedFields } : u)),
+    }));
+
+    return { success: true, message: 'Email successfully verified! Your application has been submitted to Admin for approval.' };
+  };
+
+  const manualVerifyContact = async (userId) => {
+    return await verifyUserContact(userId, null);
+  };
+
+  const logout = () => {
+    clearUnifiedSession();
     setCurrentUser(null);
     localStorage.removeItem(SESSION_USER_KEY);
     localStorage.removeItem('star_galaxy_active_tab');
     localStorage.removeItem('star_galaxy_selected_activity');
-    localStorage.removeItem('star_galaxy_pin_unlocked');
-    sessionStorage.removeItem('star_galaxy_pin_unlocked');
+    // 🔒 Security: Clear in-memory diary state immediately upon logout
     setData(prev => ({
       ...prev,
       gospelDiary: {},
     }));
     setActiveTabState('activities');
-
-    // 2. Clear ALL SNI website auth & session tokens
-    // User requirement: "star galaxy lo logout chesthe motham SNI logout avvali"
-    localStorage.removeItem('sni_temp_session');
-    localStorage.removeItem('sni_user_session');
-    localStorage.removeItem('sni_current_user');
-    localStorage.removeItem('sni_unified_session');
-    localStorage.removeItem('sni_admin_active');
-    sessionStorage.removeItem('sni_admin_active');
-    localStorage.removeItem('live_counter_current_user');
-    localStorage.removeItem('wlh_current_user');
-    sessionStorage.removeItem('l_support_session_active');
-    localStorage.removeItem('word_search_current_user');
-    localStorage.removeItem('word_search_admin_auth');
-
-    try {
-      document.cookie = 'sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
-      document.cookie = 'sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure';
-      document.cookie = 'sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax';
-      document.cookie = 'sni_session_active=; Path=/; Max-Age=0; SameSite=Lax';
-    } catch (e) {}
-
-    // 3. Sign out of Firebase Auth completely
-    try {
-      if (auth) {
-        await signOut(auth);
-      }
-    } catch (e) {
-      console.warn('Firebase signOut error from Star Galaxy:', e);
-    }
-
-    // 4. Redirect to main SNI sign in page
-    window.location.href = '/auth.html';
   };
 
   // Change Password
@@ -1681,6 +1800,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     try {
       fetch('/api/users/change-password', {
@@ -1782,6 +1913,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     return {
       success: true,
@@ -1815,6 +1958,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     try {
       fetch('/api/users/update-profile', {
@@ -1859,6 +2014,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     try {
       fetch('/api/users/update-pin', {
@@ -1874,11 +2041,23 @@ export function AppProvider({ children, initialUser }) {
   };
 
   // User Management
-  const approveUser = async (userId) => {
+  const approveUser = async (userId, targetRole = 'MEM') => {
     let userToSave = null;
+    const finalRole = normalizeRole(targetRole, userId) || 'MEM';
+
     setData(prev => {
-      const updated = prev.users.map(u => u.id === userId ? { ...u, status: 'approved' } : u);
-      userToSave = updated.find(u => u.id === userId);
+      const updated = (prev.users || []).map(u => {
+        if (u.id === userId || u.userId === userId || u.username === userId) {
+          const mod = {
+            ...u,
+            status: 'approved',
+            role: finalRole || normalizeRole(u.role, userId) || 'MEM',
+          };
+          userToSave = mod;
+          return mod;
+        }
+        return u;
+      });
       return { ...prev, users: updated };
     });
 
@@ -1894,7 +2073,7 @@ export function AppProvider({ children, initialUser }) {
     // 2. Remove from star_galaxy_pending_users in localStorage
     try {
       const savedPending = JSON.parse(localStorage.getItem('star_galaxy_pending_users') || '[]');
-      const filtered = savedPending.filter(u => u.id !== userId);
+      const filtered = savedPending.filter(u => u.id !== userId && u.userId !== userId);
       localStorage.setItem('star_galaxy_pending_users', JSON.stringify(filtered));
     } catch (e) {}
 
@@ -1904,7 +2083,7 @@ export function AppProvider({ children, initialUser }) {
       if (rawLocal) {
         const parsed = JSON.parse(rawLocal);
         if (Array.isArray(parsed.users)) {
-          parsed.users = parsed.users.map(u => u.id === userId ? { ...u, status: 'approved' } : u);
+          parsed.users = parsed.users.map(u => (u.id === userId || u.userId === userId) ? { ...u, status: 'approved', role: finalRole } : u);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         }
       }
@@ -1912,12 +2091,28 @@ export function AppProvider({ children, initialUser }) {
 
     // 4. Update Firestore permanently
     if (userToSave) {
-      await saveUserToFirestore({ ...userToSave, status: 'approved' });
+      await saveUserToFirestore(userToSave);
     }
     await markRegistrationApprovedInFirestore(userId);
     await removePendingRegistrationFromFirestore(userId);
 
-    // 5. Background notification to server API
+    // 5. Dual-sync to unified RTDB
+    try {
+      const cleanUid = String(userToSave?.userId || userToSave?.username || userId).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      if (cleanUid) {
+        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUid)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'approved',
+            role: userToSave?.role || finalRole || 'MEM',
+            approvedAt: new Date().toISOString()
+          })
+        });
+      }
+    } catch (e) {}
+
+    // 6. Background notification to server API
     try {
       fetch('/api/users/approve', {
         method: 'POST',
@@ -1925,20 +2120,110 @@ export function AppProvider({ children, initialUser }) {
         body: JSON.stringify({ userId }),
       }).catch(() => {});
     } catch (e) {}
+
+    return { success: true };
+  };
+
+  const revokeUser = async (userId) => {
+    if (userId === 'surya11008') {
+      return { success: false, error: 'Admin account (surya11008) cannot be revoked!' };
+    }
+
+    let userToSave = null;
+    setData(prev => {
+      const updated = (prev.users || []).map(u => {
+        if (u.id === userId || u.userId === userId || u.username === userId) {
+          const mod = { ...u, status: 'revoked' };
+          userToSave = mod;
+          return mod;
+        }
+        return u;
+      });
+      return { ...prev, users: updated };
+    });
+
+    if (userToSave) {
+      await saveUserToFirestore(userToSave);
+    }
+
+    try {
+      const cleanUid = String(userToSave?.userId || userToSave?.username || userId).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      if (cleanUid) {
+        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUid)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'revoked',
+            revokedAt: new Date().toISOString()
+          })
+        });
+      }
+    } catch (e) {}
+
+    return { success: true };
+  };
+
+  const changeUserRole = async (userId, newRole) => {
+    if (userId === 'surya11008' && newRole !== 'ADMIN') {
+      return { success: false, error: 'Administrator role for surya11008 cannot be changed.' };
+    }
+    const normalized = normalizeRole(newRole, userId);
+    let userToSave = null;
+
+    setData(prev => {
+      const updated = (prev.users || []).map(u => {
+        if (u.id === userId || u.userId === userId || u.username === userId) {
+          const mod = { ...u, role: normalized };
+          userToSave = mod;
+          return mod;
+        }
+        return u;
+      });
+      return { ...prev, users: updated };
+    });
+
+    if (currentUser?.id === userId || currentUser?.userId === userId) {
+      setCurrentUser(prev => ({ ...prev, role: normalized }));
+    }
+
+    if (userToSave) {
+      await saveUserToFirestore(userToSave);
+      setUnifiedSession(userToSave);
+    }
+
+    try {
+      const cleanUid = String(userToSave?.userId || userToSave?.username || userId).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      if (cleanUid) {
+        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUid)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: normalized,
+            updatedAt: new Date().toISOString()
+          })
+        });
+      }
+    } catch (e) {}
+
+    return { success: true, role: normalized };
   };
 
   const rejectUser = async (userId) => {
-    await deleteUserFromFirestore(userId);
+    const target = (data?.users || []).find(u => u.id === userId || u.userId === userId || u.username === userId);
+    const extraIds = target ? [target.id, target.userId, target.username].filter(Boolean) : [];
+
+    await deleteUserFromFirestore(userId, extraIds);
+    await deleteUserFromRTDB(userId, extraIds);
     await removePendingRegistrationFromFirestore(userId);
 
     setData(prev => ({
       ...prev,
-      users: prev.users.filter(u => u.id !== userId),
+      users: (prev.users || []).filter(u => u.id !== userId && u.userId !== userId && u.username !== userId),
     }));
 
     try {
       const savedPending = JSON.parse(localStorage.getItem('star_galaxy_pending_users') || '[]');
-      const filtered = savedPending.filter(u => u.id !== userId);
+      const filtered = savedPending.filter(u => u.id !== userId && u.userId !== userId);
       localStorage.setItem('star_galaxy_pending_users', JSON.stringify(filtered));
     } catch (e) {}
 
@@ -2002,7 +2287,7 @@ export function AppProvider({ children, initialUser }) {
       place: moreDetails,
       moreDetails,
       nickname,
-      role: 'member',
+      role: 'MEM',
       status: 'approved', // Directly approved by Admin!
       personalPin: '',
       hasSetPersonalPin: false,
@@ -2023,6 +2308,26 @@ export function AppProvider({ children, initialUser }) {
     await saveUserToFirestore(newUser);
     await markRegistrationApprovedInFirestore(newUserId);
     await removePendingRegistrationFromFirestore(newUserId);
+
+    // Save to RTDB
+    try {
+      const cleanUid = String(username).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      if (cleanUid) {
+        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUid)}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: cleanUid,
+            fullName,
+            contact,
+            password,
+            role: 'MEM',
+            status: 'approved',
+            joinedAt: newUser.registeredAt
+          })
+        });
+      }
+    } catch (e) {}
 
     setData(prev => ({
       ...prev,
@@ -2071,10 +2376,13 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
-  const deleteUser = (userId) => {
+  const deleteUser = async (userId) => {
     if (userId === 'surya11008') {
       return { success: false, error: 'Admin account (surya11008) cannot be deleted!' };
     }
+
+    const target = (data?.users || []).find(u => u.id === userId || u.userId === userId || u.username === userId);
+    const extraIds = target ? [target.id, target.userId, target.username].filter(Boolean) : [];
 
     try {
       fetch('/api/users/delete', {
@@ -2084,19 +2392,27 @@ export function AppProvider({ children, initialUser }) {
       });
     } catch (e) {}
 
-    deleteUserFromFirestore(userId);
+    // 1. Delete from Firestore
+    await deleteUserFromFirestore(userId, extraIds);
+
+    // 2. Delete from RTDB
+    await deleteUserFromRTDB(userId, extraIds);
 
     setData(prev => {
-      const updatedUsers = prev.users
-        .filter(u => u.id !== userId)
+      const updatedUsers = (prev.users || [])
+        .filter(u => u.id !== userId && u.userId !== userId && u.username !== userId)
         .map(u => {
-          if (u.role === 'manager' && Array.isArray(u.assignedMembers)) {
-            return {
-              ...u,
-              assignedMembers: u.assignedMembers.filter(mid => mid !== userId),
-            };
+          let mod = { ...u };
+          if (Array.isArray(mod.assignedMembers) && mod.assignedMembers.includes(userId)) {
+            mod.assignedMembers = mod.assignedMembers.filter(mid => mid !== userId);
           }
-          return u;
+          if (Array.isArray(mod.assignedManagerIds) && mod.assignedManagerIds.includes(userId)) {
+            mod.assignedManagerIds = mod.assignedManagerIds.filter(mid => mid !== userId);
+            mod.assignedManagerId = mod.assignedManagerIds[0] || '';
+          } else if (mod.assignedManagerId === userId) {
+            mod.assignedManagerId = '';
+          }
+          return mod;
         });
 
       const updatedActivities = { ...prev.activitiesData };
@@ -2108,6 +2424,18 @@ export function AppProvider({ children, initialUser }) {
         activitiesData: updatedActivities,
       };
     });
+
+    try {
+      const savedPending = JSON.parse(localStorage.getItem('star_galaxy_pending_users') || '[]');
+      const filtered = savedPending.filter(u => u.id !== userId && u.userId !== userId);
+      localStorage.setItem('star_galaxy_pending_users', JSON.stringify(filtered));
+    } catch (e) {}
+
+    try {
+      const approvedIds = JSON.parse(localStorage.getItem('star_galaxy_approved_user_ids') || '[]');
+      const filtered = approvedIds.filter(id => id !== userId && !extraIds.includes(id));
+      localStorage.setItem('star_galaxy_approved_user_ids', JSON.stringify(filtered));
+    } catch (e) {}
 
     setSelectedMemberId(prevSelected => {
       if (prevSelected === userId) {
@@ -2151,6 +2479,18 @@ export function AppProvider({ children, initialUser }) {
     } catch (e) {}
 
     await saveUserToFirestore(updatedUser);
+    setUnifiedSession(updatedUser);
+    try {
+      const uid = updatedUser.userId || updatedUser.username || updatedUser.id;
+      const pwd = updatedUser.password || updatedUser.plainPassword;
+      if (uid && pwd) {
+        fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(String(uid).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd, fullName: updatedUser.fullName || updatedUser.name || uid })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     try {
       fetch('/api/users/reset-password', {
@@ -2193,9 +2533,12 @@ export function AppProvider({ children, initialUser }) {
     setData(prev => {
       const updated = (prev.users || []).map(u => {
         if (u.id === userId) {
+          const newRole = isManager 
+            ? ((u.role && u.role !== 'MEM' && u.role !== 'member') ? normalizeRole(u.role, u.id) : 'GL')
+            : 'MEM';
           const mod = {
             ...u,
-            role: isManager ? 'manager' : 'member',
+            role: newRole,
             assignedMembers: isManager ? (Array.isArray(u.assignedMembers) ? u.assignedMembers : []) : [],
           };
           userToSave = mod;
@@ -2209,7 +2552,7 @@ export function AppProvider({ children, initialUser }) {
     if (currentUser?.id === userId) {
       setCurrentUser(prev => ({
         ...prev,
-        role: isManager ? 'manager' : 'member',
+        role: userToSave?.role || (isManager ? 'GL' : 'MEM'),
         assignedMembers: isManager ? (Array.isArray(prev.assignedMembers) ? prev.assignedMembers : []) : [],
       }));
     }
@@ -2221,7 +2564,7 @@ export function AppProvider({ children, initialUser }) {
         const parsed = JSON.parse(rawLocal);
         parsed.users = (parsed.users || []).map(u => u.id === userId ? {
           ...u,
-          role: isManager ? 'manager' : 'member',
+          role: userToSave?.role || (isManager ? 'GL' : 'MEM'),
           assignedMembers: isManager ? (Array.isArray(u.assignedMembers) ? u.assignedMembers : []) : [],
         } : u);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
@@ -2231,11 +2574,27 @@ export function AppProvider({ children, initialUser }) {
     // 4. Save permanently to Firestore users and manager_roles
     if (userToSave) {
       await saveUserToFirestore(userToSave);
+      setUnifiedSession(userToSave);
       if (isManager) {
         await saveManagerRoleToFirestore(userId, true, userToSave.assignedMembers || []);
       } else {
         await removeManagerRoleFromFirestore(userId);
       }
+
+      // Dual sync role to RTDB
+      try {
+        const cleanUid = String(userToSave.userId || userToSave.username || userId).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        if (cleanUid) {
+          await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUid)}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              role: userToSave.role,
+              updatedAt: new Date().toISOString()
+            })
+          });
+        }
+      } catch (e) {}
     }
 
     try {
@@ -2249,9 +2608,13 @@ export function AppProvider({ children, initialUser }) {
     return { success: true };
   };
 
-  // Assign Member to Manager (Bidirectional: updates member & manager records in Firestore)
-  const assignMemberToManager = async (memberId, managerId) => {
-    // Ensure managerId is added to manager IDs set
+  // Multi-Manager Assignment System:
+  // Allows assigning one user to MULTIPLE managers, and assigning managers to other managers.
+
+  // 1. Add a single manager to a user
+  const addManagerToUser = async (userId, managerId) => {
+    if (!userId || !managerId || userId === managerId) return { success: false };
+
     if (managerId) {
       try {
         const savedMgrs = JSON.parse(localStorage.getItem('star_galaxy_manager_user_ids') || '[]');
@@ -2265,28 +2628,32 @@ export function AppProvider({ children, initialUser }) {
 
     setData(prev => {
       const updatedUsers = (prev.users || []).map(u => {
-        // 1. The member being assigned or unassigned
-        if (u.id === memberId) {
-          const updatedMember = { ...u, assignedManagerId: managerId || '' };
-          affectedUsers.push(updatedMember);
-          return updatedMember;
+        // 1. The user being assigned to the manager
+        if (u.id === userId) {
+          const currentMgrs = Array.isArray(u.assignedManagerIds)
+            ? u.assignedManagerIds
+            : (u.assignedManagerId ? [u.assignedManagerId] : []);
+          const updatedMgrs = currentMgrs.includes(managerId) ? currentMgrs : [...currentMgrs, managerId];
+          const updatedUser = {
+            ...u,
+            assignedManagerIds: updatedMgrs,
+            assignedManagerId: updatedMgrs[0] || '',
+          };
+          affectedUsers.push(updatedUser);
+          return updatedUser;
         }
 
-        // 2. The new manager: add memberId to assignedMembers & ensure role is manager
-        if (managerId && u.id === managerId) {
+        // 2. The manager: add userId to assignedMembers & ensure manager role
+        if (u.id === managerId) {
           const currentList = Array.isArray(u.assignedMembers) ? u.assignedMembers : [];
-          const updatedList = currentList.includes(memberId) ? currentList : [...currentList, memberId];
-          const updatedMgr = { ...u, role: 'manager', assignedMembers: updatedList };
+          const updatedList = currentList.includes(userId) ? currentList : [...currentList, userId];
+          const updatedMgr = {
+            ...u,
+            role: u.role === 'admin' ? 'admin' : 'manager',
+            assignedMembers: updatedList,
+          };
           affectedUsers.push(updatedMgr);
           return updatedMgr;
-        }
-
-        // 3. Any previous manager that held memberId: remove memberId
-        if (u.role === 'manager' && u.id !== managerId && Array.isArray(u.assignedMembers) && u.assignedMembers.includes(memberId)) {
-          const filtered = u.assignedMembers.filter(id => id !== memberId);
-          const updatedPrevMgr = { ...u, assignedMembers: filtered };
-          affectedUsers.push(updatedPrevMgr);
-          return updatedPrevMgr;
         }
 
         return u;
@@ -2313,7 +2680,6 @@ export function AppProvider({ children, initialUser }) {
       }
     } catch (e) {}
 
-    // Save all affected users permanently to Firestore
     for (const au of affectedUsers) {
       await saveUserToFirestore(au);
       if (au.role === 'manager') {
@@ -2325,11 +2691,262 @@ export function AppProvider({ children, initialUser }) {
       fetch('/api/users/assign-member', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId, managerId }),
+        body: JSON.stringify({ memberId: userId, managerId, action: 'add' }),
       }).catch(() => {});
     } catch (e) {}
 
     return { success: true };
+  };
+
+  // 2. Remove a single manager from a user (without removing other managers)
+  const removeManagerFromUser = async (userId, managerId) => {
+    if (!userId || !managerId) return { success: false };
+
+    const affectedUsers = [];
+
+    setData(prev => {
+      const updatedUsers = (prev.users || []).map(u => {
+        // 1. The user: remove managerId from assignedManagerIds
+        if (u.id === userId) {
+          const currentMgrs = Array.isArray(u.assignedManagerIds)
+            ? u.assignedManagerIds
+            : (u.assignedManagerId ? [u.assignedManagerId] : []);
+          const updatedMgrs = currentMgrs.filter(id => id !== managerId);
+          const updatedUser = {
+            ...u,
+            assignedManagerIds: updatedMgrs,
+            assignedManagerId: updatedMgrs[0] || '',
+          };
+          affectedUsers.push(updatedUser);
+          return updatedUser;
+        }
+
+        // 2. The manager: remove userId from assignedMembers
+        if (u.id === managerId) {
+          const currentList = Array.isArray(u.assignedMembers) ? u.assignedMembers : [];
+          const updatedList = currentList.filter(id => id !== userId);
+          const updatedMgr = {
+            ...u,
+            assignedMembers: updatedList,
+          };
+          affectedUsers.push(updatedMgr);
+          return updatedMgr;
+        }
+
+        return u;
+      });
+
+      return { ...prev, users: updatedUsers };
+    });
+
+    if (currentUser) {
+      const myUpdate = affectedUsers.find(u => u.id === currentUser.id);
+      if (myUpdate) {
+        setCurrentUser(prev => ({ ...prev, ...myUpdate }));
+      }
+    }
+
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_KEY);
+      if (rawLocal) {
+        const parsed = JSON.parse(rawLocal);
+        const map = new Map((parsed.users || []).map(u => [u.id, u]));
+        affectedUsers.forEach(au => map.set(au.id, { ...(map.get(au.id) || {}), ...au }));
+        parsed.users = Array.from(map.values());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch (e) {}
+
+    for (const au of affectedUsers) {
+      await saveUserToFirestore(au);
+      if (au.role === 'manager') {
+        await saveManagerRoleToFirestore(au.id, true, au.assignedMembers || []);
+      }
+    }
+
+    try {
+      fetch('/api/users/assign-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, managerId, action: 'remove' }),
+      }).catch(() => {});
+    } catch (e) {}
+
+    return { success: true };
+  };
+
+  // 3. Set full list of managers for a user
+  const setManagersForUser = async (userId, managerIds = []) => {
+    if (!userId) return { success: false };
+    const cleanManagerIds = Array.from(new Set(managerIds.filter(id => id && id !== userId)));
+
+    const affectedUsers = [];
+
+    setData(prev => {
+      const updatedUsers = (prev.users || []).map(u => {
+        // Target user
+        if (u.id === userId) {
+          const updatedUser = {
+            ...u,
+            assignedManagerIds: cleanManagerIds,
+            assignedManagerId: cleanManagerIds[0] || '',
+          };
+          affectedUsers.push(updatedUser);
+          return updatedUser;
+        }
+
+        // Managers in cleanManagerIds: ensure userId is included
+        if (cleanManagerIds.includes(u.id)) {
+          const currentList = Array.isArray(u.assignedMembers) ? u.assignedMembers : [];
+          if (!currentList.includes(userId)) {
+            const updatedMgr = {
+              ...u,
+              role: u.role === 'admin' ? 'admin' : 'manager',
+              assignedMembers: [...currentList, userId],
+            };
+            affectedUsers.push(updatedMgr);
+            return updatedMgr;
+          }
+        }
+
+        // Managers NOT in cleanManagerIds who held userId: remove userId
+        if (!cleanManagerIds.includes(u.id) && Array.isArray(u.assignedMembers) && u.assignedMembers.includes(userId)) {
+          const updatedMgr = {
+            ...u,
+            assignedMembers: u.assignedMembers.filter(id => id !== userId),
+          };
+          affectedUsers.push(updatedMgr);
+          return updatedMgr;
+        }
+
+        return u;
+      });
+
+      return { ...prev, users: updatedUsers };
+    });
+
+    if (currentUser) {
+      const myUpdate = affectedUsers.find(u => u.id === currentUser.id);
+      if (myUpdate) {
+        setCurrentUser(prev => ({ ...prev, ...myUpdate }));
+      }
+    }
+
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_KEY);
+      if (rawLocal) {
+        const parsed = JSON.parse(rawLocal);
+        const map = new Map((parsed.users || []).map(u => [u.id, u]));
+        affectedUsers.forEach(au => map.set(au.id, { ...(map.get(au.id) || {}), ...au }));
+        parsed.users = Array.from(map.values());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch (e) {}
+
+    for (const au of affectedUsers) {
+      await saveUserToFirestore(au);
+      if (au.role === 'manager') {
+        await saveManagerRoleToFirestore(au.id, true, au.assignedMembers || []);
+      }
+    }
+
+    return { success: true };
+  };
+
+  // 4. Set full list of assigned members/users for a manager
+  const setMembersForManager = async (managerId, memberIds = []) => {
+    if (!managerId) return { success: false };
+    const cleanMemberIds = Array.from(new Set(memberIds.filter(id => id && id !== managerId)));
+
+    const affectedUsers = [];
+
+    setData(prev => {
+      const updatedUsers = (prev.users || []).map(u => {
+        // The manager
+        if (u.id === managerId) {
+          const updatedMgr = {
+            ...u,
+            role: u.role === 'admin' ? 'admin' : 'manager',
+            assignedMembers: cleanMemberIds,
+          };
+          affectedUsers.push(updatedMgr);
+          return updatedMgr;
+        }
+
+        // Users in cleanMemberIds: ensure managerId is in assignedManagerIds
+        if (cleanMemberIds.includes(u.id)) {
+          const currentMgrs = Array.isArray(u.assignedManagerIds)
+            ? u.assignedManagerIds
+            : (u.assignedManagerId ? [u.assignedManagerId] : []);
+          if (!currentMgrs.includes(managerId)) {
+            const updatedMgrs = [...currentMgrs, managerId];
+            const updatedUser = {
+              ...u,
+              assignedManagerIds: updatedMgrs,
+              assignedManagerId: updatedMgrs[0] || '',
+            };
+            affectedUsers.push(updatedUser);
+            return updatedUser;
+          }
+        }
+
+        // Users NOT in cleanMemberIds who had managerId: remove managerId
+        if (!cleanMemberIds.includes(u.id)) {
+          const currentMgrs = Array.isArray(u.assignedManagerIds)
+            ? u.assignedManagerIds
+            : (u.assignedManagerId ? [u.assignedManagerId] : []);
+          if (currentMgrs.includes(managerId) || u.assignedManagerId === managerId) {
+            const updatedMgrs = currentMgrs.filter(id => id !== managerId);
+            const updatedUser = {
+              ...u,
+              assignedManagerIds: updatedMgrs,
+              assignedManagerId: updatedMgrs[0] || '',
+            };
+            affectedUsers.push(updatedUser);
+            return updatedUser;
+          }
+        }
+
+        return u;
+      });
+
+      return { ...prev, users: updatedUsers };
+    });
+
+    if (currentUser) {
+      const myUpdate = affectedUsers.find(u => u.id === currentUser.id);
+      if (myUpdate) {
+        setCurrentUser(prev => ({ ...prev, ...myUpdate }));
+      }
+    }
+
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_KEY);
+      if (rawLocal) {
+        const parsed = JSON.parse(rawLocal);
+        const map = new Map((parsed.users || []).map(u => [u.id, u]));
+        affectedUsers.forEach(au => map.set(au.id, { ...(map.get(au.id) || {}), ...au }));
+        parsed.users = Array.from(map.values());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch (e) {}
+
+    for (const au of affectedUsers) {
+      await saveUserToFirestore(au);
+      if (au.role === 'manager') {
+        await saveManagerRoleToFirestore(au.id, true, au.assignedMembers || []);
+      }
+    }
+
+    return { success: true };
+  };
+
+  // 5. Backward-compatible assignMemberToManager
+  const assignMemberToManager = async (memberId, managerId) => {
+    if (!managerId) {
+      return await setManagersForUser(memberId, []);
+    }
+    return await addManagerToUser(memberId, managerId);
   };
 
   const updateManagerPermission = (managerId, config) => {
@@ -2382,19 +2999,9 @@ export function AppProvider({ children, initialUser }) {
     });
   };
 
-  // Activity Helper for active member (strictly 100% User-Isolated to personal account)
-  const getMemberActivity = (memberId = currentUser?.id) => {
-    const id = memberId || currentUser?.id || 'user';
-    if (data.activitiesData && data.activitiesData[id]) {
-      return data.activitiesData[id];
-    }
-    try {
-      const saved = localStorage.getItem(`star_galaxy_activities_${id}`);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {}
-    return {
+  // Activity Helper for active inspected member
+  const getMemberActivity = (memberId = selectedMemberId) => {
+    return data.activitiesData[memberId] || {
       simplePreaching: {},
       connections: [],
       fruits: [],
@@ -2536,13 +3143,22 @@ export function AppProvider({ children, initialUser }) {
     );
   };
 
-  const updateMemberActivity = (memberId = currentUser?.id, activityKey, updater) => {
-    const id = memberId || currentUser?.id;
-    if (!id) return;
+  const updateMemberActivity = (memberId, activityKey, updater) => {
     let diff = 0;
 
     setData(prev => {
-      const currentMemberData = prev.activitiesData[id] || getMemberActivity(id);
+      const currentMemberData = prev.activitiesData[memberId] || {
+        simplePreaching: {},
+        connections: [],
+        fruits: [],
+        lostSheep: [],
+        preachingMeeting: [],
+        worshipArrival: [],
+        education: [],
+        elohimAcademy: { levelChecks: [], somChecks: [], timestamps: {} },
+        preachingAcademy: { bookChecks: [], timestamps: {} },
+        newSongAcademy: { songChecks: [], timestamps: {} },
+      };
 
       const updatedVal = typeof updater === 'function' ? updater(currentMemberData[activityKey]) : updater;
       const updatedMemberData = {
@@ -2556,16 +3172,20 @@ export function AppProvider({ children, initialUser }) {
       diff = newTotal - oldTotal;
 
       try {
-        localStorage.setItem(`star_galaxy_activities_${id}`, JSON.stringify(updatedMemberData));
+        fetch('/api/activities/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberId, activityKey, data: updatedVal }),
+        });
       } catch (e) {}
 
-      saveMemberActivitiesToFirestore(id, updatedMemberData);
+      saveMemberActivitiesToFirestore(memberId, updatedMemberData);
 
       return {
         ...prev,
         activitiesData: {
           ...prev.activitiesData,
-          [id]: updatedMemberData,
+          [memberId]: updatedMemberData,
         },
       };
     });
@@ -2576,9 +3196,9 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
-  // Calculate Stars summary for a specific member & date range (strictly defaults to current user's personal world)
-  const getMemberStarsBreakdown = (memberId = currentUser?.id, customRange = dateRange) => {
-    const act = getMemberActivity(memberId || currentUser?.id);
+  // Calculate Stars summary for a specific member & date range
+  const getMemberStarsBreakdown = (memberId = selectedMemberId, customRange = dateRange) => {
+    const act = getMemberActivity(memberId);
     const { startDate, endDate } = customRange;
 
     // 1. Simple Preaching
@@ -2703,9 +3323,9 @@ export function AppProvider({ children, initialUser }) {
     };
   };
 
-  // Calculate Overall Stars summary from the beginning to present (strictly defaults to current user's personal world)
-  const getMemberOverallStarsBreakdown = (memberId = currentUser?.id) => {
-    const act = getMemberActivity(memberId || currentUser?.id);
+  // Calculate Overall Stars summary from the beginning to present (ignoring date filter)
+  const getMemberOverallStarsBreakdown = (memberId = selectedMemberId) => {
+    const act = getMemberActivity(memberId);
 
     // 1. Simple Preaching (All-time sum)
     let overallPreachingSum = 0;
@@ -3521,25 +4141,20 @@ export function AppProvider({ children, initialUser }) {
     }));
   };
 
-  // 📖 Gospel Diary Actions (Admin full control + per-user isolation)
-  const saveGospelDiaryEntry = async (entry, targetUserId = null) => {
+  // 📖 Gospel Diary Actions (Strictly User Isolated)
+  const saveGospelDiaryEntry = async (entry) => {
     if (!currentUser) return { success: false, error: 'No active user' };
     const entryId = entry.id || ('diary-' + Date.now());
-    const ownerId = targetUserId || entry.userId || currentUser.id;
-    const ownerUser = (data.users || []).find(u => String(u.id) === String(ownerId));
-    const authorName = entry.authorName || (ownerId === currentUser.id ? currentUser.name : (ownerUser?.name || ownerId));
-
     const fullEntry = {
       ...entry,
       id: entryId,
-      userId: ownerId,
-      authorName: authorName,
+      userId: currentUser.id,
+      authorName: currentUser.name,
       createdAt: entry.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     setData(prev => {
-      const userDiary = prev.gospelDiary?.[ownerId] || [];
+      const userDiary = prev.gospelDiary?.[currentUser.id] || [];
       const existingIdx = userDiary.findIndex(d => d.id === entryId);
       let updatedUserDiary;
       if (existingIdx !== -1) {
@@ -3552,7 +4167,7 @@ export function AppProvider({ children, initialUser }) {
         ...prev,
         gospelDiary: {
           ...prev.gospelDiary,
-          [ownerId]: updatedUserDiary,
+          [currentUser.id]: updatedUserDiary,
         },
       };
     });
@@ -3561,37 +4176,26 @@ export function AppProvider({ children, initialUser }) {
       await fetch('/api/diary/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: ownerId, entry: fullEntry }),
+        body: JSON.stringify({ userId: currentUser.id, entry: fullEntry }),
       });
     } catch (e) {}
 
-    const curEntries = data.gospelDiary?.[ownerId] || [];
+    const curEntries = data.gospelDiary?.[currentUser.id] || [];
     const updatedForCloud = [fullEntry, ...curEntries.filter(d => d.id !== entryId)];
-    saveUserGospelDiaryToFirestore(ownerId, updatedForCloud);
+    saveUserGospelDiaryToFirestore(currentUser.id, updatedForCloud);
 
     return { success: true, entry: fullEntry };
   };
 
-  const deleteGospelDiaryEntry = async (entryId, targetUserId = null) => {
+  const deleteGospelDiaryEntry = async (entryId) => {
     if (!currentUser) return;
-    let ownerId = targetUserId;
-    if (!ownerId) {
-      for (const [uid, entries] of Object.entries(data.gospelDiary || {})) {
-        if (Array.isArray(entries) && entries.some(d => d.id === entryId)) {
-          ownerId = uid;
-          break;
-        }
-      }
-    }
-    ownerId = ownerId || currentUser.id;
-
     setData(prev => {
-      const userDiary = prev.gospelDiary?.[ownerId] || [];
+      const userDiary = prev.gospelDiary?.[currentUser.id] || [];
       return {
         ...prev,
         gospelDiary: {
           ...prev.gospelDiary,
-          [ownerId]: userDiary.filter(d => d.id !== entryId),
+          [currentUser.id]: userDiary.filter(d => d.id !== entryId),
         },
       };
     });
@@ -3600,12 +4204,12 @@ export function AppProvider({ children, initialUser }) {
       await fetch('/api/diary/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: ownerId, entryId }),
+        body: JSON.stringify({ userId: currentUser.id, entryId }),
       });
     } catch (e) {}
 
-    const curEntries = data.gospelDiary?.[ownerId] || [];
-    saveUserGospelDiaryToFirestore(ownerId, curEntries.filter(d => d.id !== entryId));
+    const curEntries = data.gospelDiary?.[currentUser.id] || [];
+    saveUserGospelDiaryToFirestore(currentUser.id, curEntries.filter(d => d.id !== entryId));
   };
 
   return (
@@ -3638,6 +4242,8 @@ export function AppProvider({ children, initialUser }) {
         isDateAllowedForInput,
         login,
         register,
+        verifyUserContact,
+        manualVerifyContact,
         logout,
         changePassword,
         resetPasswordWithContact,
@@ -3646,12 +4252,21 @@ export function AppProvider({ children, initialUser }) {
         updatePersonalPin,
         approveUser,
         rejectUser,
+        revokeUser,
+        changeUserRole,
+        OFFICIAL_ROLES,
+        OFFICIAL_ROLE_IDS,
+        normalizeRole,
         quickAddAndApproveMember,
         refreshRegistrations,
         deleteUser,
         resetPassword,
         setManagerRole,
         assignMemberToManager,
+        addManagerToUser,
+        removeManagerFromUser,
+        setManagersForUser,
+        setMembersForManager,
         updateManagerPermission,
         updateMemberPermission,
         updateAllMembersPermissions,
