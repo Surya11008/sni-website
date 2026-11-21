@@ -223,6 +223,8 @@ export default function RichTextEditor({
   const [showHtmlSource, setShowHtmlSource] = useState(false);
   const [htmlSource, setHtmlSource] = useState('');
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (spacious modern) or 'pages' (standard sheet)
+  const [textWidth, setTextWidth] = useState('wide'); // 'wide', 'full', 'standard'
   const [docTitle, setDocTitle] = useState(label || 'Untitled document');
 
   // Active Formatting States
@@ -794,7 +796,82 @@ export default function RichTextEditor({
                   View
                 </button>
                 {activeMenu === 'view' && (
-                  <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                    <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                      Text Space Layout
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPageFormat('pageless');
+                        setActiveMenu(null);
+                      }}
+                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                        pageFormat === 'pageless' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                      }`}
+                    >
+                      <span>Spacious (Pageless)</span>
+                      {pageFormat === 'pageless' && <span>✓</span>}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPageFormat('pages');
+                        setActiveMenu(null);
+                      }}
+                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                        pageFormat === 'pages' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                      }`}
+                    >
+                      <span>Standard Page (Print)</span>
+                      {pageFormat === 'pages' && <span>✓</span>}
+                    </button>
+
+                    <div className="my-1 border-t border-[#e0e0e0]"></div>
+                    <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                      Text Width
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTextWidth('wide');
+                        setActiveMenu(null);
+                      }}
+                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                        textWidth === 'wide' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                      }`}
+                    >
+                      <span>Wide (Comfortable)</span>
+                      {textWidth === 'wide' && <span>✓</span>}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTextWidth('full');
+                        setActiveMenu(null);
+                      }}
+                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                        textWidth === 'full' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                      }`}
+                    >
+                      <span>Full Width (100%)</span>
+                      {textWidth === 'full' && <span>✓</span>}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTextWidth('standard');
+                        setActiveMenu(null);
+                      }}
+                      className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                        textWidth === 'standard' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                      }`}
+                    >
+                      <span>Standard Reading Width</span>
+                      {textWidth === 'standard' && <span>✓</span>}
+                    </button>
+
+                    <div className="my-1 border-t border-[#e0e0e0]"></div>
                     <button
                       type="button"
                       onClick={() => {
@@ -1031,12 +1108,62 @@ export default function RichTextEditor({
           </div>
         </div>
 
-        {/* Right: Google Docs Share Button + Fullscreen */}
-        <div className="flex items-center gap-2 mt-2 sm:mt-0">
+        {/* Right: Quick Layout Pill + Fullscreen + Share */}
+        <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
+          {/* Quick Layout Mode Pill */}
+          <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+            <button
+              type="button"
+              onClick={() => setPageFormat('pageless')}
+              className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
+                pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+              }`}
+              title="Spacious text space without restrictive margins"
+            >
+              Spacious
+            </button>
+            <button
+              type="button"
+              onClick={() => setPageFormat('pages')}
+              className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
+                pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+              }`}
+              title="Page print layout"
+            >
+              Page
+            </button>
+          </div>
+
+          {/* Quick Width Pill if in spacious pageless mode */}
+          {pageFormat === 'pageless' && (
+            <div className="hidden sm:inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+              <button
+                type="button"
+                onClick={() => setTextWidth('wide')}
+                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
+                  textWidth === 'wide' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746]'
+                }`}
+                title="Wide text area"
+              >
+                Wide
+              </button>
+              <button
+                type="button"
+                onClick={() => setTextWidth('full')}
+                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
+                  textWidth === 'full' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746]'
+                }`}
+                title="Full width text area"
+              >
+                Full
+              </button>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
+            className="px-2.5 py-1 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
             title="Toggle Fullscreen Google Docs Mode"
           >
             {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen'}
@@ -1048,12 +1175,12 @@ export default function RichTextEditor({
               navigator.clipboard?.writeText(window.location.href);
               alert('Document link copied to clipboard!');
             }}
-            className="px-4 py-1.5 rounded-full bg-[#c2e7ff] hover:bg-[#b3ddfc] text-[#001d35] font-medium text-xs flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+            className="px-3.5 py-1 rounded-full bg-[#c2e7ff] hover:bg-[#b3ddfc] text-[#001d35] font-medium text-xs flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
             </svg>
-            <span>Share</span>
+            <span className="hidden sm:inline">Share</span>
           </button>
         </div>
       </div>
@@ -1684,7 +1811,41 @@ export default function RichTextEditor({
             placeholder="Edit raw HTML code..."
           />
         </div>
+      ) : pageFormat === 'pageless' ? (
+        /* PAGELESS / SPACIOUS TEXT SPACE (Modern Google Docs, Wide & Comfortable) */
+        <div className="flex-1 overflow-y-auto bg-white py-4 px-3 sm:px-6 flex flex-col items-center">
+          <div
+            className={`w-full transition-all duration-150 origin-top ${
+              textWidth === 'full'
+                ? 'max-w-none px-2'
+                : textWidth === 'standard'
+                ? 'max-w-3xl px-4 sm:px-8'
+                : 'max-w-5xl px-3 sm:px-8'
+            }`}
+            style={{
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: 'top center',
+            }}
+          >
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={handleInput}
+              onMouseUp={handleMouseUp}
+              onKeyUp={updateActiveFormatting}
+              className="w-full min-h-[380px] focus:outline-none rich-html-content text-[#1f1f1f] text-base"
+              style={{
+                fontFamily: currentFont,
+                fontSize: `${fontSize}pt`,
+                caretColor: '#1a73e8',
+                lineHeight: 1.75,
+              }}
+              data-placeholder={placeholder}
+            />
+          </div>
+        </div>
       ) : (
+        /* PAGES / STANDARD PAPER FORMAT WITH RULER */
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#f0f4f9] py-4 px-2 sm:px-6 flex flex-col items-center">
           {/* Authentic Google Docs Top Ruler */}
           <div
@@ -1707,9 +1868,9 @@ export default function RichTextEditor({
             <span>7</span>
           </div>
 
-          {/* Authentic Google Docs Centered Paper Sheet */}
+          {/* Centered Paper Sheet with comfortable margins */}
           <div
-            className="w-full max-w-[816px] bg-white my-3 px-12 sm:px-[72px] py-12 sm:py-[72px] min-h-[900px] transition-transform duration-150 origin-top text-[#1f1f1f]"
+            className="w-full max-w-[816px] bg-white my-3 px-8 sm:px-12 py-8 sm:py-12 min-h-[580px] transition-transform duration-150 origin-top text-[#1f1f1f]"
             style={{
               boxShadow: '0 1px 3px 1px rgba(60,64,67,0.15), 0 1px 2px 0 rgba(60,64,67,0.30)',
               transform: `scale(${zoomLevel / 100})`,
@@ -1722,11 +1883,12 @@ export default function RichTextEditor({
               onInput={handleInput}
               onMouseUp={handleMouseUp}
               onKeyUp={updateActiveFormatting}
-              className="w-full min-h-[750px] focus:outline-none leading-relaxed rich-html-content"
+              className="w-full min-h-[500px] focus:outline-none leading-relaxed rich-html-content text-base"
               style={{
                 fontFamily: currentFont,
                 fontSize: `${fontSize}pt`,
                 caretColor: '#1a73e8',
+                lineHeight: 1.75,
               }}
               data-placeholder={placeholder}
             />
@@ -2129,16 +2291,20 @@ export default function RichTextEditor({
       )}
 
       {/* Footer Status Bar */}
-      <div className="px-4 py-1 bg-white border-t border-[#dadce0] flex items-center justify-between text-[11px] text-[#5f6368]">
+      <div className="px-4 py-1.5 bg-white border-t border-[#dadce0] flex flex-wrap items-center justify-between text-[11px] text-[#5f6368] gap-2">
         <div className="flex items-center gap-2">
-          <span>Google Docs Format</span>
+          <span className="font-medium text-[#1f1f1f]">Google Docs</span>
+          <span>•</span>
+          <span className="capitalize">{pageFormat === 'pageless' ? `Spacious (${textWidth})` : 'Page (Print)'}</span>
           <span>•</span>
           <span>{currentFont}</span>
           <span>•</span>
           <span>{fontSize} pt</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span>{wordCount} words</span>
+          <span>•</span>
+          <span>{charCount} characters</span>
           <span>•</span>
           <button
             type="button"
