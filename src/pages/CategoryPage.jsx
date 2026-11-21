@@ -24,6 +24,7 @@ import {
   AlignJustify,
   Music,
   Download,
+  Globe,
 } from 'lucide-react';
 
 export default function CategoryPage() {
@@ -404,6 +405,12 @@ export default function CategoryPage() {
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
                                   <FileText className="w-2.5 h-2.5" />
                                   <span>PDF</span>
+                                </span>
+                              )}
+                              {(item.websiteUrl || item.embedUrl) && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 font-semibold text-[10px]">
+                                  <Globe className="w-2.5 h-2.5" />
+                                  <span>Website</span>
                                 </span>
                               )}
                             </div>

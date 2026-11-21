@@ -43,6 +43,7 @@ import {
   MessageCircle,
   Music,
   Download,
+  Globe,
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
@@ -71,6 +72,7 @@ export default function ContentDetailPage() {
   const [audioUrl, setAudioUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const isAdmin =
@@ -102,6 +104,7 @@ export default function ContentDetailPage() {
             setAudioUrl(data.audioUrl || '');
             setFileUrl(data.fileUrl || '');
             setDownloadUrl(data.downloadUrl || '');
+            setWebsiteUrl(data.websiteUrl || data.embedUrl || '');
 
             // Keep address bar in clean semantic format: sni.org.in/Home/Worship/Sermons/:contentId
             const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
@@ -306,6 +309,8 @@ export default function ContentDetailPage() {
         audioUrl: audioUrl.trim() || null,
         fileUrl: fileUrl.trim() || null,
         downloadUrl: downloadUrl.trim() || null,
+        websiteUrl: websiteUrl.trim() || null,
+        embedUrl: websiteUrl.trim() || null,
         updatedAt: serverTimestamp(),
       };
 
@@ -584,13 +589,26 @@ export default function ContentDetailPage() {
                     className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block font-bold text-slate-700 mb-1">Direct Download URL (Instant download link)</label>
                   <input
                     type="url"
                     value={downloadUrl}
                     onChange={(e) => setDownloadUrl(e.target.value)}
                     placeholder="https://drive.google.com/uc?export=download&id=..."
+                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Website URL (Embed / Interactive Link)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://example.com or https://..."
                     className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
                   />
                 </div>
@@ -768,6 +786,39 @@ export default function ContentDetailPage() {
                 <Download className="w-4 h-4" />
                 <span>Download Now</span>
               </a>
+            </div>
+          )}
+
+          {/* Interactive Website URL Live Embed */}
+          {(article.websiteUrl || article.embedUrl) && (
+            <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-md space-y-0">
+              <div className="p-3.5 sm:p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 truncate">
+                  <Globe className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span className="truncate max-w-xs sm:max-w-md">{article.websiteUrl || article.embedUrl}</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                    Live Embed
+                  </span>
+                </div>
+                <a
+                  href={article.websiteUrl || article.embedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                >
+                  <span>Open in New Tab</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+              <div className="w-full h-[520px] sm:h-[680px] bg-slate-50 relative">
+                <iframe
+                  src={article.websiteUrl || article.embedUrl}
+                  title="Embedded Website"
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                  loading="lazy"
+                  className="w-full h-full border-0"
+                />
+              </div>
             </div>
           )}
 

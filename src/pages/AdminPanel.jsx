@@ -43,6 +43,7 @@ import {
   Image as ImageIcon,
   Check,
   KeyRound,
+  Globe,
 } from 'lucide-react';
 
 const DEFAULT_ROLES = [
@@ -125,6 +126,7 @@ export default function AdminPanel() {
     audioUrl: '',
     fileUrl: '',
     downloadUrl: '',
+    websiteUrl: '',
   });
 
   // 5. Announcements State
@@ -506,6 +508,8 @@ export default function AdminPanel() {
         audioUrl: newContent.audioUrl.trim() || null,
         fileUrl: newContent.fileUrl.trim() || null,
         downloadUrl: newContent.downloadUrl.trim() || null,
+        websiteUrl: newContent.websiteUrl?.trim() || null,
+        embedUrl: newContent.websiteUrl?.trim() || null,
         updatedAt: serverTimestamp(),
       };
 
@@ -532,6 +536,7 @@ export default function AdminPanel() {
         audioUrl: '',
         fileUrl: '',
         downloadUrl: '',
+        websiteUrl: '',
       });
       await fetchContents();
     } catch (err) {
@@ -554,6 +559,7 @@ export default function AdminPanel() {
       audioUrl: item.audioUrl || '',
       fileUrl: item.fileUrl || '',
       downloadUrl: item.downloadUrl || '',
+      websiteUrl: item.websiteUrl || item.embedUrl || '',
     });
     setIsContentFormOpen(true);
   };
@@ -1432,6 +1438,7 @@ export default function AdminPanel() {
                     audioUrl: '',
                     fileUrl: '',
                     downloadUrl: '',
+                    websiteUrl: '',
                   });
                   setIsContentFormOpen(true);
                 }}
@@ -1560,13 +1567,26 @@ export default function AdminPanel() {
                         className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
                       />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
                       <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
                       <input
                         type="url"
                         value={newContent.downloadUrl}
                         onChange={(e) => setNewContent({ ...newContent, downloadUrl: e.target.value })}
                         placeholder="https://drive.google.com/uc?export=download&id=..."
+                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Website URL (Embed / Interactive Link)</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={newContent.websiteUrl}
+                        onChange={(e) => setNewContent({ ...newContent, websiteUrl: e.target.value })}
+                        placeholder="https://example.com or https://..."
                         className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
                       />
                     </div>
