@@ -44,6 +44,7 @@ import {
   Check,
   KeyRound,
   Globe,
+  Sliders,
 } from 'lucide-react';
 
 const DEFAULT_ROLES = [];
@@ -732,6 +733,22 @@ export default function AdminPanel() {
             <span>Announcements</span>
             <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono">
               {announcements.length}
+            </span>
+          </button>
+
+          {/* Tab 6: SNI Studio */}
+          <button
+            onClick={() => setActiveTab('studio')}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
+              activeTab === 'studio'
+                ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
+                : 'text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            <span>Studio</span>
+            <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-[#F4B942] text-[10px] font-mono font-bold border border-amber-400/30">
+              PRO
             </span>
           </button>
         </div>
@@ -1818,6 +1835,69 @@ export default function AdminPanel() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 6: SNI DEVELOPER STUDIO                          */}
+        {/* ==================================================== */}
+        {activeTab === 'studio' && (
+          <div className="space-y-4">
+            {/* Studio Header Toolbar */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-[#060a14] border border-[#18233f] flex items-center justify-center text-[#F4B942] shadow-sm">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-[#0F294A]">SNI Developer Studio</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                      Live Connected
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Cards, Notices, Arrivals, Users, Site Text & Ecosystem Manager
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const iframe = document.getElementById('sni-studio-iframe');
+                    if (iframe) iframe.src = iframe.src;
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition cursor-pointer"
+                  title="Reload Studio View"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reload</span>
+                </button>
+                <a
+                  href="/studio.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] shadow-sm transition cursor-pointer"
+                  title="Open in a separate browser tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Fullscreen</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Embedded Studio Frame */}
+            <div className="bg-[#060a14] rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+              <iframe
+                id="sni-studio-iframe"
+                src="/studio.html"
+                title="SNI Developer Studio"
+                className="w-full h-[88vh] border-0"
+                allow="clipboard-write; fullscreen"
+              />
             </div>
           </div>
         )}
