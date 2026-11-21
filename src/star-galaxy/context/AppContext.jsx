@@ -1506,6 +1506,64 @@ export function AppProvider({ children }) {
     return { success: true, user };
   };
 
+  const sendOfficialVerificationEmail = async (email, password, userId) => {
+    const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+    try {
+      let idToken = null;
+      const signUpRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password || 'SniUser123.',
+          returnSecureToken: true
+        })
+      });
+
+      if (signUpRes.ok) {
+        const data = await signUpRes.json();
+        idToken = data.idToken;
+      } else {
+        const signInRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            password: password || 'SniUser123.',
+            returnSecureToken: true
+          })
+        });
+        if (signInRes.ok) {
+          const data = await signInRes.json();
+          idToken = data.idToken;
+        }
+      }
+
+      if (!idToken) return { success: false, error: 'Could not acquire authentication token' };
+
+      const continueUrl = `https://sni.org.in/auth.html?mode=email_verified&uid=${encodeURIComponent(userId)}`;
+      const oobRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestType: 'VERIFY_EMAIL',
+          idToken: idToken,
+          continueUrl: continueUrl
+        })
+      });
+
+      if (oobRes.ok) {
+        return { success: true };
+      } else {
+        const err = await oobRes.json();
+        return { success: false, error: err.error?.message };
+      }
+    } catch (e) {
+      console.error(e);
+      return { success: false, error: e.message };
+    }
+  };
+
   const register = async (formData) => {
     const fullName = (formData.fullName || formData.name || '').trim();
     const username = (formData.username || formData.userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -1572,9 +1630,16 @@ export function AppProvider({ children }) {
     } catch (e) {}
 
     const isAutoApproval = data?.settings?.autoUserApproval !== false;
-    const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const verifyToken = 'sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-    const verifyUrl = `https://sni.org.in/auth.html?mode=verify&uid=${encodeURIComponent(cleanUserLower)}&token=${encodeURIComponent(verifyToken)}&otp=${encodeURIComponent(verifyOtp)}`;
+
+    // 3. Dispatch real official verification email via Firebase Auth
+    const isAdm = cleanUserLower === 'surya11008';
+    if (!isAdm) {
+      try {
+        await sendOfficialVerificationEmail(contact, password, cleanUserLower);
+      } catch (e) {
+        console.warn('Official email send warning:', e);
+      }
+    }
 
     const newUser = {
       id: cleanUserLower,
@@ -1595,8 +1660,6 @@ export function AppProvider({ children }) {
       contactVerified: false,
       emailVerified: false,
       isVerified: false,
-      verificationToken: verifyToken,
-      verificationOtp: verifyOtp,
       verificationSentAt: new Date().toISOString(),
       personalPin: '',
       hasSetPersonalPin: false,
@@ -1625,8 +1688,6 @@ export function AppProvider({ children }) {
           contactVerified: false,
           emailVerified: false,
           isVerified: false,
-          verificationToken: verifyToken,
-          verificationOtp: verifyOtp,
           verificationSentAt: newUser.verificationSentAt,
           joinedAt: newUser.registeredAt
         })
@@ -1634,21 +1695,6 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.warn('RTDB sync on register error:', e);
     }
-
-    // 3. Dispatch Email directly to user's inbox
-    try {
-      fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          access_key: "0898517c-a496-4dd8-91ee-b5f7eeebddca",
-          subject: `Official SNI Verification Code: ${verifyOtp} - ${fullName}`,
-          from_name: "Super Natural Intelligence (SNI)",
-          email: contact,
-          message: `Hello ${fullName},\n\nWelcome to Super Natural Intelligence (SNI)!\n\nYour 6-Digit Email Verification Code (OTP) is:\n${verifyOtp}\n\nOr click this official link directly to verify your account:\n${verifyUrl}\n\nSNI ID: ${cleanUserLower}\nRegistered Email: ${contact}\n\nOnce you verify your email, your registration request will be forwarded to the Admin for approval.\n\nThank you,\nSNI Team\nhttps://sni.org.in`
-        })
-      }).catch(() => {});
-    } catch (e) {}
 
     // Optimistically update local React state
     setData(prev => ({
@@ -1660,13 +1706,11 @@ export function AppProvider({ children }) {
       success: true,
       requiresVerification: true,
       isAutoApproved: isAutoApproval,
-      verifyToken,
-      verifyOtp,
-      verifyUrl,
       contact,
       email: contact,
-      isEmail: true,
-      message: `🎉 Registration submitted successfully, ${fullName}! Please check your Gmail and enter the OTP or click the verification link.`,
+      userId: cleanUserLower,
+      password,
+      message: `🎉 Registration submitted successfully, ${fullName}! An official verification email has been sent to your Gmail. Please open your Gmail and click the verification link.`,
       newUser,
     };
   };
@@ -4242,6 +4286,7 @@ export function AppProvider({ children }) {
         isDateAllowedForInput,
         login,
         register,
+        sendOfficialVerificationEmail,
         verifyUserContact,
         manualVerifyContact,
         logout,

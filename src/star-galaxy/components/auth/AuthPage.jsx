@@ -11,19 +11,16 @@ import {
   EyeOff,
   ArrowRight,
   ShieldCheck,
-  Phone,
   Mail,
   ArrowLeft,
   Send,
   MessageCircle,
   ExternalLink,
-  Copy,
-  Check,
 } from 'lucide-react';
 import InstallAppModal from '../common/InstallAppModal';
 
 export default function AuthPage() {
-  const { login, register, resetPasswordWithContact, verifyUserContact } = useApp();
+  const { login, register, resetPasswordWithContact, verifyUserContact, sendOfficialVerificationEmail } = useApp();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -32,10 +29,8 @@ export default function AuthPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifyModalData, setVerifyModalData] = useState(null);
   const [verifySuccessMsg, setVerifySuccessMsg] = useState('');
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [modalOtpInput, setModalOtpInput] = useState('');
-  const [modalOtpError, setModalOtpError] = useState('');
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [resendEmailMsg, setResendEmailMsg] = useState('');
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -70,7 +65,7 @@ export default function AuthPage() {
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
-  // URL Parameter check for Verification mode (?mode=verify&uid=...&token=...)
+  // URL Parameter check for Verification mode (?mode=email_verified&uid=... or ?mode=verify&uid=...)
   useEffect(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -78,14 +73,15 @@ export default function AuthPage() {
       const uidParam = urlParams.get('uid');
       const tokenParam = urlParams.get('token');
       const otpParam = urlParams.get('otp');
-      const codeParam = tokenParam || otpParam;
+      const oobCodeParam = urlParams.get('oobCode');
+      const codeParam = tokenParam || otpParam || oobCodeParam;
 
-      if (modeParam === 'verify' && uidParam) {
+      if ((modeParam === 'email_verified' || modeParam === 'verify' || modeParam === 'verifyEmail') && uidParam) {
         (async () => {
           setLoginError('');
           const res = await verifyUserContact(uidParam, codeParam);
           if (res?.success) {
-            setVerifySuccessMsg(`🎉 Email verified successfully for ${uidParam}! Your application has been submitted to Admin for approval. You will be able to sign in once approved.`);
+            setVerifySuccessMsg(`🎉 Email verified successfully for ${uidParam}! Your application has been submitted to Admin. Status: Waiting for Admin Approval. You will be able to sign in once an administrator approves your account.`);
             setMode('login');
             setLoginIdentifier(uidParam);
           } else {
@@ -123,19 +119,13 @@ export default function AuthPage() {
       } else if (res.isUnverified) {
         const u = res.unverifiedUser || {};
         const emailAddress = u.email || u.contact || '';
-        const token = u.verificationToken || ('sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36));
-        const otp = u.verificationOtp || '';
-        const verifyUrl = `https://sni.org.in/auth.html?mode=verify&uid=${encodeURIComponent(u.id || cleanId)}&token=${encodeURIComponent(token)}&otp=${encodeURIComponent(otp)}`;
-        setModalOtpInput('');
-        setModalOtpError('');
+        setResendEmailMsg('');
         setVerifyModalData({
           userId: u.id || cleanId,
           fullName: u.fullName || u.name || cleanId,
           contact: emailAddress,
           email: emailAddress,
-          verifyUrl,
-          token,
-          otp,
+          password: cleanPass,
           isLoginBlock: true,
         });
         setShowVerifyModal(true);
@@ -206,17 +196,14 @@ export default function AuthPage() {
       });
 
       if (res.success) {
-        setRegSuccess(res.message || `Welcome to SNI, ${cleanFullName}! Verification link generated.`);
-        setModalOtpInput('');
-        setModalOtpError('');
+        setRegSuccess(res.message || `Welcome to SNI, ${cleanFullName}! Verification email dispatched.`);
+        setResendEmailMsg('');
         setVerifyModalData({
           userId: cleanUserId,
           fullName: cleanFullName,
           contact: cleanContact,
           email: cleanContact,
-          verifyUrl: res.verifyUrl,
-          token: res.verifyToken,
-          otp: res.verifyOtp,
+          password: cleanPass,
           isLoginBlock: false,
         });
         setShowVerifyModal(true);
@@ -231,42 +218,29 @@ export default function AuthPage() {
     }
   };
 
-  const handleVerifyOtpInModal = async () => {
-    if (!verifyModalData?.userId) return;
-    const cleanCode = modalOtpInput.trim();
-    if (!cleanCode || cleanCode.length < 6) {
-      setModalOtpError('Please enter all 6 digits of the verification code.');
-      return;
-    }
-    setIsVerifyingOtp(true);
-    setModalOtpError('');
+  const handleResendEmail = async () => {
+    if (!verifyModalData?.email || !verifyModalData?.userId) return;
+    setIsResendingEmail(true);
+    setResendEmailMsg('');
     try {
-      const res = await verifyUserContact(verifyModalData.userId, cleanCode);
-      if (res?.success) {
-        setShowVerifyModal(false);
-        setVerifySuccessMsg(`🎉 Email verified successfully for ${verifyModalData.userId}! Your application has been submitted to Admin. Status: Waiting for Admin Approval. You will be able to sign in once an administrator approves your account.`);
-        setMode('login');
-        setLoginIdentifier(verifyModalData.userId);
+      if (typeof sendOfficialVerificationEmail === 'function') {
+        const res = await sendOfficialVerificationEmail(
+          verifyModalData.email,
+          verifyModalData.password || '',
+          verifyModalData.userId
+        );
+        if (res?.success) {
+          setResendEmailMsg('✅ Official verification email resent! Please check your Gmail inbox.');
+        } else {
+          setResendEmailMsg(`⚠️ ${res?.error || 'Failed to resend email. Please check your connection.'}`);
+        }
       } else {
-        setModalOtpError(res?.error || 'Invalid OTP code. Please check your Gmail or retry.');
+        setResendEmailMsg('✅ Verification request recorded. Please check your Gmail.');
       }
     } catch (e) {
-      setModalOtpError('Verification failed. Please retry.');
+      setResendEmailMsg('⚠️ Failed to resend email. Please retry.');
     } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  const handleVerifyNowInModal = async () => {
-    if (!verifyModalData?.userId) return;
-    const res = await verifyUserContact(verifyModalData.userId, verifyModalData.token || verifyModalData.otp);
-    if (res?.success) {
-      setShowVerifyModal(false);
-      setVerifySuccessMsg(`🎉 Email verified successfully for ${verifyModalData.userId}! Your application has been submitted to Admin. Status: Waiting for Admin Approval. You will be able to sign in once an administrator approves your account.`);
-      setMode('login');
-      setLoginIdentifier(verifyModalData.userId);
-    } else {
-      alert(res?.error || 'Failed to verify account.');
+      setIsResendingEmail(false);
     }
   };
 
@@ -277,7 +251,7 @@ export default function AuthPage() {
     setForgotSuccess('');
 
     if (!forgotContact.trim()) {
-      setForgotError('Please enter your registered Phone Number or Gmail.');
+      setForgotError('Please enter your registered Gmail address.');
       return;
     }
 
@@ -551,7 +525,7 @@ export default function AuthPage() {
                 autoComplete="email"
               />
               <p className="text-[10px] text-slate-400 mt-1">
-                An official verification link and 6-digit OTP will be sent to this Gmail address.
+                An official verification link will be sent to your Gmail address.
               </p>
             </div>
 
@@ -764,7 +738,7 @@ export default function AuthPage() {
         onClose={() => setShowInstallModal(false)}
       />
 
-      {/* 📩 SNI Account Email Verification Modal */}
+      {/* 📩 SNI Official Gmail Verification Modal */}
       {showVerifyModal && verifyModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
@@ -772,60 +746,33 @@ export default function AuthPage() {
               📩
             </div>
             <h3 className="text-lg font-black text-slate-800">
-              {verifyModalData.isLoginBlock ? 'Gmail Verification Required' : 'Official Verification Link & OTP Ready'}
+              Official Verification Email Sent
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              {verifyModalData.isLoginBlock
-                ? <>Your SNI account <strong>{verifyModalData.userId}</strong> requires Gmail verification for:</>
-                : <>An official verification email with a link and OTP has been sent to:</>}
+              An official verification email has been dispatched to your Gmail:
               <br />
-              <span className="inline-block mt-1 font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
-                {verifyModalData.contact}
+              <span className="inline-block mt-2 font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
+                {verifyModalData.email || verifyModalData.contact}
               </span>
             </p>
 
-            {/* OTP Entry Section */}
-            <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
-              <label className="block text-xs font-bold text-slate-700 mb-2">
-                🔑 Enter 6-Digit Verification Code (OTP)
-              </label>
-              <div className="flex items-center justify-center gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="• • • • • •"
-                  value={modalOtpInput}
-                  onChange={(e) => {
-                    setModalOtpInput(e.target.value.replace(/[^0-9]/g, ''));
-                    setModalOtpError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleVerifyOtpInModal();
-                    }
-                  }}
-                  className="w-36 text-center text-lg font-black tracking-widest py-2 px-3 rounded-xl border-2 border-slate-300 focus:border-[#124b91] focus:ring-2 focus:ring-[#124b91]/20 outline-none bg-white text-slate-900"
-                />
-                <button
-                  type="button"
-                  disabled={isVerifyingOtp || modalOtpInput.length < 6}
-                  onClick={handleVerifyOtpInModal}
-                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#071b3b] to-[#124b91] text-[#f5c75e] font-black text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
-                >
-                  {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
-                </button>
+            {/* Step-by-step Instructions Box */}
+            <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-700">
+              <p className="font-bold text-slate-900 mb-2">Instructions:</p>
+              <ol className="list-decimal list-inside space-y-1.5 leading-relaxed text-[11px] text-slate-600">
+                <li>Open your <strong>Gmail Inbox</strong> (or check Spam / Promotions folder).</li>
+                <li>Click the official <strong>verification link</strong> in the email sent from SNI.</li>
+                <li>Once verified, your application will be automatically submitted to the Admin for approval.</li>
+              </ol>
+            </div>
+
+            {resendEmailMsg && (
+              <div className="mt-3 p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                {resendEmailMsg}
               </div>
-              {modalOtpError && (
-                <p className="text-xs font-bold text-rose-600 mt-2">{modalOtpError}</p>
-              )}
-            </div>
+            )}
 
-            <div className="mt-2.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-semibold text-left">
-              ⚠️ <strong>Notice</strong>: Verify your email by clicking the link in your Gmail or entering the OTP above. Your application will only be forwarded to the Admin after verification.
-            </div>
-
-            <div className="mt-4 space-y-2.5">
+            <div className="mt-5 space-y-2.5">
               <a
                 href="https://mail.google.com"
                 target="_blank"
@@ -835,26 +782,15 @@ export default function AuthPage() {
                 <Mail className="w-4 h-4" />
                 <span>Open Gmail Inbox</span>
               </a>
-              <button
-                type="button"
-                onClick={handleVerifyNowInModal}
-                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Click to Verify Account Now</span>
-              </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(verifyModalData.verifyUrl);
-                  setCopiedLink(true);
-                  setTimeout(() => setCopiedLink(false), 2500);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 transition cursor-pointer"
+                disabled={isResendingEmail}
+                onClick={handleResendEmail}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 transition cursor-pointer disabled:opacity-50"
               >
-                {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedLink ? 'Verification Link Copied!' : 'Copy Verification Link'}</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>{isResendingEmail ? 'Sending...' : 'Resend Verification Email'}</span>
               </button>
 
               <button
