@@ -46,32 +46,7 @@ import {
   Globe,
 } from 'lucide-react';
 
-const DEFAULT_ROLES = [
-  {
-    id: 'admin',
-    nameEn: 'Administrator',
-    description: 'Full access to all pages, content editing, user approvals, and settings.',
-    allowedCategories: ['*'],
-  },
-  {
-    id: 'pastor',
-    nameEn: 'Pastor / Minister',
-    description: 'Access to worship, truth, sermon materials, and family guidance.',
-    allowedCategories: ['worship', 'bible-truth', 'family', 'grow', 'program'],
-  },
-  {
-    id: 'worker',
-    nameEn: 'Gospel Worker',
-    description: 'Access to gospel activities, outreach, and preaching guides.',
-    allowedCategories: ['bible-truth', 'go-come', 'program', 'grow'],
-  },
-  {
-    id: 'member',
-    nameEn: 'General Member',
-    description: 'Standard access to general assembly announcements and studies.',
-    allowedCategories: ['home', 'worship', 'bible-truth', 'family'],
-  },
-];
+const DEFAULT_ROLES = [];
 
 export default function AdminPanel() {
   const { currentUser, userProfile } = useAuth();
@@ -175,19 +150,7 @@ export default function AdminPanel() {
       const snap = await getDocs(collection(db, 'roles'));
       const items = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
-
-      if (items.length > 0) {
-        // Merge with defaults
-        const merged = [...DEFAULT_ROLES];
-        items.forEach((customR) => {
-          if (!merged.find((r) => r.id === customR.id)) {
-            merged.push(customR);
-          }
-        });
-        setRolesList(merged);
-      } else {
-        setRolesList(DEFAULT_ROLES);
-      }
+      setRolesList(items);
     } catch (err) {
       console.warn('Error fetching roles:', err);
     }
@@ -867,49 +830,61 @@ export default function AdminPanel() {
 
               {/* Roles Chips */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {rolesList.map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
-                          {r.nameEn || r.name}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
-                          {r.id}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
-                        {r.description || 'Custom ministerial role'}
-                      </p>
-                      <div className="text-[9px] font-mono text-slate-400">
-                        Access: {r.allowedCategories?.includes('*') ? 'ALL PAGES (*)' : r.allowedCategories?.join(', ')}
-                      </div>
+                {rolesList.length === 0 ? (
+                  <div className="col-span-full py-10 px-4 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-300">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center mx-auto mb-3">
+                      <KeyRound className="w-6 h-6 text-[#C59B27]" />
                     </div>
-
-                    {/* Role Edit & Remove Actions */}
-                    <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditRole(r)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-[#0F294A] px-2 py-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer"
-                      >
-                        <Pencil className="w-3 h-3 text-[#C59B27]" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRole(r)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Remove</span>
-                      </button>
-                    </div>
+                    <h4 className="text-sm font-bold text-[#0F294A]">No Roles Configured Yet</h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                      All previous roles have been cleared. Click <span className="font-semibold text-[#0F294A]">"+ Add Role"</span> above to create your new ministerial roles.
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  rolesList.map((r) => (
+                    <div
+                      key={r.id}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
+                            {r.nameEn || r.name}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
+                            {r.id}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
+                          {r.description || 'Custom ministerial role'}
+                        </p>
+                        <div className="text-[9px] font-mono text-slate-400">
+                          Access: {r.allowedCategories?.includes('*') ? 'ALL PAGES (*)' : r.allowedCategories?.join(', ')}
+                        </div>
+                      </div>
+
+                      {/* Role Edit & Remove Actions */}
+                      <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditRole(r)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-[#0F294A] px-2 py-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer"
+                        >
+                          <Pencil className="w-3 h-3 text-[#C59B27]" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRole(r)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -1132,16 +1107,22 @@ export default function AdminPanel() {
                             {/* Role Selector */}
                             <td className="py-4 px-4">
                               <select
-                                value={u.role || 'member'}
+                                value={u.role || ''}
                                 onChange={(e) => handleChangeUserRole(u.id, e.target.value)}
                                 disabled={updatingUserId === u.id}
                                 className="p-1.5 rounded-lg border border-slate-300 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
                               >
+                                <option value="" disabled>Select Role</option>
                                 {rolesList.map((r) => (
                                   <option key={r.id} value={r.id}>
-                                    {r.nameEn} ({r.id})
+                                    {r.nameEn || r.name || r.id} ({r.id})
                                   </option>
                                 ))}
+                                {u.role && !rolesList.find((r) => r.id === u.role) && (
+                                  <option value={u.role}>
+                                    {u.role}
+                                  </option>
+                                )}
                               </select>
                             </td>
 
