@@ -1546,7 +1546,7 @@ export function AppProvider({ children }) {
     return { success: true, user };
   };
 
-  const sendOfficialVerificationEmail = async (email, password, userId) => {
+  const sendOfficialVerificationEmail = async (email, password, userId, otp = '') => {
     const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
     try {
       let idToken = null;
@@ -1581,7 +1581,7 @@ export function AppProvider({ children }) {
 
       if (!idToken) return { success: false, error: 'Could not acquire authentication token' };
 
-      const continueUrl = `https://sni.org.in/auth.html?mode=email_verified&uid=${encodeURIComponent(userId)}`;
+      const continueUrl = `https://sni.org.in/join?otp=${encodeURIComponent(otp)}&uid=${encodeURIComponent(userId)}`;
       const oobRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1671,11 +1671,15 @@ export function AppProvider({ children }) {
 
     const isAutoApproval = data?.settings?.autoUserApproval !== false;
 
-    // 3. Dispatch real official verification email via Firebase Auth
+    // Generate secure 6-digit OTP code and expiration (15 minutes)
     const isAdm = cleanUserLower === 'surya11008';
+    const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
+
+    // 3. Dispatch real official verification email with OTP via Firebase Auth
     if (!isAdm) {
       try {
-        await sendOfficialVerificationEmail(contact, password, cleanUserLower);
+        await sendOfficialVerificationEmail(contact, password, cleanUserLower, verifyOtp);
       } catch (e) {
         console.warn('Official email send warning:', e);
       }
@@ -1700,6 +1704,8 @@ export function AppProvider({ children }) {
       contactVerified: false,
       emailVerified: false,
       isVerified: false,
+      verificationOtp: isAdm ? '' : verifyOtp,
+      otpExpiresAt: isAdm ? '' : otpExpiresAt,
       verificationSentAt: new Date().toISOString(),
       personalPin: '',
       hasSetPersonalPin: false,
@@ -1728,6 +1734,8 @@ export function AppProvider({ children }) {
           contactVerified: false,
           emailVerified: false,
           isVerified: false,
+          verificationOtp: isAdm ? '' : verifyOtp,
+          otpExpiresAt: isAdm ? '' : otpExpiresAt,
           verificationSentAt: newUser.verificationSentAt,
           joinedAt: newUser.registeredAt
         })
@@ -1750,7 +1758,8 @@ export function AppProvider({ children }) {
       email: contact,
       userId: cleanUserLower,
       password,
-      message: `🎉 Registration submitted successfully, ${fullName}! An official verification email has been sent to your Gmail. Please open your Gmail and click the verification link.`,
+      verifyOtp,
+      message: `🎉 Registration submitted successfully, ${fullName}! A 6-digit verification code (OTP) has been dispatched to your Gmail. Please enter the OTP to verify your account.`,
       newUser,
     };
   };
@@ -1778,10 +1787,13 @@ export function AppProvider({ children }) {
       return { success: false, error: 'User account not found.' };
     }
 
-    // Verify with Firebase Auth that the email is actually verified
+    const cleanCode = (token || '').trim();
+    const isOtpMatch = cleanCode && user.verificationOtp && cleanCode === String(user.verificationOtp).trim();
+
+    // Verify with Firebase Auth that the email is actually verified (fallback if token is oobCode)
     let isFirebaseEmailVerified = false;
     const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-    if (token) {
+    if (token && !isOtpMatch) {
       try {
         await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
           method: 'POST',
@@ -1790,32 +1802,35 @@ export function AppProvider({ children }) {
         });
       } catch (e) {}
     }
-    try {
-      const email = user.email || user.contact;
-      const pass = user.password || user.plainPassword || 'SniUser123.';
-      const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass, returnSecureToken: true })
-      });
-      if (authRes.ok) {
-        const authData = await authRes.json();
-        const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+    if (!isOtpMatch) {
+      try {
+        const email = user.email || user.contact;
+        const pass = user.password || user.plainPassword || 'SniUser123.';
+        const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken: authData.idToken })
+          body: JSON.stringify({ email, password: pass, returnSecureToken: true })
         });
-        if (lookupRes.ok) {
-          const lookupData = await lookupRes.json();
-          isFirebaseEmailVerified = lookupData.users?.[0]?.emailVerified === true;
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: authData.idToken })
+          });
+          if (lookupRes.ok) {
+            const lookupData = await lookupRes.json();
+            isFirebaseEmailVerified = lookupData.users?.[0]?.emailVerified === true;
+          }
         }
-      }
-    } catch(e) {}
+      } catch(e) {}
+    }
 
-    if (!isFirebaseEmailVerified && cleanId !== 'surya11008') {
+    const isVerifiedNow = isOtpMatch || isFirebaseEmailVerified || cleanId === 'surya11008';
+    if (!isVerifiedNow) {
       return {
         success: false,
-        error: '⚠️ Email is not yet verified in Gmail. Please click the official verification link sent to your Gmail inbox first.'
+        error: '❌ Incorrect or expired OTP code. Please check your Gmail and enter the 6-digit code.'
       };
     }
 

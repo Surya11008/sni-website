@@ -31,6 +31,9 @@ export default function AuthPage() {
   const [verifySuccessMsg, setVerifySuccessMsg] = useState('');
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [resendEmailMsg, setResendEmailMsg] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -76,7 +79,7 @@ export default function AuthPage() {
       const oobCodeParam = urlParams.get('oobCode');
       const codeParam = tokenParam || otpParam || oobCodeParam;
 
-      if ((modeParam === 'email_verified' || modeParam === 'verify' || modeParam === 'verifyEmail') && uidParam) {
+      if ((modeParam === 'email_verified' || modeParam === 'verify' || modeParam === 'verifyEmail' || otpParam) && uidParam) {
         (async () => {
           setLoginError('');
           const res = await verifyUserContact(uidParam, codeParam);
@@ -196,14 +199,17 @@ export default function AuthPage() {
       });
 
       if (res.success) {
-        setRegSuccess(res.message || `Welcome to SNI, ${cleanFullName}! Verification email dispatched.`);
+        setRegSuccess(res.message || `Welcome to SNI, ${cleanFullName}! Verification OTP dispatched.`);
         setResendEmailMsg('');
+        setOtpError('');
+        setOtpInput('');
         setVerifyModalData({
           userId: cleanUserId,
           fullName: cleanFullName,
           contact: cleanContact,
           email: cleanContact,
           password: cleanPass,
+          otp: res.verifyOtp,
           isLoginBlock: false,
         });
         setShowVerifyModal(true);
@@ -218,21 +224,90 @@ export default function AuthPage() {
     }
   };
 
+  const handleVerifyOtpSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setOtpError('');
+    const cleanOtp = otpInput.trim();
+    if (!cleanOtp || cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
+      setOtpError('Please enter the full 6-digit numeric OTP code.');
+      return;
+    }
+
+    if (!verifyModalData?.userId) {
+      setOtpError('Session expired. Please fill out the registration form again.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      const res = await verifyUserContact(verifyModalData.userId, cleanOtp);
+      if (res?.success) {
+        setShowVerifyModal(false);
+        setVerifySuccessMsg(
+          `🎉 OTP verified successfully for ${verifyModalData.userId}! Your application has been submitted to Admin. Status: ⏳ Waiting for Admin Approval: Please wait until an administrator approves your account before signing in.`
+        );
+        setMode('login');
+        setLoginIdentifier(verifyModalData.userId);
+        setOtpInput('');
+      } else {
+        setOtpError(res?.error || 'Invalid or expired OTP code. Please check your Gmail.');
+      }
+    } catch (err) {
+      setOtpError('Network error verifying OTP. Please try again.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
   const handleResendEmail = async () => {
     if (!verifyModalData?.email || !verifyModalData?.userId) return;
     setIsResendingEmail(true);
     setResendEmailMsg('');
+    setOtpError('');
     try {
+      // Generate fresh 6-digit OTP
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const newExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
+      setVerifyModalData(prev => ({ ...prev, otp: newOtp }));
+
+      // Update RTDB
+      try {
+        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(verifyModalData.userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            verificationOtp: newOtp,
+            otpExpiresAt: newExpiresAt
+          })
+        });
+      } catch(e) {}
+
+      // Update Firestore
+      try {
+        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(verifyModalData.userId)}?updateMask.fieldPaths=verificationOtp&updateMask.fieldPaths=otpExpiresAt&key=${FIREBASE_API_KEY}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              verificationOtp: { stringValue: newOtp },
+              otpExpiresAt: { stringValue: newExpiresAt }
+            }
+          })
+        });
+      } catch(e) {}
+
       if (typeof sendOfficialVerificationEmail === 'function') {
         const res = await sendOfficialVerificationEmail(
           verifyModalData.email,
           verifyModalData.password || '',
-          verifyModalData.userId
+          verifyModalData.userId,
+          newOtp
         );
         if (res?.success) {
-          setResendEmailMsg('✅ Official verification email resent! Please check your Gmail inbox.');
+          setResendEmailMsg('✅ Fresh 6-digit OTP code dispatched! Please check your Gmail inbox.');
         } else {
-          setResendEmailMsg(`⚠️ ${res?.error || 'Failed to resend email. Please check your connection.'}`);
+          setResendEmailMsg(`⚠️ ${res?.error || 'Failed to resend OTP. Please check your connection.'}`);
         }
       } else {
         setResendEmailMsg('✅ Verification request recorded. Please check your Gmail.');
@@ -738,7 +813,7 @@ export default function AuthPage() {
         onClose={() => setShowInstallModal(false)}
       />
 
-      {/* 📩 SNI Official Gmail Verification Modal */}
+      {/* 📩 SNI Official Gmail Verification Modal with 6-Digit OTP */}
       {showVerifyModal && verifyModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
@@ -746,23 +821,65 @@ export default function AuthPage() {
               📩
             </div>
             <h3 className="text-lg font-black text-slate-800">
-              Official Verification Email Sent
+              Enter Verification Code (OTP)
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              An official verification email has been dispatched to your Gmail:
+              A 6-digit verification code (OTP) has been dispatched to your Gmail:
               <br />
               <span className="inline-block mt-2 font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
                 {verifyModalData.email || verifyModalData.contact}
               </span>
             </p>
 
+            {/* 🔑 6-Digit OTP Input Box */}
+            <div className="my-4 p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 text-center">
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                🔑 6-Digit Verification Code (OTP)
+              </label>
+              <p className="text-[11px] text-slate-500 mb-3">
+                Check your Gmail inbox for the OTP code, enter it below, and click verify.
+              </p>
+              <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
+                <input
+                  type="text"
+                  maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  placeholder="• • • • • •"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleVerifyOtpSubmit();
+                    }
+                  }}
+                  className="w-36 text-center text-xl font-mono font-black tracking-widest px-3 py-2 border-2 border-slate-300 rounded-xl bg-white text-slate-800 outline-none focus:border-[#124b91]"
+                />
+                <button
+                  type="button"
+                  disabled={isVerifyingOtp}
+                  onClick={handleVerifyOtpSubmit}
+                  className="py-2.5 px-4 rounded-xl bg-[#071b3b] hover:bg-[#124b91] text-[#f5c75e] font-extrabold text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isVerifyingOtp ? 'Verifying...' : 'Verify OTP →'}
+                </button>
+              </div>
+              {otpError && (
+                <p className="text-xs font-bold text-rose-600 mt-2.5 animate-in fade-in">
+                  {otpError}
+                </p>
+              )}
+            </div>
+
             {/* Step-by-step Instructions Box */}
-            <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-700">
-              <p className="font-bold text-slate-900 mb-2">Instructions:</p>
-              <ol className="list-decimal list-inside space-y-1.5 leading-relaxed text-[11px] text-slate-600">
+            <div className="mt-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-700">
+              <p className="font-bold text-slate-900 mb-1.5">Instructions:</p>
+              <ol className="list-decimal list-inside space-y-1 leading-relaxed text-[11px] text-slate-600">
                 <li>Open your <strong>Gmail Inbox</strong> (or check Spam / Promotions folder).</li>
-                <li>Click the official <strong>verification link</strong> in the email sent from SNI.</li>
-                <li>Once verified, your application will be automatically submitted to the Admin for approval.</li>
+                <li>Find the email from SNI with your 6-digit OTP code.</li>
+                <li>Enter the OTP code above and click <strong>Verify OTP</strong>.</li>
+                <li>Only after OTP verification is your request sent to Admin for approval.</li>
               </ol>
             </div>
 
@@ -772,7 +889,7 @@ export default function AuthPage() {
               </div>
             )}
 
-            <div className="mt-5 space-y-2.5">
+            <div className="mt-4 space-y-2">
               <a
                 href="https://mail.google.com"
                 target="_blank"
@@ -790,7 +907,7 @@ export default function AuthPage() {
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 transition cursor-pointer disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>{isResendingEmail ? 'Sending...' : 'Resend Verification Email'}</span>
+                <span>{isResendingEmail ? 'Sending...' : '🔄 Resend OTP Code'}</span>
               </button>
 
               <button
