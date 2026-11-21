@@ -58,27 +58,6 @@ export default function StatusTab() {
       {/* ⏰ Continuous Today 11:59:59 PM Input Deadline Countdown Banner */}
       <TodayDeadlineCountdown variant="banner" />
 
-      {/* 🔒 100% Personal & Confidential Guarantee Banner */}
-      <div className="bg-emerald-50/90 border border-emerald-300 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 font-bold">
-            🛡️
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xs text-emerald-950">
-                Personal World Active • {currentUser?.name}
-              </span>
-              <span className="bg-emerald-200/80 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
-                Your Eyes Only
-              </span>
-            </div>
-            <p className="text-[11px] text-emerald-800 mt-0.5">
-              All your activity inputs, checkboxes, preachings, and star records are strictly confidential to your account.
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* 🌟 Personal Star Status Hero Banner */}
       <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-700 text-white rounded-3xl p-5 sm:p-6 border border-blue-400/30 shadow-md">

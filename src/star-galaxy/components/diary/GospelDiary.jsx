@@ -18,8 +18,6 @@ import {
   Flame,
   Search,
   ArrowLeft,
-  Lock,
-  ShieldCheck,
 } from 'lucide-react';
 import MultiMediaUploader from '../common/MultiMediaUploader';
 import MultiMediaDisplay from '../common/MultiMediaDisplay';
@@ -285,31 +283,6 @@ export default function GospelDiary({ onBack }) {
         </div>
       </div>
 
-      {/* 🔒 100% Personal & Private Shield Guarantee */}
-      <div className="bg-emerald-50/90 border border-emerald-300/80 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-            <Lock className="w-4 h-4 text-emerald-700" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xs text-emerald-950">
-                100% Personal & Confidential
-              </span>
-              <span className="bg-emerald-200/80 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
-                Your Eyes Only
-              </span>
-            </div>
-            <p className="text-[11px] text-emerald-800 mt-0.5">
-              Entries are strictly isolated to <strong className="text-emerald-950 font-bold">{currentUser?.name || 'You'}</strong>. Neither Admin, Managers, nor other members can view your diary notes.
-            </p>
-          </div>
-        </div>
-        <div className="text-[11px] font-bold text-emerald-900 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs shrink-0 flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>User Isolation Active</span>
-        </div>
-      </div>
 
       {/* Anonymous Guest Alert if not signed in */}
       {!currentUser && (
