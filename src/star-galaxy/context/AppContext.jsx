@@ -14,6 +14,7 @@ import {
   markRegistrationApprovedInFirestore,
   getPendingRegistrationsFromFirestore,
   getAllUsersFromFirestore,
+  subscribeUserActivities,
   subscribeAllActivities,
   saveMemberActivitiesToFirestore,
   subscribeNewsPosts,
@@ -383,7 +384,7 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [initialUser, data.users, currentUser]);
 
-  // Target member being inspected/entered (strictly defaults to active currentUser's own ID)
+  // Target member being inspected/entered (strictly locks to active currentUser's own personal ID)
   const [selectedMemberId, setSelectedMemberId] = useState(() => {
     try {
       const activeSni = getActiveSniUser(initialUser);
@@ -394,15 +395,13 @@ export function AppProvider({ children, initialUser }) {
       const savedUserId = localStorage.getItem(SESSION_USER_KEY);
       if (savedUserId) return savedUserId;
     } catch (e) {}
-    return 'surya11008';
+    return 'user';
   });
 
-  // Ensure selectedMemberId always tracks currentUser unless admin explicitly changes it
+  // Ensure selectedMemberId STRICTLY tracks currentUser's own personal world at all times
   useEffect(() => {
     if (currentUser?.id) {
-      if (currentUser.role !== 'admin' || !selectedMemberId) {
-        setSelectedMemberId(currentUser.id);
-      }
+      setSelectedMemberId(currentUser.id);
     }
   }, [currentUser?.id]);
 
@@ -977,15 +976,6 @@ export function AppProvider({ children, initialUser }) {
       }
     });
 
-    const unsubActivities = subscribeAllActivities((cloudActivities) => {
-      if (cloudActivities && Object.keys(cloudActivities).length > 0) {
-        setData(prev => ({
-          ...prev,
-          activitiesData: { ...prev.activitiesData, ...cloudActivities },
-        }));
-      }
-    });
-
     const unsubSharedFiles = subscribeSharedFiles((cloudFiles) => {
       if (Array.isArray(cloudFiles)) {
         setData(prev => {
@@ -1042,7 +1032,6 @@ export function AppProvider({ children, initialUser }) {
       unsubNotices();
       unsubGallery();
       unsubMessages();
-      unsubActivities();
       unsubSharedFiles();
       unsubPresence();
       unsubChildrenMedia();
@@ -1070,7 +1059,7 @@ export function AppProvider({ children, initialUser }) {
     };
   }, [currentUser?.id]);
 
-  // Realtime Gospel Diary Sync for the active member
+  // Realtime Gospel Diary Sync for the active member (User-Isolated)
   useEffect(() => {
     if (!isFirebaseConfigured() || !currentUser?.id) return;
     const unsubDiary = subscribeUserGospelDiary(currentUser.id, (entries) => {
@@ -1085,6 +1074,26 @@ export function AppProvider({ children, initialUser }) {
       }
     });
     return () => unsubDiary();
+  }, [currentUser?.id]);
+
+  // Realtime User-Isolated Activities Sync (100% Confidential to Active Member)
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !currentUser?.id) return;
+    const unsubUserActivities = subscribeUserActivities(currentUser.id, (cloudData) => {
+      if (cloudData) {
+        setData(prev => ({
+          ...prev,
+          activitiesData: {
+            ...prev.activitiesData,
+            [currentUser.id]: cloudData,
+          },
+        }));
+        try {
+          localStorage.setItem(`star_galaxy_activities_${currentUser.id}`, JSON.stringify(cloudData));
+        } catch (e) {}
+      }
+    });
+    return () => unsubUserActivities();
   }, [currentUser?.id]);
 
   // 🎨 Realtime Lights (Theme) & Font Engine
@@ -2334,9 +2343,19 @@ export function AppProvider({ children, initialUser }) {
     });
   };
 
-  // Activity Helper for active inspected member
-  const getMemberActivity = (memberId = selectedMemberId) => {
-    return data.activitiesData[memberId] || {
+  // Activity Helper for active member (strictly 100% User-Isolated to personal account)
+  const getMemberActivity = (memberId = currentUser?.id) => {
+    const id = memberId || currentUser?.id || 'user';
+    if (data.activitiesData && data.activitiesData[id]) {
+      return data.activitiesData[id];
+    }
+    try {
+      const saved = localStorage.getItem(`star_galaxy_activities_${id}`);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {}
+    return {
       simplePreaching: {},
       connections: [],
       fruits: [],
@@ -2478,22 +2497,13 @@ export function AppProvider({ children, initialUser }) {
     );
   };
 
-  const updateMemberActivity = (memberId, activityKey, updater) => {
+  const updateMemberActivity = (memberId = currentUser?.id, activityKey, updater) => {
+    const id = memberId || currentUser?.id;
+    if (!id) return;
     let diff = 0;
 
     setData(prev => {
-      const currentMemberData = prev.activitiesData[memberId] || {
-        simplePreaching: {},
-        connections: [],
-        fruits: [],
-        lostSheep: [],
-        preachingMeeting: [],
-        worshipArrival: [],
-        education: [],
-        elohimAcademy: { levelChecks: [], somChecks: [], timestamps: {} },
-        preachingAcademy: { bookChecks: [], timestamps: {} },
-        newSongAcademy: { songChecks: [], timestamps: {} },
-      };
+      const currentMemberData = prev.activitiesData[id] || getMemberActivity(id);
 
       const updatedVal = typeof updater === 'function' ? updater(currentMemberData[activityKey]) : updater;
       const updatedMemberData = {
@@ -2507,20 +2517,16 @@ export function AppProvider({ children, initialUser }) {
       diff = newTotal - oldTotal;
 
       try {
-        fetch('/api/activities/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberId, activityKey, data: updatedVal }),
-        });
+        localStorage.setItem(`star_galaxy_activities_${id}`, JSON.stringify(updatedMemberData));
       } catch (e) {}
 
-      saveMemberActivitiesToFirestore(memberId, updatedMemberData);
+      saveMemberActivitiesToFirestore(id, updatedMemberData);
 
       return {
         ...prev,
         activitiesData: {
           ...prev.activitiesData,
-          [memberId]: updatedMemberData,
+          [id]: updatedMemberData,
         },
       };
     });
@@ -2531,9 +2537,9 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
-  // Calculate Stars summary for a specific member & date range
-  const getMemberStarsBreakdown = (memberId = selectedMemberId, customRange = dateRange) => {
-    const act = getMemberActivity(memberId);
+  // Calculate Stars summary for a specific member & date range (strictly defaults to current user's personal world)
+  const getMemberStarsBreakdown = (memberId = currentUser?.id, customRange = dateRange) => {
+    const act = getMemberActivity(memberId || currentUser?.id);
     const { startDate, endDate } = customRange;
 
     // 1. Simple Preaching
@@ -2658,9 +2664,9 @@ export function AppProvider({ children, initialUser }) {
     };
   };
 
-  // Calculate Overall Stars summary from the beginning to present (ignoring date filter)
-  const getMemberOverallStarsBreakdown = (memberId = selectedMemberId) => {
-    const act = getMemberActivity(memberId);
+  // Calculate Overall Stars summary from the beginning to present (strictly defaults to current user's personal world)
+  const getMemberOverallStarsBreakdown = (memberId = currentUser?.id) => {
+    const act = getMemberActivity(memberId || currentUser?.id);
 
     // 1. Simple Preaching (All-time sum)
     let overallPreachingSum = 0;

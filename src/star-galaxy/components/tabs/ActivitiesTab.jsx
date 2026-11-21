@@ -61,14 +61,11 @@ export default function ActivitiesTab() {
     return () => window.removeEventListener('star-galaxy-select-activity', handleSelectAct);
   }, []);
 
-  // Privacy Rule: Regular members see ONLY their own stars!
-  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
-    ? selectedMemberId
-    : currentUser?.id;
-
-  const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
-  const breakdown = getMemberStarsBreakdown(targetMemberId);
-  const overallBreakdown = getMemberOverallStarsBreakdown(targetMemberId);
+  // 100% Personal World: Target is ALWAYS the logged-in member's own account
+  const targetMemberId = currentUser?.id;
+  const selectedMember = currentUser;
+  const breakdown = getMemberStarsBreakdown(currentUser?.id);
+  const overallBreakdown = getMemberOverallStarsBreakdown(currentUser?.id);
 
   // 10 Clean Activities list with pure translated names
   const activities = [

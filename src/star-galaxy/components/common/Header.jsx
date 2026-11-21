@@ -36,27 +36,10 @@ export default function Header() {
     return (s === 'pending' || s === 'waiting') && s !== 'approved';
   }).length;
 
-  // Determine which members can be managed/viewed in the dropdown
-  let availableMembers = [];
-  if (currentUser?.role === 'admin') {
-    availableMembers = data.users.filter(u => u.status === 'approved');
-  } else if (currentUser?.role === 'manager') {
-    const assignedIds = Array.isArray(currentUser.assignedMembers) ? currentUser.assignedMembers : [];
-    availableMembers = data.users.filter(u =>
-      (u.id === currentUser.id || assignedIds.includes(u.id) || u.assignedManagerId === currentUser.id) &&
-      u.status === 'approved'
-    );
-  } else {
-    // Regular member can only manage themselves
-    availableMembers = currentUser ? [currentUser] : [];
-  }
-
-  // Regular members always see their own stars in header
-  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
-    ? selectedMemberId
-    : currentUser?.id;
-  const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
-  const starsBreakdown = getMemberStarsBreakdown(targetMemberId);
+  // Every user strictly operates in their OWN personal world
+  const targetMemberId = currentUser?.id;
+  const selectedMember = currentUser;
+  const starsBreakdown = getMemberStarsBreakdown(currentUser?.id);
 
   // Desktop Navigation Tabs
   const navTabs = [
@@ -152,33 +135,11 @@ export default function Header() {
         {/* ⏰ Live 11:59:59 PM Midnight Clock (Always visible at the top as requested!) */}
         <TodayDeadlineCountdown variant="compact" />
 
-        {/* Managing Member Selector (Visible ONLY for Admin and Manager) */}
-        {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
-          <div className="flex items-center gap-2 ml-auto sm:ml-0">
-            <Users className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="text-slate-500 font-medium hidden sm:inline">
-              {currentUser.role === 'admin' ? (t('viewingManaging') || 'Managing:') : (t('assignedManager') || 'Assigned Member:')}
-            </span>
-            <select
-              value={selectedMemberId}
-              onChange={(e) => setSelectedMemberId(e.target.value)}
-              className="bg-indigo-50 text-indigo-900 font-bold border border-indigo-200 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-400 cursor-pointer shadow-2xs"
-            >
-              {availableMembers.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.name} {m.id === currentUser.id ? `(${t('myself') || 'Myself'})` : `(${m.nickname || m.place || m.moreDetails || ''})`}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Regular Member View Indicator (Personal view for all non-admins) */}
-        {currentUser?.role !== 'admin' && currentUser?.role !== 'manager' && (
-          <div className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-            ✓ {t('viewingPersonal') || 'Personal Status'}
-          </div>
-        )}
+        {/* 100% Personal & Confidential World Indicator */}
+        <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 shadow-2xs flex items-center gap-1.5 ml-auto sm:ml-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Personal World Active</span>
+        </div>
       </div>
     </header>
   );

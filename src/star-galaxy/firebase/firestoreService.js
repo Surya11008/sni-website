@@ -227,8 +227,23 @@ export async function deleteUserFromFirestore(userId) {
 }
 
 /**
- * Sync Activities Data
+ * Sync User-Isolated Activities Data (100% Confidential to Active Member)
  */
+export function subscribeUserActivities(userId, onUpdate) {
+  if (!isFirebaseConfigured() || !db || !userId) return () => {};
+  try {
+    const docRef = doc(db, 'activities', userId);
+    return onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        onUpdate(docSnap.data());
+      }
+    }, (err) => console.error('Firestore user activities error:', err));
+  } catch (e) {
+    console.error('Failed to subscribe user activities:', e);
+    return () => {};
+  }
+}
+
 export function subscribeAllActivities(onUpdate) {
   if (!isFirebaseConfigured() || !db) return () => {};
   try {

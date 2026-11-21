@@ -114,9 +114,7 @@ export default function ElohimAcademy({ onBack }) {
   } = useApp();
 
   // Enforce privacy: regular member always sees own activity
-  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
-    ? selectedMemberId
-    : currentUser?.id;
+  const targetMemberId = currentUser?.id;
 
   const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
   const activityData = getMemberActivity(targetMemberId);
