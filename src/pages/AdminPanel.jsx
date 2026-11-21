@@ -319,34 +319,71 @@ export default function AdminPanel() {
   const handleApproveUser = async (userId, targetRole = 'MEM') => {
     setUpdatingUserId(userId);
     try {
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          status: 'approved',
-          role: targetRole,
-          approvedAt: serverTimestamp(),
-          approvedBy: currentUser?.email || 'admin',
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      // 1. Update Firestore (SDK + REST Fallback)
       for (const id of cleanIds) {
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          await setDoc(
+            doc(db, 'users', id),
+            {
               status: 'approved',
               role: targetRole,
-              approvedAt: new Date().toISOString(),
+              approvedAt: serverTimestamp(),
               approvedBy: currentUser?.email || 'admin',
-            }),
-          });
+            },
+            { merge: true }
+          );
+        } catch (sdkErr) {
+          console.warn('Firestore SDK update error, attempting REST fallback:', sdkErr);
+          try {
+            await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(id)}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=approvedAt&updateMask.fieldPaths=approvedBy&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fields: {
+                  status: { stringValue: 'approved' },
+                  role: { stringValue: targetRole },
+                  approvedAt: { stringValue: new Date().toISOString() },
+                  approvedBy: { stringValue: currentUser?.email || 'admin' }
+                }
+              })
+            });
+          } catch (restErr) {
+            console.warn('Firestore REST fallback error:', restErr);
+          }
+        }
+      }
+
+      // 2. Dual-sync to RTDB for all matching IDs
+      for (const id of cleanIds) {
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                status: 'approved',
+                role: targetRole,
+                approvedAt: new Date().toISOString(),
+                approvedBy: currentUser?.email || 'admin',
+              }),
+            });
+          }
         } catch (e) {
           console.warn('Error syncing approval to RTDB:', e);
         }
+      }
+
+      // 3. Remove from pending registrations in Firestore if present
+      for (const id of cleanIds) {
+        try {
+          await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(id)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+            method: 'DELETE'
+          });
+        } catch (e) {}
       }
 
       showFeedback('success', 'User account approved successfully!');
@@ -361,37 +398,60 @@ export default function AdminPanel() {
   const handleManualVerifyContact = async (userId) => {
     setUpdatingUserId(userId);
     try {
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          contactVerified: true,
-          isVerified: true,
-          verifiedAt: serverTimestamp(),
-          verifiedBy: currentUser?.email || 'admin',
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
       for (const id of cleanIds) {
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          await setDoc(
+            doc(db, 'users', id),
+            {
               contactVerified: true,
               isVerified: true,
-              verifiedAt: new Date().toISOString(),
+              status: 'pending', // Contact verified, now moves to Admin Pending Approval queue!
+              verifiedAt: serverTimestamp(),
               verifiedBy: currentUser?.email || 'admin',
-            }),
-          });
+            },
+            { merge: true }
+          );
+        } catch (sdkErr) {
+          try {
+            await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(id)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fields: {
+                  contactVerified: { booleanValue: true },
+                  isVerified: { booleanValue: true },
+                  status: { stringValue: 'pending' },
+                  verifiedAt: { stringValue: new Date().toISOString() }
+                }
+              })
+            });
+          } catch (e) {}
+        }
+
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contactVerified: true,
+                isVerified: true,
+                status: 'pending',
+                verifiedAt: new Date().toISOString(),
+                verifiedBy: currentUser?.email || 'admin',
+              }),
+            });
+          }
         } catch (e) {
           console.warn('Error syncing verify to RTDB:', e);
         }
       }
 
-      showFeedback('success', `Contact for user "${userId}" verified successfully!`);
+      showFeedback('success', `Contact for user "${userId}" verified! Now in pending approval queue.`);
       await fetchUsers();
     } catch (err) {
       showFeedback('error', 'Failed to verify contact: ' + err.message);
@@ -404,26 +464,36 @@ export default function AdminPanel() {
     if (!window.confirm('Are you sure you want to reject this user registration?')) return;
     setUpdatingUserId(userId);
     try {
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          status: 'rejected',
-          rejectedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'rejected',
-            rejectedAt: new Date().toISOString(),
-          }),
-        });
-      } catch (e) {
-        console.warn('Error syncing rejection to RTDB:', e);
+      for (const id of cleanIds) {
+        try {
+          await setDoc(
+            doc(db, 'users', id),
+            {
+              status: 'rejected',
+              rejectedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (e) {}
+
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                status: 'rejected',
+                rejectedAt: new Date().toISOString(),
+              }),
+            });
+          }
+        } catch (e) {
+          console.warn('Error syncing rejection to RTDB:', e);
+        }
       }
 
       showFeedback('success', 'User status set to rejected.');
@@ -439,27 +509,33 @@ export default function AdminPanel() {
     if (!window.confirm('Are you sure you want to revoke this user account? They will lose access to the portal.')) return;
     setUpdatingUserId(userId);
     try {
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          status: 'revoked',
-          revokedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
       for (const id of cleanIds) {
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          await setDoc(
+            doc(db, 'users', id),
+            {
               status: 'revoked',
-              revokedAt: new Date().toISOString(),
-            }),
-          });
+              revokedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (e) {}
+
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                status: 'revoked',
+                revokedAt: new Date().toISOString(),
+              }),
+            });
+          }
         } catch (e) {
           console.warn('Error syncing revocation to RTDB:', e);
         }
@@ -479,28 +555,34 @@ export default function AdminPanel() {
     setUpdatingUserId(userId);
     try {
       const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          tempPassword: '123456',
-          tempPasswordExpiresAt: expiresAt,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
       for (const id of cleanIds) {
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          await setDoc(
+            doc(db, 'users', id),
+            {
               tempPassword: '123456',
               tempPasswordExpiresAt: expiresAt,
-            }),
-          });
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (e) {}
+
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                tempPassword: '123456',
+                tempPasswordExpiresAt: expiresAt,
+              }),
+            });
+          }
         } catch (e) {
           console.warn('Error syncing temp password to RTDB:', e);
         }
@@ -518,27 +600,33 @@ export default function AdminPanel() {
   const handleChangeUserRole = async (userId, newRole) => {
     setUpdatingUserId(userId);
     try {
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          role: newRole,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
       for (const id of cleanIds) {
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          await setDoc(
+            doc(db, 'users', id),
+            {
               role: newRole,
-              updatedAt: new Date().toISOString(),
-            }),
-          });
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (e) {}
+
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                role: newRole,
+                updatedAt: new Date().toISOString(),
+              }),
+            });
+          }
         } catch (e) {
           console.warn('Error syncing role change to RTDB:', e);
         }
@@ -555,16 +643,38 @@ export default function AdminPanel() {
 
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Delete this user record from database? This cannot be undone.')) return;
+    setUpdatingUserId(userId);
     try {
-      const target = users.find(u => u.id === userId);
-      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      const target = usersList.find(u => u.id === userId || u.userId === userId || u.username === userId);
+      const cleanIds = new Set([userId, target?.id, target?.userId, target?.username].filter(Boolean));
 
       for (const id of cleanIds) {
-        await deleteDoc(doc(db, 'users', id)).catch(() => {});
+        // Delete from Firestore via SDK
         try {
-          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
-            method: 'DELETE',
+          await deleteDoc(doc(db, 'users', id));
+        } catch (e) {
+          try {
+            await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(id)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+              method: 'DELETE'
+            });
+          } catch (err2) {}
+        }
+
+        // Delete from pending registrations in Firestore
+        try {
+          await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(id)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+            method: 'DELETE'
           });
+        } catch (e) {}
+
+        // Delete from RTDB
+        try {
+          const cleanKey = String(id).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          if (cleanKey) {
+            await fetch(`${RTDB_BASE}/users/${encodeURIComponent(cleanKey)}.json`, {
+              method: 'DELETE',
+            });
+          }
         } catch (e) {
           console.warn('Error deleting user from RTDB:', e);
         }
@@ -574,6 +684,8 @@ export default function AdminPanel() {
       await fetchUsers();
     } catch (err) {
       showFeedback('error', 'Failed to delete user: ' + err.message);
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -1062,7 +1174,17 @@ export default function AdminPanel() {
     if (isUserAdmin) return false;
     if (u.status === 'approved') return false;
     if (u.status === 'revoked' || u.status === 'rejected') return false;
-    return true;
+    // Strictly requires phone or email contact to be verified first!
+    const isContactVerified = u.contactVerified === true || u.isVerified === true;
+    return isContactVerified && (u.status === 'pending' || !u.status || u.status === 'awaiting_approval');
+  };
+
+  const isUserUnverified = (u) => {
+    const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
+    if (isUserAdmin) return false;
+    if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected') return false;
+    const isContactVerified = u.contactVerified === true || u.isVerified === true;
+    return !isContactVerified || u.status === 'unverified' || u.status === 'awaiting_verification';
   };
 
   const isUserApproved = (u) => {
@@ -1071,6 +1193,7 @@ export default function AdminPanel() {
   };
 
   const pendingUsersCount = usersList.filter(isUserPending).length;
+  const unverifiedUsersCount = usersList.filter(isUserUnverified).length;
   const filteredUsers = usersList.filter((u) => {
     const matchesSearch =
       (u.email || '').toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -1079,6 +1202,7 @@ export default function AdminPanel() {
       (u.phone || '').toLowerCase().includes(userSearchTerm.toLowerCase());
 
     if (userStatusFilter === 'pending') return matchesSearch && isUserPending(u);
+    if (userStatusFilter === 'unverified') return matchesSearch && isUserUnverified(u);
     if (userStatusFilter === 'approved') return matchesSearch && isUserApproved(u);
     return matchesSearch;
   });
@@ -1268,6 +1392,7 @@ export default function AdminPanel() {
                 {[
                   { id: 'all', label: `All Users (${usersList.length})` },
                   { id: 'pending', label: `Pending Approvals (${pendingUsersCount})` },
+                  { id: 'unverified', label: `Awaiting Verification (${unverifiedUsersCount})` },
                   { id: 'approved', label: 'Approved Members' },
                 ].map((f) => (
                   <button
@@ -1420,10 +1545,15 @@ export default function AdminPanel() {
                                   <X className="w-3 h-3 text-rose-500" />
                                   <span>Rejected</span>
                                 </span>
+                              ) : (!u.contactVerified && !u.isVerified) ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  <span>Awaiting Verification</span>
+                                </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-bold uppercase tracking-wider animate-pulse">
                                   <Clock className="w-3 h-3 text-amber-600" />
-                                  <span>Pending</span>
+                                  <span>Pending Approval</span>
                                 </span>
                               )}
                             </td>

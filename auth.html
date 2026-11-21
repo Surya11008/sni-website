@@ -1119,7 +1119,7 @@
                         const isAdmin = isCardAdmin(userId, pass) || userData.role === 'admin' || userData.role === 'ADMIN';
 
                         // Check Phone / Gmail Verification for members
-                        if (!isAdmin && userData.contactVerified === false) {
+                        if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified')) {
                             const token = userData.verificationToken || ('sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36));
                             const verifyUrl = `${window.location.origin}${window.location.pathname}?mode=verify&uid=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
                             const isEmail = (userData.contact || '').includes('@');
@@ -1140,9 +1140,11 @@
                         const isApproved = isAdmin || userData.status === 'approved';
                         if (!isApproved) {
                             if (userData.status === 'rejected') {
-                                showAlert('❌ Your registration request was not approved.');
+                                showAlert('❌ Your registration request was not approved by administrator.');
+                            } else if (userData.status === 'revoked') {
+                                showAlert('⛔ Your account access has been revoked by administrator.');
                             } else {
-                                showAlert('⏳ Your registration is pending admin approval. You can sign in once verified.');
+                                showAlert('⏳ Your contact is verified! Your registration is pending admin approval. You can sign in once an administrator approves your account.');
                             }
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
@@ -1242,7 +1244,7 @@
                     email: isEmail ? contact : '',
                     password: pass,
                     role: isAdmin ? 'ADMIN' : 'MEM',
-                    status: isAdmin ? 'approved' : 'pending',
+                    status: isAdmin ? 'approved' : 'unverified',
                     contactVerified: isAdmin ? true : false,
                     isVerified: isAdmin ? true : false,
                     verificationToken: isAdmin ? '' : verifyToken,
@@ -1275,7 +1277,7 @@
                                 password: { stringValue: pass },
                                 plainPassword: { stringValue: pass },
                                 role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
-                                status: { stringValue: isAdmin ? 'approved' : 'pending' },
+                                status: { stringValue: isAdmin ? 'approved' : 'unverified' },
                                 contactVerified: { booleanValue: isAdmin ? true : false },
                                 isVerified: { booleanValue: isAdmin ? true : false },
                                 verificationToken: { stringValue: isAdmin ? '' : verifyToken },
@@ -1400,13 +1402,13 @@
 
             icon.className = 'modal-icon success';
             icon.innerHTML = '🎉';
-            title.innerText = 'Verification Completed!';
+            title.innerText = 'Contact Verified!';
             target.innerText = contact || uid;
-            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your contact has been verified successfully for SNI ID: <strong class="modal-target">${uid}</strong>.`;
+            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your contact has been verified successfully. Your registration for SNI ID <strong class="modal-target">${uid}</strong> is now submitted for Admin Approval.<br><small style="color: #64748b; display: block; margin-top: 8px;">You will be able to sign in once an administrator approves your account.</small>`;
 
             actions.innerHTML = `
                 <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')">
-                    ✨ Sign In to Your Account Now
+                    🔑 Return to Sign In
                 </button>
             `;
 
@@ -1422,7 +1424,7 @@
                 const pInput = document.getElementById('signInPass');
                 if (pInput) pInput.focus();
             }
-            showAlert('Your contact is verified! Please enter your password to sign in.', 'success');
+            showAlert('Contact verified! Your registration is awaiting admin approval. You can sign in once approved.', 'info');
         };
 
         const closeVerifyBtn = document.getElementById('closeVerifyModalBtn');
@@ -1474,17 +1476,43 @@
                     body: JSON.stringify({
                         contactVerified: true,
                         isVerified: true,
+                        status: 'pending',
                         verifiedAt: new Date().toISOString()
                     })
                 });
 
                 // Update Firestore
                 try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             fields: {
+                                contactVerified: { booleanValue: true },
+                                isVerified: { booleanValue: true },
+                                status: { stringValue: 'pending' },
+                                verifiedAt: { stringValue: new Date().toISOString() }
+                            }
+                        })
+                    });
+                } catch(e) {}
+
+                // Also populate pending_registrations in Firestore
+                try {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(uid)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields: {
+                                id: { stringValue: uid },
+                                userId: { stringValue: uid },
+                                username: { stringValue: uid },
+                                name: { stringValue: userData.fullName || uid },
+                                fullName: { stringValue: userData.fullName || uid },
+                                contact: { stringValue: userData.contact || '' },
+                                phone: { stringValue: userData.contact || '' },
+                                role: { stringValue: 'MEM' },
+                                status: { stringValue: 'pending' },
                                 contactVerified: { booleanValue: true },
                                 isVerified: { booleanValue: true },
                                 verifiedAt: { stringValue: new Date().toISOString() }
