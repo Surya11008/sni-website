@@ -145,24 +145,24 @@ export default function Home() {
         )}
 
         {/* Hero Content Container */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12">
-          <div className="max-w-2xl text-left text-white space-y-5">
+        <div className="relative w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 py-12 md:py-20">
+          <div className="max-w-3xl lg:max-w-4xl text-left text-white space-y-5">
             {/* Sub-Badge */}
             {heroSettings.badge && (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-[#C59B27]/50 text-[#C59B27] text-xs font-semibold uppercase tracking-widest shadow-xs">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-[#C59B27]/50 text-[#C59B27] text-xs font-semibold uppercase tracking-widest shadow-xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#C59B27] animate-ping"></span>
                 <span>{heroSettings.badge}</span>
               </div>
             )}
 
             {/* Inspirational Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.15] font-serif">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-white leading-[1.12] font-serif">
               <span className="text-white drop-shadow-sm">{heroSettings.title}</span>
             </h1>
 
             {/* Subtitle */}
             {heroSettings.subtitle && (
-              <p className="text-slate-200 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-normal">
+              <p className="text-slate-200 text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl lg:max-w-3xl font-normal">
                 {heroSettings.subtitle}
               </p>
             )}
@@ -171,7 +171,7 @@ export default function Home() {
             <div className="pt-3 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => handleScrollTo('photos-section')}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border-2 border-white/40 text-white hover:bg-white/10 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer group"
+                className="inline-flex items-center gap-2 px-7 py-3.5 sm:px-8 sm:py-4 rounded-full border-2 border-white/40 text-white hover:bg-white/10 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer group"
               >
                 <ImageIcon className="w-4 h-4 text-[#F4B942]" />
                 <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>

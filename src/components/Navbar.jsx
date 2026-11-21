@@ -165,15 +165,31 @@ export default function Navbar() {
     }
   }, [userProfile?.role, currentUser?.email]);
 
-  const visibleCategories = portalStructure.filter((cat) => {
+  const isCategoryPermitted = (cat) => {
     if (!rolePermissions || rolePermissions.includes('*')) return true;
-    return rolePermissions.includes(cat.categorySlug);
-  });
+    if (rolePermissions.includes(cat.categorySlug)) return true;
+    return cat.pages?.some(
+      (p) =>
+        rolePermissions.includes(p.pageSlug) ||
+        rolePermissions.includes(`${cat.categorySlug}/${p.pageSlug}`)
+    );
+  };
+
+  const isPagePermitted = (catSlug, page) => {
+    if (!rolePermissions || rolePermissions.includes('*')) return true;
+    if (rolePermissions.includes(catSlug)) return true;
+    return (
+      rolePermissions.includes(page.pageSlug) ||
+      rolePermissions.includes(`${catSlug}/${page.pageSlug}`)
+    );
+  };
+
+  const visibleCategories = portalStructure.filter(isCategoryPermitted);
 
   return (
     <header className="sticky top-0 z-50 bg-[#071B3B] border-b border-[#132A4A] shadow-[0_4px_25px_rgba(0,0,0,0.3)] font-sans">
       {/* Main Sleek & Compact Navbar Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12">
         <div className="flex items-center justify-between h-14 sm:h-16 gap-4">
           {/* Brand Emblem & Title on the Far Left */}
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
@@ -267,7 +283,7 @@ export default function Navbar() {
 
                       {/* Compact Sub-Pages List - Close together without bulky descriptions */}
                       <div className="flex flex-col gap-0.5 max-h-[340px] overflow-y-auto">
-                        {cat.pages.map((page) => {
+                        {cat.pages.filter((page) => isPagePermitted(cat.categorySlug, page)).map((page) => {
                           const pageTitle = isTelugu ? page.titleTe : page.titleEn;
 
                           if (page.externalUrl) {
@@ -517,7 +533,7 @@ export default function Navbar() {
 
                   {isExpanded && (
                     <div className="p-2 bg-[#040E1E] space-y-1 border-t border-[#132A4A]">
-                      {cat.pages.map((page) => {
+                      {cat.pages.filter((page) => isPagePermitted(cat.categorySlug, page)).map((page) => {
                         const pageTitle = isTelugu ? page.titleTe : page.titleEn;
 
                         if (page.externalUrl) {

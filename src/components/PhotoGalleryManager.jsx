@@ -165,7 +165,7 @@ export default function PhotoGalleryManager({
   }
 
   return (
-    <section className={`py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ${className}`}>
+    <section className={`py-12 px-3 sm:px-6 md:px-8 lg:px-12 w-full max-w-[1720px] mx-auto ${className}`}>
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-slate-200 gap-4">
         <div>
@@ -305,7 +305,7 @@ export default function PhotoGalleryManager({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {photos.map((photo) => {
             const title = isTelugu ? photo.titleTe || photo.titleEn : photo.titleEn || photo.titleTe;
             const caption = isTelugu ? photo.captionTe || photo.captionEn : photo.captionEn || photo.captionTe;
@@ -391,7 +391,7 @@ export default function PhotoGalleryManager({
           onClick={() => setPreviewPhoto(null)}
         >
           <div
-            className="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-150"
+            className="relative max-w-6xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -401,11 +401,11 @@ export default function PhotoGalleryManager({
               <X className="w-4 h-4" />
             </button>
 
-            <div className="max-h-[70vh] bg-black flex items-center justify-center">
+            <div className="max-h-[82vh] bg-black flex items-center justify-center">
               <img
                 src={previewPhoto.imageUrl}
                 alt="Enlarged"
-                className="max-h-[70vh] w-auto max-w-full object-contain"
+                className="max-h-[82vh] w-auto max-w-full object-contain"
               />
             </div>
 

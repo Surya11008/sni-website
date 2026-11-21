@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -45,6 +45,10 @@ import {
   KeyRound,
   Globe,
   Sliders,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 const DEFAULT_ROLES = [];
@@ -73,6 +77,16 @@ export default function AdminPanel() {
     description: '',
     allowedCategories: ['home', 'worship', 'bible-truth'],
   });
+
+  // Dynamic portal structure combining default hierarchy + custom Firestore pages
+  const fullPortalStructure = useMemo(
+    () => mergePortalStructure(customPagesList),
+    [customPagesList]
+  );
+
+  // Search & Accordion expansion state for role permissions modal
+  const [rolePermSearch, setRolePermSearch] = useState('');
+  const [roleExpandedCats, setRoleExpandedCats] = useState({});
 
   // 3. Pages State
   const [customPagesList, setCustomPagesList] = useState([]);
@@ -312,6 +326,12 @@ export default function AdminPanel() {
       description: '',
       allowedCategories: ['home', 'worship', 'bible-truth'],
     });
+    setRolePermSearch('');
+    const map = {};
+    fullPortalStructure.forEach((c) => {
+      map[c.categorySlug] = true;
+    });
+    setRoleExpandedCats(map);
     setIsAddRoleOpen(true);
   };
 
@@ -323,6 +343,12 @@ export default function AdminPanel() {
       description: role.description || '',
       allowedCategories: role.allowedCategories || ['*'],
     });
+    setRolePermSearch('');
+    const map = {};
+    fullPortalStructure.forEach((c) => {
+      map[c.categorySlug] = true;
+    });
+    setRoleExpandedCats(map);
     setIsAddRoleOpen(true);
   };
 
@@ -378,6 +404,156 @@ export default function AdminPanel() {
       showFeedback('error', 'Failed to save role: ' + err.message);
     }
   };
+
+  // ----------------------------------------------------
+  // ROLE PERMISSIONS & SUB-PAGE SELECTION HELPERS
+  // ----------------------------------------------------
+  const isMasterAllSelected = newRole.allowedCategories?.includes('*');
+
+  // Check if a category is considered fully selected
+  const isCategoryFullySelected = (cat) => {
+    if (isMasterAllSelected) return true;
+    if (newRole.allowedCategories?.includes(cat.categorySlug)) return true;
+    if (!cat.pages || cat.pages.length === 0) return false;
+    return cat.pages.every(
+      (p) =>
+        newRole.allowedCategories?.includes(p.pageSlug) ||
+        newRole.allowedCategories?.includes(`${cat.categorySlug}/${p.pageSlug}`)
+    );
+  };
+
+  // Check if a specific sub-page is selected
+  const isPageSelected = (cat, page) => {
+    if (isMasterAllSelected) return true;
+    if (newRole.allowedCategories?.includes(cat.categorySlug)) return true;
+    return (
+      newRole.allowedCategories?.includes(page.pageSlug) ||
+      newRole.allowedCategories?.includes(`${cat.categorySlug}/${page.pageSlug}`)
+    );
+  };
+
+  // Count how many sub-pages of a category are selected
+  const getCategorySelectedCount = (cat) => {
+    if (isMasterAllSelected || newRole.allowedCategories?.includes(cat.categorySlug)) {
+      return cat.pages?.length || 0;
+    }
+    return (
+      cat.pages?.filter(
+        (p) =>
+          newRole.allowedCategories?.includes(p.pageSlug) ||
+          newRole.allowedCategories?.includes(`${cat.categorySlug}/${p.pageSlug}`)
+      ).length || 0
+    );
+  };
+
+  // Toggle master "Full Access (All Pages & Contents)"
+  const handleToggleMasterAll = (checked) => {
+    if (checked) {
+      setNewRole((prev) => ({ ...prev, allowedCategories: ['*'] }));
+    } else {
+      setNewRole((prev) => ({ ...prev, allowedCategories: [] }));
+    }
+  };
+
+  // Toggle all pages within a single category
+  const handleToggleCategory = (cat, checked) => {
+    const catSlug = cat.categorySlug;
+    const pageSlugs = cat.pages ? cat.pages.map((p) => p.pageSlug) : [];
+    const comboSlugs = cat.pages ? cat.pages.map((p) => `${catSlug}/${p.pageSlug}`) : [];
+    const allCatIdentifiers = new Set([catSlug, ...pageSlugs, ...comboSlugs]);
+
+    setNewRole((prev) => {
+      let current = (prev.allowedCategories || []).filter((x) => x !== '*');
+      if (checked) {
+        return {
+          ...prev,
+          allowedCategories: Array.from(new Set([...current, catSlug, ...pageSlugs, ...comboSlugs])),
+        };
+      } else {
+        return {
+          ...prev,
+          allowedCategories: current.filter((x) => !allCatIdentifiers.has(x)),
+        };
+      }
+    });
+  };
+
+  // Toggle individual sub-page
+  const handleTogglePage = (cat, page, checked) => {
+    const catSlug = cat.categorySlug;
+    const pageSlug = page.pageSlug;
+    const comboSlug = `${catSlug}/${pageSlug}`;
+
+    setNewRole((prev) => {
+      let current = (prev.allowedCategories || []).filter((x) => x !== '*');
+
+      // If category-level slug was present and we uncheck one subpage, expand other pages
+      if (!checked && current.includes(catSlug)) {
+        current = current.filter((x) => x !== catSlug);
+        const otherPages = (cat.pages || []).filter((p) => p.pageSlug !== pageSlug);
+        otherPages.forEach((p) => {
+          current.push(p.pageSlug);
+          current.push(`${catSlug}/${p.pageSlug}`);
+        });
+      }
+
+      if (checked) {
+        current = Array.from(new Set([...current, pageSlug, comboSlug]));
+        // If all pages of this category are now checked, also add category slug
+        const allSelected = (cat.pages || []).every(
+          (p) => current.includes(p.pageSlug) || current.includes(`${catSlug}/${p.pageSlug}`)
+        );
+        if (allSelected) {
+          current.push(catSlug);
+        }
+      } else {
+        current = current.filter((x) => x !== pageSlug && x !== comboSlug && x !== catSlug);
+      }
+
+      return {
+        ...prev,
+        allowedCategories: Array.from(new Set(current)),
+      };
+    });
+  };
+
+  // Expand / collapse all categories
+  const handleExpandAllCats = (expand) => {
+    const map = {};
+    fullPortalStructure.forEach((c) => {
+      map[c.categorySlug] = expand;
+    });
+    setRoleExpandedCats(map);
+  };
+
+  // Filter categories and sub-pages by search query
+  const filteredPortalStructure = useMemo(() => {
+    if (!rolePermSearch.trim()) return fullPortalStructure;
+    const q = rolePermSearch.trim().toLowerCase();
+    return fullPortalStructure
+      .map((cat) => {
+        const catTitleEn = (cat.titleEn || '').toLowerCase();
+        const catTitleTe = (cat.titleTe || '').toLowerCase();
+        const catSlug = (cat.categorySlug || '').toLowerCase();
+        const catMatch = catTitleEn.includes(q) || catTitleTe.includes(q) || catSlug.includes(q);
+
+        const matchedPages = (cat.pages || []).filter((p) => {
+          const pTitleEn = (p.titleEn || '').toLowerCase();
+          const pTitleTe = (p.titleTe || '').toLowerCase();
+          const pSlug = (p.pageSlug || '').toLowerCase();
+          return pTitleEn.includes(q) || pTitleTe.includes(q) || pSlug.includes(q);
+        });
+
+        if (catMatch || matchedPages.length > 0) {
+          return {
+            ...cat,
+            pages: catMatch ? cat.pages : matchedPages,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }, [fullPortalStructure, rolePermSearch]);
 
   // ----------------------------------------------------
   // PAGE MANAGEMENT HANDLERS
@@ -875,8 +1051,24 @@ export default function AdminPanel() {
                         <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
                           {r.description || 'Custom ministerial role'}
                         </p>
-                        <div className="text-[9px] font-mono text-slate-400">
-                          Access: {r.allowedCategories?.includes('*') ? 'ALL PAGES (*)' : r.allowedCategories?.join(', ')}
+                        <div className="text-[10px] text-slate-500 font-medium mt-1">
+                          <span className="font-bold text-slate-700">Access: </span>
+                          {r.allowedCategories?.includes('*') ? (
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold font-mono text-[9px]">
+                              ALL PAGES & CONTENTS (*)
+                            </span>
+                          ) : r.allowedCategories && r.allowedCategories.length > 0 ? (
+                            <span className="text-slate-600">
+                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).slice(0, 5).join(', ')}
+                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length > 5 && (
+                                <span className="text-amber-700 font-bold">
+                                  {' '}+{Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length - 5} more
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">No pages assigned</span>
+                          )}
                         </div>
                       </div>
 
@@ -905,115 +1097,277 @@ export default function AdminPanel() {
               </div>
             </div>
 
-            {/* Modal: Add New Role */}
+            {/* Modal: Add / Edit Ministerial Role */}
             {isAddRoleOpen && (
-              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+                <div className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden">
+                  {/* Modal Top Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
                     <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
                       <KeyRound className="w-5 h-5 text-[#C59B27]" />
                       <span>{editingRoleId ? 'Edit Ministerial Role' : 'Create New Ministerial Role'}</span>
                     </h3>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsAddRoleOpen(false);
                         setEditingRoleId(null);
                       }}
-                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer"
+                      className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-400 hover:text-slate-700 cursor-pointer transition"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <form onSubmit={handleCreateRole} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Role Title *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={newRole.name}
-                        onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                        placeholder="e.g. Choir Ministry"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                      />
-                    </div>
+                  <form onSubmit={handleCreateRole} className="flex flex-col flex-1 overflow-hidden text-xs">
+                    {/* Scrollable Form Body */}
+                    <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          Role Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newRole.name}
+                          onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                          placeholder="e.g. Choir Ministry, Deacon, Sunday School Teacher"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Role Description
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={newRole.description}
-                        onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                        placeholder="Responsibilities and purpose of this role..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                      />
-                    </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          Role Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={newRole.description}
+                          onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                          placeholder="Responsibilities and purpose of this ministerial role..."
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        />
+                      </div>
 
-                    {/* Permissions: Checkboxes for allowed categories */}
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-2">
-                        Permitted Categories & Pages for this Role:
-                      </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                        {[
-                          { id: '*', label: 'Full Access (All)' },
-                          { id: 'home', label: 'Home' },
-                          { id: 'worship', label: 'Worship' },
-                          { id: 'bible-truth', label: 'Truth' },
-                          { id: 'family', label: 'Family' },
-                          { id: 'grow', label: 'Grow' },
-                          { id: 'go-come', label: 'Go & Come' },
-                          { id: 'program', label: 'Program' },
-                          { id: 'more', label: 'More' },
-                        ].map((cat) => {
-                          const isChecked = newRole.allowedCategories.includes(cat.id);
-                          return (
-                            <label
-                              key={cat.id}
-                              className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(e) => {
-                                  if (cat.id === '*') {
-                                    setNewRole({
-                                      ...newRole,
-                                      allowedCategories: e.target.checked ? ['*'] : ['home'],
-                                    });
-                                  } else {
-                                    const next = e.target.checked
-                                      ? [...newRole.allowedCategories.filter((x) => x !== '*'), cat.id]
-                                      : newRole.allowedCategories.filter((x) => x !== cat.id);
-                                    setNewRole({ ...newRole, allowedCategories: next });
-                                  }
-                                }}
-                                className="rounded text-[#0F294A] focus:ring-amber-500"
-                              />
-                              <span>{cat.label}</span>
+                      {/* 🌟 Granular Permissions: Categories & All Sub-Pages Selection */}
+                      <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <div>
+                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                            <label className="block font-bold text-slate-800 text-xs sm:text-sm">
+                              Permitted Categories, Sub-Pages & Contents:
                             </label>
-                          );
-                        })}
+                            <span className="text-[11px] text-slate-500">
+                              {isMasterAllSelected
+                                ? 'Full Access Granted to All Pages & Contents'
+                                : `${newRole.allowedCategories?.length || 0} items permitted`}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            Select individual sub-pages, entire categories, or grant unrestricted Full Access.
+                          </p>
+                        </div>
+
+                        {/* 👑 Master Option: Full Access (All Categories, Sub-Pages & Contents) */}
+                        <div
+                          className={`p-3 sm:p-4 rounded-2xl border-2 transition flex items-center justify-between gap-3 cursor-pointer ${
+                            isMasterAllSelected
+                              ? 'bg-amber-50/90 border-[#C59B27] shadow-xs'
+                              : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                          }`}
+                          onClick={() => handleToggleMasterAll(!isMasterAllSelected)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isMasterAllSelected}
+                              onChange={(e) => handleToggleMasterAll(e.target.checked)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                            />
+                            <div>
+                              <div className="font-extrabold text-xs text-[#071B3B] flex items-center gap-2 flex-wrap">
+                                <span>Full Access (All Categories, Pages & Contents)</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-bold">
+                                  ALL ACCESS (*)
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Members with this role can view and access every category, sub-page, and published content across the entire website.
+                              </p>
+                            </div>
+                          </div>
+                          <Sparkles className={`w-5 h-5 shrink-0 ${isMasterAllSelected ? 'text-[#C59B27]' : 'text-slate-300'}`} />
+                        </div>
+
+                        {/* Toolbar: Search Sub-Pages & Quick Action Buttons */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1">
+                          <div className="relative flex-1 min-w-[200px]">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={rolePermSearch}
+                              onChange={(e) => setRolePermSearch(e.target.value)}
+                              placeholder="Search sub-pages or categories (e.g. sermons, diary)..."
+                              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-slate-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={handleSelectAllPages}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                            >
+                              Select All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleClearAllPages}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                            >
+                              Clear All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExpandAllCats(true)}
+                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
+                            >
+                              Expand All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExpandAllCats(false)}
+                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
+                            >
+                              Collapse All
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Categories Accordion with All Sub-Pages Checkboxes */}
+                        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                          {filteredPortalStructure.map((cat) => {
+                            const isFullySelected = isCategoryFullySelected(cat);
+                            const selectedCount = getCategorySelectedCount(cat);
+                            const totalCount = cat.pages ? cat.pages.length : 0;
+                            const isExpanded = roleExpandedCats[cat.categorySlug] !== false;
+
+                            return (
+                              <div
+                                key={cat.categorySlug}
+                                className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs transition-all"
+                              >
+                                {/* Category Header Bar */}
+                                <div className="p-3 bg-slate-50/90 hover:bg-slate-100 flex items-center justify-between gap-3 select-none">
+                                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={isFullySelected}
+                                      onChange={(e) => handleToggleCategory(cat, e.target.checked)}
+                                      className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                                    />
+                                    <div
+                                      className="flex items-center gap-2 flex-1 cursor-pointer truncate"
+                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
+                                    >
+                                      <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#F4B942] flex items-center justify-center shrink-0">
+                                        <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
+                                      </div>
+                                      <span className="font-extrabold text-xs text-slate-800 truncate">
+                                        {cat.titleEn}
+                                      </span>
+                                      {cat.titleTe && (
+                                        <span className="text-[11px] text-slate-400 font-telugu hidden sm:inline">
+                                          ({cat.titleTe})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span
+                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                        isFullySelected
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                          : selectedCount > 0
+                                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                          : 'bg-slate-200 text-slate-600'
+                                      }`}
+                                    >
+                                      {isFullySelected ? `All (${totalCount})` : `${selectedCount} / ${totalCount}`}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
+                                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50 transition cursor-pointer"
+                                    >
+                                      <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                      />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Sub-Pages Grid */}
+                                {isExpanded && cat.pages && cat.pages.length > 0 && (
+                                  <div className="p-3 bg-white border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                    {cat.pages.map((p) => {
+                                      const isPChecked = isPageSelected(cat, p);
+                                      return (
+                                        <label
+                                          key={p.pageSlug}
+                                          className={`flex items-start gap-2 p-2 rounded-xl border text-xs cursor-pointer transition ${
+                                            isPChecked
+                                              ? 'bg-amber-50/80 border-[#C59B27]/50 text-[#071B3B] font-bold shadow-2xs'
+                                              : 'bg-slate-50/60 border-slate-200/80 text-slate-700 hover:bg-slate-100'
+                                          }`}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={isPChecked}
+                                            onChange={(e) => handleTogglePage(cat, p, e.target.checked)}
+                                            className="mt-0.5 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                                          />
+                                          <div className="min-w-0 flex-1">
+                                            <div className="truncate font-semibold flex items-center gap-1.5">
+                                              <PortalIcon name={p.iconName} className="w-3 h-3 text-slate-400 shrink-0" />
+                                              <span className="truncate">{p.titleEn}</span>
+                                            </div>
+                                            {p.titleTe && (
+                                              <div className="text-[10px] text-slate-500 font-telugu truncate">
+                                                {p.titleTe}
+                                              </div>
+                                            )}
+                                            <div className="text-[9px] text-slate-400 font-mono truncate">
+                                              {p.pageSlug}
+                                            </div>
+                                          </div>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    {/* Fixed Action Footer */}
+                    <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/80">
                       <button
                         type="button"
                         onClick={() => setIsAddRoleOpen(false)}
-                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
+                        className="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 font-bold text-xs transition cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider"
+                        className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider text-xs transition shadow-md cursor-pointer"
                       >
-                        Save Role
+                        {editingRoleId ? 'Update Role' : 'Save Role'}
                       </button>
                     </div>
                   </form>

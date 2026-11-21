@@ -2,15 +2,16 @@ import { ExternalLink, Play } from 'lucide-react';
 
 /**
  * RichContentRenderer
- * Renders structured markdown-like rich text into Tailwind styled HTML.
+ * Renders structured markdown-like rich text into responsive Tailwind styled HTML.
  * Supports:
  * - Headings (#, ##, ###)
- * - Blockquotes / Verse boxes (> text)
+ * - Blockquotes / Scripture passages (> text)
  * - Lists (- item, 1. item)
  * - Bold (**text**), Italic (*text*), Highlights (==text==)
  * - Links ([text](url))
  * - Images (![alt](url))
- * - YouTube Video embed helper
+ * - Embedded Videos (YouTube / Vimeo / Video links)
+ * - Raw HTML from Google Docs & Rich Text Editor
  */
 export default function RichContentRenderer({ content = '', isTelugu = false, className = '' }) {
   if (!content) return null;
@@ -20,25 +21,33 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
   if (isHtml) {
     return (
       <div
-        className={`rich-html-content text-slate-800 text-sm sm:text-base leading-relaxed ${className}`}
+        className={`rich-html-content text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${className}`}
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
   }
 
-  // Split into blocks by double newlines or single newlines
+  // Helper to extract YouTube video ID
+  const getYouTubeId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return match ? match[1] : null;
+  };
+
+  // Helper to extract Vimeo video ID
+  const getVimeoId = (url) => {
+    if (!url) return null;
+    const match = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
+    return match ? match[3] : null;
+  };
+
+  // Split into blocks by lines
   const lines = content.split('\n');
 
   const renderInline = (text) => {
     if (!text) return null;
 
-    // Tokenize for bold, italic, highlights, links
-    // 1. Links: [text](url)
-    // 2. Bold: **text**
-    // 3. Highlight: ==text==
-    // 4. Italic: *text*
-    
-    // Quick regex replacer or parser
+    // Tokenize for links: [text](url)
     const linkRegex = /\[(.*?)\]\((.*?)\)/g;
     const parts = [];
     let lastIndex = 0;
@@ -64,46 +73,48 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             href={part.url}
             target={isExternal ? '_blank' : '_self'}
             rel={isExternal ? 'noreferrer' : ''}
-            className="text-[#C59B27] hover:underline font-semibold inline-flex items-center gap-1 mx-0.5"
+            className="text-[#C59B27] hover:underline font-bold inline-flex items-center gap-1 mx-0.5 break-words"
           >
             <span>{part.label}</span>
-            {isExternal && <ExternalLink className="w-3 h-3 inline" />}
+            {isExternal && <ExternalLink className="w-3.5 h-3.5 inline shrink-0" />}
           </a>
         );
       }
 
       // Format bold, italic, highlight in text
       let subText = part.val;
-      // Replace highlights ==text== with custom markup
-      const formattedParts = [];
       const splitTokens = subText.split(/(\*\*.*?\*\*|\*.*?\*|==.*?==)/g);
 
-      splitTokens.forEach((token, tIdx) => {
-        if (!token) return;
-        if (token.startsWith('**') && token.endsWith('**')) {
-          formattedParts.push(
-            <strong key={tIdx} className="font-extrabold text-[#0F294A]">
-              {token.slice(2, -2)}
-            </strong>
-          );
-        } else if (token.startsWith('==') && token.endsWith('==')) {
-          formattedParts.push(
-            <mark key={tIdx} className="bg-amber-100/90 text-[#0F294A] px-1.5 py-0.5 rounded font-semibold border-b border-[#C59B27]">
-              {token.slice(2, -2)}
-            </mark>
-          );
-        } else if (token.startsWith('*') && token.endsWith('*')) {
-          formattedParts.push(
-            <em key={tIdx} className="italic text-slate-700">
-              {token.slice(1, -1)}
-            </em>
-          );
-        } else {
-          formattedParts.push(token);
-        }
-      });
-
-      return <span key={pIdx}>{formattedParts}</span>;
+      return (
+        <span key={pIdx}>
+          {splitTokens.map((token, tIdx) => {
+            if (!token) return null;
+            if (token.startsWith('**') && token.endsWith('**')) {
+              return (
+                <strong key={tIdx} className="font-extrabold text-[#0F294A]">
+                  {token.slice(2, -2)}
+                </strong>
+              );
+            } else if (token.startsWith('==') && token.endsWith('==')) {
+              return (
+                <mark
+                  key={tIdx}
+                  className="bg-amber-100/90 text-[#0F294A] px-1.5 py-0.5 rounded font-semibold border-b border-[#C59B27]"
+                >
+                  {token.slice(2, -2)}
+                </mark>
+              );
+            } else if (token.startsWith('*') && token.endsWith('*')) {
+              return (
+                <em key={tIdx} className="italic text-slate-700">
+                  {token.slice(1, -1)}
+                </em>
+              );
+            }
+            return token;
+          })}
+        </span>
+      );
     });
   };
 
@@ -111,7 +122,7 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
   const blocks = [];
   let currentList = null;
 
-  lines.forEach((rawLine, idx) => {
+  lines.forEach((rawLine) => {
     const line = rawLine.trim();
 
     if (!line) {
@@ -119,6 +130,30 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
         blocks.push(currentList);
         currentList = null;
       }
+      return;
+    }
+
+    // Video URL on a standalone line: YouTube
+    const ytId = getYouTubeId(line);
+    if (ytId && (line.startsWith('http://') || line.startsWith('https://') || line.startsWith('www.'))) {
+      if (currentList) { blocks.push(currentList); currentList = null; }
+      blocks.push({
+        type: 'video',
+        provider: 'youtube',
+        embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}`,
+      });
+      return;
+    }
+
+    // Video URL on a standalone line: Vimeo
+    const vimeoId = getVimeoId(line);
+    if (vimeoId && (line.startsWith('http://') || line.startsWith('https://'))) {
+      if (currentList) { blocks.push(currentList); currentList = null; }
+      blocks.push({
+        type: 'video',
+        provider: 'vimeo',
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+      });
       return;
     }
 
@@ -183,15 +218,36 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
   }
 
   return (
-    <div className={`space-y-4 text-slate-800 text-sm sm:text-base leading-relaxed ${isTelugu ? 'font-telugu leading-loose' : ''} ${className}`}>
+    <div
+      className={`space-y-5 text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
+        isTelugu ? 'font-telugu' : ''
+      } ${className}`}
+    >
       {blocks.map((block, idx) => {
         switch (block.type) {
+          case 'video':
+            return (
+              <div
+                key={idx}
+                className="my-6 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 bg-black shadow-lg"
+              >
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={block.embedUrl}
+                    title="Embedded Video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                </div>
+              </div>
+            );
           case 'h1':
             return (
               <h2
                 key={idx}
-                className={`text-2xl sm:text-3xl font-extrabold text-[#0F294A] pt-4 pb-1 border-b border-slate-200 ${
-                  isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
+                className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#0F294A] pt-4 pb-2 border-b border-slate-200 leading-tight ${
+                  isTelugu ? 'font-krishna' : 'font-serif'
                 }`}
               >
                 {renderInline(block.content)}
@@ -201,8 +257,8 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             return (
               <h3
                 key={idx}
-                className={`text-xl sm:text-2xl font-bold text-[#0F294A] pt-3 pb-1 text-[#C59B27] ${
-                  isTelugu ? 'font-krishna text-2xl sm:text-3xl' : 'font-serif'
+                className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#C59B27] pt-3 pb-2 leading-tight ${
+                  isTelugu ? 'font-krishna' : 'font-serif'
                 }`}
               >
                 {renderInline(block.content)}
@@ -210,7 +266,7 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             );
           case 'h3':
             return (
-              <h4 key={idx} className="text-lg sm:text-xl font-bold text-slate-900 pt-2">
+              <h4 key={idx} className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 pt-2 pb-1">
                 {renderInline(block.content)}
               </h4>
             );
@@ -218,17 +274,17 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             return (
               <blockquote
                 key={idx}
-                className="my-3 p-4 sm:p-5 rounded-2xl bg-amber-50/70 border-l-4 border-[#C59B27] text-slate-800 font-medium italic shadow-xs"
+                className="my-4 p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-amber-50/70 border-l-4 sm:border-l-6 border-[#C59B27] text-slate-800 font-medium italic shadow-xs text-base sm:text-lg lg:text-xl"
               >
-                <div className="flex items-start gap-2">
-                  <span className="text-[#C59B27] text-2xl font-serif leading-none">“</span>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#C59B27] text-3xl sm:text-4xl font-serif leading-none select-none">“</span>
                   <div className="flex-1 not-italic font-normal">{renderInline(block.content)}</div>
                 </div>
               </blockquote>
             );
           case 'ul':
             return (
-              <ul key={idx} className="list-disc list-outside pl-5 space-y-1.5 my-2">
+              <ul key={idx} className="list-disc list-outside pl-6 space-y-2 my-3 text-base sm:text-lg">
                 {block.items.map((item, i) => (
                   <li key={i} className="pl-1">
                     {renderInline(item)}
@@ -238,7 +294,7 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             );
           case 'ol':
             return (
-              <ol key={idx} className="list-decimal list-outside pl-5 space-y-1.5 my-2 font-medium">
+              <ol key={idx} className="list-decimal list-outside pl-6 space-y-2 my-3 font-medium text-base sm:text-lg">
                 {block.items.map((item, i) => (
                   <li key={i} className="pl-1 font-normal">
                     {renderInline(item)}
@@ -248,21 +304,25 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
             );
           case 'image':
             return (
-              <figure key={idx} className="my-5 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                <img src={block.url} alt={block.alt} className="w-full max-h-[480px] object-cover" />
+              <figure key={idx} className="my-6 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-md">
+                <img
+                  src={block.url}
+                  alt={block.alt}
+                  className="w-full max-h-[640px] lg:max-h-[800px] object-cover"
+                />
                 {block.alt && (
-                  <figcaption className="text-center text-xs text-slate-500 py-2 bg-slate-50">
+                  <figcaption className="text-center text-xs sm:text-sm text-slate-500 py-2.5 bg-slate-50 border-t border-slate-100">
                     {block.alt}
                   </figcaption>
                 )}
               </figure>
             );
           case 'hr':
-            return <hr key={idx} className="my-6 border-slate-200" />;
+            return <hr key={idx} className="my-8 border-slate-200" />;
           case 'p':
           default:
             return (
-              <p key={idx} className="leading-relaxed">
+              <p key={idx} className="leading-relaxed sm:leading-loose">
                 {renderInline(block.content)}
               </p>
             );

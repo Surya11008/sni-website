@@ -268,7 +268,7 @@ export default function DynamicPage() {
       {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
       {category?.pages && category.pages.length > 0 && (
         <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
             <Link
               to={`/category/${categorySlug}`}
               className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
@@ -296,7 +296,7 @@ export default function DynamicPage() {
       )}
 
       {/* 2. Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-8 space-y-2.5 sm:space-y-3">
+      <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 pt-3 sm:pt-4 pb-12 space-y-4">
         {/* Clean, Lightweight Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
           <div>
@@ -526,7 +526,7 @@ export default function DynamicPage() {
         )}
 
         {activeArticle ? (
-          <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-12 shadow-md max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
+          <article className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-8 md:p-12 lg:p-14 shadow-md w-full max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-200">
             {/* Top Bar: Back Button & Admin Controls */}
             <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4 flex-wrap">
               <button
@@ -727,7 +727,7 @@ export default function DynamicPage() {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
-                <div className="w-full h-[520px] sm:h-[680px] bg-slate-50 relative">
+                <div className="w-full h-[560px] sm:h-[720px] md:h-[820px] lg:h-[900px] xl:h-[960px] bg-slate-50 relative">
                   <iframe
                     src={activeArticle.websiteUrl || activeArticle.embedUrl}
                     title="Embedded Website"
@@ -835,7 +835,7 @@ export default function DynamicPage() {
 
             {/* GRID VIEW */}
             {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
                 {contents.map((item) => {
                   const itemTitle = getText(item, 'title');
                   const itemDesc = getDesc(item);
@@ -1132,7 +1132,7 @@ export default function DynamicPage() {
           </div>
         ) : (
           /* Editorial Default Welcome if no user-submitted content exists yet */
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 shadow-sm max-w-4xl mx-auto space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 md:p-12 shadow-sm w-full max-w-[1600px] mx-auto space-y-6">
             <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
               <div className="w-14 h-14 rounded-2xl bg-[#0F294A] text-[#F4B942] flex items-center justify-center shrink-0 shadow-sm">
                 <PortalIcon name={page?.iconName || 'BookOpen'} className="w-7 h-7" />

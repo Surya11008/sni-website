@@ -15,6 +15,30 @@
   font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
 }
 
+/* Responsive Media, Embeds, Videos, and Iframes */
+iframe, video, embed, object {
+  max-width: 100%;
+}
+
+.responsive-embed-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.responsive-embed-container iframe,
+.responsive-embed-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* Rich HTML Content styling for Google Docs pasted tables, headings, blockquotes */
 .rich-html-content table {
   width: 100%;
@@ -26,7 +50,7 @@
 .rich-html-content th,
 .rich-html-content td {
   border: 1px solid #cbd5e1;
-  padding: 0.6rem 0.85rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   vertical-align: top;
 }
@@ -37,53 +61,98 @@
 }
 .rich-html-content img {
   max-width: 100%;
+  width: 100%;
   height: auto;
-  border-radius: 0.75rem;
-  margin: 1.25rem 0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  border-radius: 1rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.1);
 }
+.rich-html-content iframe,
+.rich-html-content video,
+.rich-html-content embed,
+.rich-html-content object {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 16 / 9;
+  border-radius: 1rem;
+  margin: 1.5rem 0;
+  border: 0;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  min-height: 220px;
+}
+@media (min-width: 640px) {
+  .rich-html-content iframe,
+  .rich-html-content video {
+    min-height: 380px;
+  }
+}
+@media (min-width: 1024px) {
+  .rich-html-content iframe,
+  .rich-html-content video {
+    min-height: 520px;
+  }
+}
+@media (min-width: 1536px) {
+  .rich-html-content iframe,
+  .rich-html-content video {
+    min-height: 640px;
+  }
+}
+
+.rich-html-content a {
+  color: #C59B27;
+  font-weight: 700;
+  text-decoration: underline;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.rich-html-content a:hover {
+  color: #0F294A;
+}
+
 .rich-html-content blockquote {
   border-left: 4px solid #C59B27;
-  padding: 0.75rem 1.25rem;
-  margin: 1.25rem 0;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
   color: #334155;
   font-style: italic;
   background-color: #fffbeb;
-  border-radius: 0 0.75rem 0.75rem 0;
+  border-radius: 0 1rem 1rem 0;
 }
 .rich-html-content h1 {
-  font-size: 1.85rem;
+  font-size: 2.25rem;
   font-weight: 800;
-  margin: 1.5rem 0 0.75rem;
+  margin: 2rem 0 1rem;
+  color: #071B3B;
+  line-height: 1.2;
+}
+.rich-html-content h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.75rem;
   color: #071B3B;
   line-height: 1.25;
 }
-.rich-html-content h2 {
-  font-size: 1.5rem;
+.rich-html-content h3 {
+  font-size: 1.4rem;
   font-weight: 700;
   margin: 1.25rem 0 0.5rem;
-  color: #071B3B;
-  line-height: 1.3;
-}
-.rich-html-content h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 1rem 0 0.5rem;
   color: #0F294A;
 }
 .rich-html-content ul {
   list-style-type: disc;
   margin-left: 1.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 .rich-html-content ol {
   list-style-type: decimal;
   margin-left: 1.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 .rich-html-content p {
-  margin-bottom: 0.85rem;
-  line-height: 1.75;
+  margin-bottom: 1rem;
+  line-height: 1.8;
 }
 
 /* Floating Hearts Animation */

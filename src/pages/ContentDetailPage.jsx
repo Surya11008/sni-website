@@ -397,7 +397,7 @@ export default function ContentDetailPage() {
       {/* 2nd Header: Subpage Navigation Bar for this Category (Positioned directly under Main Navbar) */}
       {subPages.length > 0 && (
         <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
             <Link
               to={`/category/${currentCategorySlug}`}
               className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
@@ -425,7 +425,7 @@ export default function ContentDetailPage() {
       )}
 
       {/* Main Page Container (Clean, Open, Dedicated Page Layout - NO POPUP LOOK) */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 py-8 space-y-8">
         {/* Breadcrumb & Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           {/* Breadcrumb Links: Home > Category > Page > Content Title */}
@@ -810,7 +810,7 @@ export default function ContentDetailPage() {
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
-              <div className="w-full h-[520px] sm:h-[680px] bg-slate-50 relative">
+              <div className="w-full h-[560px] sm:h-[720px] md:h-[820px] lg:h-[900px] xl:h-[960px] bg-slate-50 relative">
                 <iframe
                   src={article.websiteUrl || article.embedUrl}
                   title="Embedded Website"

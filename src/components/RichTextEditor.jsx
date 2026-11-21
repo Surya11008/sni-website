@@ -28,6 +28,7 @@ import {
   Highlighter,
   ChevronDown,
   Sparkles,
+  Video,
 } from 'lucide-react';
 
 export default function RichTextEditor({
@@ -131,6 +132,29 @@ export default function RichTextEditor({
     const url = prompt('Enter Image URL (e.g. https://...):');
     if (url) {
       execCmd('insertHTML', `<img src="${url}" alt="Embedded Image" style="max-width:100%; border-radius: 12px; margin: 12px 0;" /><p><br/></p>`);
+    }
+  };
+
+  // Insert Video / Embed Link (YouTube, Vimeo, Google Drive, or <iframe>)
+  const handleInsertVideo = () => {
+    const input = prompt('Enter Video URL (YouTube, Vimeo) or <iframe> embed code:');
+    if (!input) return;
+    const trimmed = input.trim();
+    if (trimmed.startsWith('<iframe')) {
+      execCmd(
+        'insertHTML',
+        `<div class="responsive-embed-container" style="position:relative; width:100%; aspect-ratio:16/9; margin:1.5rem 0; border-radius:1rem; overflow:hidden;">${trimmed}</div><p><br/></p>`
+      );
+    } else {
+      let embedUrl = trimmed;
+      const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      if (ytMatch && ytMatch[1]) {
+        embedUrl = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
+      }
+      execCmd(
+        'insertHTML',
+        `<div class="responsive-embed-container" style="position:relative; width:100%; aspect-ratio:16/9; margin:1.5rem 0; border-radius:1rem; overflow:hidden; box-shadow:0 4px 12px -2px rgba(0,0,0,0.1);"><iframe src="${embedUrl}" style="width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br/></p>`
+      );
     }
   };
 
@@ -353,6 +377,16 @@ export default function RichTextEditor({
           >
             <ImageIcon className="w-4 h-4 text-emerald-600" />
             <span>Image</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInsertVideo}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white transition cursor-pointer font-semibold text-slate-800"
+            title="Insert Video or Embed (YouTube, Vimeo, etc.)"
+          >
+            <Video className="w-4 h-4 text-rose-600" />
+            <span>Video/Embed</span>
           </button>
 
           <button

@@ -134,7 +134,7 @@ export default function CategoryPage() {
       {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
       {currentCategory.pages?.length > 0 && (
         <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
             <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27] shrink-0">
               {isTelugu ? 'అన్ని' : 'All'}
             </span>
@@ -152,7 +152,7 @@ export default function CategoryPage() {
       )}
 
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-8 space-y-5">
+      <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 pt-3 sm:pt-4 pb-8 space-y-6">
         {/* Clean, Lightweight Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2.5 border-b border-slate-200">
           <div>
@@ -312,7 +312,7 @@ export default function CategoryPage() {
                   </div>
                 ) : viewMode === 'grid' ? (
                   /* GRID VIEW */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
                     {subPageContents.map((item) => {
                       const itemTitle = getText(item, 'title');
                       const itemDesc = getDesc(item);
