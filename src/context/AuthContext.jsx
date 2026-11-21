@@ -21,10 +21,44 @@ export const useAuth = () => {
   return context;
 };
 
+function getInitialSession() {
+  if (typeof window === 'undefined') return { user: null, profile: null };
+  try {
+    const stored =
+      localStorage.getItem('sni_user_session') ||
+      localStorage.getItem('sni_current_user') ||
+      localStorage.getItem('sni_unified_session');
+    if (stored) {
+      const u = JSON.parse(stored);
+      if (u && (u.userId || u.uid)) {
+        const id = u.userId || u.uid;
+        const email = u.email || `${id}@sni.org.in`;
+        const isAdmin = String(id).toLowerCase() === 'surya11008' || u.role === 'admin';
+        return {
+          user: {
+            uid: id,
+            email: email,
+            displayName: u.fullName || u.displayName || id,
+          },
+          profile: {
+            uid: id,
+            email: email,
+            displayName: u.fullName || u.displayName || id,
+            role: isAdmin ? 'admin' : (u.role || 'member'),
+            status: u.status || 'approved',
+          },
+        };
+      }
+    }
+  } catch (e) {}
+  return { user: null, profile: null };
+}
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initial = getInitialSession();
+  const [currentUser, setCurrentUser] = useState(initial.user);
+  const [userProfile, setUserProfile] = useState(initial.profile);
+  const [loading, setLoading] = useState(!initial.user);
 
   // Auto-expire timer for 3-hour temporary password sessions & unified session sync
   useEffect(() => {

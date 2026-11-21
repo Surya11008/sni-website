@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import SniTopHeader from './components/common/SniTopHeader';
 import Header from './components/common/Header';
@@ -25,12 +25,27 @@ function MainApp() {
     data,
   } = useApp();
 
-  // If user is not logged in, redirect directly to the ONLY SNI Master Login page
-  if (!currentUser) {
-    if (typeof window !== 'undefined') {
-      window.location.replace('/auth.html');
+  // If user is not logged in, redirect to SNI Master Login page gracefully after session check
+  useEffect(() => {
+    if (!currentUser) {
+      const timer = setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.replace('/auth.html');
+        }
+      }, 600);
+      return () => clearTimeout(timer);
     }
-    return null;
+  }, [currentUser]);
+
+  if (!currentUser) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-slate-400">
+        <div className="w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          Connecting to Star Galaxy...
+        </p>
+      </div>
+    );
   }
 
   return (
