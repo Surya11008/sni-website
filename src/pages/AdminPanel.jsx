@@ -101,16 +101,6 @@ export default function AdminPanel() {
     allowedCategories: ['home', 'worship', 'bible-truth'],
   });
 
-  // Dynamic portal structure combining default hierarchy + custom Firestore pages
-  const fullPortalStructure = useMemo(
-    () => mergePortalStructure(customPagesList),
-    [customPagesList]
-  );
-
-  // Search & Accordion expansion state for role permissions modal
-  const [rolePermSearch, setRolePermSearch] = useState('');
-  const [roleExpandedCats, setRoleExpandedCats] = useState({});
-
   // 3. Pages State
   const [customPagesList, setCustomPagesList] = useState([]);
   const [newPage, setNewPage] = useState({
@@ -122,6 +112,16 @@ export default function AdminPanel() {
     externalUrl: '',
     iconName: 'FileText',
   });
+
+  // Dynamic portal structure combining default hierarchy + custom Firestore pages
+  const fullPortalStructure = useMemo(
+    () => mergePortalStructure(customPagesList),
+    [customPagesList]
+  );
+
+  // Search & Accordion expansion state for role permissions modal
+  const [rolePermSearch, setRolePermSearch] = useState('');
+  const [roleExpandedCats, setRoleExpandedCats] = useState({});
 
   // 4. Articles & Contents State
   const [contentsList, setContentsList] = useState([]);
@@ -1426,6 +1426,7 @@ export default function AdminPanel() {
                       <th className="py-3 px-4">Contact (Email / Phone)</th>
                       <th className="py-3 px-4">Approval Status</th>
                       <th className="py-3 px-4">Ministerial Role</th>
+                        <th className="py-3 px-4">Password</th>
                       <th className="py-3 px-4">Temp Pass (123456 - 3h)</th>
                       <th className="py-3 px-5 text-right">Actions</th>
                     </tr>
@@ -1433,7 +1434,7 @@ export default function AdminPanel() {
                   <tbody className="divide-y divide-slate-100">
                     {filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
+                        <td colSpan={7} className="py-8 text-center text-slate-400 font-medium">
                           No users found matching current filter.
                         </td>
                       </tr>
@@ -1518,6 +1519,11 @@ export default function AdminPanel() {
                                   </option>
                                 )}
                               </select>
+                            </td>
+
+                            {/* Password */}
+                            <td className="py-4 px-4 font-mono text-xs text-slate-700">
+                              {u.password || '—'}
                             </td>
 
                             {/* Temporary Password Status */}
