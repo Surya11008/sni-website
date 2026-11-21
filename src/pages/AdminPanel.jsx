@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 
 const DEFAULT_ROLES = [];
+const RTDB_BASE = 'https://sni-org-in-default-rtdb.firebaseio.com';
 
 export default function AdminPanel() {
   const { currentUser, userProfile } = useAuth();
@@ -158,12 +159,53 @@ export default function AdminPanel() {
     setTimeout(() => setStatusMessage({ type: '', text: '' }), 4000);
   };
 
-  // Fetch Users
+  // Fetch Users from both Firestore and Realtime Database (RTDB)
   const fetchUsers = useCallback(async () => {
     try {
-      const snap = await getDocs(collection(db, 'users'));
-      const items = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      const userMap = new Map();
+
+      // 1. Fetch from Firestore
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        snap.forEach((d) => {
+          userMap.set(d.id, { id: d.id, ...d.data() });
+        });
+      } catch (e) {
+        console.warn('Error fetching Firestore users:', e);
+      }
+
+      // 2. Fetch from Realtime Database (where auth.html registrations land)
+      try {
+        const res = await fetch(`${RTDB_BASE}/users.json`);
+        if (res.ok) {
+          const rtdbData = await res.json();
+          if (rtdbData && typeof rtdbData === 'object') {
+            Object.keys(rtdbData).forEach((key) => {
+              const u = rtdbData[key];
+              if (!u) return;
+              const existing = userMap.get(key) || {};
+              userMap.set(key, {
+                ...existing,
+                ...u,
+                id: key,
+                userId: u.userId || key,
+                displayName: u.fullName || u.displayName || existing.displayName || existing.fullName || key,
+                email: u.email || existing.email || (u.contact && u.contact.includes('@') ? u.contact : ''),
+                phone: u.phone || existing.phone || (u.contact && !u.contact.includes('@') ? u.contact : ''),
+                password: u.password || existing.password || '',
+                role: u.role || existing.role || 'member',
+                status: u.status || existing.status || (u.role === 'admin' ? 'approved' : 'pending'),
+                createdAt: u.joinedAt || existing.createdAt || existing.joinedAt || '',
+                fromRtdb: true,
+              });
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching RTDB users:', e);
+      }
+
+      let items = Array.from(userMap.values());
 
       if (items.length === 0 && currentUser) {
         items.push({
@@ -246,12 +288,32 @@ export default function AdminPanel() {
   const handleApproveUser = async (userId, targetRole = 'member') => {
     setUpdatingUserId(userId);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'approved',
-        role: targetRole,
-        approvedAt: serverTimestamp(),
-        approvedBy: currentUser?.email || 'admin',
-      });
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          status: 'approved',
+          role: targetRole,
+          approvedAt: serverTimestamp(),
+          approvedBy: currentUser?.email || 'admin',
+        },
+        { merge: true }
+      );
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'approved',
+            role: targetRole,
+            approvedAt: new Date().toISOString(),
+            approvedBy: currentUser?.email || 'admin',
+          }),
+        });
+      } catch (e) {
+        console.warn('Error syncing approval to RTDB:', e);
+      }
+
       showFeedback('success', 'User account approved successfully!');
       await fetchUsers();
     } catch (err) {
@@ -265,10 +327,28 @@ export default function AdminPanel() {
     if (!window.confirm('Are you sure you want to reject this user registration?')) return;
     setUpdatingUserId(userId);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'rejected',
-        rejectedAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          status: 'rejected',
+          rejectedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'rejected',
+            rejectedAt: new Date().toISOString(),
+          }),
+        });
+      } catch (e) {
+        console.warn('Error syncing rejection to RTDB:', e);
+      }
+
       showFeedback('success', 'User status set to rejected.');
       await fetchUsers();
     } catch (err) {
@@ -282,10 +362,28 @@ export default function AdminPanel() {
     if (!window.confirm('Are you sure you want to revoke this user account? They will lose access to the portal.')) return;
     setUpdatingUserId(userId);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'revoked',
-        revokedAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          status: 'revoked',
+          revokedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'revoked',
+            revokedAt: new Date().toISOString(),
+          }),
+        });
+      } catch (e) {
+        console.warn('Error syncing revocation to RTDB:', e);
+      }
+
       showFeedback('success', 'User access revoked.');
       await fetchUsers();
     } catch (err) {
@@ -300,11 +398,29 @@ export default function AdminPanel() {
     setUpdatingUserId(userId);
     try {
       const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
-      await updateDoc(doc(db, 'users', userId), {
-        tempPassword: '123456',
-        tempPasswordExpiresAt: expiresAt,
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          tempPassword: '123456',
+          tempPasswordExpiresAt: expiresAt,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tempPassword: '123456',
+            tempPasswordExpiresAt: expiresAt,
+          }),
+        });
+      } catch (e) {
+        console.warn('Error syncing temp password to RTDB:', e);
+      }
+
       showFeedback('success', `Temporary password "123456" enabled for 3 hours (expires at ${new Date(expiresAt).toLocaleTimeString()}).`);
       await fetchUsers();
     } catch (err) {
@@ -317,10 +433,27 @@ export default function AdminPanel() {
   const handleChangeUserRole = async (userId, newRole) => {
     setUpdatingUserId(userId);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        role: newRole,
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          role: newRole,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: newRole,
+          }),
+        });
+      } catch (e) {
+        console.warn('Error syncing role change to RTDB:', e);
+      }
+
       showFeedback('success', `User role updated to ${newRole}`);
       await fetchUsers();
     } catch (err) {
@@ -334,6 +467,15 @@ export default function AdminPanel() {
     if (!window.confirm('Delete this user record from database? This cannot be undone.')) return;
     try {
       await deleteDoc(doc(db, 'users', userId));
+
+      try {
+        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+          method: 'DELETE',
+        });
+      } catch (e) {
+        console.warn('Error deleting user from RTDB:', e);
+      }
+
       showFeedback('success', 'User removed.');
       await fetchUsers();
     } catch (err) {
@@ -547,6 +689,21 @@ export default function AdminPanel() {
       map[c.categorySlug] = expand;
     });
     setRoleExpandedCats(map);
+  };
+
+  const handleSelectAllPages = () => {
+    handleToggleMasterAll(true);
+  };
+
+  const handleClearAllPages = () => {
+    handleToggleMasterAll(false);
+  };
+
+  const toggleExpandCategory = (catSlug) => {
+    setRoleExpandedCats((prev) => ({
+      ...prev,
+      [catSlug]: prev[catSlug] === false ? true : false,
+    }));
   };
 
   // Filter categories and sub-pages by search query
@@ -806,14 +963,29 @@ export default function AdminPanel() {
   };
 
   // Filtered users
-  const pendingUsersCount = usersList.filter((u) => u.status === 'pending').length;
+  const isUserPending = (u) => {
+    const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
+    if (isUserAdmin) return false;
+    if (u.status === 'approved') return false;
+    if (u.status === 'revoked' || u.status === 'rejected') return false;
+    return true;
+  };
+
+  const isUserApproved = (u) => {
+    const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
+    return isUserAdmin || u.status === 'approved';
+  };
+
+  const pendingUsersCount = usersList.filter(isUserPending).length;
   const filteredUsers = usersList.filter((u) => {
     const matchesSearch =
       (u.email || '').toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-      (u.displayName || '').toLowerCase().includes(userSearchTerm.toLowerCase());
+      (u.displayName || '').toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      (u.id || '').toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      (u.phone || '').toLowerCase().includes(userSearchTerm.toLowerCase());
 
-    if (userStatusFilter === 'pending') return matchesSearch && u.status === 'pending';
-    if (userStatusFilter === 'approved') return matchesSearch && (u.status === 'approved' || u.role === 'admin');
+    if (userStatusFilter === 'pending') return matchesSearch && isUserPending(u);
+    if (userStatusFilter === 'approved') return matchesSearch && isUserApproved(u);
     return matchesSearch;
   });
 
@@ -1015,7 +1187,7 @@ export default function AdminPanel() {
                 </div>
 
                 <button
-                  onClick={() => setIsAddRoleOpen(true)}
+                  onClick={handleOpenAddRole}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
@@ -1440,10 +1612,11 @@ export default function AdminPanel() {
                       </tr>
                     ) : (
                       filteredUsers.map((u) => {
-                        const isUserAdmin = u.role === 'admin' || u.email?.startsWith('surya');
-                        const isApproved = isUserAdmin || u.status === 'approved';
+                        const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
+                        const isApproved = isUserApproved(u);
                         const isRevoked = u.status === 'revoked';
-                        const isPending = !isApproved && !isRevoked;
+                        const isRejected = u.status === 'rejected';
+                        const isPending = isUserPending(u);
 
                         const isTempPassActive =
                           u.tempPassword === '123456' &&
@@ -1463,7 +1636,7 @@ export default function AdminPanel() {
                                     {u.displayName || 'Unnamed User'}
                                   </div>
                                   <div className="text-[10px] text-slate-400 font-mono truncate">
-                                    ID: {u.id || u.uid}
+                                    ID: {u.id || u.userId}
                                   </div>
                                 </div>
                               </div>
@@ -1490,6 +1663,11 @@ export default function AdminPanel() {
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold uppercase tracking-wider">
                                   <UserX className="w-3 h-3 text-rose-600" />
                                   <span>Revoked</span>
+                                </span>
+                              ) : isRejected ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wider">
+                                  <X className="w-3 h-3 text-rose-500" />
+                                  <span>Rejected</span>
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-bold uppercase tracking-wider animate-pulse">
