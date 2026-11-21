@@ -200,6 +200,7 @@ export default function AdminPanel() {
               const u = rtdbData[key];
               if (!u) return;
               const existing = userMap.get(key) || {};
+              const isVerified = (u.contactVerified !== undefined ? u.contactVerified : (existing.contactVerified !== undefined ? existing.contactVerified : (u.isVerified !== undefined ? u.isVerified : (existing.isVerified !== undefined ? existing.isVerified : (u.role === 'admin' || u.role === 'ADMIN')))));
               userMap.set(key, {
                 ...existing,
                 ...u,
@@ -211,6 +212,8 @@ export default function AdminPanel() {
                 password: u.password || existing.password || '',
                 role: u.role || existing.role || 'member',
                 status: u.status || existing.status || (u.role === 'admin' ? 'approved' : 'pending'),
+                contactVerified: isVerified,
+                isVerified: isVerified,
                 createdAt: u.joinedAt || existing.createdAt || existing.joinedAt || '',
                 fromRtdb: true,
               });
@@ -350,6 +353,48 @@ export default function AdminPanel() {
       await fetchUsers();
     } catch (err) {
       showFeedback('error', 'Failed to approve user: ' + err.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleManualVerifyContact = async (userId) => {
+    setUpdatingUserId(userId);
+    try {
+      await setDoc(
+        doc(db, 'users', userId),
+        {
+          contactVerified: true,
+          isVerified: true,
+          verifiedAt: serverTimestamp(),
+          verifiedBy: currentUser?.email || 'admin',
+        },
+        { merge: true }
+      );
+
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      for (const id of cleanIds) {
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contactVerified: true,
+              isVerified: true,
+              verifiedAt: new Date().toISOString(),
+              verifiedBy: currentUser?.email || 'admin',
+            }),
+          });
+        } catch (e) {
+          console.warn('Error syncing verify to RTDB:', e);
+        }
+      }
+
+      showFeedback('success', `Contact for user "${userId}" verified successfully!`);
+      await fetchUsers();
+    } catch (err) {
+      showFeedback('error', 'Failed to verify contact: ' + err.message);
     } finally {
       setUpdatingUserId(null);
     }
@@ -1328,10 +1373,33 @@ export default function AdminPanel() {
                             {/* Contact: Email & Phone */}
                             <td className="py-4 px-4">
                               <div className="text-xs text-slate-800 font-medium truncate">
-                                {u.email}
+                                {u.email || u.contact || 'No email'}
                               </div>
                               <div className="text-[11px] text-slate-500 font-mono">
-                                {u.phone ? `Ph: ${u.phone}` : 'No phone'}
+                                {u.phone ? `Ph: ${u.phone}` : ''}
+                              </div>
+                              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                {u.contactVerified || u.isVerified || u.role === 'admin' || u.role === 'ADMIN' ? (
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
+                                    <Check className="w-2.5 h-2.5 text-emerald-600" />
+                                    <span>Verified</span>
+                                  </span>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                                      <Clock className="w-2.5 h-2.5 text-amber-600" />
+                                      <span>Unverified</span>
+                                    </span>
+                                    <button
+                                      onClick={() => handleManualVerifyContact(u.id)}
+                                      disabled={updatingUserId === u.id}
+                                      className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                                      title="Manually verify user contact"
+                                    >
+                                      Verify
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </td>
 
