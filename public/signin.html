@@ -763,7 +763,7 @@
                         <div class="input-wrap">
                             <input type="email" id="joinContact" class="form-input" placeholder="e.g. yourname@gmail.com" required autocomplete="email">
                         </div>
-                        <div class="form-helper">An official verification link and 6-digit OTP will be sent to this Gmail address.</div>
+                        <div class="form-helper">An official verification link will be sent to your Gmail address.</div>
                     </div>
 
                     <div class="form-group">
@@ -1534,14 +1534,22 @@
         async function handleEmailVerifiedSuccess(uid, code = null) {
             showAlert('Verifying your email with SNI & Google Firebase...', 'info');
             try {
+                let isFirebaseEmailVerified = false;
+
                 // If oobCode is passed from Firebase email, apply it first
                 if (code) {
                     try {
-                        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
+                        const oobUpdateRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ oobCode: code })
                         });
+                        if (oobUpdateRes.ok) {
+                            const oobData = await oobUpdateRes.json();
+                            if (oobData.emailVerified) {
+                                isFirebaseEmailVerified = true;
+                            }
+                        }
                     } catch(e) {
                         console.warn('oobCode apply error:', e);
                     }
@@ -1575,12 +1583,17 @@
                     return false;
                 }
 
-                // STRICT VERIFICATION CHECK: Verify directly with Firebase Auth that email is truly verified!
-                let isFirebaseEmailVerified = false;
-                const emailToVerify = userData.email || userData.contact;
+                const emailToVerify = (userData.email || userData.contact || '').trim().toLowerCase();
                 const passToVerify = userData.password || userData.plainPassword || 'SniUser123.';
 
-                if (emailToVerify) {
+                // Enforce strictly valid email format (No phone numbers permitted)
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToVerify)) {
+                    showAlert('❌ Invalid email address. Phone numbers cannot be verified via Gmail. Please register with a valid Gmail address.', 'error');
+                    return false;
+                }
+
+                // If not already verified via oobCode, verify directly with Firebase Auth
+                if (!isFirebaseEmailVerified) {
                     try {
                         const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
                             method: 'POST',

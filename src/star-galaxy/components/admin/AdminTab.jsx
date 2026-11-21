@@ -194,8 +194,9 @@ export default function AdminTab() {
     if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     const s = (u.status || '').toLowerCase().trim();
     if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
+    const hasValidEmail = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) || (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact));
     const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return isEmailVerified && (s === 'pending' || s === 'waiting');
+    return hasValidEmail && isEmailVerified && (s === 'pending' || s === 'waiting');
   });
 
   const unverifiedUsers = (data?.users || []).filter(u => {

@@ -1177,7 +1177,8 @@ export default function AdminPanel() {
     if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected' || u.status === 'unverified') return false;
     // Strictly requires email to be verified first!
     const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return isEmailVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
+    const hasValidEmail = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) || (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact));
+    return hasValidEmail && isEmailVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
   };
 
   const isUserUnverified = (u) => {
@@ -1505,26 +1506,16 @@ export default function AdminPanel() {
                                 {u.phone ? `Ph: ${u.phone}` : ''}
                               </div>
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                                {u.contactVerified || u.isVerified || u.role === 'admin' || u.role === 'ADMIN' ? (
+                                {u.emailVerified || u.role === 'admin' || u.role === 'ADMIN' ? (
                                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
                                     <Check className="w-2.5 h-2.5 text-emerald-600" />
-                                    <span>Verified</span>
+                                    <span>Gmail Verified</span>
                                   </span>
                                 ) : (
-                                  <div className="flex items-center gap-1">
-                                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
-                                      <Clock className="w-2.5 h-2.5 text-amber-600" />
-                                      <span>Unverified</span>
-                                    </span>
-                                    <button
-                                      onClick={() => handleManualVerifyContact(u.id)}
-                                      disabled={updatingUserId === u.id}
-                                      className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
-                                      title="Manually verify user contact"
-                                    >
-                                      Verify
-                                    </button>
-                                  </div>
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold" title="Applicant must click the verification link in their Gmail inbox">
+                                    <Clock className="w-2.5 h-2.5 text-amber-600" />
+                                    <span>Gmail Unverified</span>
+                                  </span>
                                 )}
                               </div>
                             </td>

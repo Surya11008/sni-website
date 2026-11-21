@@ -905,8 +905,9 @@ export function AppProvider({ children }) {
             removePendingRegistrationFromFirestore(p.id).catch(() => {});
             return;
           }
-          // STRICT SECURITY: Only accept into pending if email is verified!
-          if (p.emailVerified !== true && p.contactVerified !== true) {
+          // STRICT SECURITY: Only accept into pending if email is verified and has a valid email!
+          const hasEmail = (p.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) || (p.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.contact));
+          if (!hasEmail || p.emailVerified !== true || p.status === 'unverified') {
             removePendingRegistrationFromFirestore(p.id).catch(() => {});
             return;
           }
