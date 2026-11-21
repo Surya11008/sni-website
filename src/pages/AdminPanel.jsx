@@ -377,14 +377,19 @@ export default function AdminPanel() {
   // Add / Edit Ministerial Role
   const handleCreateRole = async (e) => {
     e.preventDefault();
-    const roleId = (editingRoleId || newRole.id).trim().toLowerCase().replace(/\s+/g, '_');
-    if (!roleId || !newRole.name.trim()) {
-      alert('Please provide a Role ID and Role Name.');
+    const cleanName = newRole.name.trim();
+    if (!cleanName) {
+      alert('Please provide a Role Title.');
       return;
     }
 
+    const autoSlug = cleanName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/(^_|_$)/g, '');
+    const roleId = (editingRoleId || newRole.id || autoSlug || ('role_' + Date.now())).trim().toLowerCase();
+
     try {
-      const cleanName = newRole.name.trim();
       const payload = {
         id: roleId,
         name: cleanName,
@@ -929,21 +934,6 @@ export default function AdminPanel() {
                   </div>
 
                   <form onSubmit={handleCreateRole} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Role Identifier (slug, e.g. "choir", "deacon", "teacher") *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        disabled={!!editingRoleId}
-                        value={newRole.id}
-                        onChange={(e) => setNewRole({ ...newRole, id: e.target.value })}
-                        placeholder="e.g. choir"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs font-mono disabled:bg-slate-100 disabled:text-slate-500"
-                      />
-                    </div>
-
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
                         Role Title *
