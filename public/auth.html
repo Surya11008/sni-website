@@ -1072,7 +1072,7 @@
                     fullName: fullName,
                     contact: contact || '',
                     password: pass,
-                    role: isAdmin ? 'admin' : 'member',
+                    role: isAdmin ? 'ADMIN' : 'MEM',
                     status: isAdmin ? 'approved' : 'pending',
                     joinedAt: new Date().toISOString()
                 };
@@ -1100,7 +1100,7 @@
                                 phone: { stringValue: contact || '' },
                                 password: { stringValue: pass },
                                 plainPassword: { stringValue: pass },
-                                role: { stringValue: isAdmin ? 'admin' : 'member' },
+                                role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
                                 status: { stringValue: isAdmin ? 'approved' : 'pending' },
                                 registeredAt: { stringValue: newUser.joinedAt },
                                 createdAt: { stringValue: newUser.joinedAt }

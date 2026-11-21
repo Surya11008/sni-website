@@ -17,6 +17,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import {
@@ -51,7 +52,22 @@ import {
   Layers,
 } from 'lucide-react';
 
-const DEFAULT_ROLES = [];
+const OFFICIAL_ROLES = [
+  { id: 'MEM', name: 'Member (MEM) — Default', nameEn: 'Member (MEM)' },
+  { id: 'EVE', name: 'Evangelist (EVE)', nameEn: 'Evangelist (EVE)' },
+  { id: 'CW', name: 'Church Worker (CW)', nameEn: 'Church Worker (CW)' },
+  { id: 'UL', name: 'Unit Leader (UL)', nameEn: 'Unit Leader (UL)' },
+  { id: 'GL', name: 'Group Leader (GL)', nameEn: 'Group Leader (GL)' },
+  { id: 'PTS', name: 'Pastoral Team Staff (PTS)', nameEn: 'Pastoral Team Staff (PTS)' },
+  { id: 'TS', name: 'Team Supervisor (TS)', nameEn: 'Team Supervisor (TS)' },
+  { id: 'PBCL', name: 'Public Bible Class Leader (PBCL)', nameEn: 'Public Bible Class Leader (PBCL)' },
+  { id: 'DEA', name: 'Deacon / Deaconess (DEA)', nameEn: 'Deacon / Deaconess (DEA)' },
+  { id: '(D) OS', name: 'Deputy Overseer ((D) OS)', nameEn: 'Deputy Overseer ((D) OS)' },
+  { id: 'OS', name: 'Overseer (OS)', nameEn: 'Overseer (OS)' },
+  { id: 'ADMIN', name: 'Administrator (ADMIN)', nameEn: 'Administrator (ADMIN)' },
+];
+
+const DEFAULT_ROLES = OFFICIAL_ROLES;
 const RTDB_BASE = 'https://sni-org-in-default-rtdb.firebaseio.com';
 
 export default function AdminPanel() {
@@ -228,11 +244,16 @@ export default function AdminPanel() {
   const fetchRoles = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, 'roles'));
-      const items = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      const items = [...OFFICIAL_ROLES];
+      snap.forEach((d) => {
+        if (!items.find((r) => r.id === d.id)) {
+          items.push({ id: d.id, ...d.data() });
+        }
+      });
       setRolesList(items);
     } catch (err) {
       console.warn('Error fetching roles:', err);
+      setRolesList(OFFICIAL_ROLES);
     }
   }, []);
 
@@ -273,19 +294,26 @@ export default function AdminPanel() {
     }
   }, []);
 
-  // Initial load
+  // Initial load + Realtime Firestore Listener on users collection
   useEffect(() => {
     fetchUsers();
     fetchRoles();
     fetchPages();
     fetchContents();
     fetchAnnouncements();
+
+    // Live two-way sync: listen to Firestore users changes
+    const unsub = onSnapshot(collection(db, 'users'), () => {
+      fetchUsers();
+    }, (err) => console.warn('Firestore live listener error:', err));
+
+    return () => unsub();
   }, [fetchUsers, fetchRoles, fetchPages, fetchContents, fetchAnnouncements]);
 
   // ----------------------------------------------------
   // USER APPROVAL & ROLE HANDLERS
   // ----------------------------------------------------
-  const handleApproveUser = async (userId, targetRole = 'member') => {
+  const handleApproveUser = async (userId, targetRole = 'MEM') => {
     setUpdatingUserId(userId);
     try {
       await setDoc(
@@ -299,19 +327,23 @@ export default function AdminPanel() {
         { merge: true }
       );
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'approved',
-            role: targetRole,
-            approvedAt: new Date().toISOString(),
-            approvedBy: currentUser?.email || 'admin',
-          }),
-        });
-      } catch (e) {
-        console.warn('Error syncing approval to RTDB:', e);
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      for (const id of cleanIds) {
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'approved',
+              role: targetRole,
+              approvedAt: new Date().toISOString(),
+              approvedBy: currentUser?.email || 'admin',
+            }),
+          });
+        } catch (e) {
+          console.warn('Error syncing approval to RTDB:', e);
+        }
       }
 
       showFeedback('success', 'User account approved successfully!');
@@ -371,17 +403,21 @@ export default function AdminPanel() {
         { merge: true }
       );
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'revoked',
-            revokedAt: new Date().toISOString(),
-          }),
-        });
-      } catch (e) {
-        console.warn('Error syncing revocation to RTDB:', e);
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      for (const id of cleanIds) {
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'revoked',
+              revokedAt: new Date().toISOString(),
+            }),
+          });
+        } catch (e) {
+          console.warn('Error syncing revocation to RTDB:', e);
+        }
       }
 
       showFeedback('success', 'User access revoked.');
@@ -408,17 +444,21 @@ export default function AdminPanel() {
         { merge: true }
       );
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tempPassword: '123456',
-            tempPasswordExpiresAt: expiresAt,
-          }),
-        });
-      } catch (e) {
-        console.warn('Error syncing temp password to RTDB:', e);
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      for (const id of cleanIds) {
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tempPassword: '123456',
+              tempPasswordExpiresAt: expiresAt,
+            }),
+          });
+        } catch (e) {
+          console.warn('Error syncing temp password to RTDB:', e);
+        }
       }
 
       showFeedback('success', `Temporary password "123456" enabled for 3 hours (expires at ${new Date(expiresAt).toLocaleTimeString()}).`);
@@ -442,16 +482,21 @@ export default function AdminPanel() {
         { merge: true }
       );
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            role: newRole,
-          }),
-        });
-      } catch (e) {
-        console.warn('Error syncing role change to RTDB:', e);
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
+      for (const id of cleanIds) {
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              role: newRole,
+              updatedAt: new Date().toISOString(),
+            }),
+          });
+        } catch (e) {
+          console.warn('Error syncing role change to RTDB:', e);
+        }
       }
 
       showFeedback('success', `User role updated to ${newRole}`);
@@ -466,17 +511,21 @@ export default function AdminPanel() {
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Delete this user record from database? This cannot be undone.')) return;
     try {
-      await deleteDoc(doc(db, 'users', userId));
+      const target = users.find(u => u.id === userId);
+      const cleanIds = new Set([userId, target?.userId, target?.username].filter(Boolean));
 
-      try {
-        await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-          method: 'DELETE',
-        });
-      } catch (e) {
-        console.warn('Error deleting user from RTDB:', e);
+      for (const id of cleanIds) {
+        await deleteDoc(doc(db, 'users', id)).catch(() => {});
+        try {
+          await fetch(`${RTDB_BASE}/users/${encodeURIComponent(String(id).toLowerCase().replace(/[^a-z0-9_-]/g, ''))}.json`, {
+            method: 'DELETE',
+          });
+        } catch (e) {
+          console.warn('Error deleting user from RTDB:', e);
+        }
       }
 
-      showFeedback('success', 'User removed.');
+      showFeedback('success', 'User removed from all databases.');
       await fetchUsers();
     } catch (err) {
       showFeedback('error', 'Failed to delete user: ' + err.message);
