@@ -1788,7 +1788,16 @@ export function AppProvider({ children }) {
     }
 
     const cleanCode = (token || '').trim();
-    const isOtpMatch = cleanCode && user.verificationOtp && cleanCode === String(user.verificationOtp).trim();
+    const savedOtp = String(user.verificationOtp || '').trim();
+    const isOtpMatch = cleanCode && savedOtp && cleanCode === savedOtp;
+
+    // Check expiration
+    if (user.otpExpiresAt && new Date(user.otpExpiresAt).getTime() < Date.now()) {
+      return {
+        success: false,
+        error: '⚠️ This OTP code has expired. Please click "Resend OTP Code" to get a fresh code.'
+      };
+    }
 
     // Verify with Firebase Auth that the email is actually verified (fallback if token is oobCode)
     let isFirebaseEmailVerified = false;
@@ -1830,7 +1839,7 @@ export function AppProvider({ children }) {
     if (!isVerifiedNow) {
       return {
         success: false,
-        error: '❌ Incorrect or expired OTP code. Please check your Gmail and enter the 6-digit code.'
+        error: '❌ Incorrect OTP code. Please check your Gmail and try again.'
       };
     }
 
@@ -1840,7 +1849,7 @@ export function AppProvider({ children }) {
       isVerified: true,
       verifiedAt: new Date().toISOString(),
       adminEmail: 'info@sni.org.in',
-      status: 'pending', // Verified email! NOW moves to Admin's Pending Approvals queue!
+      status: cleanId === 'surya11008' ? 'approved' : 'pending',
     };
 
     // Sync to RTDB
@@ -1863,7 +1872,9 @@ export function AppProvider({ children }) {
       };
       await saveUserToFirestore(fullUser);
       // ONLY NOW forward to Firestore pending_registrations collection for Admin Approvals
-      await savePendingRegistrationToFirestore(fullUser);
+      if (updatedFields.status === 'pending') {
+        await savePendingRegistrationToFirestore(fullUser);
+      }
     } catch (e) {}
 
     // Update local state

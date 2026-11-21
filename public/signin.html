@@ -795,6 +795,9 @@
                     <div class="auth-switch-prompt">
                         Already have an account? <a id="switchToSignInLink">Sign In here</a>
                     </div>
+                    <div style="margin-top: 12px; font-size: 0.82rem; text-align: center; color: #64748b;">
+                        Already registered? <a id="enterExistingOtpLink" style="color: #124b91; font-weight: 700; cursor: pointer; text-decoration: underline;">Enter your 6-digit OTP code here</a>
+                    </div>
                 </form>
 
             </div>
@@ -1215,7 +1218,7 @@
                             } else if (userData.status === 'revoked') {
                                 showAlert('⛔ Your account access has been revoked by administrator.');
                             } else {
-                                showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.');
+                                showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
                             }
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
@@ -1442,13 +1445,17 @@
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
 
-                    showVerificationModal({
+                    const pendingInfo = {
                         userId,
                         fullName,
                         email,
-                        pass,
-                        otp: verifyOtp
-                    });
+                        pass
+                    };
+                    try {
+                        localStorage.setItem('sni_pending_verify_user', JSON.stringify(pendingInfo));
+                    } catch(e) {}
+
+                    showVerificationModal(pendingInfo);
                 }
 
             } catch(err) {
@@ -1494,7 +1501,7 @@
                 otpStatus.textContent = '';
             }
             if (otpInput) {
-                otpInput.value = info.otp || '';
+                otpInput.value = (info && info.otp) ? info.otp : '';
                 setTimeout(() => otpInput.focus(), 200);
             }
 
@@ -1514,7 +1521,24 @@
         const otpCodeInput = document.getElementById('otpCodeInput');
 
         async function handleOtpSubmit() {
-            if (!currentModalInfo || !currentModalInfo.userId) {
+            let info = currentModalInfo;
+            if (!info || !info.userId) {
+                try {
+                    const saved = localStorage.getItem('sni_pending_verify_user');
+                    if (saved) {
+                        info = JSON.parse(saved);
+                        currentModalInfo = info;
+                    }
+                } catch(e) {}
+            }
+            if (!info || !info.userId) {
+                const manualId = document.getElementById('joinUserId')?.value.trim() || document.getElementById('signInUserId')?.value.trim();
+                if (manualId) {
+                    info = { userId: manualId };
+                    currentModalInfo = info;
+                }
+            }
+            if (!info || !info.userId) {
                 showOtpStatus('⚠️ Session expired. Please fill out the registration form again.', '#dc2626');
                 return;
             }
@@ -1531,7 +1555,7 @@
             }
             showOtpStatus('Verifying OTP code...', '#2563eb');
 
-            const success = await handleOtpVerificationSuccess(currentModalInfo.userId, enteredOtp);
+            const success = await handleOtpVerificationSuccess(info.userId, enteredOtp);
             if (submitOtpBtn) {
                 submitOtpBtn.disabled = false;
                 submitOtpBtn.textContent = 'Verify OTP →';
@@ -1626,7 +1650,16 @@
             icon.innerHTML = '🎉';
             title.innerText = 'Email Verified Successfully!';
             target.innerText = email || uid;
-            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your email address has been verified. Your application for SNI ID <strong class="modal-target">${uid}</strong> has now been forwarded to the Admin.<br><div style="color: #b45309; font-weight: 700; margin-top: 10px; background: #fef3c7; padding: 12px 14px; border-radius: 10px; border: 1px solid #fde68a; font-size: 0.85rem;">⏳ Waiting for Admin Approval: You will be able to sign in once an administrator approves your account.</div>`;
+            subtitle.innerHTML = `
+                <div style="margin: 12px 0;">
+                    <div style="font-size: 1.1rem; font-weight: 900; color: #16a34a; margin-bottom: 10px;">
+                        Email Verified Successfully!
+                    </div>
+                    <div style="background: #fef3c7; border: 1.5px solid #fde68a; border-radius: 12px; padding: 14px 16px; color: #b45309; font-weight: 700; font-size: 0.88rem; line-height: 1.5; text-align: left;">
+                        ⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.
+                    </div>
+                </div>
+            `;
 
             actions.innerHTML = `
                 <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')" style="background: #071b3b; color: #f5c75e; font-weight: 700; width: 100%;">
@@ -1646,7 +1679,7 @@
                 const pInput = document.getElementById('signInPass');
                 if (pInput) pInput.focus();
             }
-            showAlert('⏳ Waiting for Admin Approval: Email verified! Your application has been submitted to Admin. You can sign in once approved.', 'info');
+            showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
         };
 
         const closeVerifyBtn = document.getElementById('closeVerifyModalBtn');
@@ -1771,6 +1804,7 @@
                     } catch(e) {}
                 }
 
+                try { localStorage.removeItem('sni_pending_verify_user'); } catch(e) {}
                 showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
                 return true;
 
@@ -1945,6 +1979,7 @@
                     } catch(e) {}
                 }
 
+                try { localStorage.removeItem('sni_pending_verify_user'); } catch(e) {}
                 showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
                 return true;
 
@@ -1982,9 +2017,32 @@
             handleEmailVerifiedSuccess(uidParam, oobCode);
         } else if (mode === 'join' || window.location.pathname.includes('join')) {
             switchMode('join');
+            // Auto restore pending verification modal if present
+            try {
+                const savedPending = localStorage.getItem('sni_pending_verify_user');
+                if (savedPending && !otpParam) {
+                    const parsed = JSON.parse(savedPending);
+                    if (parsed && parsed.userId) {
+                        showVerificationModal(parsed);
+                    }
+                }
+            } catch(e) {}
         } else {
             switchMode('signin');
         }
+
+        const existingOtpLink = document.getElementById('enterExistingOtpLink');
+        if (existingOtpLink) {
+            existingOtpLink.addEventListener('click', () => {
+                let saved = null;
+                try { saved = JSON.parse(localStorage.getItem('sni_pending_verify_user')); } catch(e) {}
+                const uid = saved?.userId || document.getElementById('joinUserId')?.value.trim() || prompt('Please enter your SNI User ID:')?.trim().toLowerCase();
+                if (uid) {
+                    showVerificationModal(saved || { userId: uid, email: document.getElementById('joinContact')?.value.trim() || uid });
+                }
+            });
+        }
+
         checkExistingSession();
     </script>
 </body>

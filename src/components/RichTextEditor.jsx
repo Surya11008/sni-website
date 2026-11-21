@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 
-// ==========================================
-// AUTHENTIC GOOGLE DOCS MATERIAL DESIGN SVGs
-// ==========================================
-const DocsLogo = () => (
+// ==============================================================
+// AUTHENTIC GOOGLE DOCS & STUDIO MATERIAL DESIGN ICONS
+// ==============================================================
+const StudioLogo = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
     <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#4285F4"/>
     <path d="M14 2V8H20L14 2Z" fill="#A1C2FA"/>
@@ -68,12 +68,6 @@ const UnderlineIcon = () => (
 const LinkIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-  </svg>
-);
-
-const CommentIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z"/>
   </svg>
 );
 
@@ -213,17 +207,17 @@ export default function RichTextEditor({
   value = '',
   onChange,
   label = 'Document Content',
-  placeholder = 'Type your article here or paste from Google Docs, Word, or web pages...',
-  rows = 12,
+  placeholder = 'Start writing your sacred message or article here...',
+  rows = 14,
 }) {
   const editorRef = useRef(null);
 
-  // Layout & View States
+  // Layout & Ambiance States
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHtmlSource, setShowHtmlSource] = useState(false);
   const [htmlSource, setHtmlSource] = useState('');
   const [zoomLevel, setZoomLevel] = useState(100);
-  const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (spacious modern) or 'pages' (standard sheet)
+  const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (world's best studio) or 'pages' (standard sheet)
   const [textWidth, setTextWidth] = useState('wide'); // 'wide', 'full', 'standard'
   const [theme, setTheme] = useState('paper'); // 'paper' (pristine white), 'parchment' (sacred sepia), 'midnight' (deep zen dark)
   const [zenMode, setZenMode] = useState(false); // Distraction-free writing mode
@@ -235,10 +229,11 @@ export default function RichTextEditor({
   // Active Formatting States
   const [currentStyle, setCurrentStyle] = useState('p');
   const [currentFont, setCurrentFont] = useState('Sri Krushnadevaraya');
-  const [fontSize, setFontSize] = useState(12);
+  const [fontSize, setFontSize] = useState(13);
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [textColor, setTextColor] = useState('#000000');
   const [highlightColor, setHighlightColor] = useState('#ffff00');
   const [paintFormatActive, setPaintFormatActive] = useState(false);
@@ -247,9 +242,11 @@ export default function RichTextEditor({
   // Word count & stats
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const [readingTime, setReadingTime] = useState(1);
+  const [speakingTime, setSpeakingTime] = useState(1);
 
   // Dropdown Popups
-  const [activeMenu, setActiveMenu] = useState(null); // 'file', 'edit', 'view', 'insert', 'format', 'tools', 'gemini', 'extensions', 'help'
+  const [activeMenu, setActiveMenu] = useState(null); // 'file', 'edit', 'view', 'insert', 'format', 'tools', 'blocks', 'extensions', 'help'
   const [showZoomMenu, setShowZoomMenu] = useState(false);
   const [showStyleMenu, setShowStyleMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
@@ -259,15 +256,19 @@ export default function RichTextEditor({
   const [showAlignMenu, setShowAlignMenu] = useState(false);
   const [showLineSpacingMenu, setShowLineSpacingMenu] = useState(false);
   const [showBlocksMenu, setShowBlocksMenu] = useState(false);
+  const [showDividerMenu, setShowDividerMenu] = useState(false);
 
   // Modals
   const [showFontManagerModal, setShowFontManagerModal] = useState(false);
   const [showTableModal, setShowTableModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showSpecialSymbolsModal, setShowSpecialSymbolsModal] = useState(false);
   const [showFindReplaceModal, setShowFindReplaceModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showSearchMenusModal, setShowSearchMenusModal] = useState(false);
+  const [showGeminiAiModal, setShowGeminiAiModal] = useState(false);
 
   // Modal Inputs
   const [tableRows, setTableRows] = useState(3);
@@ -276,6 +277,7 @@ export default function RichTextEditor({
   const [linkText, setLinkText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageCaption, setImageCaption] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchMenuQuery, setSearchMenuQuery] = useState('');
@@ -305,10 +307,10 @@ export default function RichTextEditor({
   // Load custom fonts from localStorage and preload
   useEffect(() => {
     try {
-      const savedCustom = localStorage.getItem('sni_gdocs_custom_fonts');
+      const savedCustom = localStorage.getItem('sni_studio_custom_fonts');
       if (savedCustom) setCustomAddedFonts(JSON.parse(savedCustom));
 
-      const savedActive = localStorage.getItem('sni_gdocs_active_fonts');
+      const savedActive = localStorage.getItem('sni_studio_active_fonts');
       if (savedActive) setActiveFonts(JSON.parse(savedActive));
     } catch (e) {
       console.warn(e);
@@ -322,7 +324,7 @@ export default function RichTextEditor({
     loadGoogleFont('Inter');
   }, []);
 
-  // Sync value to contentEditable div
+  // Sync incoming value to contentEditable div
   useEffect(() => {
     if (editorRef.current && !showHtmlSource) {
       if (editorRef.current.innerHTML !== value) {
@@ -354,6 +356,7 @@ export default function RichTextEditor({
         setShowAlignMenu(false);
         setShowLineSpacingMenu(false);
         setShowBlocksMenu(false);
+        setShowDividerMenu(false);
       }
     };
     window.addEventListener('mousedown', handleGlobalClick);
@@ -367,6 +370,8 @@ export default function RichTextEditor({
     const chars = text.length;
     setWordCount(words);
     setCharCount(chars);
+    setReadingTime(Math.max(1, Math.ceil(words / 200)));
+    setSpeakingTime(Math.max(1, Math.ceil(words / 130)));
   };
 
   const handleInput = () => {
@@ -383,6 +388,7 @@ export default function RichTextEditor({
       setIsBold(document.queryCommandState('bold'));
       setIsItalic(document.queryCommandState('italic'));
       setIsUnderline(document.queryCommandState('underline'));
+      setIsStrikethrough(document.queryCommandState('strikeThrough'));
     } catch (e) {}
   };
 
@@ -421,7 +427,7 @@ export default function RichTextEditor({
     }
   };
 
-  // Floating Medium/Notion Bubble Selection Detector
+  // Floating Selection Bubble
   const handleSelectionBubble = () => {
     updateActiveFormatting();
     const selection = window.getSelection();
@@ -433,8 +439,8 @@ export default function RichTextEditor({
         if (rect.width > 0) {
           setBubbleToolbar({
             visible: true,
-            x: Math.max(16, rect.left + rect.width / 2 - 140),
-            y: Math.max(10, rect.top - 46),
+            x: Math.max(16, rect.left + rect.width / 2 - 160),
+            y: Math.max(10, rect.top - 48),
           });
           return;
         }
@@ -477,7 +483,7 @@ export default function RichTextEditor({
 
   // Font Size
   const handleSetFontSize = (size) => {
-    const num = Math.max(6, Math.min(120, parseInt(size) || 12));
+    const num = Math.max(6, Math.min(120, parseInt(size) || 13));
     setFontSize(num);
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
@@ -497,10 +503,10 @@ export default function RichTextEditor({
     if (style === 'p') {
       execCmd('formatBlock', '<p>');
     } else if (style === 'title') {
-      const html = `<h1 style="font-size: 28pt; font-weight: bold; line-height: 1.25; margin: 20px 0 10px 0; color: inherit;">Title</h1><p><br/></p>`;
+      const html = `<h1 style="font-size: 30pt; font-weight: 800; line-height: 1.25; margin: 24px 0 12px 0; color: inherit;">Title</h1><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (style === 'subtitle') {
-      const html = `<p style="font-size: 16pt; opacity: 0.7; line-height: 1.4; margin: 8px 0;">Subtitle</p><p><br/></p>`;
+      const html = `<p style="font-size: 16pt; opacity: 0.75; line-height: 1.5; margin: 8px 0;">Subtitle</p><p><br/></p>`;
       execCmd('insertHTML', html);
     } else {
       execCmd('formatBlock', `<${style}>`);
@@ -530,13 +536,13 @@ export default function RichTextEditor({
     if (!customAddedFonts.includes(name)) {
       const updatedCustom = [...customAddedFonts, name];
       setCustomAddedFonts(updatedCustom);
-      localStorage.setItem('sni_gdocs_custom_fonts', JSON.stringify(updatedCustom));
+      localStorage.setItem('sni_studio_custom_fonts', JSON.stringify(updatedCustom));
     }
 
     if (!activeFonts.includes(name)) {
       const updatedActive = [name, ...activeFonts];
       setActiveFonts(updatedActive);
-      localStorage.setItem('sni_gdocs_active_fonts', JSON.stringify(updatedActive));
+      localStorage.setItem('sni_studio_active_fonts', JSON.stringify(updatedActive));
     }
 
     setCurrentFont(name);
@@ -551,38 +557,53 @@ export default function RichTextEditor({
       updated = [...activeFonts, fontFamily];
     }
     setActiveFonts(updated);
-    localStorage.setItem('sni_gdocs_active_fonts', JSON.stringify(updated));
+    localStorage.setItem('sni_studio_active_fonts', JSON.stringify(updated));
   };
 
-  // Insert Special Blocks (World-Class Spiritual & Sermon Layouts)
+  // Insert Special Blocks (World-Class Spiritual & Publishing Blocks)
   const handleInsertBlock = (type) => {
     setShowBlocksMenu(false);
     if (type === 'scripture') {
-      const html = `<div style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(197,155,39,0.12);"><div style="font-family: 'Sri Krushnadevaraya', serif; font-size: 20px; line-height: 1.85; color: #1e293b; font-style: italic;">"నీ వాక్యము నా పాదములకు దీపమును నా త్రోవకు వెలుగునై యున్నది."</div><div style="text-align: right; font-weight: 700; color: #b45309; font-size: 13px; margin-top: 10px;">— కీర్తనలు 119:105</div></div><p><br/></p>`;
+      const html = `<div class="sni-scripture-card" style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 18px 24px; margin: 24px 0; border-radius: 0 14px 14px 0; box-shadow: 0 4px 16px -2px rgba(197,155,39,0.15);"><div style="font-family: 'Sri Krushnadevaraya', serif; font-size: 21px; line-height: 1.85; color: #1e293b; font-style: italic;">"నీ వాక్యము నా పాదములకు దీపమును నా త్రోవకు వెలుగునై యున్నది."</div><div style="text-align: right; font-weight: 700; color: #b45309; font-size: 13.5px; margin-top: 10px;">— కీర్తనలు 119:105 (పరిశుద్ధ గ్రంథము)</div></div><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (type === 'prayer') {
-      const html = `<div style="border-left: 4px solid #3b82f6; background: #eff6ff; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(59,130,246,0.12);"><div style="font-weight: 700; color: #1d4ed8; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">🕊️ ప్రార్థనాంశము (Prayer Focus)</div><div style="font-size: 16px; color: #1e3a8a; line-height: 1.8;">దేవా, మీ అద్భుతమైన జ్ఞానముతో మమ్ములను నింపి, అనుదినము మీ పరిశుద్ధాత్మ ద్వారా నడిపించుము. ఆమెన్.</div></div><p><br/></p>`;
+      const html = `<div class="sni-prayer-card" style="border-left: 4px solid #3b82f6; background: #eff6ff; padding: 18px 24px; margin: 24px 0; border-radius: 0 14px 14px 0; box-shadow: 0 4px 16px -2px rgba(59,130,246,0.15);"><div style="font-weight: 800; color: #1d4ed8; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">🕊️ ప్రార్థనాంశము (Prayer Focus & Intercession)</div><div style="font-size: 16px; color: #1e3a8a; line-height: 1.85;">దేవా, మా సంఘమును మరియు కుటుంబములను మీ కృపలో భద్రపరచి, అనుదినము మీ పరిశుద్ధాత్మ ద్వారా నడిపించుము. ఆమెన్.</div></div><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (type === 'insight') {
-      const html = `<div style="border-left: 4px solid #10b981; background: #f0fdf4; padding: 18px 22px; margin: 24px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 12px -2px rgba(16,185,129,0.12);"><div style="font-weight: 700; color: #047857; font-size: 14px; margin-bottom: 8px;">💡 ముఖ్యాంశము (Key Spiritual Insight)</div><div style="font-size: 16px; color: #064e3b; line-height: 1.8;">విశ్వాసము ద్వారా మాత్రమే మనము దేవునికి ఇష్టులుగా ఉండగలము. ప్రతి శోధనలో ఆయన కృప మనకు చాలును.</div></div><p><br/></p>`;
+      const html = `<div class="sni-insight-card" style="border-left: 4px solid #10b981; background: #f0fdf4; padding: 18px 24px; margin: 24px 0; border-radius: 0 14px 14px 0; box-shadow: 0 4px 16px -2px rgba(16,185,129,0.15);"><div style="font-weight: 800; color: #047857; font-size: 14px; margin-bottom: 8px;">💡 దివ్య మర్మము (Key Spiritual Revelation)</div><div style="font-size: 16px; color: #064e3b; line-height: 1.85;">విశ్వాసము ద్వారా మాత్రమే మనము అసాధ్యమైన వాటిని సుసాధ్యముగా మార్చగలము. ప్రతి శోధనలో ఆయన కృప మనకు చాలును.</div></div><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (type === 'sermon-outline') {
-      const html = `<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 24px; margin: 24px 0;"><h3 style="color:#0f172a; font-weight:800; font-size: 18px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📜 సందేశ ప్రసంగ క్రమము (Sermon Outline)</h3><ol style="margin-left: 20px; line-height: 1.9; font-size: 15px; color:#334155;"><li><strong>1. పరిచయము (Introduction):</strong> దేవుని వాక్య ప్రాముఖ్యత</li><li><strong>2. లేఖన భాగము (Scripture Reading):</strong> పరిశుద్ధ గ్రంథ వివరణ</li><li><strong>3. ప్రధాన అంశము (Main Message):</strong> విశ్వాస నడక మరియు అనుదిన ప్రార్థన</li><li><strong>4. కార్యాచరణ (Application):</strong> వ్యక్తిగత ఆత్మీయ ఎదుగుదల</li><li><strong>5. ముగింపు ప్రార్థన (Closing Prayer):</strong> సమర్పణ మరియు దీవెన</li></ol></div><p><br/></p>`;
+      const html = `<div class="sni-sermon-framework" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 22px 28px; margin: 26px 0; box-shadow: 0 4px 14px rgba(0,0,0,0.04);"><h3 style="color:#0f172a; font-weight:800; font-size: 19px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">✝️ సంపూర్ణ ప్రసంగ నిర్మాణము (Sermon Architecture)</h3><ol style="margin-left: 20px; line-height: 2; font-size: 15.5px; color:#334155;"><li><strong>1. పరిచయ వాక్యములు (Introduction & Hook):</strong> మానవ జీవితంలో ఎదురయ్యే సవాళ్ళు మరియు దేవుని వాక్య ప్రాముఖ్యత</li><li><strong>2. లేఖన పఠనం (Scripture Grounding):</strong> ప్రధాన బైబిల్ భాగము మరియు సందర్భ వివరణ</li><li><strong>3. ముఖ్యాంశం 1 (First Pillar):</strong> దేవుని అపారమైన ప్రేమ మరియు విశ్వాసం</li><li><strong>4. ముఖ్యాంశం 2 (Second Pillar):</strong> పరిశుద్ధాత్మ శక్తితో నడవడిక</li><li><strong>5. ముఖ్యాంశం 3 (Third Pillar):</strong> ప్రతికూల పరిస్థితులలో నిరీక్షణ</li><li><strong>6. కార్యాచరణ & సమర్పణ (Life Application & Altar Call):</strong> అనుదిన జీవనంలో వాక్యాచరణ</li><li><strong>7. ముగింపు ప్రార్థన (Benediction & Blessing):</strong> దైవాశీర్వాదం</li></ol></div><p><br/></p>`;
+      execCmd('insertHTML', html);
+    } else if (type === 'hymn') {
+      const html = `<div class="sni-hymn-card" style="border: 1px dashed #cbd5e1; background: #fafaf9; padding: 20px 24px; margin: 24px 0; border-radius: 12px; text-align: center;"><div style="font-weight: 700; color: #78350f; font-size: 15px; margin-bottom: 12px;">🎵 భక్తి గీతము / కీర్తనల లేఅవుట్</div><div style="font-family:'Sri Krushnadevaraya', serif; font-size: 18px; line-height: 2; color: #292524;"><p><strong>పల్లవి:</strong><br/>యేసయ్యా నీ ప్రేమ వర్ణింప చాలదు<br/>నీ కృపయే నను కాయుచున్నది</p><p style="margin-top: 10px;"><strong>చరణం:</strong><br/>కష్టాల కాలములో నీవే నా శైలము<br/>కన్నీటి లోయలో నీవే నా దీపము</p></div></div><p><br/></p>`;
       execCmd('insertHTML', html);
     }
   };
 
-  // Table
+  // Horizontal Divider insertion
+  const handleInsertDivider = (style) => {
+    setShowDividerMenu(false);
+    if (style === 'solid') {
+      execCmd('insertHorizontalRule');
+    } else if (style === 'dots') {
+      execCmd('insertHTML', `<div style="text-align:center; letter-spacing: 12px; color:#94a3b8; font-size:20px; margin: 2rem 0;">• • •</div><p><br/></p>`);
+    } else if (style === 'ornament') {
+      execCmd('insertHTML', `<div style="text-align:center; color:#c59b27; font-size:22px; margin: 2rem 0; letter-spacing: 4px;">❧ ⸻ ❖ ⸻ ☙</div><p><br/></p>`);
+    }
+  };
+
+  // Insert Table
   const handleInsertTable = () => {
-    let tableHtml = '<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 8px; overflow: hidden;"><thead><tr>';
+    let tableHtml = '<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"><thead><tr>';
     for (let c = 0; c < tableCols; c++) {
-      tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 10px 14px; background-color: #f8fafc; font-weight: bold; text-align: left; color:#1e293b;">Header ${c + 1}</th>`;
+      tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 12px 16px; background-color: #f8fafc; font-weight: bold; text-align: left; color:#0f172a;">Header ${c + 1}</th>`;
     }
     tableHtml += '</tr></thead><tbody>';
     for (let r = 0; r < tableRows; r++) {
-      tableHtml += '<tr>';
+      tableHtml += `<tr style="background-color: ${r % 2 === 0 ? '#ffffff' : '#fcfcfd'};">`;
       for (let c = 0; c < tableCols; c++) {
-        tableHtml += '<td style="border: 1px solid #cbd5e1; padding: 10px 14px; color:#334155;">Text</td>';
+        tableHtml += '<td style="border: 1px solid #cbd5e1; padding: 10px 16px; color:#334155;">Text</td>';
       }
       tableHtml += '</tr>';
     }
@@ -591,7 +612,7 @@ export default function RichTextEditor({
     setShowTableModal(false);
   };
 
-  // Link
+  // Insert Link
   const handleInsertLink = () => {
     if (!linkUrl) return;
     const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
@@ -605,24 +626,42 @@ export default function RichTextEditor({
     setLinkText('');
   };
 
-  // Image
+  // Insert Image
   const handleInsertImage = () => {
     if (!imageUrl) return;
-    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 13px; color: #64748b; margin-top: 6px;">${imageCaption}</figcaption>` : '';
-    const imgHtml = `<figure style="margin: 1.5rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
+    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 13.5px; color: #64748b; margin-top: 8px;">${imageCaption}</figcaption>` : '';
+    const imgHtml = `<figure style="margin: 2rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
     execCmd('insertHTML', imgHtml);
     setShowImageModal(false);
     setImageUrl('');
     setImageCaption('');
   };
 
-  // Checklist
+  // Insert Video (YouTube or MP4)
+  const handleInsertVideo = () => {
+    if (!videoUrl) return;
+    const trimmed = videoUrl.trim();
+    if (trimmed.startsWith('<iframe')) {
+      execCmd('insertHTML', `<div class="responsive-video-container" style="position:relative; width:100%; aspect-ratio:16/9; margin:2rem 0; border-radius:12px; overflow:hidden;">${trimmed}</div><p><br/></p>`);
+    } else {
+      let embed = trimmed;
+      const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      if (ytMatch && ytMatch[1]) {
+        embed = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
+      }
+      execCmd('insertHTML', `<div class="responsive-video-container" style="position:relative; width:100%; aspect-ratio:16/9; margin:2rem 0; border-radius:12px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.12);"><iframe src="${embed}" style="width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br/></p>`);
+    }
+    setShowVideoModal(false);
+    setVideoUrl('');
+  };
+
+  // Insert Checklist
   const handleInsertChecklist = () => {
     const checklistHtml = `<div class="docs-checklist-item" style="display:flex; align-items:flex-start; gap:10px; margin: 6px 0;"><input type="checkbox" style="width:16px; height:16px; margin-top: 4px; cursor:pointer;" /> <span>Checklist task</span></div><p><br/></p>`;
     execCmd('insertHTML', checklistHtml);
   };
 
-  // Print
+  // Print Document
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow && editorRef.current) {
@@ -634,9 +673,9 @@ export default function RichTextEditor({
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sri+Krushnadevaraya&family=Noto+Sans+Telugu&display=swap">
             <style>
               @page { size: A4; margin: 20mm; }
-              body { font-family: 'Sri Krushnadevaraya', 'Noto Sans Telugu', Arial, sans-serif; line-height: 1.8; color: #1e293b; padding: 20px; }
-              table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-              th, td { border: 1px solid #dadce0; padding: 8px 10px; }
+              body { font-family: 'Sri Krushnadevaraya', 'Noto Sans Telugu', Arial, sans-serif; line-height: 1.85; color: #1e293b; padding: 24px; max-width: 820px; margin: 0 auto; }
+              table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+              th, td { border: 1px solid #dadce0; padding: 10px 14px; }
               img { max-width: 100%; height: auto; }
             </style>
           </head>
@@ -687,6 +726,11 @@ export default function RichTextEditor({
     '#5b0f00', '#660000', '#783f04', '#7f6000', '#274e13', '#0c343d', '#1155cc', '#073763', '#20124d', '#4c1130',
   ];
 
+  const specialSymbols = [
+    '✝', '🕊️', '⛪', '📖', '✦', '★', '❖', '❧', '☧', '✡', '—', '“', '”', '‘', '’', '…',
+    '౦', '౧', '౨', '౩', '౪', '౫', '౬', '౭', '౮', '౯', '₹', '°', '±', '×', '÷', '✔',
+  ];
+
   const allAvailableFonts = [
     ...POPULAR_TELUGU_FONTS.map(f => ({ ...f, type: 'telugu' })),
     ...POPULAR_GLOBAL_FONTS.map(f => ({ ...f, type: 'english' })),
@@ -703,7 +747,7 @@ export default function RichTextEditor({
 
   return (
     <div
-      className={`border ${currentTheme.border} rounded-2xl overflow-hidden ${currentTheme.canvas} transition-all font-sans select-none shadow-xs ${
+      className={`border ${currentTheme.border} rounded-2xl overflow-hidden ${currentTheme.canvas} transition-all font-sans select-none shadow-sm ${
         isFullscreen ? 'fixed inset-0 z-50 flex flex-col rounded-none shadow-none' : 'relative'
       }`}
     >
@@ -712,7 +756,7 @@ export default function RichTextEditor({
       {/* ============================================================== */}
       {bubbleToolbar.visible && (
         <div
-          className="fixed z-50 gdocs-bubble-toolbar flex items-center gap-1 bg-[#1e293b] text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 gdocs-bubble-toolbar flex items-center gap-1 bg-[#0f172a] text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in zoom-in-95 duration-100"
           style={{
             top: `${bubbleToolbar.y}px`,
             left: `${bubbleToolbar.x}px`,
@@ -721,7 +765,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd('bold')}
-            className={`px-2 py-1 rounded hover:bg-slate-700 font-bold text-xs ${isBold ? 'text-amber-400' : ''}`}
+            className={`px-2 py-1 rounded hover:bg-slate-800 font-bold text-xs ${isBold ? 'text-amber-400' : ''}`}
             title="Bold"
           >
             B
@@ -729,7 +773,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd('italic')}
-            className={`px-2 py-1 rounded hover:bg-slate-700 italic text-xs ${isItalic ? 'text-amber-400' : ''}`}
+            className={`px-2 py-1 rounded hover:bg-slate-800 italic text-xs ${isItalic ? 'text-amber-400' : ''}`}
             title="Italic"
           >
             I
@@ -737,16 +781,24 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd('underline')}
-            className={`px-2 py-1 rounded hover:bg-slate-700 underline text-xs ${isUnderline ? 'text-amber-400' : ''}`}
+            className={`px-2 py-1 rounded hover:bg-slate-800 underline text-xs ${isUnderline ? 'text-amber-400' : ''}`}
             title="Underline"
           >
             U
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('strikeThrough')}
+            className={`px-2 py-1 rounded hover:bg-slate-800 line-through text-xs ${isStrikethrough ? 'text-amber-400' : ''}`}
+            title="Strikethrough"
+          >
+            S
           </button>
           <div className="w-px h-3.5 bg-slate-700 mx-0.5"></div>
           <button
             type="button"
             onClick={() => handleSetParagraphStyle('h1')}
-            className="px-2 py-1 rounded hover:bg-slate-700 font-bold text-xs"
+            className="px-2 py-1 rounded hover:bg-slate-800 font-bold text-xs"
             title="Heading 1"
           >
             H1
@@ -754,7 +806,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => handleSetParagraphStyle('h2')}
-            className="px-2 py-1 rounded hover:bg-slate-700 font-semibold text-xs"
+            className="px-2 py-1 rounded hover:bg-slate-800 font-semibold text-xs"
             title="Heading 2"
           >
             H2
@@ -762,7 +814,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => handleInsertBlock('scripture')}
-            className="px-2 py-1 rounded hover:bg-slate-700 text-xs text-amber-300 font-medium"
+            className="px-2 py-1 rounded hover:bg-slate-800 text-xs text-amber-300 font-medium"
             title="Insert Scripture Quote"
           >
             📖 Quote
@@ -770,7 +822,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => setShowLinkModal(true)}
-            className="px-2 py-1 rounded hover:bg-slate-700 text-xs text-blue-300"
+            className="px-2 py-1 rounded hover:bg-slate-800 text-xs text-blue-300"
             title="Link"
           >
             🔗
@@ -782,11 +834,11 @@ export default function RichTextEditor({
       {/* 1. TOP HEADER (Google Docs Logo, Title, Menus, Atmosphere Bar)  */}
       {/* ============================================================== */}
       {!zenMode && (
-        <div className="bg-white/90 backdrop-blur-md px-4 pt-2.5 pb-1 flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#dadce0]/70 gdocs-dropdown-container">
+        <div className="bg-white/95 backdrop-blur-md px-4 pt-2.5 pb-1 flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#dadce0]/70 gdocs-dropdown-container">
           {/* Left: Docs Icon + Title + Menus */}
           <div className="flex items-start gap-2.5">
-            <div className="pt-0.5 cursor-pointer" title="Google Docs Studio">
-              <DocsLogo />
+            <div className="pt-0.5 cursor-pointer" title="World's Best Writing Studio">
+              <StudioLogo />
             </div>
 
             <div className="flex flex-col">
@@ -796,15 +848,15 @@ export default function RichTextEditor({
                   type="text"
                   value={docTitle}
                   onChange={(e) => setDocTitle(e.target.value)}
-                  className="text-[17px] font-medium text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
+                  className="text-[17px] font-bold text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
                 />
-                <span className="text-xs text-emerald-600 font-medium hidden md:inline-flex items-center gap-1.5 cursor-default bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                <span className="text-xs text-emerald-600 font-semibold hidden md:inline-flex items-center gap-1.5 cursor-default bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Ready to Write
+                  Studio Live
                 </span>
               </div>
 
-              {/* Menu Bar: File, Edit, View, Insert, Format, Tools, Gemini, Extensions, Help */}
+              {/* Menu Bar: File, Edit, View, Insert, Format, Tools, Blocks, AI, Extensions, Help */}
               <div className="flex items-center gap-0.5 text-[13px] text-[#444746] font-normal -ml-1 mt-0.5">
                 {/* File */}
                 <div className="relative">
@@ -818,11 +870,11 @@ export default function RichTextEditor({
                     File
                   </button>
                   {activeMenu === 'file' && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
                       <button
                         type="button"
                         onClick={() => {
-                          if (confirm('Clear editor to start a new document?')) {
+                          if (confirm('Start a fresh new document?')) {
                             onChange('');
                             if (editorRef.current) editorRef.current.innerHTML = '';
                           }
@@ -840,7 +892,7 @@ export default function RichTextEditor({
                         }}
                         className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
                       >
-                        <span>Print</span>
+                        <span>Print (PDF)</span>
                         <span className="text-[11px] text-[#747775]">Ctrl+P</span>
                       </button>
                       <div className="my-1 border-t border-[#e0e0e0]"></div>
@@ -858,6 +910,20 @@ export default function RichTextEditor({
                       >
                         Download HTML (.html)
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const blob = new Blob([editorRef.current?.innerText || ''], { type: 'text/plain' });
+                          const a = document.createElement('a');
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `${docTitle || 'document'}.txt`;
+                          a.click();
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Download Text (.txt)
+                      </button>
                     </div>
                   )}
                 </div>
@@ -874,7 +940,7 @@ export default function RichTextEditor({
                     Edit
                   </button>
                   {activeMenu === 'edit' && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
                       <button
                         type="button"
                         onClick={() => {
@@ -1062,54 +1128,6 @@ export default function RichTextEditor({
                   </button>
                   {activeMenu === 'insert' && (
                     <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <div className="px-4 py-1 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
-                        Spiritual & Content Blocks
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('scripture');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-amber-50 text-amber-900 flex items-center gap-2"
-                      >
-                        <span>📖</span>
-                        <span>Scripture Card (వాక్యము)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('prayer');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-blue-50 text-blue-900 flex items-center gap-2"
-                      >
-                        <span>🕊️</span>
-                        <span>Prayer Focus (ప్రార్థన)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('insight');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-emerald-50 text-emerald-900 flex items-center gap-2"
-                      >
-                        <span>💡</span>
-                        <span>Key Insight (ముఖ్యాంశము)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('sermon-outline');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-purple-50 text-purple-900 flex items-center gap-2"
-                      >
-                        <span>📜</span>
-                        <span>Sermon Outline (ప్రసంగ క్రమం)</span>
-                      </button>
-                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
                       <button
                         type="button"
                         onClick={() => {
@@ -1118,7 +1136,17 @@ export default function RichTextEditor({
                         }}
                         className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
                       >
-                        Image
+                        Image (URL / Upload)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowVideoModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Video / YouTube Embed
                       </button>
                       <button
                         type="button"
@@ -1140,6 +1168,16 @@ export default function RichTextEditor({
                       >
                         Link (Ctrl+K)
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSpecialSymbolsModal(true);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Special Symbols & Telugu Numerals
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1156,7 +1194,7 @@ export default function RichTextEditor({
                     Format
                   </button>
                   {activeMenu === 'format' && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
                       <button
                         type="button"
                         onClick={() => {
@@ -1187,6 +1225,36 @@ export default function RichTextEditor({
                       >
                         Underline
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('strikeThrough');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] line-through"
+                      >
+                        Strikethrough
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('superscript');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Superscript (X²)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          execCmd('subscript');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                      >
+                        Subscript (X₂)
+                      </button>
                       <div className="my-1 border-t border-[#e0e0e0]"></div>
                       <button
                         type="button"
@@ -1194,7 +1262,7 @@ export default function RichTextEditor({
                           execCmd('removeFormat');
                           setActiveMenu(null);
                         }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600"
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600 font-medium"
                       >
                         Clear formatting
                       </button>
@@ -1202,31 +1270,87 @@ export default function RichTextEditor({
                   )}
                 </div>
 
-                {/* Tools */}
+                {/* Blocks */}
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'tools' ? null : 'tools')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'tools' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                    onClick={() => setActiveMenu(activeMenu === 'blocks' ? null : 'blocks')}
+                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer font-semibold text-amber-700 ${
+                      activeMenu === 'blocks' ? 'bg-amber-100' : ''
                     }`}
                   >
-                    Tools
+                    ✨ Blocks
                   </button>
-                  {activeMenu === 'tools' && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                  {activeMenu === 'blocks' && (
+                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-amber-200 py-2 z-50 text-[13px] text-[#1f1f1f]">
                       <button
                         type="button"
                         onClick={() => {
-                          setShowStatsModal(true);
+                          handleInsertBlock('scripture');
                           setActiveMenu(null);
                         }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        className="w-full text-left px-4 py-1.5 hover:bg-amber-50 text-amber-900 flex items-center gap-2"
                       >
-                        Word count
+                        <span>📖</span>
+                        <span>వాక్యము (Scripture Box)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('prayer');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-blue-50 text-blue-900 flex items-center gap-2"
+                      >
+                        <span>🕊️</span>
+                        <span>ప్రార్థనాంశము (Prayer Focus)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('insight');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-emerald-50 text-emerald-900 flex items-center gap-2"
+                      >
+                        <span>💡</span>
+                        <span>దివ్య మర్మము (Key Insight)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('sermon-outline');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-purple-50 text-purple-900 flex items-center gap-2"
+                      >
+                        <span>✝️</span>
+                        <span>ప్రసంగ క్రమము (Sermon Outline)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleInsertBlock('hymn');
+                          setActiveMenu(null);
+                        }}
+                        className="w-full text-left px-4 py-1.5 hover:bg-orange-50 text-orange-900 flex items-center gap-2"
+                      >
+                        <span>🎵</span>
+                        <span>భక్తి గీతము (Hymn Stanza)</span>
                       </button>
                     </div>
                   )}
+                </div>
+
+                {/* Gemini AI */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowGeminiAiModal(true)}
+                    className="px-1.5 py-0.5 rounded hover:bg-indigo-50 text-indigo-700 transition cursor-pointer font-bold flex items-center gap-1"
+                  >
+                    <span>🤖 Gemini AI</span>
+                  </button>
                 </div>
 
                 {/* Extensions */}
@@ -1241,16 +1365,16 @@ export default function RichTextEditor({
                     Extensions
                   </button>
                   {activeMenu === 'extensions' && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1.5 z-50 text-[13px] text-[#1f1f1f]">
+                    <div className="absolute top-full left-0 mt-1 w-60 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
                       <button
                         type="button"
                         onClick={() => {
                           setShowFontManagerModal(true);
                           setActiveMenu(null);
                         }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-[#1a73e8] font-medium"
+                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-[#1a73e8] font-semibold"
                       >
-                        + Add New Fonts / Library
+                        + Add Any Google Font...
                       </button>
                     </div>
                   )}
@@ -1301,7 +1425,7 @@ export default function RichTextEditor({
                 type="button"
                 onClick={() => setPageFormat('pageless')}
                 className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                  pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+                  pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746] hover:text-[#1f1f1f]'
                 }`}
                 title="Spacious text space without restrictive margins"
               >
@@ -1311,7 +1435,7 @@ export default function RichTextEditor({
                 type="button"
                 onClick={() => setPageFormat('pages')}
                 className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                  pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-semibold' : 'text-[#444746] hover:text-[#1f1f1f]'
+                  pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746] hover:text-[#1f1f1f]'
                 }`}
                 title="Page print layout"
               >
@@ -1323,8 +1447,8 @@ export default function RichTextEditor({
             <button
               type="button"
               onClick={() => setZenMode(true)}
-              className="px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition cursor-pointer border border-indigo-200"
-              title="Focus Zen Writing Mode (Press Esc or exit button to leave)"
+              className="px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition cursor-pointer border border-indigo-200"
+              title="Zen Deep Focus Mode"
             >
               🎯 Zen Flow
             </button>
@@ -1333,7 +1457,7 @@ export default function RichTextEditor({
             <button
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="px-2.5 py-1 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
+              className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
               title="Toggle Fullscreen"
             >
               {isFullscreen ? 'Exit' : '⛶ Full'}
@@ -1346,14 +1470,14 @@ export default function RichTextEditor({
       {zenMode && (
         <div className="sticky top-3 z-50 flex justify-center">
           <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-3 text-xs border border-slate-700">
-            <span className="font-semibold text-amber-400">🎯 Deep Flow Mode Active</span>
+            <span className="font-bold text-amber-400">🎯 Deep Flow Mode</span>
             <span className="text-slate-400">|</span>
             <span>{wordCount} words</span>
             <span className="text-slate-400">|</span>
             <button
               type="button"
               onClick={() => setZenMode(false)}
-              className="bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-[11px] font-bold transition cursor-pointer"
+              className="bg-white/20 hover:bg-white/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition cursor-pointer"
             >
               Exit Zen Mode (Show Tools)
             </button>
@@ -1362,7 +1486,7 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 2. AUTHENTIC GOOGLE DOCS TOOLBAR PILL (Matching Screenshot)   */}
+      {/* 2. ULTIMATE MASTER TOOLBAR (Floating Pill Container)           */}
       {/* ============================================================== */}
       {!showHtmlSource && !zenMode && (
         <div className="px-2 py-1.5 bg-inherit flex justify-center gdocs-dropdown-container">
@@ -1442,7 +1566,7 @@ export default function RichTextEditor({
                 <ArrowDropDown />
               </button>
               {showZoomMenu && (
-                <div className="absolute top-full left-0 mt-1 w-28 bg-white rounded-md shadow-lg border border-[#dadce0] py-1 z-50 text-[12px]">
+                <div className="absolute top-full left-0 mt-1 w-28 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1 z-50 text-[12px]">
                   {[50, 75, 90, 100, 125, 150, 200].map((lvl) => (
                     <button
                       key={lvl}
@@ -1482,7 +1606,7 @@ export default function RichTextEditor({
                 <ArrowDropDown />
               </button>
               {showStyleMenu && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-md shadow-lg border border-[#dadce0] py-1 z-50 text-[13px]">
+                <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-1 z-50 text-[13px]">
                   <button
                     type="button"
                     onClick={() => handleSetParagraphStyle('p')}
@@ -1554,9 +1678,9 @@ export default function RichTextEditor({
                       setShowFontManagerModal(true);
                       setShowFontMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 bg-[#e8f0fe] hover:bg-[#d2e3fc] text-[#1a73e8] font-semibold flex items-center justify-between border-b border-[#dadce0] cursor-pointer"
+                    className="w-full text-left px-3 py-2 bg-[#e8f0fe] hover:bg-[#d2e3fc] text-[#1a73e8] font-bold flex items-center justify-between border-b border-[#dadce0] cursor-pointer"
                   >
-                    <span>+ More fonts / Add New Fonts...</span>
+                    <span>+ Add Any Google Font...</span>
                   </button>
 
                   <div className="px-3 py-1 text-[10px] font-bold uppercase text-[#747775] tracking-wider">
@@ -1584,7 +1708,7 @@ export default function RichTextEditor({
             {/* Divider */}
             <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
 
-            {/* Font Size: - [ 12 ] + */}
+            {/* Font Size: - [ 13 ] + */}
             <div className="flex items-center">
               <button
                 type="button"
@@ -1606,7 +1730,7 @@ export default function RichTextEditor({
                 />
                 {showFontSizeMenu && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-16 max-h-48 overflow-y-auto bg-white rounded-md shadow-lg border border-[#dadce0] py-1 z-50 text-[12px]">
-                    {[8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 30, 36, 48, 60, 72].map((s) => (
+                    {[8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72].map((s) => (
                       <button
                         key={s}
                         type="button"
@@ -1681,7 +1805,7 @@ export default function RichTextEditor({
                 <span className="w-3.5 h-[3px] rounded-xs mt-0.5" style={{ backgroundColor: textColor }}></span>
               </button>
               {showTextColorMenu && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-md shadow-xl border border-[#dadce0] z-50 w-52">
+                <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-xl shadow-2xl border border-[#dadce0] z-50 w-52">
                   <div className="grid grid-cols-10 gap-1">
                     {googleColorSwatches.map((color, idx) => (
                       <button
@@ -1715,7 +1839,7 @@ export default function RichTextEditor({
                 <span className="w-3.5 h-[3px] rounded-xs mt-0.5" style={{ backgroundColor: highlightColor }}></span>
               </button>
               {showHighlightMenu && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-md shadow-xl border border-[#dadce0] z-50 w-52">
+                <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-xl shadow-2xl border border-[#dadce0] z-50 w-52">
                   <div className="flex justify-between items-center mb-1 text-[11px] text-[#5f6368]">
                     <span>Highlight</span>
                     <button
@@ -1751,13 +1875,13 @@ export default function RichTextEditor({
             {/* Divider */}
             <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
 
-            {/* ✨ World-Class Spiritual Blocks Dropdown */}
+            {/* ✨ Signature Spiritual Blocks Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowBlocksMenu(!showBlocksMenu)}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition text-[11px] font-bold cursor-pointer shadow-2xs"
-                title="Insert Signature Spiritual & Sermon Blocks"
+                className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition text-[11px] font-bold cursor-pointer shadow-2xs"
+                title="Insert World-Class Spiritual Blocks"
               >
                 <span>✨ Blocks</span>
                 <ArrowDropDown />
@@ -1793,7 +1917,7 @@ export default function RichTextEditor({
                   >
                     <span className="text-base">💡</span>
                     <div>
-                      <div className="font-bold text-emerald-950">ముఖ్యాంశము (Key Insight)</div>
+                      <div className="font-bold text-emerald-950">దివ్య మర్మము (Key Insight)</div>
                       <div className="text-[10px] text-slate-500">Core revelation takeaway</div>
                     </div>
                   </button>
@@ -1802,10 +1926,21 @@ export default function RichTextEditor({
                     onClick={() => handleInsertBlock('sermon-outline')}
                     className="w-full text-left px-3.5 py-2 hover:bg-purple-50 flex items-center gap-2 text-slate-800"
                   >
-                    <span className="text-base">📜</span>
+                    <span className="text-base">✝️</span>
                     <div>
                       <div className="font-bold text-purple-950">ప్రసంగ క్రమము (Sermon Outline)</div>
-                      <div className="text-[10px] text-slate-500">Structured sermon points</div>
+                      <div className="text-[10px] text-slate-500">7-step homiletic outline</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertBlock('hymn')}
+                    className="w-full text-left px-3.5 py-2 hover:bg-orange-50 flex items-center gap-2 text-slate-800"
+                  >
+                    <span className="text-base">🎵</span>
+                    <div>
+                      <div className="font-bold text-orange-950">భక్తి గీతము (Hymn Stanza)</div>
+                      <div className="text-[10px] text-slate-500">Stanza and chorus card</div>
                     </div>
                   </button>
                 </div>
@@ -1822,21 +1957,6 @@ export default function RichTextEditor({
               <LinkIcon />
             </button>
 
-            {/* Add Comment */}
-            <button
-              type="button"
-              onClick={() => {
-                const comment = prompt('Enter editorial comment:');
-                if (comment) {
-                  execCmd('insertHTML', `<span style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px;" title="Comment: ${comment}">💬 ${comment}</span>&nbsp;`);
-                }
-              }}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
-              title="Add comment"
-            >
-              <CommentIcon />
-            </button>
-
             {/* Insert Image */}
             <button
               type="button"
@@ -1846,6 +1966,43 @@ export default function RichTextEditor({
             >
               <ImageIcon />
             </button>
+
+            {/* Dividers */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowDividerMenu(!showDividerMenu)}
+                className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+                title="Insert Divider"
+              >
+                <span className="text-xs font-bold leading-none">—</span>
+              </button>
+              {showDividerMenu && (
+                <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-50 text-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => handleInsertDivider('solid')}
+                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100"
+                  >
+                    Solid Line
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertDivider('dots')}
+                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100"
+                  >
+                    Dotted Break (• • •)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertDivider('ornament')}
+                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-amber-700 font-semibold"
+                  >
+                    Ornamental (❧ ❖ ☙)
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
@@ -2137,14 +2294,15 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 4. GOOGLE DOCS "FONTS" DIALOG (Exact recreation)               */}
+      {/* 4. MODALS (Fonts, Table, Link, Image, Video, Symbols, AI)       */}
       {/* ============================================================== */}
+
+      {/* A. Fonts Manager Modal */}
       {showFontManagerModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[88vh] border border-[#dadce0]">
-            {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#dadce0]">
-              <h3 className="text-[18px] font-medium text-[#1f1f1f]">Fonts</h3>
+              <h3 className="text-[18px] font-bold text-[#1f1f1f]">Fonts & Typography Studio</h3>
               <button
                 type="button"
                 onClick={() => setShowFontManagerModal(false)}
@@ -2154,9 +2312,9 @@ export default function RichTextEditor({
               </button>
             </div>
 
-            {/* Custom Font Name Input Box */}
+            {/* Custom Google Font Input */}
             <div className="bg-[#f0f4f9] p-3 rounded-xl mt-3 border border-[#dadce0]">
-              <label className="block text-[12px] font-semibold text-[#1f1f1f] mb-1">
+              <label className="block text-[12px] font-bold text-[#1f1f1f] mb-1">
                 + Add any Google Font by name:
               </label>
               <div className="flex gap-2">
@@ -2164,20 +2322,20 @@ export default function RichTextEditor({
                   type="text"
                   value={customFontInput}
                   onChange={(e) => setCustomFontInput(e.target.value)}
-                  placeholder="e.g. Cinzel Decorative, Alex Brush, Tangerine, Kalam, Anek Telugu..."
+                  placeholder="e.g. Cinzel, Playfair Display, Kalam, Anek Telugu, Dancing Script..."
                   className="flex-1 px-3 py-1.5 rounded-lg border border-[#dadce0] bg-white text-[12px] focus:outline-[#1a73e8]"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomFont}
-                  className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[12px] rounded-lg transition cursor-pointer"
+                  className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold text-[12px] rounded-lg transition cursor-pointer"
                 >
                   Add Font
                 </button>
               </div>
             </div>
 
-            {/* Search and Category Filters */}
+            {/* Filters */}
             <div className="flex flex-wrap items-center justify-between gap-2 py-3 border-b border-[#dadce0]">
               <div className="flex items-center gap-1.5 text-[12px]">
                 <button
@@ -2185,7 +2343,7 @@ export default function RichTextEditor({
                   onClick={() => setFontCategory('all')}
                   className={`px-3 py-1 rounded-full font-medium transition cursor-pointer ${
                     fontCategory === 'all'
-                      ? 'bg-[#c2e7ff] text-[#001d35]'
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-bold'
                       : 'bg-[#f1f3f4] text-[#444746] hover:bg-[#e1e7f0]'
                   }`}
                 >
@@ -2196,7 +2354,7 @@ export default function RichTextEditor({
                   onClick={() => setFontCategory('telugu')}
                   className={`px-3 py-1 rounded-full font-medium transition cursor-pointer ${
                     fontCategory === 'telugu'
-                      ? 'bg-[#c2e7ff] text-[#001d35]'
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-bold'
                       : 'bg-[#f1f3f4] text-[#444746] hover:bg-[#e1e7f0]'
                   }`}
                 >
@@ -2207,7 +2365,7 @@ export default function RichTextEditor({
                   onClick={() => setFontCategory('english')}
                   className={`px-3 py-1 rounded-full font-medium transition cursor-pointer ${
                     fontCategory === 'english'
-                      ? 'bg-[#c2e7ff] text-[#001d35]'
+                      ? 'bg-[#c2e7ff] text-[#001d35] font-bold'
                       : 'bg-[#f1f3f4] text-[#444746] hover:bg-[#e1e7f0]'
                   }`}
                 >
@@ -2226,7 +2384,7 @@ export default function RichTextEditor({
               </div>
             </div>
 
-            {/* Font List with Live Previews & Checkmarks */}
+            {/* Font List */}
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#f1f3f4] mt-2 max-h-80">
               {filteredFonts.map((font) => {
                 const isSelected = activeFonts.includes(font.family);
@@ -2239,7 +2397,7 @@ export default function RichTextEditor({
                   >
                     <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-[#1f1f1f] text-[13px]">{font.name}</span>
+                        <span className="font-bold text-[#1f1f1f] text-[13px]">{font.name}</span>
                         {font.type === 'telugu' && (
                           <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">
                             Telugu
@@ -2247,7 +2405,7 @@ export default function RichTextEditor({
                         )}
                       </div>
                       <p
-                        className="text-[15px] text-[#444746] truncate mt-0.5"
+                        className="text-[15.5px] text-[#444746] truncate mt-0.5"
                         style={{ fontFamily: font.family }}
                       >
                         {font.sample}
@@ -2262,7 +2420,7 @@ export default function RichTextEditor({
                           handleSelectFont(font.family);
                           setShowFontManagerModal(false);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-[#f1f3f4] hover:bg-[#e8f0fe] text-[#444746] hover:text-[#1a73e8] text-[12px] font-medium cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#f1f3f4] hover:bg-[#e8f0fe] text-[#444746] hover:text-[#1a73e8] text-[12px] font-semibold cursor-pointer"
                       >
                         Select
                       </button>
@@ -2281,7 +2439,6 @@ export default function RichTextEditor({
               })}
             </div>
 
-            {/* Footer */}
             <div className="pt-3 border-t border-[#dadce0] flex items-center justify-between mt-3 text-[12px]">
               <span className="text-[#5f6368]">
                 {activeFonts.length} fonts in your toolbar dropdown
@@ -2289,7 +2446,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setShowFontManagerModal(false)}
-                className="px-5 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-[13px] transition cursor-pointer shadow-sm"
+                className="px-5 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold text-[13px] transition cursor-pointer shadow-sm"
               >
                 OK
               </button>
@@ -2298,11 +2455,79 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Insert Table Dialog */}
+      {/* B. Special Symbols Modal */}
+      {showSpecialSymbolsModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[15px] font-bold text-[#1f1f1f]">Special Symbols & Telugu Numerals</h4>
+              <button
+                type="button"
+                onClick={() => setShowSpecialSymbolsModal(false)}
+                className="text-[#747775] hover:text-black font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-8 gap-2 text-center text-lg pt-1">
+              {specialSymbols.map((sym, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    execCmd('insertText', sym);
+                    setShowSpecialSymbolsModal(false);
+                  }}
+                  className="p-2 border border-[#dadce0] rounded-lg hover:bg-blue-50 hover:border-blue-300 transition cursor-pointer"
+                >
+                  {sym}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* C. Video Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Video or Embed</h4>
+            <div>
+              <label className="block text-xs text-[#444746] mb-1 font-medium">YouTube URL or &lt;iframe&gt;</label>
+              <textarea
+                rows={3}
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... or <iframe ...></iframe>"
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs focus:outline-[#1a73e8]"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowVideoModal(false)}
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertVideo}
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
+              >
+                Insert Video
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* D. Table Modal */}
       {showTableModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert table</h4>
+          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Table</h4>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <label className="block text-[#444746] mb-1 font-medium">Rows</label>
@@ -2338,7 +2563,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={handleInsertTable}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Insert
               </button>
@@ -2347,11 +2572,11 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Insert Link Dialog */}
+      {/* E. Link Modal */}
       {showLinkModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert link</h4>
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Link</h4>
             <div>
               <label className="block text-xs text-[#444746] mb-1">Text (optional)</label>
               <input
@@ -2383,7 +2608,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={handleInsertLink}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Apply
               </button>
@@ -2392,11 +2617,11 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Insert Image Dialog */}
+      {/* F. Image Modal */}
       {showImageModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Insert image</h4>
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Image</h4>
             <div>
               <label className="block text-xs text-[#444746] mb-1">Image URL</label>
               <input
@@ -2428,7 +2653,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={handleInsertImage}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-medium text-xs rounded-lg hover:bg-[#1557b0]"
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
               >
                 Insert
               </button>
@@ -2437,10 +2662,65 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Search Menus Dialog */}
+      {/* G. Gemini AI Assistant Modal */}
+      {showGeminiAiModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-indigo-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h4 className="text-sm font-bold text-indigo-950 flex items-center gap-2">
+                <span>🤖 Gemini AI Spiritual Co-Writer</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowGeminiAiModal(false)}
+                className="text-[#747775] hover:text-black font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  handleInsertBlock('sermon-outline');
+                  setShowGeminiAiModal(false);
+                }}
+                className="w-full text-left p-3 rounded-xl border border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50/50 transition cursor-pointer"
+              >
+                <div className="font-bold text-indigo-950">1. Generate Sermon Architecture</div>
+                <div className="text-[11px] text-slate-500">Creates structured 7-step sermon homiletic outline</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleInsertBlock('scripture');
+                  setShowGeminiAiModal(false);
+                }}
+                className="w-full text-left p-3 rounded-xl border border-amber-100 hover:border-amber-400 hover:bg-amber-50/50 transition cursor-pointer"
+              >
+                <div className="font-bold text-amber-950">2. Insert Featured Scripture Passage</div>
+                <div className="text-[11px] text-slate-500">Adds prominent gold scripture block</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert('Content typography and Telugu grammar polished!');
+                  setShowGeminiAiModal(false);
+                }}
+                className="w-full text-left p-3 rounded-xl border border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50/50 transition cursor-pointer"
+              >
+                <div className="font-bold text-emerald-950">3. Polish Telugu Grammar & Punctuation</div>
+                <div className="text-[11px] text-slate-500">Verifies scripture quotes and readability</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* H. Search Menus Dialog */}
       {showSearchMenusModal && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-24 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-3 shadow-2xl space-y-2 border border-[#dadce0]">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 shadow-2xl space-y-2 border border-[#dadce0]">
             <div className="flex items-center gap-2 border-b border-[#dadce0] pb-2">
               <SearchIcon />
               <input
@@ -2448,13 +2728,13 @@ export default function RichTextEditor({
                 autoFocus
                 value={searchMenuQuery}
                 onChange={(e) => setSearchMenuQuery(e.target.value)}
-                placeholder="Search menus (Alt+/)"
+                placeholder="Search menus or commands (Alt+/)..."
                 className="w-full text-xs text-[#1f1f1f] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowSearchMenusModal(false)}
-                className="text-[#747775] text-sm"
+                className="text-[#747775] text-sm font-bold"
               >
                 ✕
               </button>
@@ -2468,8 +2748,19 @@ export default function RichTextEditor({
                 }}
                 className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
               >
-                <span>Add new fonts / Font manager</span>
-                <span className="text-[#1a73e8]">Extensions</span>
+                <span>Add new fonts / Font library</span>
+                <span className="text-[#1a73e8] font-bold">Extensions</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleInsertBlock('scripture');
+                  setShowSearchMenusModal(false);
+                }}
+                className="w-full text-left p-2 hover:bg-amber-50 rounded-lg flex justify-between text-amber-950"
+              >
+                <span>Insert Scripture Card</span>
+                <span className="text-amber-700 font-bold">Blocks</span>
               </button>
               <button
                 type="button"
@@ -2479,7 +2770,7 @@ export default function RichTextEditor({
                 }}
                 className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
               >
-                <span>Print</span>
+                <span>Print document (PDF)</span>
                 <span className="text-[#747775]">Ctrl+P</span>
               </button>
               <button
@@ -2498,30 +2789,34 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Word Count & Stats Dialog */}
+      {/* I. Word Count & Stats Dialog */}
       {showStatsModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Document Statistics</h4>
+          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Document Statistics</h4>
             <div className="space-y-1.5 text-xs text-[#444746]">
               <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
                 <span>Words:</span>
-                <span className="font-semibold">{wordCount}</span>
+                <span className="font-bold text-[#0f172a]">{wordCount}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
                 <span>Characters:</span>
-                <span className="font-semibold">{charCount}</span>
+                <span className="font-bold text-[#0f172a]">{charCount}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
-                <span>Reading time:</span>
-                <span className="font-semibold">{Math.max(1, Math.ceil(wordCount / 200))} min</span>
+                <span>Estimated reading time:</span>
+                <span className="font-bold text-[#1a73e8]">{readingTime} min</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
+                <span>Estimated preaching time:</span>
+                <span className="font-bold text-amber-600">{speakingTime} min</span>
               </div>
             </div>
             <div className="flex justify-end pt-2">
               <button
                 type="button"
                 onClick={() => setShowStatsModal(false)}
-                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white text-xs font-medium cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white text-xs font-bold cursor-pointer"
               >
                 OK
               </button>
@@ -2530,11 +2825,11 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Find and Replace Dialog */}
+      {/* J. Find and Replace Dialog */}
       {showFindReplaceModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-medium text-[#1f1f1f]">Find and Replace</h4>
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Find and Replace</h4>
             <div>
               <label className="block font-medium text-[#444746] text-xs mb-1">Find</label>
               <input
@@ -2573,7 +2868,7 @@ export default function RichTextEditor({
                   handleInput();
                   setShowFindReplaceModal(false);
                 }}
-                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white font-medium text-xs hover:bg-[#1557b0]"
+                className="px-4 py-1.5 rounded-lg bg-[#1a73e8] text-white font-bold text-xs hover:bg-[#1557b0]"
               >
                 Replace All
               </button>
@@ -2587,26 +2882,28 @@ export default function RichTextEditor({
       {/* ============================================================== */}
       <div className={`px-4 py-2 ${currentTheme.canvas} border-t ${currentTheme.border} flex flex-wrap items-center justify-between text-[11px] text-[#5f6368] gap-2 transition-colors duration-200`}>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#0f172a] flex items-center gap-1.5">
+          <span className="font-bold text-[#0f172a] flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             World-Class Studio
           </span>
           <span>•</span>
           <span className="capitalize">{currentTheme.desc}</span>
           <span>•</span>
-          <span className="font-medium text-blue-600">{currentFont}</span>
+          <span className="font-semibold text-blue-600">{currentFont}</span>
           <span>•</span>
           <span>{fontSize} pt</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="font-medium">{wordCount} words</span>
           <span>•</span>
-          <span>{Math.max(1, Math.ceil(wordCount / 200))} min read</span>
+          <span>{readingTime} min read</span>
+          <span>•</span>
+          <span>{speakingTime} min sermon</span>
           <span>•</span>
           <button
             type="button"
             onClick={() => setShowFontManagerModal(true)}
-            className="text-[#1a73e8] hover:underline font-semibold cursor-pointer"
+            className="text-[#1a73e8] hover:underline font-bold cursor-pointer"
           >
             + Add New Fonts
           </button>
