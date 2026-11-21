@@ -759,11 +759,11 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="joinContact">Phone Number or Gmail Address *</label>
+                        <label for="joinContact">Gmail / Email Address *</label>
                         <div class="input-wrap">
-                            <input type="text" id="joinContact" class="form-input" placeholder="e.g. 9876543210 or name@gmail.com" required>
+                            <input type="email" id="joinContact" class="form-input" placeholder="e.g. yourname@gmail.com" required autocomplete="email">
                         </div>
-                        <div class="form-helper">An official verification link will be sent to this Phone or Gmail.</div>
+                        <div class="form-helper">An official verification link and 6-digit OTP will be sent to this Gmail address.</div>
                     </div>
 
                     <div class="form-group">
@@ -801,19 +801,34 @@
 
         </div>
 
-        <!-- VERIFICATION MODAL (For Phone & Gmail Links) -->
+        <!-- VERIFICATION MODAL (For Gmail / Email Verification) -->
         <div id="verifyModal" class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-icon verify" id="verifyModalIcon">📩</div>
-                <h3 class="modal-title" id="verifyModalTitle">SNI Verification Link Ready</h3>
+                <h3 class="modal-title" id="verifyModalTitle">Official SNI Email Verification</h3>
                 <p class="modal-text" id="verifyModalSubtitle">
-                    An official verification link has been generated for:
-                    <br><strong class="modal-target" id="verifyModalTarget">contact</strong>
+                    An official verification message has been sent to your Gmail:
+                    <br><strong class="modal-target" id="verifyModalTarget">email@gmail.com</strong>
                 </p>
-                <div class="modal-actions" id="verifyModalActions">
-                    <!-- Populated dynamically: Email vs Phone buttons -->
+
+                <!-- OTP Input Section -->
+                <div id="otpInputSection" style="margin: 16px 0; padding: 16px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: center;">
+                    <label for="otpCodeInput" style="display: block; font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                        🔑 Enter 6-Digit Verification Code (OTP)
+                    </label>
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center; max-width: 320px; margin: 0 auto;">
+                        <input type="text" id="otpCodeInput" maxlength="6" placeholder="• • • • • •" style="width: 140px; text-align: center; font-size: 1.25rem; font-weight: 800; letter-spacing: 4px; padding: 10px 8px; border: 2px solid #94a3b8; border-radius: 8px; background: #ffffff; color: #0f172a; outline: none;" />
+                        <button type="button" id="submitOtpBtn" class="modal-btn modal-btn-primary" style="padding: 10px 16px; margin: 0; font-size: 0.85rem; font-weight: 700; background: #071b3b; color: #f5c75e; border-radius: 8px; cursor: pointer;">
+                            Verify OTP
+                        </button>
+                    </div>
+                    <div id="otpStatusMsg" style="font-size: 0.8rem; font-weight: 600; margin-top: 8px; display: none;"></div>
                 </div>
-                <div style="margin-top: 16px;">
+
+                <div class="modal-actions" id="verifyModalActions">
+                    <!-- Populated dynamically: Email buttons -->
+                </div>
+                <div style="margin-top: 14px;">
                     <button type="button" class="modal-btn modal-btn-secondary" id="closeVerifyModalBtn" style="width: 100%;">
                         Dismiss &amp; Continue to Sign In
                     </button>
@@ -1118,20 +1133,21 @@
                     if (userData.password === pass) {
                         const isAdmin = isCardAdmin(userId, pass) || userData.role === 'admin' || userData.role === 'ADMIN';
 
-                        // Check Phone / Gmail Verification for members
-                        if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified')) {
+                        // Check Gmail / Email Verification for members
+                        if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified' || userData.emailVerified === false)) {
                             const token = userData.verificationToken || ('sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36));
-                            const verifyUrl = `${window.location.origin}${window.location.pathname}?mode=verify&uid=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`;
-                            const isEmail = (userData.contact || '').includes('@');
+                            const otp = userData.verificationOtp || '';
+                            const verifyUrl = `${window.location.origin}${window.location.pathname}?mode=verify&uid=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}&otp=${encodeURIComponent(otp)}`;
                             showVerificationModal({
                                 userId,
                                 fullName: userData.fullName || userId,
-                                contact: userData.contact || 'your contact',
-                                isEmail,
+                                contact: userData.email || userData.contact || 'your Gmail address',
+                                email: userData.email || userData.contact || '',
                                 verifyUrl,
-                                token
+                                token,
+                                otp
                             }, true);
-                            showAlert('⚠️ Phone / Gmail verification required before sign in. Please verify your contact.', 'error');
+                            showAlert('⚠️ Gmail verification required before sign in. Please verify your email using the link or OTP sent from SNI.', 'error');
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
                             return;
@@ -1144,7 +1160,7 @@
                             } else if (userData.status === 'revoked') {
                                 showAlert('⛔ Your account access has been revoked by administrator.');
                             } else {
-                                showAlert('⏳ Waiting for Admin Approval: Your contact is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.');
+                                showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.');
                             }
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
@@ -1174,30 +1190,25 @@
             }
         });
 
-        // 2. JOIN (REGISTER) SUBMISSION
+        // 2. JOIN (REGISTER) SUBMISSION - STRICTLY EMAIL ONLY
         joinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAlert();
 
             const fullName = document.getElementById('joinFullName').value.trim();
             const userId = document.getElementById('joinUserId').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-            const contact = document.getElementById('joinContact').value.trim();
+            const email = document.getElementById('joinContact').value.trim().toLowerCase();
             const pass = document.getElementById('joinPass').value.trim();
             const confirmPass = document.getElementById('joinConfirmPass').value.trim();
             const submitBtn = document.getElementById('joinSubmitBtn');
 
-            if (!fullName || !userId || !contact || !pass) {
-                showAlert('Please fill in all required fields, including Phone Number or Gmail.');
+            if (!fullName || !userId || !email || !pass) {
+                showAlert('Please fill in all required fields, including your Gmail address.');
                 return;
             }
 
-            const isEmail = contact.includes('@');
-            if (isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
-                showAlert('Please enter a valid Gmail / Email address.');
-                return;
-            }
-            if (!isEmail && contact.replace(/[^0-9]/g, '').length < 10) {
-                showAlert('Please enter a valid 10-digit mobile phone number.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAlert('Please enter a valid Gmail / Email address (e.g. yourname@gmail.com).');
                 return;
             }
 
@@ -1233,21 +1244,24 @@
                 }
 
                 const isAdmin = isCardAdmin(userId, pass);
+                const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
                 const verifyToken = 'sni_v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-                const verifyUrl = `${window.location.origin}${window.location.pathname}?mode=verify&uid=${encodeURIComponent(userId)}&token=${encodeURIComponent(verifyToken)}`;
+                const verifyUrl = `${window.location.origin}${window.location.pathname}?mode=verify&uid=${encodeURIComponent(userId)}&token=${encodeURIComponent(verifyToken)}&otp=${encodeURIComponent(verifyOtp)}`;
 
                 const newUser = {
                     userId: userId,
                     fullName: fullName,
-                    contact: contact,
-                    phone: isEmail ? '' : contact,
-                    email: isEmail ? contact : '',
+                    contact: email,
+                    email: email,
+                    phone: '',
                     password: pass,
                     role: isAdmin ? 'ADMIN' : 'MEM',
                     status: isAdmin ? 'approved' : 'unverified',
                     contactVerified: isAdmin ? true : false,
+                    emailVerified: isAdmin ? true : false,
                     isVerified: isAdmin ? true : false,
                     verificationToken: isAdmin ? '' : verifyToken,
+                    verificationOtp: isAdmin ? '' : verifyOtp,
                     verificationSentAt: new Date().toISOString(),
                     joinedAt: new Date().toISOString()
                 };
@@ -1259,7 +1273,7 @@
                     body: JSON.stringify(newUser)
                 });
 
-                // Dual sync to Firestore
+                // Dual sync to Firestore users collection
                 try {
                     await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
                         method: 'PATCH',
@@ -1271,16 +1285,18 @@
                                 username: { stringValue: userId },
                                 fullName: { stringValue: fullName },
                                 name: { stringValue: fullName },
-                                contact: { stringValue: contact },
-                                phone: { stringValue: contact },
-                                email: { stringValue: isEmail ? contact : '' },
+                                contact: { stringValue: email },
+                                email: { stringValue: email },
+                                phone: { stringValue: '' },
                                 password: { stringValue: pass },
                                 plainPassword: { stringValue: pass },
                                 role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
                                 status: { stringValue: isAdmin ? 'approved' : 'unverified' },
                                 contactVerified: { booleanValue: isAdmin ? true : false },
+                                emailVerified: { booleanValue: isAdmin ? true : false },
                                 isVerified: { booleanValue: isAdmin ? true : false },
                                 verificationToken: { stringValue: isAdmin ? '' : verifyToken },
+                                verificationOtp: { stringValue: isAdmin ? '' : verifyOtp },
                                 registeredAt: { stringValue: newUser.joinedAt },
                                 createdAt: { stringValue: newUser.joinedAt }
                             }
@@ -1295,35 +1311,34 @@
                     showAlert(`Welcome, ${fullName}! Redirecting...`, 'success');
                     setTimeout(() => redirectAfterLogin(), 800);
                 } else {
-                    // Send Email if applicable
-                    if (isEmail) {
-                        try {
-                            fetch("https://api.web3forms.com/submit", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json", "Accept": "application/json" },
-                                body: JSON.stringify({
-                                    access_key: "0898517c-a496-4dd8-91ee-b5f7eeebddca",
-                                    subject: `Official SNI Verification Link - ${fullName}`,
-                                    from_name: "SNI Natural Intelligence",
-                                    email: contact,
-                                    message: `Hello ${fullName},\n\nWelcome to SNI!\n\nPlease click the official link below to verify your account:\n${verifyUrl}\n\nYour SNI ID: ${userId}\n\nThank you,\nSNI Team\nhttps://sni.org.in`
-                                })
-                            }).catch(() => {});
-                        } catch(e) {}
-                    }
+                    // Send Email directly via Web3Forms
+                    try {
+                        fetch("https://api.web3forms.com/submit", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                            body: JSON.stringify({
+                                access_key: "0898517c-a496-4dd8-91ee-b5f7eeebddca",
+                                subject: `Official SNI Verification Code: ${verifyOtp} - ${fullName}`,
+                                from_name: "Super Natural Intelligence (SNI)",
+                                email: email,
+                                message: `Hello ${fullName},\n\nWelcome to Super Natural Intelligence (SNI)!\n\nYour 6-Digit Email Verification Code (OTP) is:\n${verifyOtp}\n\nOr click the official link below to verify your account immediately:\n${verifyUrl}\n\nSNI ID: ${userId}\nRegistered Email: ${email}\n\nOnce you verify your email, your application will be submitted to the Admin for approval.\n\nThank you,\nSNI Administration\nhttps://sni.org.in`
+                            })
+                        }).catch(() => {});
+                    } catch(e) {}
 
                     joinForm.reset();
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
 
-                    // Show the verification prompt modal
+                    // Show the email verification prompt modal
                     showVerificationModal({
                         userId,
                         fullName,
-                        contact,
-                        isEmail,
+                        contact: email,
+                        email: email,
                         verifyUrl,
-                        token: verifyToken
+                        token: verifyToken,
+                        otp: verifyOtp
                     });
                 }
 
@@ -1335,79 +1350,111 @@
             }
         });
 
-        // MODAL HANDLERS FOR VERIFICATION
+        // MODAL HANDLERS FOR EMAIL VERIFICATION
+        let currentModalInfo = null;
+
         function showVerificationModal(info, isLoginBlock = false) {
+            currentModalInfo = info;
             const modal = document.getElementById('verifyModal');
             const icon = document.getElementById('verifyModalIcon');
             const title = document.getElementById('verifyModalTitle');
             const subtitle = document.getElementById('verifyModalSubtitle');
             const actions = document.getElementById('verifyModalActions');
             const target = document.getElementById('verifyModalTarget');
+            const otpSection = document.getElementById('otpInputSection');
+            const otpInput = document.getElementById('otpCodeInput');
+            const otpStatus = document.getElementById('otpStatusMsg');
+
+            if (otpSection) otpSection.style.display = 'block';
+            if (otpInput) otpInput.value = '';
+            if (otpStatus) {
+                otpStatus.style.display = 'none';
+                otpStatus.textContent = '';
+            }
 
             icon.className = 'modal-icon verify';
             icon.innerHTML = '📩';
-            title.innerText = isLoginBlock ? 'Verification Required' : 'Official Verification Link Ready';
-            target.innerText = info.contact || info.userId;
+            title.innerText = isLoginBlock ? 'Gmail Verification Required' : 'Official Verification Link & OTP Ready';
+            target.innerText = info.contact || info.email || info.userId;
             subtitle.innerHTML = isLoginBlock
-                ? `Your SNI account <strong>${info.userId}</strong> requires contact verification for: <br><strong class="modal-target">${info.contact}</strong>.<br><small style="color: #64748b; display: block; margin-top: 6px;">Please verify your contact first. Your request will only be sent to the Admin after verification.</small>`
-                : `An official SNI verification link has been generated for: <br><strong class="modal-target">${info.contact}</strong>.<br><small style="color: #b45309; font-weight: 600; display: block; margin-top: 6px;">⚠️ Click the verification link below (or open it from your phone/mail) to send your approval request to the Admin.</small>`;
+                ? `Your SNI account <strong>${info.userId}</strong> requires Gmail verification for: <br><strong class="modal-target">${info.contact || info.email}</strong>.<br><small style="color: #64748b; display: block; margin-top: 6px;">Please verify your Gmail first. Your application will only be forwarded to the Admin after verification.</small>`
+                : `An official verification email with a link and OTP has been sent to: <br><strong class="modal-target">${info.contact || info.email}</strong>.<br><small style="color: #b45309; font-weight: 600; display: block; margin-top: 6px;">⚠️ Verify your email via the link in your mail or enter the 6-digit OTP code below to send your approval request to the Admin.</small>`;
 
-            let actionsHtml = '';
+            actions.innerHTML = `
+                <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="modal-btn modal-btn-primary" style="background: #ea4335; color: #ffffff;">
+                    ✉️ Open Gmail Inbox
+                </a>
+                <a href="${info.verifyUrl}" class="modal-btn modal-btn-primary" style="background: #16a34a; color: #ffffff;">
+                    🔗 Click to Verify Account Now
+                </a>
+                <button type="button" class="modal-btn modal-btn-secondary" onclick="navigator.clipboard.writeText('${info.verifyUrl}'); alert('Verification link copied to clipboard!');">
+                    📋 Copy Verification Link
+                </button>
+            `;
 
-            if (info.isEmail) {
-                actionsHtml += `
-                    <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="modal-btn modal-btn-primary">
-                        ✉️ Open Gmail Inbox
-                    </a>
-                    <a href="${info.verifyUrl}" class="modal-btn modal-btn-primary" style="background: #16a34a;">
-                        🔗 Click to Verify Account Now
-                    </a>
-                    <button type="button" class="modal-btn modal-btn-secondary" onclick="navigator.clipboard.writeText('${info.verifyUrl}'); alert('Verification link copied to clipboard!');">
-                        📋 Copy Verification Link
-                    </button>
-                `;
-            } else {
-                const cleanDigits = (info.contact || '').replace(/[^0-9]/g, '');
-                const fullWaPhone = cleanDigits.length === 10 ? '91' + cleanDigits : cleanDigits;
-                const smsUrl = `sms:${cleanDigits}?body=${encodeURIComponent("Click here to verify your official SNI account: " + info.verifyUrl)}`;
-                const waUrl = `https://api.whatsapp.com/send?phone=${fullWaPhone}&text=${encodeURIComponent("Click here to verify your official SNI account: " + info.verifyUrl)}`;
-
-                actionsHtml += `
-                    <a href="${smsUrl}" class="modal-btn modal-btn-primary">
-                        💬 Send Link to Phone (SMS)
-                    </a>
-                    <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="modal-btn modal-btn-whatsapp">
-                        📲 Send Link via WhatsApp
-                    </a>
-                    <a href="${info.verifyUrl}" class="modal-btn modal-btn-primary" style="background: #16a34a;">
-                        🔗 Click to Verify Account Now
-                    </a>
-                    <button type="button" class="modal-btn modal-btn-secondary" onclick="navigator.clipboard.writeText('${info.verifyUrl}'); alert('Verification link copied to clipboard!');">
-                        📋 Copy Verification Link
-                    </button>
-                `;
-            }
-
-            actions.innerHTML = actionsHtml;
             modal.classList.add('active');
         }
 
-        function showVerifiedSuccessModal(uid, fullName, contact) {
+        // OTP Verification inside Modal
+        const submitOtpBtn = document.getElementById('submitOtpBtn');
+        const otpCodeInput = document.getElementById('otpCodeInput');
+        if (submitOtpBtn && otpCodeInput) {
+            const doOtpVerify = async () => {
+                const code = otpCodeInput.value.trim();
+                const otpStatus = document.getElementById('otpStatusMsg');
+                if (!code || code.length < 6) {
+                    if (otpStatus) {
+                        otpStatus.style.display = 'block';
+                        otpStatus.style.color = '#dc2626';
+                        otpStatus.textContent = 'Please enter all 6 digits of the OTP code.';
+                    }
+                    return;
+                }
+                if (!currentModalInfo || !currentModalInfo.userId) {
+                    return;
+                }
+                submitOtpBtn.disabled = true;
+                submitOtpBtn.textContent = 'Verifying...';
+                if (otpStatus) {
+                    otpStatus.style.display = 'block';
+                    otpStatus.style.color = '#2563eb';
+                    otpStatus.textContent = 'Verifying OTP code...';
+                }
+                const ok = await handleVerifyAccount(currentModalInfo.userId, currentModalInfo.token, code);
+                submitOtpBtn.disabled = false;
+                submitOtpBtn.textContent = 'Verify OTP';
+                if (!ok && otpStatus) {
+                    otpStatus.style.color = '#dc2626';
+                    otpStatus.textContent = 'Invalid OTP code. Please check your Gmail or retry.';
+                }
+            };
+            submitOtpBtn.addEventListener('click', doOtpVerify);
+            otpCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    doOtpVerify();
+                }
+            });
+        }
+
+        function showVerifiedSuccessModal(uid, fullName, email) {
             const modal = document.getElementById('verifyModal');
             const icon = document.getElementById('verifyModalIcon');
             const title = document.getElementById('verifyModalTitle');
             const subtitle = document.getElementById('verifyModalSubtitle');
             const actions = document.getElementById('verifyModalActions');
             const target = document.getElementById('verifyModalTarget');
+            const otpSection = document.getElementById('otpInputSection');
+            if (otpSection) otpSection.style.display = 'none';
 
             icon.className = 'modal-icon success';
             icon.innerHTML = '🎉';
-            title.innerText = 'Contact Verified!';
-            target.innerText = contact || uid;
-            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your contact has been verified successfully. Your application for SNI ID <strong class="modal-target">${uid}</strong> is now submitted to the Admin.<br><div style="color: #b45309; font-weight: 700; margin-top: 10px; background: #fef3c7; padding: 8px 12px; border-radius: 8px; border: 1px solid #fde68a;">⏳ Waiting for Admin Approval: You will be able to sign in once an administrator approves your account.</div>`;
+            title.innerText = 'Email Verified Successfully!';
+            target.innerText = email || uid;
+            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your email address has been verified. Your application for SNI ID <strong class="modal-target">${uid}</strong> has now been forwarded to the Admin.<br><div style="color: #b45309; font-weight: 700; margin-top: 10px; background: #fef3c7; padding: 10px 14px; border-radius: 10px; border: 1px solid #fde68a; font-size: 0.85rem;">⏳ Waiting for Admin Approval: You will be able to sign in once an administrator approves your account.</div>`;
 
             actions.innerHTML = `
-                <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')">
+                <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')" style="background: #071b3b; color: #f5c75e; font-weight: 700;">
                     🔑 Return to Sign In
                 </button>
             `;
@@ -1424,7 +1471,7 @@
                 const pInput = document.getElementById('signInPass');
                 if (pInput) pInput.focus();
             }
-            showAlert('⏳ Waiting for Admin Approval: Contact verified! Your application has been submitted to Admin. You can sign in once approved.', 'info');
+            showAlert('⏳ Waiting for Admin Approval: Email verified! Your application has been submitted to Admin. You can sign in once approved.', 'info');
         };
 
         const closeVerifyBtn = document.getElementById('closeVerifyModalBtn');
@@ -1434,9 +1481,9 @@
             });
         }
 
-        // VERIFY ACCOUNT FROM URL PARAMETER
-        async function handleVerifyAccount(uid, token) {
-            showAlert('Verifying your contact with SNI...', 'info');
+        // VERIFY ACCOUNT FROM URL PARAMETER OR OTP
+        async function handleVerifyAccount(uid, token, otp) {
+            showAlert('Verifying your email with SNI...', 'info');
             try {
                 const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`);
                 let userData = null;
@@ -1452,8 +1499,11 @@
                             userData = {
                                 userId: fsDoc.fields.userId?.stringValue || uid,
                                 fullName: fsDoc.fields.fullName?.stringValue || uid,
-                                contact: fsDoc.fields.contact?.stringValue || '',
-                                verificationToken: fsDoc.fields.verificationToken?.stringValue || ''
+                                contact: fsDoc.fields.contact?.stringValue || fsDoc.fields.email?.stringValue || '',
+                                email: fsDoc.fields.email?.stringValue || fsDoc.fields.contact?.stringValue || '',
+                                verificationToken: fsDoc.fields.verificationToken?.stringValue || '',
+                                verificationOtp: fsDoc.fields.verificationOtp?.stringValue || '',
+                                status: fsDoc.fields.status?.stringValue || 'unverified'
                             };
                         }
                     }
@@ -1461,12 +1511,18 @@
 
                 if (!userData) {
                     showAlert('❌ Account not found for verification.', 'error');
-                    return;
+                    return false;
                 }
 
-                if (userData.verificationToken && token && userData.verificationToken !== token) {
-                    showAlert('❌ Invalid or expired verification token.', 'error');
-                    return;
+                const cleanToken = (token || '').trim();
+                const cleanOtp = (otp || '').trim();
+
+                const isTokenMatch = cleanToken && (cleanToken === userData.verificationToken || cleanToken === userData.verificationOtp);
+                const isOtpMatch = cleanOtp && (cleanOtp === userData.verificationOtp || cleanOtp === userData.verificationToken);
+
+                if (userData.verificationToken && !isTokenMatch && !isOtpMatch) {
+                    showAlert('❌ Invalid or expired verification code or link.', 'error');
+                    return false;
                 }
 
                 const targetStatus = (userData.status === 'approved' || uid === 'surya11008') ? 'approved' : 'pending';
@@ -1477,20 +1533,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contactVerified: true,
+                        emailVerified: true,
                         isVerified: true,
                         status: targetStatus,
                         verifiedAt: new Date().toISOString()
                     })
                 });
 
-                // Update Firestore
+                // Update Firestore users collection
                 try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             fields: {
                                 contactVerified: { booleanValue: true },
+                                emailVerified: { booleanValue: true },
                                 isVerified: { booleanValue: true },
                                 status: { stringValue: targetStatus },
                                 verifiedAt: { stringValue: new Date().toISOString() }
@@ -1499,7 +1557,7 @@
                     });
                 } catch(e) {}
 
-                // Also populate pending_registrations in Firestore if awaiting approval
+                // ONLY NOW forward approval request to Admin (by saving to pending_registrations)
                 if (targetStatus === 'pending') {
                     try {
                         await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(uid)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
@@ -1512,11 +1570,13 @@
                                     username: { stringValue: uid },
                                     name: { stringValue: userData.fullName || uid },
                                     fullName: { stringValue: userData.fullName || uid },
-                                    contact: { stringValue: userData.contact || '' },
-                                    phone: { stringValue: userData.contact || '' },
+                                    contact: { stringValue: userData.email || userData.contact || '' },
+                                    email: { stringValue: userData.email || userData.contact || '' },
+                                    phone: { stringValue: '' },
                                     role: { stringValue: 'MEM' },
                                     status: { stringValue: 'pending' },
                                     contactVerified: { booleanValue: true },
+                                    emailVerified: { booleanValue: true },
                                     isVerified: { booleanValue: true },
                                     verifiedAt: { stringValue: new Date().toISOString() }
                                 }
@@ -1525,11 +1585,13 @@
                     } catch(e) {}
                 }
 
-                showVerifiedSuccessModal(uid, userData.fullName || uid, userData.contact);
+                showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
+                return true;
 
             } catch (e) {
                 console.error(e);
                 showAlert('Verification failed due to a network error. Please try again.', 'error');
+                return false;
             }
         }
 
@@ -1538,9 +1600,10 @@
         const mode = urlParams.get('mode');
         const uidParam = urlParams.get('uid');
         const tokenParam = urlParams.get('token');
+        const otpParam = urlParams.get('otp');
 
         if (mode === 'verify' && uidParam) {
-            handleVerifyAccount(uidParam, tokenParam);
+            handleVerifyAccount(uidParam, tokenParam, otpParam);
         } else if (mode === 'join' || window.location.pathname.includes('join')) {
             switchMode('join');
         } else {

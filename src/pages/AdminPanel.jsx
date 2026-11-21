@@ -1571,7 +1571,7 @@ export default function AdminPanel() {
                                 <option value="" disabled>Select Role</option>
                                 {rolesList.map((r) => (
                                   <option key={r.id} value={r.id}>
-                                    {r.nameEn || r.name || r.id} ({r.id})
+                                    {r.nameEn || r.name || r.id}
                                   </option>
                                 ))}
                                 {u.role && !rolesList.find((r) => r.id === u.role) && (
