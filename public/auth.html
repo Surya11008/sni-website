@@ -953,6 +953,34 @@
                     userData = await res.json();
                 }
 
+                // C. If not in RTDB, check Firestore in real-time
+                if (!userData) {
+                    try {
+                        const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`);
+                        if (fsRes.ok) {
+                            const fsDoc = await fsRes.json();
+                            if (fsDoc && fsDoc.fields) {
+                                const f = fsDoc.fields;
+                                userData = {
+                                    userId: f.userId?.stringValue || f.username?.stringValue || userId,
+                                    fullName: f.fullName?.stringValue || f.name?.stringValue || userId,
+                                    contact: f.contact?.stringValue || f.phone?.stringValue || '',
+                                    password: f.password?.stringValue || f.plainPassword?.stringValue || '',
+                                    role: f.role?.stringValue || 'member',
+                                    status: f.status?.stringValue || 'approved',
+                                    joinedAt: f.registeredAt?.stringValue || f.createdAt?.stringValue || new Date().toISOString()
+                                };
+                                // Auto cache to RTDB
+                                fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(userData)
+                                }).catch(() => {});
+                            }
+                        }
+                    } catch(e) {}
+                }
+
                 if (userData) {
                     if (userData.password === pass) {
                         const isApproved = userData.role === 'admin' || userData.status === 'approved';
@@ -1055,6 +1083,33 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newUser)
                 });
+
+                // Dual sync to Firestore
+                try {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields: {
+                                id: { stringValue: userId },
+                                userId: { stringValue: userId },
+                                username: { stringValue: userId },
+                                fullName: { stringValue: fullName },
+                                name: { stringValue: fullName },
+                                contact: { stringValue: contact || '' },
+                                phone: { stringValue: contact || '' },
+                                password: { stringValue: pass },
+                                plainPassword: { stringValue: pass },
+                                role: { stringValue: isAdmin ? 'admin' : 'member' },
+                                status: { stringValue: isAdmin ? 'approved' : 'pending' },
+                                registeredAt: { stringValue: newUser.joinedAt },
+                                createdAt: { stringValue: newUser.joinedAt }
+                            }
+                        })
+                    });
+                } catch(e) {
+                    console.warn('Firestore sync failed:', e);
+                }
 
                 if (isAdmin) {
                     setCurrentUser(newUser);
