@@ -52,3 +52,15 @@ if (fs.existsSync(publicDir)) {
   }
   console.log('[postbuild] Synced all public files to dist');
 }
+
+// 5. Ensure signin.html, join.html, auth.html are synced
+const rootAuth = path.resolve('auth.html');
+if (fs.existsSync(rootAuth)) {
+  const authHtml = fs.readFileSync(rootAuth, 'utf8');
+  fs.writeFileSync(path.resolve('signin.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.resolve('join.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.join(distDir, 'signin.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.join(distDir, 'join.html'), authHtml, 'utf8');
+  fs.writeFileSync(path.join(distDir, 'auth.html'), authHtml, 'utf8');
+  console.log('[postbuild] Synced auth.html -> signin.html, join.html in root & dist');
+}

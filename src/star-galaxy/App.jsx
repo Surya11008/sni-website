@@ -30,7 +30,7 @@ function MainApp() {
     if (!currentUser) {
       const timer = setTimeout(() => {
         if (typeof window !== 'undefined') {
-          window.location.replace('/auth.html');
+          window.location.replace('/signin');
         }
       }, 600);
       return () => clearTimeout(timer);

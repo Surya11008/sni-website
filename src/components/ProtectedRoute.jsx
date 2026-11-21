@@ -18,9 +18,9 @@ export default function ProtectedRoute({ children, requiredRole }) {
     );
   }
 
-  // 1. Not logged in -> redirect directly to auth.html (Sign In)
+  // 1. Not logged in -> redirect directly to /signin
   if (!currentUser) {
-    window.location.replace('/auth.html');
+    window.location.replace('/signin');
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-slate-600">
         <Loader2 className="w-10 h-10 animate-spin text-[#C59B27] mb-3" />

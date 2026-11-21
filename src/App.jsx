@@ -17,7 +17,7 @@ import ContentDetailPage from './pages/ContentDetailPage';
 
 function RedirectToAuthSignIn() {
   useEffect(() => {
-    window.location.replace('/auth.html');
+    window.location.replace('/signin');
   }, []);
 
   return (
@@ -32,7 +32,7 @@ function RedirectToAuthSignIn() {
 
 function RedirectToAuthJoin() {
   useEffect(() => {
-    window.location.replace('/auth.html?mode=join');
+    window.location.replace('/join');
   }, []);
 
   return (
@@ -66,9 +66,15 @@ export default function App() {
             <Navbar />
             <main className="flex-1">
               <Routes>
-                {/* Login redirects to Sign In, Join redirects to Join */}
+                {/* Authentication Routes */}
+                <Route path="/signin" element={<RedirectToAuthSignIn />} />
+                <Route path="/signin.html" element={<RedirectToAuthSignIn />} />
                 <Route path="/login" element={<RedirectToAuthSignIn />} />
+                <Route path="/login.html" element={<RedirectToAuthSignIn />} />
+                <Route path="/auth" element={<RedirectToAuthSignIn />} />
+                <Route path="/auth.html" element={<RedirectToAuthSignIn />} />
                 <Route path="/join" element={<RedirectToAuthJoin />} />
+                <Route path="/join.html" element={<RedirectToAuthJoin />} />
 
                 {/* Gated Behind Login - Only Authenticated & Approved Users Can Access */}
                 <Route

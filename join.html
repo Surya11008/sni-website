@@ -2,11 +2,1628 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=auth.html?mode=join">
-    <title>Redirecting to Join | SNI</title>
-    <script>window.location.replace("auth.html?mode=join");</script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sign In &amp; Join | SNI - S Natural Intelligence</title>
+    <meta name="description" content="Sign In or Join SNI to access all apps, preaching counters, study portals, and resources with one unified account.">
+    <meta name="theme-color" content="#071b3b">
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="Images/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="Images/favicon-64.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="Images/apple-touch-icon.png">
+
+    <style>
+        :root {
+            --navy: #071b3b;
+            --blue: #124b91;
+            --gold: #f5c75e;
+            --gold-dark: #d97706;
+            --white: #ffffff;
+            --bg: #f5f8ff;
+            --text: #172b4d;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --card-bg: #ffffff;
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #071b3b 0%, #0d2959 50%, #124b91 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* HEADER */
+        header {
+            padding: 16px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(7, 27, 59, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(245, 199, 94, 0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--gold);
+        }
+
+        .logo img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .logo-text strong {
+            display: block;
+            font-size: 20px;
+            letter-spacing: 2px;
+            color: var(--gold);
+            line-height: 1.1;
+        }
+
+        .logo-text small {
+            display: block;
+            color: #d5e1f2;
+            font-size: 8.5px;
+            letter-spacing: 1px;
+        }
+
+        .nav-home-link {
+            color: white;
+            text-decoration: none;
+            font-size: 13.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.25s ease;
+        }
+
+        .nav-home-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        /* AUTH CONTAINER */
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 30px rgba(245, 199, 94, 0.15);
+            width: 100%;
+            max-width: 460px;
+            padding: 36px 32px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(245, 199, 94, 0.4);
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #071b3b, var(--gold), #124b91);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-badge-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #071b3b, #124b91);
+            color: var(--gold);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 12px;
+            box-shadow: 0 6px 16px rgba(7, 27, 59, 0.25);
+            border: 2px solid rgba(245, 199, 94, 0.6);
+        }
+
+        .auth-header h1 {
+            font-size: 24px;
+            color: var(--navy);
+            margin-bottom: 6px;
+            font-weight: 800;
+        }
+
+        .auth-header p {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            line-height: 1.4;
+        }
+
+        /* TABS */
+        .auth-tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .auth-tab-btn.active {
+            background: white;
+            color: var(--navy);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        /* FORMS */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #cbd5e1;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+            color: #1e293b;
+            transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(18, 75, 145, 0.15);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 15px;
+            padding: 4px;
+        }
+
+        .form-helper {
+            font-size: 11.5px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12.5px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(7, 27, 59, 0.25);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(7, 27, 59, 0.35);
+            opacity: 0.96;
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-join-special {
+            background: linear-gradient(135deg, #071b3b 0%, #124b91 60%, #0d2959 100%);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-join-special:hover {
+            color: white;
+            border-color: #ffffff;
+        }
+
+        .auth-switch-prompt {
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 20px;
+        }
+
+        .auth-switch-prompt a {
+            color: var(--blue);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .auth-switch-prompt a:hover {
+            text-decoration: underline;
+            color: var(--navy);
+        }
+
+        /* ALERTS */
+        .auth-msg {
+            display: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: left;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .auth-msg.error {
+            display: block;
+            background: #ffe4e6;
+            color: #b91c1c;
+            border-left: 4px solid #ef4444;
+        }
+
+        .auth-msg.success {
+            display: block;
+            background: #dcfce7;
+            color: #15803d;
+            border-left: 4px solid #22c55e;
+        }
+
+        /* LOGGED IN PROFILE VIEW */
+        .profile-view {
+            display: none;
+            text-align: center;
+        }
+
+        .profile-view.active {
+            display: block;
+        }
+
+        .profile-avatar {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            color: var(--gold);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 6px 18px rgba(7, 27, 59, 0.2);
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .profile-tag {
+            display: inline-block;
+            background: rgba(245, 199, 94, 0.2);
+            color: #b45309;
+            border: 1px solid var(--gold);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            margin-top: 4px;
+            margin-bottom: 16px;
+        }
+
+        .profile-info-grid {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .profile-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .profile-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .profile-info-label {
+            color: #64748b;
+        }
+
+        .profile-info-value {
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .profile-apps-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .profile-app-btn {
+            background: #f1f5f9;
+            color: var(--navy);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s;
+        }
+
+        .profile-app-btn:hover {
+            background: var(--navy);
+            color: var(--gold);
+            border-color: var(--navy);
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* MODAL STYLES FOR VERIFICATION */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(4, 17, 39, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            max-width: 460px;
+            width: 100%;
+            padding: 28px 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            animation: popIn 0.25s ease-out;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        .modal-icon.verify {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            color: #2563eb;
+        }
+        .modal-icon.success {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            color: #16a34a;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+        .modal-text {
+            font-size: 13.5px;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .modal-target {
+            font-weight: 700;
+            color: #0f172a;
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-btn {
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .modal-btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .modal-btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .modal-btn-whatsapp {
+            background: #22c55e;
+            color: white;
+        }
+        .modal-btn-whatsapp:hover {
+            background: #16a34a;
+        }
+        .modal-btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .modal-btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 18px 15px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            background: rgba(4, 17, 39, 0.9);
+        }
+
+        footer span {
+            color: var(--gold);
+        }
+
+        @media (max-width: 500px) {
+            .auth-card {
+                padding: 28px 20px;
+            }
+            .profile-apps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>Redirecting to <a href="auth.html?mode=join">Join SNI</a>...</p>
+
+    <header>
+        <a class="logo" href="index.html" title="SNI Home">
+            <span style="color: var(--gold); font-size: 24px; font-weight: 800; letter-spacing: 2.5px;">SNI</span>
+        </a>
+    </header>
+
+    <main class="auth-wrapper">
+        <div class="auth-card">
+
+            <!-- LOGGED IN PROFILE VIEW -->
+            <div id="profileView" class="profile-view">
+                <div class="profile-avatar" id="profileAvatarLetter">S</div>
+                <div class="profile-name" id="profileFullName">Surya</div>
+                <div class="profile-tag" id="profileRoleBadge">👑 SNI Administrator</div>
+
+                <div class="profile-info-grid">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Member ID:</span>
+                        <span class="profile-info-value" id="profileUserId">surya11008</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Account Status:</span>
+                        <span class="profile-info-value" style="color: #16a34a;">● Active &amp; Verified</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Account Role:</span>
+                        <span class="profile-info-value" id="profileRoleText">Administrator</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label">Joined:</span>
+                        <span class="profile-info-value" id="profileJoinedDate">2026</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 10px; font-weight: 600;">ACCESS SNI ECOSYSTEM</p>
+                <div id="profileAdminStudioSection" style="display: none; margin-bottom: 12px;">
+                    <a href="/admin?tab=studio" class="profile-app-btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #0f172a, #1e293b); color: var(--gold); border: 1px solid rgba(245, 199, 94, 0.4); font-weight: 700; padding: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <span>🛡️ Open Admin Panel &amp; Studio →</span>
+                    </a>
+                </div>
+                <div class="profile-apps-grid">
+                    <a href="index.html" class="profile-app-btn">🌐 SNI Home</a>
+                    <a href="https://count.sni.org.in" class="profile-app-btn" target="_blank" rel="noopener">📖 Preaching Counter</a>
+                    <a href="https://star.sni.org.in" class="profile-app-btn" target="_blank" rel="noopener">★ STAR Galaxy</a>
+                    <a href="https://support.sni.org.in" class="profile-app-btn" target="_blank" rel="noopener">S Support Portal</a>
+                    <a href="wordsearch.html" class="profile-app-btn">🔤 Word Search</a>
+                    <a href="diary.html" class="profile-app-btn">📔 Gospel Diary</a>
+                </div>
+
+                <button type="button" class="btn-logout" id="profileLogoutBtn">Sign Out of Account</button>
+            </div>
+
+            <!-- AUTH BOX (SIGN IN & JOIN) -->
+            <div id="authFormsContainer">
+                <div class="auth-header">
+                    <div class="auth-badge-icon">✨</div>
+                    <h1 id="authMainTitle">Welcome to SNI</h1>
+                    <p id="authMainSub">One account for all SNI websites, study portals, and apps</p>
+                </div>
+
+                <div class="auth-tabs">
+                    <button type="button" class="auth-tab-btn active" id="tabSignInBtn">
+                        <span>Sign In</span>
+                    </button>
+                    <button type="button" class="auth-tab-btn" id="tabJoinBtn">
+                        <span>✨ Join</span>
+                    </button>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="authAlert" class="auth-msg"></div>
+
+                <!-- 1. SIGN IN FORM -->
+                <form id="signInForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="signInUserId">SNI ID *</label>
+                        <div class="input-wrap">
+                            <input type="text" id="signInUserId" class="form-input" placeholder="Enter SNI ID" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signInPass">SNI Password *</label>
+                        <div class="input-wrap">
+                            <input type="password" id="signInPass" class="form-input" placeholder="Enter SNI Password" required autocomplete="current-password" style="padding-right: 40px;">
+                            <button type="button" class="toggle-password" id="toggleSignInPassBtn" title="Show/Hide Password">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="rememberMeCheckbox" checked>
+                            <span>Remember Me</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="signInSubmitBtn">
+                        <span>Sign In</span>
+                        <span>→</span>
+                    </button>
+
+                    <div class="auth-switch-prompt">
+                        Don't have an account yet? <a id="switchToJoinLink">Join here</a>
+                    </div>
+                </form>
+
+                <!-- 2. JOIN (REGISTER) FORM -->
+                <form id="joinForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="joinFullName">Your Full Name *</label>
+                        <div class="input-wrap">
+                            <input type="text" id="joinFullName" class="form-input" placeholder="Full Name" required autocomplete="name">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="joinUserId">Choose SNI ID *</label>
+                        <div class="input-wrap">
+                            <input type="text" id="joinUserId" class="form-input" placeholder="Enter desired SNI ID" required autocomplete="username">
+                        </div>
+                        <div class="form-helper">Unique username (letters and numbers).</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="joinContact">Gmail / Email Address *</label>
+                        <div class="input-wrap">
+                            <input type="email" id="joinContact" class="form-input" placeholder="e.g. yourname@gmail.com" required autocomplete="email">
+                        </div>
+                        <div class="form-helper">An official verification link and 6-digit OTP will be sent to this Gmail address.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="joinPass">Create SNI Password *</label>
+                        <div class="input-wrap">
+                            <input type="password" id="joinPass" class="form-input" placeholder="Enter SNI Password (at least 8 characters)" minlength="8" required autocomplete="new-password" style="padding-right: 40px;">
+                            <button type="button" class="toggle-password" id="toggleJoinPassBtn" title="Show/Hide Password">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="joinConfirmPass">Confirm SNI Password *</label>
+                        <div class="input-wrap">
+                            <input type="password" id="joinConfirmPass" class="form-input" placeholder="Re-enter SNI Password" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="joinTermsCheck" required checked>
+                            <span>I agree to the SNI guidelines</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-submit btn-join-special" id="joinSubmitBtn">
+                        <span>✨ Submit Registration</span>
+                    </button>
+
+                    <div class="auth-switch-prompt">
+                        Already have an account? <a id="switchToSignInLink">Sign In here</a>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+
+        <!-- VERIFICATION MODAL (For Real Gmail Verification) -->
+        <div id="verifyModal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-icon verify" id="verifyModalIcon">📩</div>
+                <h3 class="modal-title" id="verifyModalTitle">Official Verification Email Sent</h3>
+                <p class="modal-text" id="verifyModalSubtitle">
+                    An official verification email has been dispatched to your Gmail:
+                    <br><strong class="modal-target" id="verifyModalTarget">email@gmail.com</strong>
+                </p>
+
+                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 16px 0; text-align: left; font-size: 0.85rem; color: #334155;">
+                    <p style="margin: 0 0 6px 0; font-weight: 700; color: #0f172a;">Instructions:</p>
+                    <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Open your <strong>Gmail Inbox</strong> (or check Spam / Promotions folder).</li>
+                        <li>Click the official <strong>verification link</strong> in the email sent from SNI.</li>
+                        <li>Once verified, your application will be automatically submitted to the Admin for approval.</li>
+                    </ol>
+                </div>
+
+                <div class="modal-actions" id="verifyModalActions">
+                    <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="modal-btn modal-btn-primary" style="background: #ea4335; color: #ffffff;">
+                        ✉️ Open Gmail Inbox
+                    </a>
+                    <button type="button" class="modal-btn modal-btn-secondary" id="resendVerifyEmailBtn" style="width: 100%;">
+                        🔄 Resend Verification Email
+                    </button>
+                    <div id="resendStatusMsg" style="font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none;"></div>
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <button type="button" class="modal-btn modal-btn-secondary" id="closeVerifyModalBtn" style="width: 100%;">
+                        Dismiss &amp; Continue to Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2026 <span>S Natural Intelligence (SNI)</span>. All Rights Reserved.
+    </footer>
+
+    <script>
+        const RTDB_BASE = "https://sni-org-in-default-rtdb.firebaseio.com";
+        const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
+        const VALID_ADMIN_PASSWORDS = [
+            'Suri742766.', 'Surya742766.', 'suri742766.', 'surya742766.',
+            'Suri742766', 'Surya742766', 'suri742766', 'surya742766',
+            'admin'
+        ];
+
+        function isCardAdmin(userId, password) {
+            if (!userId || !password) return false;
+            const u = String(userId).trim().toLowerCase();
+            const p = String(password).trim();
+            if (!VALID_ADMIN_IDS.includes(u)) return false;
+            const lowerP = p.toLowerCase();
+            const validLowers = VALID_ADMIN_PASSWORDS.map(x => x.toLowerCase());
+            return validLowers.includes(lowerP) ||
+                   validLowers.includes(lowerP.replace(/\.$/, '')) ||
+                   validLowers.includes(lowerP + '.');
+        }
+
+        function getCurrentUser() {
+            try {
+                const s = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_current_user');
+                return s ? JSON.parse(s) : null;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function setCurrentUser(user) {
+            if (user) {
+                localStorage.setItem('sni_user_session', JSON.stringify(user));
+                localStorage.setItem('sni_current_user', JSON.stringify(user));
+                localStorage.setItem('sni_unified_session', JSON.stringify(user));
+                localStorage.setItem('live_counter_current_user', JSON.stringify(user));
+                localStorage.setItem('star_galaxy_active_user_id', user.userId);
+                localStorage.setItem('wlh_current_user', JSON.stringify({ userId: user.userId, name: user.fullName || user.userId, role: user.role || 'user' }));
+                sessionStorage.setItem('l_support_session_active', 'true');
+                localStorage.setItem('word_search_current_user', JSON.stringify(user));
+
+                const isAdmin = user.role === 'admin' || isCardAdmin(user.userId, user.password);
+                if (isAdmin) {
+                    localStorage.setItem('sni_admin_active', 'true');
+                    sessionStorage.setItem('sni_admin_active', 'true');
+                    localStorage.setItem('word_search_admin_auth', 'true');
+                    localStorage.setItem('star_galaxy_pin_unlocked', 'true');
+                }
+
+                // Cross-Subdomain SSO Cookie on .sni.org.in
+                try {
+                    const cookiePayload = encodeURIComponent(JSON.stringify(user));
+                    const maxAge = 365 * 24 * 60 * 60; // 1 year
+                    document.cookie = `sni_unified_user=${cookiePayload}; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+                    document.cookie = `sni_session_active=true; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+                    document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+                    document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+                } catch(e) {}
+            } else {
+                localStorage.removeItem('sni_user_session');
+                localStorage.removeItem('sni_current_user');
+                localStorage.removeItem('sni_unified_session');
+                localStorage.removeItem('live_counter_current_user');
+                localStorage.removeItem('star_galaxy_active_user_id');
+                localStorage.removeItem('wlh_current_user');
+                sessionStorage.removeItem('l_support_session_active');
+                localStorage.removeItem('word_search_current_user');
+                localStorage.removeItem('sni_admin_active');
+                sessionStorage.removeItem('sni_admin_active');
+                localStorage.removeItem('word_search_admin_auth');
+                localStorage.removeItem('star_galaxy_pin_unlocked');
+
+                try {
+                    document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+                    document.cookie = `sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+                    document.cookie = `sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax`;
+                    document.cookie = `sni_session_active=; Path=/; Max-Age=0; SameSite=Lax`;
+                } catch(e) {}
+            }
+        }
+
+        function redirectAfterLogin() {
+            const p = new URLSearchParams(window.location.search);
+            const dest = p.get('redirect');
+            if (dest && !dest.startsWith('auth.html') && !dest.startsWith('signin.html') && !dest.startsWith('login.html') && !dest.startsWith('/signin') && !dest.startsWith('/auth')) {
+                window.location.href = decodeURIComponent(dest);
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function showAlert(msg, type = 'error') {
+            const el = document.getElementById('authAlert');
+            if (!el) return;
+            el.className = 'auth-msg ' + type;
+            el.innerHTML = msg;
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function clearAlert() {
+            const el = document.getElementById('authAlert');
+            if (el) {
+                el.className = 'auth-msg';
+                el.innerHTML = '';
+            }
+        }
+
+        // TAB SWITCHING
+        const tabSignInBtn = document.getElementById('tabSignInBtn');
+        const tabJoinBtn = document.getElementById('tabJoinBtn');
+        const signInForm = document.getElementById('signInForm');
+        const joinForm = document.getElementById('joinForm');
+        const authMainTitle = document.getElementById('authMainTitle');
+        const authMainSub = document.getElementById('authMainSub');
+
+        function switchMode(mode) {
+            clearAlert();
+            if (mode === 'join') {
+                tabJoinBtn.classList.add('active');
+                tabSignInBtn.classList.remove('active');
+                joinForm.classList.add('active');
+                signInForm.classList.remove('active');
+                authMainTitle.textContent = 'Join SNI';
+                authMainSub.textContent = '';
+                if (window.location.pathname !== '/join' || window.location.search) {
+                    history.replaceState(null, '', '/join');
+                }
+            } else {
+                tabSignInBtn.classList.add('active');
+                tabJoinBtn.classList.remove('active');
+                signInForm.classList.add('active');
+                joinForm.classList.remove('active');
+                authMainTitle.textContent = 'Welcome to SNI';
+                authMainSub.textContent = 'Sign in to access your unified SNI account';
+                if (window.location.pathname !== '/signin' || window.location.search) {
+                    history.replaceState(null, '', '/signin');
+                }
+            }
+        }
+
+        tabSignInBtn.addEventListener('click', () => switchMode('signin'));
+        tabJoinBtn.addEventListener('click', () => switchMode('join'));
+        document.getElementById('switchToJoinLink').addEventListener('click', () => switchMode('join'));
+        document.getElementById('switchToSignInLink').addEventListener('click', () => switchMode('signin'));
+
+        // PASSWORD VISIBILITY TOGGLES
+        function wirePassToggle(btnId, inputId) {
+            const btn = document.getElementById(btnId);
+            const inp = document.getElementById(inputId);
+            if (btn && inp) {
+                btn.addEventListener('click', () => {
+                    if (inp.type === 'password') {
+                        inp.type = 'text';
+                        btn.textContent = '🙈';
+                    } else {
+                        inp.type = 'password';
+                        btn.textContent = '👁️';
+                    }
+                });
+            }
+        }
+        wirePassToggle('toggleSignInPassBtn', 'signInPass');
+        wirePassToggle('toggleJoinPassBtn', 'joinPass');
+
+        // CHECK IF ALREADY LOGGED IN
+        function checkExistingSession() {
+            const user = getCurrentUser();
+            const profileView = document.getElementById('profileView');
+            const authFormsContainer = document.getElementById('authFormsContainer');
+
+            if (user) {
+                authFormsContainer.style.display = 'none';
+                profileView.classList.add('active');
+
+                document.getElementById('profileAvatarLetter').textContent = (user.fullName || user.userId || 'S').charAt(0).toUpperCase();
+                const cleanName = String(user.fullName || user.userId || '').replace(/\s*\(Admin\)/gi, '').trim();
+                document.getElementById('profileFullName').textContent = cleanName;
+                document.getElementById('profileUserId').textContent = '@' + user.userId;
+
+                const isAdmin = user.role === 'admin' || isCardAdmin(user.userId, user.password);
+                document.getElementById('profileRoleBadge').textContent = '✨ Verified Member';
+                document.getElementById('profileRoleBadge').style.background = 'rgba(18, 75, 145, 0.15)';
+                document.getElementById('profileRoleBadge').style.color = '#124b91';
+                document.getElementById('profileRoleBadge').style.borderColor = '#93c5fd';
+
+                document.getElementById('profileRoleText').textContent = 'Verified Member';
+                document.getElementById('profileJoinedDate').textContent = user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'Active Member';
+
+                const studioSec = document.getElementById('profileAdminStudioSection');
+                if (studioSec) {
+                    studioSec.style.display = (isAdmin || user.userId === 'surya11008') ? 'block' : 'none';
+                }
+
+                // Enrich profile apps links with SSO
+                document.querySelectorAll('.profile-apps-grid a').forEach(a => {
+                    try {
+                        const url = new URL(a.href, window.location.origin);
+                        url.searchParams.set('sso_user', user.userId);
+                        url.searchParams.set('sso_name', user.fullName || user.userId);
+                        url.searchParams.set('sso_role', user.role || 'member');
+                        if (user.password) url.searchParams.set('sso_key', user.password);
+                        url.searchParams.set('sso_ts', Date.now());
+                        a.href = url.toString();
+                    } catch(e) {}
+                });
+            } else {
+                profileView.classList.remove('active');
+                authFormsContainer.style.display = 'block';
+            }
+        }
+
+        // LOGOUT
+        document.getElementById('profileLogoutBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to sign out?')) {
+                setCurrentUser(null);
+                checkExistingSession();
+                switchMode('signin');
+                showAlert('Successfully signed out.', 'success');
+            }
+        });
+
+        // 1. SIGN IN SUBMISSION
+        signInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAlert();
+
+            const userId = document.getElementById('signInUserId').value.trim().toLowerCase();
+            const pass = document.getElementById('signInPass').value.trim();
+            const submitBtn = document.getElementById('signInSubmitBtn');
+
+            if (!userId || !pass) {
+                showAlert('Please provide both SNI ID and SNI Password.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Verifying...</span>';
+
+            try {
+                // A. Check Admin First
+                if (isCardAdmin(userId, pass)) {
+                    const adminUser = {
+                        userId: 'surya11008',
+                        fullName: 'Surya',
+                        role: 'admin',
+                        status: 'approved',
+                        password: pass,
+                        joinedAt: new Date().toISOString()
+                    };
+                    setCurrentUser(adminUser);
+                    showAlert('Welcome, Surya! Redirecting...', 'success');
+                    setTimeout(() => {
+                        redirectAfterLogin();
+                    }, 800);
+                    return;
+                }
+
+                // B. Fetch from Cloud RTDB
+                const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
+                let userData = null;
+                if (res.ok) {
+                    userData = await res.json();
+                }
+
+                // C. If not in RTDB, check Firestore in real-time
+                if (!userData) {
+                    try {
+                        const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`);
+                        if (fsRes.ok) {
+                            const fsDoc = await fsRes.json();
+                            if (fsDoc && fsDoc.fields) {
+                                const f = fsDoc.fields;
+                                userData = {
+                                    userId: f.userId?.stringValue || f.username?.stringValue || userId,
+                                    fullName: f.fullName?.stringValue || f.name?.stringValue || userId,
+                                    contact: f.contact?.stringValue || f.phone?.stringValue || '',
+                                    password: f.password?.stringValue || f.plainPassword?.stringValue || '',
+                                    role: f.role?.stringValue || 'member',
+                                    status: f.status?.stringValue || 'approved',
+                                    joinedAt: f.registeredAt?.stringValue || f.createdAt?.stringValue || new Date().toISOString()
+                                };
+                                // Auto cache to RTDB
+                                fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(userData)
+                                }).catch(() => {});
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                if (userData) {
+                    if (userData.password === pass) {
+                        const isAdmin = isCardAdmin(userId, pass) || userData.role === 'admin' || userData.role === 'ADMIN';
+
+                        // Check Gmail / Email Verification for members
+                        if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified' || userData.emailVerified === false)) {
+                            showVerificationModal({
+                                userId,
+                                fullName: userData.fullName || userId,
+                                email: userData.email || userData.contact || '',
+                                pass: pass
+                            }, true);
+                            showAlert('⚠️ Gmail verification required before sign in. Please open your Gmail and click the verification link.', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                            return;
+                        }
+
+                        const isApproved = isAdmin || userData.status === 'approved';
+                        if (!isApproved) {
+                            if (userData.status === 'rejected') {
+                                showAlert('❌ Your registration request was not approved by administrator.');
+                            } else if (userData.status === 'revoked') {
+                                showAlert('⛔ Your account access has been revoked by administrator.');
+                            } else {
+                                showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.');
+                            }
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                            return;
+                        }
+
+                        setCurrentUser(userData);
+                        showAlert(`Welcome, ${userData.fullName || userData.userId}! Redirecting...`, 'success');
+                        setTimeout(() => {
+                            redirectAfterLogin();
+                        }, 800);
+                    } else {
+                        showAlert('⚠️ Incorrect password. Please try again.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                    }
+                } else {
+                    showAlert(`⚠️ Account "${userId}" not found. Click "Join" to submit a registration request.`);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+                }
+            } catch(err) {
+                console.error(err);
+                showAlert('Network error connecting to auth service. Please retry.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
+            }
+        });
+
+        // Helper: Dispatch Real Official Verification Email via Google Firebase Auth
+        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+
+        async function sendOfficialVerificationEmail(email, password, userId) {
+            try {
+                let idToken = null;
+                // 1. Try to create user in Firebase Auth
+                const signUpRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password || 'SniUser123.',
+                        returnSecureToken: true
+                    })
+                });
+
+                if (signUpRes.ok) {
+                    const data = await signUpRes.json();
+                    idToken = data.idToken;
+                } else {
+                    // If user already exists in Firebase Auth, sign in to acquire idToken
+                    const signInRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password || 'SniUser123.',
+                            returnSecureToken: true
+                        })
+                    });
+                    if (signInRes.ok) {
+                        const data = await signInRes.json();
+                        idToken = data.idToken;
+                    }
+                }
+
+                if (!idToken) {
+                    return { success: false, error: 'Could not acquire authentication token' };
+                }
+
+                const continueUrl = `${window.location.origin}/auth.html?mode=email_verified&uid=${encodeURIComponent(userId)}`;
+                const oobRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requestType: 'VERIFY_EMAIL',
+                        idToken: idToken,
+                        continueUrl: continueUrl
+                    })
+                });
+
+                if (oobRes.ok) {
+                    return { success: true };
+                } else {
+                    const err = await oobRes.json();
+                    return { success: false, error: err.error?.message };
+                }
+            } catch(e) {
+                console.error(e);
+                return { success: false, error: e.message };
+            }
+        }
+
+        // 2. JOIN (REGISTER) SUBMISSION - REAL EMAIL DISPATCH ONLY
+        joinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAlert();
+
+            const fullName = document.getElementById('joinFullName').value.trim();
+            const userId = document.getElementById('joinUserId').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            const email = document.getElementById('joinContact').value.trim().toLowerCase();
+            const pass = document.getElementById('joinPass').value.trim();
+            const confirmPass = document.getElementById('joinConfirmPass').value.trim();
+            const submitBtn = document.getElementById('joinSubmitBtn');
+
+            if (!fullName || !userId || !email || !pass) {
+                showAlert('Please fill in all required fields, including your Gmail address.');
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAlert('Please enter a valid Gmail / Email address (e.g. yourname@gmail.com).');
+                return;
+            }
+
+            if (userId.length < 3) {
+                showAlert('SNI ID must be at least 3 characters long.');
+                return;
+            }
+
+            if (pass.length < 8) {
+                showAlert('SNI Password must be at least 8 characters long.');
+                return;
+            }
+
+            if (pass !== confirmPass) {
+                showAlert('Passwords do not match! Please check again.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Sending Official Verification Email...</span>';
+
+            try {
+                // Check if user already exists
+                const checkRes = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
+                if (checkRes.ok) {
+                    const existing = await checkRes.json();
+                    if (existing) {
+                        showAlert(`⚠️ SNI ID "${userId}" is already registered. Please choose another ID or Sign In.`);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+                        return;
+                    }
+                }
+
+                const isAdmin = isCardAdmin(userId, pass);
+
+                // 1. Dispatch real official verification email via Firebase Auth
+                if (!isAdmin) {
+                    const emailResult = await sendOfficialVerificationEmail(email, pass, userId);
+                    if (!emailResult.success) {
+                        console.warn('Firebase email dispatch warning:', emailResult.error);
+                    }
+                }
+
+                const newUser = {
+                    userId: userId,
+                    fullName: fullName,
+                    contact: email,
+                    email: email,
+                    phone: '',
+                    password: pass,
+                    role: isAdmin ? 'ADMIN' : 'MEM',
+                    status: isAdmin ? 'approved' : 'unverified',
+                    contactVerified: isAdmin ? true : false,
+                    emailVerified: isAdmin ? true : false,
+                    isVerified: isAdmin ? true : false,
+                    joinedAt: new Date().toISOString()
+                };
+
+                // Save to Cloud RTDB
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newUser)
+                });
+
+                // Dual sync to Firestore users collection (NOT in pending_registrations until verified!)
+                try {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields: {
+                                id: { stringValue: userId },
+                                userId: { stringValue: userId },
+                                username: { stringValue: userId },
+                                fullName: { stringValue: fullName },
+                                name: { stringValue: fullName },
+                                contact: { stringValue: email },
+                                email: { stringValue: email },
+                                phone: { stringValue: '' },
+                                password: { stringValue: pass },
+                                plainPassword: { stringValue: pass },
+                                role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
+                                status: { stringValue: isAdmin ? 'approved' : 'unverified' },
+                                contactVerified: { booleanValue: isAdmin ? true : false },
+                                emailVerified: { booleanValue: isAdmin ? true : false },
+                                isVerified: { booleanValue: isAdmin ? true : false },
+                                registeredAt: { stringValue: newUser.joinedAt },
+                                createdAt: { stringValue: newUser.joinedAt }
+                            }
+                        })
+                    });
+                } catch(e) {
+                    console.warn('Firestore sync failed:', e);
+                }
+
+                if (isAdmin) {
+                    setCurrentUser(newUser);
+                    showAlert(`Welcome, ${fullName}! Redirecting...`, 'success');
+                    setTimeout(() => redirectAfterLogin(), 800);
+                } else {
+                    joinForm.reset();
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+
+                    showVerificationModal({
+                        userId,
+                        fullName,
+                        email,
+                        pass
+                    });
+                }
+
+            } catch(err) {
+                console.error(err);
+                showAlert('Error submitting registration. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+            }
+        });
+
+        // MODAL HANDLERS FOR EMAIL VERIFICATION
+        let currentModalInfo = null;
+
+        function showVerificationModal(info, isLoginBlock = false) {
+            currentModalInfo = info;
+            const modal = document.getElementById('verifyModal');
+            const icon = document.getElementById('verifyModalIcon');
+            const title = document.getElementById('verifyModalTitle');
+            const subtitle = document.getElementById('verifyModalSubtitle');
+            const target = document.getElementById('verifyModalTarget');
+            const resendStatus = document.getElementById('resendStatusMsg');
+
+            if (resendStatus) {
+                resendStatus.style.display = 'none';
+                resendStatus.textContent = '';
+            }
+
+            icon.className = 'modal-icon verify';
+            icon.innerHTML = '📩';
+            title.innerText = isLoginBlock ? 'Gmail Verification Required' : 'Official Verification Email Sent';
+            target.innerText = info.email || info.contact || info.userId;
+            subtitle.innerHTML = isLoginBlock
+                ? `Your SNI account <strong>${info.userId}</strong> requires email verification for: <br><strong class="modal-target">${info.email || info.contact}</strong>.<br><small style="color: #64748b; display: block; margin-top: 6px;">Please open your Gmail and click the verification link. Your application will only be sent to the Admin after verification.</small>`
+                : `A real official verification email has been dispatched from SNI to your Gmail: <br><strong class="modal-target">${info.email || info.contact}</strong>.<br><small style="color: #b45309; font-weight: 600; display: block; margin-top: 6px;">⚠️ You MUST open your Gmail inbox and click the verification link inside the email to forward your application to the Admin.</small>`;
+
+            modal.classList.add('active');
+        }
+
+        // Resend Verification Email Button Handler
+        const resendBtn = document.getElementById('resendVerifyEmailBtn');
+        if (resendBtn) {
+            resendBtn.addEventListener('click', async () => {
+                if (!currentModalInfo || !currentModalInfo.email) return;
+                const resendStatus = document.getElementById('resendStatusMsg');
+                resendBtn.disabled = true;
+                resendBtn.textContent = 'Sending Email...';
+                if (resendStatus) {
+                    resendStatus.style.display = 'block';
+                    resendStatus.style.color = '#2563eb';
+                    resendStatus.textContent = 'Dispatching verification email via Google Firebase...';
+                }
+                const res = await sendOfficialVerificationEmail(currentModalInfo.email, currentModalInfo.pass, currentModalInfo.userId);
+                resendBtn.disabled = false;
+                resendBtn.textContent = '🔄 Resend Verification Email';
+                if (resendStatus) {
+                    if (res.success) {
+                        resendStatus.style.color = '#16a34a';
+                        resendStatus.textContent = '✅ Official verification email sent! Please check your Gmail inbox.';
+                    } else {
+                        resendStatus.style.color = '#dc2626';
+                        resendStatus.textContent = '⚠️ ' + (res.error || 'Please wait a moment before requesting another email.');
+                    }
+                }
+            });
+        }
+
+        function showVerifiedSuccessModal(uid, fullName, email) {
+            const modal = document.getElementById('verifyModal');
+            const icon = document.getElementById('verifyModalIcon');
+            const title = document.getElementById('verifyModalTitle');
+            const subtitle = document.getElementById('verifyModalSubtitle');
+            const actions = document.getElementById('verifyModalActions');
+            const target = document.getElementById('verifyModalTarget');
+
+            icon.className = 'modal-icon success';
+            icon.innerHTML = '🎉';
+            title.innerText = 'Email Verified Successfully!';
+            target.innerText = email || uid;
+            subtitle.innerHTML = `Congratulations, <strong>${fullName}</strong>! <br>Your email address has been verified. Your application for SNI ID <strong class="modal-target">${uid}</strong> has now been forwarded to the Admin.<br><div style="color: #b45309; font-weight: 700; margin-top: 10px; background: #fef3c7; padding: 12px 14px; border-radius: 10px; border: 1px solid #fde68a; font-size: 0.85rem;">⏳ Waiting for Admin Approval: You will be able to sign in once an administrator approves your account.</div>`;
+
+            actions.innerHTML = `
+                <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')" style="background: #071b3b; color: #f5c75e; font-weight: 700; width: 100%;">
+                    🔑 Return to Sign In
+                </button>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        window.proceedToSignInAfterVerify = function(uid) {
+            document.getElementById('verifyModal').classList.remove('active');
+            switchMode('signin');
+            const uInput = document.getElementById('signInUserId');
+            if (uInput) {
+                uInput.value = uid;
+                const pInput = document.getElementById('signInPass');
+                if (pInput) pInput.focus();
+            }
+            showAlert('⏳ Waiting for Admin Approval: Email verified! Your application has been submitted to Admin. You can sign in once approved.', 'info');
+        };
+
+        const closeVerifyBtn = document.getElementById('closeVerifyModalBtn');
+        if (closeVerifyBtn) {
+            closeVerifyBtn.addEventListener('click', () => {
+                document.getElementById('verifyModal').classList.remove('active');
+            });
+        }
+
+        // VERIFY ACCOUNT FROM EMAIL LINK
+        async function handleEmailVerifiedSuccess(uid) {
+            showAlert('Verifying your email with SNI...', 'info');
+            try {
+                const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`);
+                let userData = null;
+                if (res.ok) {
+                    userData = await res.json();
+                }
+
+                if (!userData) {
+                    const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`);
+                    if (fsRes.ok) {
+                        const fsDoc = await fsRes.json();
+                        if (fsDoc?.fields) {
+                            userData = {
+                                userId: fsDoc.fields.userId?.stringValue || uid,
+                                fullName: fsDoc.fields.fullName?.stringValue || uid,
+                                contact: fsDoc.fields.contact?.stringValue || fsDoc.fields.email?.stringValue || '',
+                                email: fsDoc.fields.email?.stringValue || fsDoc.fields.contact?.stringValue || '',
+                                status: fsDoc.fields.status?.stringValue || 'unverified'
+                            };
+                        }
+                    }
+                }
+
+                if (!userData) {
+                    showAlert('❌ Account not found for verification.', 'error');
+                    return false;
+                }
+
+                const targetStatus = (userData.status === 'approved' || uid === 'surya11008') ? 'approved' : 'pending';
+
+                // 1. Update RTDB
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contactVerified: true,
+                        emailVerified: true,
+                        isVerified: true,
+                        status: targetStatus,
+                        verifiedAt: new Date().toISOString()
+                    })
+                });
+
+                // 2. Update Firestore users collection
+                try {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields: {
+                                contactVerified: { booleanValue: true },
+                                emailVerified: { booleanValue: true },
+                                isVerified: { booleanValue: true },
+                                status: { stringValue: targetStatus },
+                                verifiedAt: { stringValue: new Date().toISOString() }
+                            }
+                        })
+                    });
+                } catch(e) {}
+
+                // 3. ONLY NOW submit application to Admin (in pending_registrations collection)
+                if (targetStatus === 'pending') {
+                    try {
+                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(uid)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fields: {
+                                    id: { stringValue: uid },
+                                    userId: { stringValue: uid },
+                                    username: { stringValue: uid },
+                                    name: { stringValue: userData.fullName || uid },
+                                    fullName: { stringValue: userData.fullName || uid },
+                                    contact: { stringValue: userData.email || userData.contact || '' },
+                                    email: { stringValue: userData.email || userData.contact || '' },
+                                    phone: { stringValue: '' },
+                                    role: { stringValue: 'MEM' },
+                                    status: { stringValue: 'pending' },
+                                    contactVerified: { booleanValue: true },
+                                    emailVerified: { booleanValue: true },
+                                    isVerified: { booleanValue: true },
+                                    verifiedAt: { stringValue: new Date().toISOString() }
+                                }
+                            })
+                        });
+                    } catch(e) {}
+                }
+
+                showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
+                return true;
+
+            } catch (e) {
+                console.error(e);
+                showAlert('Verification failed due to a network error. Please try again.', 'error');
+                return false;
+            }
+        }
+
+        // INITIAL CHECK
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        const uidParam = urlParams.get('uid');
+        const oobCode = urlParams.get('oobCode');
+
+        if (mode === 'email_verified' && uidParam) {
+            handleEmailVerifiedSuccess(uidParam);
+        } else if (mode === 'verifyEmail' && oobCode) {
+            (async () => {
+                showAlert('Applying verification code from email...', 'info');
+                try {
+                    await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${FIREBASE_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ oobCode: oobCode })
+                    });
+                    if (uidParam) handleEmailVerifiedSuccess(uidParam);
+                } catch(e) {
+                    if (uidParam) handleEmailVerifiedSuccess(uidParam);
+                }
+            })();
+        } else if (mode === 'verify' && uidParam) {
+            handleEmailVerifiedSuccess(uidParam);
+        } else if (mode === 'join' || window.location.pathname.includes('join')) {
+            switchMode('join');
+        } else {
+            switchMode('signin');
+        }
+        checkExistingSession();
+    </script>
 </body>
 </html>

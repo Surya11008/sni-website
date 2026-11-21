@@ -368,7 +368,7 @@ export default function GospelDiary({ onBack }) {
             Your Gospel Diary reflections are 100% confidential and securely isolated to your personal account.
           </p>
           <a
-            href="/auth.html"
+            href="/signin"
             className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
           >
             Sign In / Join Now →
