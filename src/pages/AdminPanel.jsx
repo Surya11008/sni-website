@@ -62,11 +62,11 @@ export default function AdminPanel() {
     try {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
-      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio'].includes(tabParam)) {
+      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio', 'roles'].includes(tabParam)) {
         return tabParam;
       }
       const savedTab = localStorage.getItem('sni_admin_active_tab');
-      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio'].includes(savedTab)) {
+      if (['users', 'pages', 'contents', 'photos', 'announcements', 'studio', 'roles'].includes(savedTab)) {
         return savedTab;
       }
     } catch {}
@@ -1122,6 +1122,22 @@ export default function AdminPanel() {
               PRO
             </span>
           </button>
+
+          {/* Tab 7: Role Management */}
+          <button
+            onClick={() => handleTabChange('roles')}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
+              activeTab === 'roles'
+                ? 'bg-[#F4B942] text-[#071B3B] shadow-md'
+                : 'text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <KeyRound className="w-4 h-4" />
+            <span>Role</span>
+            <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono">
+              {rolesList.length}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -1148,11 +1164,11 @@ export default function AdminPanel() {
       {/* 4. Tab Panels */}
       <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 mt-6">
         {/* ======================================================== */}
-        {/* TAB 1: USERS & APPROVALS (with Roles & + Add Role)       */}
+        {/* TAB 1: USERS & APPROVALS                                 */}
         {/* ======================================================== */}
         {activeTab === 'users' && (
-          <div className="space-y-8">
-            {/* Top Toolbar: Filters, Search & + Add Role Button */}
+          <div className="space-y-6">
+            {/* Top Toolbar: Filters & Search */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 {[
@@ -1185,390 +1201,8 @@ export default function AdminPanel() {
                     className="pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
                 </div>
-
-                <button
-                  onClick={handleOpenAddRole}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>+ Add New Role</span>
-                </button>
               </div>
             </div>
-
-            {/* Custom Roles Manager Card */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                <div>
-                  <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
-                    <KeyRound className="w-5 h-5 text-[#C59B27]" />
-                    <span>Configured Ministerial Roles & Page Permissions</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Select a role for each user below. Admin role grants full access; other roles see only their permitted categories.
-                  </p>
-                </div>
-                <button
-                  onClick={handleOpenAddRole}
-                  className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#0F294A] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer"
-                >
-                  + Add Role
-                </button>
-              </div>
-
-              {/* Roles Chips */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {rolesList.length === 0 ? (
-                  <div className="col-span-full py-10 px-4 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-300">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center mx-auto mb-3">
-                      <KeyRound className="w-6 h-6 text-[#C59B27]" />
-                    </div>
-                    <h4 className="text-sm font-bold text-[#0F294A]">No Roles Configured Yet</h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                      All previous roles have been cleared. Click <span className="font-semibold text-[#0F294A]">"+ Add Role"</span> above to create your new ministerial roles.
-                    </p>
-                  </div>
-                ) : (
-                  rolesList.map((r) => (
-                    <div
-                      key={r.id}
-                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
-                            {r.nameEn || r.name}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
-                            {r.id}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
-                          {r.description || 'Custom ministerial role'}
-                        </p>
-                        <div className="text-[10px] text-slate-500 font-medium mt-1">
-                          <span className="font-bold text-slate-700">Access: </span>
-                          {r.allowedCategories?.includes('*') ? (
-                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold font-mono text-[9px]">
-                              ALL PAGES & CONTENTS (*)
-                            </span>
-                          ) : r.allowedCategories && r.allowedCategories.length > 0 ? (
-                            <span className="text-slate-600">
-                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).slice(0, 5).join(', ')}
-                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length > 5 && (
-                                <span className="text-amber-700 font-bold">
-                                  {' '}+{Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length - 5} more
-                                </span>
-                              )}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 italic">No pages assigned</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Role Edit & Remove Actions */}
-                      <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditRole(r)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-[#0F294A] px-2 py-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer"
-                        >
-                          <Pencil className="w-3 h-3 text-[#C59B27]" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRole(r)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Remove</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Modal: Add / Edit Ministerial Role */}
-            {isAddRoleOpen && (
-              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-                <div className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden">
-                  {/* Modal Top Header */}
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
-                    <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
-                      <KeyRound className="w-5 h-5 text-[#C59B27]" />
-                      <span>{editingRoleId ? 'Edit Ministerial Role' : 'Create New Ministerial Role'}</span>
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddRoleOpen(false);
-                        setEditingRoleId(null);
-                      }}
-                      className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-400 hover:text-slate-700 cursor-pointer transition"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleCreateRole} className="flex flex-col flex-1 overflow-hidden text-xs">
-                    {/* Scrollable Form Body */}
-                    <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">
-                          Role Title *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newRole.name}
-                          onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                          placeholder="e.g. Choir Ministry, Deacon, Sunday School Teacher"
-                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">
-                          Role Description
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={newRole.description}
-                          onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                          placeholder="Responsibilities and purpose of this ministerial role..."
-                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                        />
-                      </div>
-
-                      {/* 🌟 Granular Permissions: Categories & All Sub-Pages Selection */}
-                      <div className="space-y-3 pt-2 border-t border-slate-100">
-                        <div>
-                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
-                            <label className="block font-bold text-slate-800 text-xs sm:text-sm">
-                              Permitted Categories, Sub-Pages & Contents:
-                            </label>
-                            <span className="text-[11px] text-slate-500">
-                              {isMasterAllSelected
-                                ? 'Full Access Granted to All Pages & Contents'
-                                : `${newRole.allowedCategories?.length || 0} items permitted`}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-500">
-                            Select individual sub-pages, entire categories, or grant unrestricted Full Access.
-                          </p>
-                        </div>
-
-                        {/* 👑 Master Option: Full Access (All Categories, Sub-Pages & Contents) */}
-                        <div
-                          className={`p-3 sm:p-4 rounded-2xl border-2 transition flex items-center justify-between gap-3 cursor-pointer ${
-                            isMasterAllSelected
-                              ? 'bg-amber-50/90 border-[#C59B27] shadow-xs'
-                              : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                          }`}
-                          onClick={() => handleToggleMasterAll(!isMasterAllSelected)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={isMasterAllSelected}
-                              onChange={(e) => handleToggleMasterAll(e.target.checked)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
-                            />
-                            <div>
-                              <div className="font-extrabold text-xs text-[#071B3B] flex items-center gap-2 flex-wrap">
-                                <span>Full Access (All Categories, Pages & Contents)</span>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-bold">
-                                  ALL ACCESS (*)
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-slate-500 mt-0.5">
-                                Members with this role can view and access every category, sub-page, and published content across the entire website.
-                              </p>
-                            </div>
-                          </div>
-                          <Sparkles className={`w-5 h-5 shrink-0 ${isMasterAllSelected ? 'text-[#C59B27]' : 'text-slate-300'}`} />
-                        </div>
-
-                        {/* Toolbar: Search Sub-Pages & Quick Action Buttons */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1">
-                          <div className="relative flex-1 min-w-[200px]">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                              type="text"
-                              value={rolePermSearch}
-                              onChange={(e) => setRolePermSearch(e.target.value)}
-                              placeholder="Search sub-pages or categories (e.g. sermons, diary)..."
-                              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-slate-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                            />
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 text-[11px]">
-                            <button
-                              type="button"
-                              onClick={handleSelectAllPages}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
-                            >
-                              Select All
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleClearAllPages}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
-                            >
-                              Clear All
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleExpandAllCats(true)}
-                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
-                            >
-                              Expand All
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleExpandAllCats(false)}
-                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
-                            >
-                              Collapse All
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Categories Accordion with All Sub-Pages Checkboxes */}
-                        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-                          {filteredPortalStructure.map((cat) => {
-                            const isFullySelected = isCategoryFullySelected(cat);
-                            const selectedCount = getCategorySelectedCount(cat);
-                            const totalCount = cat.pages ? cat.pages.length : 0;
-                            const isExpanded = roleExpandedCats[cat.categorySlug] !== false;
-
-                            return (
-                              <div
-                                key={cat.categorySlug}
-                                className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs transition-all"
-                              >
-                                {/* Category Header Bar */}
-                                <div className="p-3 bg-slate-50/90 hover:bg-slate-100 flex items-center justify-between gap-3 select-none">
-                                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                                    <input
-                                      type="checkbox"
-                                      checked={isFullySelected}
-                                      onChange={(e) => handleToggleCategory(cat, e.target.checked)}
-                                      className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
-                                    />
-                                    <div
-                                      className="flex items-center gap-2 flex-1 cursor-pointer truncate"
-                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
-                                    >
-                                      <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#F4B942] flex items-center justify-center shrink-0">
-                                        <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
-                                      </div>
-                                      <span className="font-extrabold text-xs text-slate-800 truncate">
-                                        {cat.titleEn}
-                                      </span>
-                                      {cat.titleTe && (
-                                        <span className="text-[11px] text-slate-400 font-telugu hidden sm:inline">
-                                          ({cat.titleTe})
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <span
-                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                        isFullySelected
-                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                          : selectedCount > 0
-                                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                          : 'bg-slate-200 text-slate-600'
-                                      }`}
-                                    >
-                                      {isFullySelected ? `All (${totalCount})` : `${selectedCount} / ${totalCount}`}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
-                                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50 transition cursor-pointer"
-                                    >
-                                      <ChevronDown
-                                        className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                      />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Sub-Pages Grid */}
-                                {isExpanded && cat.pages && cat.pages.length > 0 && (
-                                  <div className="p-3 bg-white border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                    {cat.pages.map((p) => {
-                                      const isPChecked = isPageSelected(cat, p);
-                                      return (
-                                        <label
-                                          key={p.pageSlug}
-                                          className={`flex items-start gap-2 p-2 rounded-xl border text-xs cursor-pointer transition ${
-                                            isPChecked
-                                              ? 'bg-amber-50/80 border-[#C59B27]/50 text-[#071B3B] font-bold shadow-2xs'
-                                              : 'bg-slate-50/60 border-slate-200/80 text-slate-700 hover:bg-slate-100'
-                                          }`}
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            checked={isPChecked}
-                                            onChange={(e) => handleTogglePage(cat, p, e.target.checked)}
-                                            className="mt-0.5 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
-                                          />
-                                          <div className="min-w-0 flex-1">
-                                            <div className="truncate font-semibold flex items-center gap-1.5">
-                                              <PortalIcon name={p.iconName} className="w-3 h-3 text-slate-400 shrink-0" />
-                                              <span className="truncate">{p.titleEn}</span>
-                                            </div>
-                                            {p.titleTe && (
-                                              <div className="text-[10px] text-slate-500 font-telugu truncate">
-                                                {p.titleTe}
-                                              </div>
-                                            )}
-                                            <div className="text-[9px] text-slate-400 font-mono truncate">
-                                              {p.pageSlug}
-                                            </div>
-                                          </div>
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Fixed Action Footer */}
-                    <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/80">
-                      <button
-                        type="button"
-                        onClick={() => setIsAddRoleOpen(false)}
-                        className="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 font-bold text-xs transition cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider text-xs transition shadow-md cursor-pointer"
-                      >
-                        {editingRoleId ? 'Update Role' : 'Save Role'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
 
             {/* Users Table */}
             <div className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-sm">
@@ -2460,6 +2094,392 @@ export default function AdminPanel() {
                 allow="clipboard-write; fullscreen"
               />
             </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 7: MINISTERIAL ROLE MANAGEMENT                   */}
+        {/* ==================================================== */}
+        {activeTab === 'roles' && (
+          <div className="space-y-6">
+            {/* Top Toolbar */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-[#C59B27]" />
+                  <span>Configured Ministerial Roles & Page Permissions</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Manage ministerial roles and configure category/sub-page permissions. Users can be assigned to any of these roles in the Users tab.
+                </p>
+              </div>
+
+              <button
+                onClick={handleOpenAddRole}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Role</span>
+              </button>
+            </div>
+
+            {/* Custom Roles Grid */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {rolesList.length === 0 ? (
+                  <div className="col-span-full py-12 px-4 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-300">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center mx-auto mb-3">
+                      <KeyRound className="w-6 h-6 text-[#C59B27]" />
+                    </div>
+                    <h4 className="text-sm font-bold text-[#0F294A]">No Roles Configured Yet</h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                      All previous roles have been cleared. Click <span className="font-semibold text-[#0F294A]">"+ Add Role"</span> above to create your new ministerial roles.
+                    </p>
+                  </div>
+                ) : (
+                  rolesList.map((r) => (
+                    <div
+                      key={r.id}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-[#C59B27]/50 transition flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-bold text-[#0F294A] uppercase tracking-wider">
+                            {r.nameEn || r.name}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-100 text-[#0F294A] font-bold">
+                            {r.id}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">
+                          {r.description || 'Custom ministerial role'}
+                        </p>
+                        <div className="text-[10px] text-slate-500 font-medium mt-1">
+                          <span className="font-bold text-slate-700">Access: </span>
+                          {r.allowedCategories?.includes('*') ? (
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold font-mono text-[9px]">
+                              ALL PAGES & CONTENTS (*)
+                            </span>
+                          ) : r.allowedCategories && r.allowedCategories.length > 0 ? (
+                            <span className="text-slate-600">
+                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).slice(0, 5).join(', ')}
+                              {Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length > 5 && (
+                                <span className="text-amber-700 font-bold">
+                                  {' '}+{Array.from(new Set(r.allowedCategories.map((x) => x.split('/').pop()))).length - 5} more
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">No pages assigned</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Role Edit & Remove Actions */}
+                      <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditRole(r)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-[#0F294A] px-2 py-1 rounded-md hover:bg-slate-200/60 transition cursor-pointer"
+                        >
+                          <Pencil className="w-3 h-3 text-[#C59B27]" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRole(r)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Modal: Add / Edit Ministerial Role */}
+            {isAddRoleOpen && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+                <div className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden">
+                  {/* Modal Top Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+                    <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
+                      <KeyRound className="w-5 h-5 text-[#C59B27]" />
+                      <span>{editingRoleId ? 'Edit Ministerial Role' : 'Create New Ministerial Role'}</span>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddRoleOpen(false);
+                        setEditingRoleId(null);
+                      }}
+                      className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-400 hover:text-slate-700 cursor-pointer transition"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCreateRole} className="flex flex-col flex-1 overflow-hidden text-xs">
+                    {/* Scrollable Form Body */}
+                    <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          Role Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newRole.name}
+                          onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                          placeholder="e.g. Choir Ministry, Deacon, Sunday School Teacher"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          Role Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={newRole.description}
+                          onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                          placeholder="Responsibilities and purpose of this ministerial role..."
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        />
+                      </div>
+
+                      {/* 🌟 Granular Permissions: Categories & All Sub-Pages Selection */}
+                      <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <div>
+                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                            <label className="block font-bold text-slate-800 text-xs sm:text-sm">
+                              Permitted Categories, Sub-Pages & Contents:
+                            </label>
+                            <span className="text-[11px] text-slate-500">
+                              {isMasterAllSelected
+                                ? 'Full Access Granted to All Pages & Contents'
+                                : `${newRole.allowedCategories?.length || 0} items permitted`}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            Select individual sub-pages, entire categories, or grant unrestricted Full Access.
+                          </p>
+                        </div>
+
+                        {/* 👑 Master Option: Full Access (All Categories, Sub-Pages & Contents) */}
+                        <div
+                          className={`p-3 sm:p-4 rounded-2xl border-2 transition flex items-center justify-between gap-3 cursor-pointer ${
+                            isMasterAllSelected
+                              ? 'bg-amber-50/90 border-[#C59B27] shadow-xs'
+                              : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                          }`}
+                          onClick={() => handleToggleMasterAll(!isMasterAllSelected)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isMasterAllSelected}
+                              onChange={(e) => handleToggleMasterAll(e.target.checked)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                            />
+                            <div>
+                              <div className="font-extrabold text-xs text-[#071B3B] flex items-center gap-2 flex-wrap">
+                                <span>Full Access (All Categories, Pages & Contents)</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-bold">
+                                  ALL ACCESS (*)
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Members with this role can view and access every category, sub-page, and published content across the entire website.
+                              </p>
+                            </div>
+                          </div>
+                          <Sparkles className={`w-5 h-5 shrink-0 ${isMasterAllSelected ? 'text-[#C59B27]' : 'text-slate-300'}`} />
+                        </div>
+
+                        {/* Toolbar: Search Sub-Pages & Quick Action Buttons */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1">
+                          <div className="relative flex-1 min-w-[200px]">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={rolePermSearch}
+                              onChange={(e) => setRolePermSearch(e.target.value)}
+                              placeholder="Search sub-pages or categories (e.g. sermons, diary)..."
+                              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-slate-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={handleSelectAllPages}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                            >
+                              Select All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleClearAllPages}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                            >
+                              Clear All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExpandAllCats(true)}
+                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
+                            >
+                              Expand All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExpandAllCats(false)}
+                              className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 font-semibold transition cursor-pointer"
+                            >
+                              Collapse All
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Categories Accordion with All Sub-Pages Checkboxes */}
+                        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                          {filteredPortalStructure.map((cat) => {
+                            const isFullySelected = isCategoryFullySelected(cat);
+                            const selectedCount = getCategorySelectedCount(cat);
+                            const totalCount = cat.pages ? cat.pages.length : 0;
+                            const isExpanded = roleExpandedCats[cat.categorySlug] !== false;
+
+                            return (
+                              <div
+                                key={cat.categorySlug}
+                                className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs transition-all"
+                              >
+                                {/* Category Header Bar */}
+                                <div className="p-3 bg-slate-50/90 hover:bg-slate-100 flex items-center justify-between gap-3 select-none">
+                                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={isFullySelected}
+                                      onChange={(e) => handleToggleCategory(cat, e.target.checked)}
+                                      className="w-4 h-4 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                                    />
+                                    <div
+                                      className="flex items-center gap-2 flex-1 cursor-pointer truncate"
+                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
+                                    >
+                                      <div className="w-6 h-6 rounded-lg bg-[#0F294A] text-[#F4B942] flex items-center justify-center shrink-0">
+                                        <PortalIcon name={cat.iconName} className="w-3.5 h-3.5" />
+                                      </div>
+                                      <span className="font-extrabold text-xs text-slate-800 truncate">
+                                        {cat.titleEn}
+                                      </span>
+                                      {cat.titleTe && (
+                                        <span className="text-[11px] text-slate-400 font-telugu hidden sm:inline">
+                                          ({cat.titleTe})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span
+                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                        isFullySelected
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                          : selectedCount > 0
+                                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                          : 'bg-slate-200 text-slate-600'
+                                      }`}
+                                    >
+                                      {isFullySelected ? `All (${totalCount})` : `${selectedCount} / ${totalCount}`}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleExpandCategory(cat.categorySlug)}
+                                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50 transition cursor-pointer"
+                                    >
+                                      <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                      />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Sub-Pages Grid */}
+                                {isExpanded && cat.pages && cat.pages.length > 0 && (
+                                  <div className="p-3 bg-white border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                    {cat.pages.map((p) => {
+                                      const isPChecked = isPageSelected(cat, p);
+                                      return (
+                                        <label
+                                          key={p.pageSlug}
+                                          className={`flex items-start gap-2 p-2 rounded-xl border text-xs cursor-pointer transition ${
+                                            isPChecked
+                                              ? 'bg-amber-50/80 border-[#C59B27]/50 text-[#071B3B] font-bold shadow-2xs'
+                                              : 'bg-slate-50/60 border-slate-200/80 text-slate-700 hover:bg-slate-100'
+                                          }`}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={isPChecked}
+                                            onChange={(e) => handleTogglePage(cat, p, e.target.checked)}
+                                            className="mt-0.5 rounded text-[#0F294A] focus:ring-amber-500 cursor-pointer"
+                                          />
+                                          <div className="min-w-0 flex-1">
+                                            <div className="truncate font-semibold flex items-center gap-1.5">
+                                              <PortalIcon name={p.iconName} className="w-3 h-3 text-slate-400 shrink-0" />
+                                              <span className="truncate">{p.titleEn}</span>
+                                            </div>
+                                            {p.titleTe && (
+                                              <div className="text-[10px] text-slate-500 font-telugu truncate">
+                                                {p.titleTe}
+                                              </div>
+                                            )}
+                                            <div className="text-[9px] text-slate-400 font-mono truncate">
+                                              {p.pageSlug}
+                                            </div>
+                                          </div>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fixed Action Footer */}
+                    <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/80">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddRoleOpen(false);
+                          setEditingRoleId(null);
+                        }}
+                        className="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 font-bold text-xs transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider text-xs transition shadow-md cursor-pointer"
+                      >
+                        {editingRoleId ? 'Update Role' : 'Save Role'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
