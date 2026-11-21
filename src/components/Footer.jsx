@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { launchEcosystemApp } from '../utils/sso';
-import WorldLanguageTranslator from './WorldLanguageTranslator';
 import {
   Award,
   ClipboardCheck,
@@ -189,9 +188,6 @@ export default function Footer() {
               </li>
               <li>
                 <span className="text-slate-400">Member Verification Policy</span>
-              </li>
-              <li className="pt-2">
-                <WorldLanguageTranslator />
               </li>
             </ul>
           </div>

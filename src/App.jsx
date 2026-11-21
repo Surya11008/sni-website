@@ -46,6 +46,18 @@ function RedirectToAuthJoin() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Clear any previous Google Translate cookies so translation is deactivated
+    try {
+      document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+      document.cookie = `googtrans=; path=/; domain=.${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+      const script = document.getElementById('google-translate-script');
+      if (script) script.remove();
+    } catch {
+      // ignore
+    }
+  }, []);
+
   return (
     <LanguageProvider>
       <AuthProvider>

@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from './PortalIcon';
-import WorldLanguageTranslator from './WorldLanguageTranslator';
 import {
   Globe,
   LogIn,
@@ -329,11 +328,8 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right Section: Translator, Admin, Member/Login */}
+          {/* Right Section: Admin, Member/Login */}
           <div className="hidden lg:flex items-center gap-2">
-            {/* World Language Translator Globe Button */}
-            <WorldLanguageTranslator />
-
             {currentUser ? (
               <div className="flex items-center gap-2 pl-2 border-l border-white/10">
                 {/* Admin Button */}
@@ -417,7 +413,6 @@ export default function Navbar() {
 
           {/* Mobile Menu Actions & Hamburger */}
           <div className="flex xl:hidden items-center gap-2">
-            <WorldLanguageTranslator />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition focus:outline-none cursor-pointer"
