@@ -336,11 +336,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('sni_unified_session');
     localStorage.removeItem('sni_admin_active');
     sessionStorage.removeItem('sni_admin_active');
-    localStorage.removeItem('star_galaxy_active_user_id');
-    localStorage.removeItem('star_galaxy_pin_unlocked');
-    sessionStorage.removeItem('star_galaxy_pin_unlocked');
-    localStorage.removeItem('star_galaxy_active_tab');
-    localStorage.removeItem('star_galaxy_selected_activity');
     try {
       document.cookie = 'sni_unified_user=; Path=/; Max-Age=0';
       document.cookie = 'sni_session_active=; Path=/; Max-Age=0';

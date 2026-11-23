@@ -108,9 +108,9 @@ function GlobalSoundHandler({ children }) {
   return children;
 }
 
-export default function StarGalaxyApp({ initialUser }) {
+export default function StarGalaxyApp() {
   return (
-    <AppProvider initialUser={initialUser}>
+    <AppProvider>
       <GlobalSoundHandler>
         <MainApp />
       </GlobalSoundHandler>

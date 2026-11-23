@@ -125,6 +125,17 @@ export default function Header() {
 
           {/* 🌐 Globe Language Selector Button */}
           <LanguageSwitcher showTranslateBadge={false} />
+
+          {/* 🚪 Star Galaxy Independent Logout */}
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer shadow-xs ml-1"
+            title="Sign out of Star Galaxy"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
         </div>
       </div>
 

@@ -21,6 +21,9 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
+import StarGalaxyApp from '../star-galaxy/App';
+import GospelDiary from '../star-galaxy/components/diary/GospelDiary';
+import { AppProvider } from '../star-galaxy/context/AppContext';
 import {
   ChevronRight,
   Plus,
@@ -59,6 +62,14 @@ export default function DynamicPage() {
   // View Mode: 'grid' | 'list' | 'compact'
   const [viewMode, setViewMode] = useState('grid');
 
+  // Stars Program special view tab: 'tracker' | 'articles'
+  const isStarsPage = pageSlug === 'stars' || (categorySlug === 'program' && pageSlug === 'stars');
+  const [starsViewTab, setStarsViewTab] = useState('tracker');
+
+  // Gospel Diary Program special view tab: 'diary' | 'articles'
+  const isDiaryPage = pageSlug === 'diary' || (categorySlug === 'program' && pageSlug === 'diary');
+  const [diaryViewTab, setDiaryViewTab] = useState('diary');
+
   // In-Page Article View state (NO popup)
   const [activeArticle, setActiveArticle] = useState(null);
 
@@ -96,6 +107,8 @@ export default function DynamicPage() {
     setPageInfo(info);
     setActiveArticle(null);
     setIsFormOpen(false);
+    setStarsViewTab('tracker');
+    setDiaryViewTab('diary');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [categorySlug, pageSlug]);
 
@@ -336,6 +349,102 @@ export default function DynamicPage() {
           )}
         </div>
 
+        {/* Special Stars Program Mode Switcher (Tracker vs Articles) */}
+        {isStarsPage && !activeArticle && !isFormOpen && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStarsViewTab('tracker')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  starsViewTab === 'tracker'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 fill-current text-[#F4B942]" />
+                <span>{isTelugu ? 'ఆకాశ నక్షత్రాల సాధన (Star Galaxy)' : 'Stars Program (Star Galaxy)'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setStarsViewTab('articles')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  starsViewTab === 'articles'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{isTelugu ? 'అధ్యయన సామగ్రి & ప్రసంగాలు' : 'Study Materials & Articles'}</span>
+                {contents.length > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] font-bold">
+                    {contents.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {starsViewTab === 'tracker' && isAdmin && (
+              <button
+                type="button"
+                onClick={handleOpenAddForm}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-[#071B3B] text-xs font-bold transition cursor-pointer border border-slate-200"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#C59B27]" />
+                <span>{isTelugu ? 'ఆర్టికల్ జోడించండి' : '+ Add Article'}</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Special Diary Program Mode Switcher (Gospel Diary vs Articles) */}
+        {isDiaryPage && !activeArticle && !isFormOpen && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDiaryViewTab('diary')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  diaryViewTab === 'diary'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#F4B942]" />
+                <span>{isTelugu ? 'ఆత్మీయ సువార్త డైరీ (Gospel Diary)' : 'Interactive Gospel Diary'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiaryViewTab('articles')}
+                className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-black transition cursor-pointer ${
+                  diaryViewTab === 'articles'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>{isTelugu ? 'అధ్యయన సామగ్రి & ప్రసంగాలు' : 'Study Materials & Articles'}</span>
+                {contents.length > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] font-bold">
+                    {contents.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {diaryViewTab === 'diary' && isAdmin && (
+              <button
+                type="button"
+                onClick={handleOpenAddForm}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-[#071B3B] text-xs font-bold transition cursor-pointer border border-slate-200"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#C59B27]" />
+                <span>{isTelugu ? 'ఆర్టికల్ జోడించండి' : '+ Add Article'}</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* IN-PAGE ADD / EDIT FORM (No Popup!) */}
         {isFormOpen && (
           <div className="mb-12 bg-white rounded-3xl border-2 border-[#F4B942]/50 p-6 sm:p-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
@@ -525,7 +634,18 @@ export default function DynamicPage() {
           </div>
         )}
 
-        {activeArticle ? (
+        {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Embedded Star Galaxy */}
+        {isStarsPage && starsViewTab === 'tracker' && !activeArticle && !isFormOpen ? (
+          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden p-2 sm:p-4">
+            <StarGalaxyApp />
+          </div>
+        ) : isDiaryPage && diaryViewTab === 'diary' && !activeArticle && !isFormOpen ? (
+          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden p-2 sm:p-4">
+            <AppProvider>
+              <GospelDiary />
+            </AppProvider>
+          </div>
+        ) : activeArticle ? (
           <article className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-8 md:p-12 lg:p-14 shadow-md w-full max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-200">
             {/* Top Bar: Back Button & Admin Controls */}
             <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4 flex-wrap">
