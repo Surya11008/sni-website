@@ -190,12 +190,31 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
-    return localStorage.getItem('sni_portal_language') || 'te';
+    try {
+      const explicitPref = localStorage.getItem('sni_portal_language_pref');
+      if (explicitPref === 'en' || explicitPref === 'te') return explicitPref;
+
+      // Clean up legacy automatic 'te' default if present in older visits
+      const legacySaved = localStorage.getItem('sni_portal_language');
+      if (legacySaved === 'te') {
+        localStorage.removeItem('sni_portal_language');
+      } else if (legacySaved === 'en') {
+        return 'en';
+      }
+
+      // Default language is ALWAYS English ('en') on all devices and browsers
+      return 'en';
+    } catch (e) {
+      return 'en';
+    }
   });
 
   const setLanguage = (lang) => {
     setLanguageState(lang);
-    localStorage.setItem('sni_portal_language', lang);
+    try {
+      localStorage.setItem('sni_portal_language_pref', lang);
+      localStorage.setItem('sni_portal_language', lang);
+    } catch (e) {}
   };
 
   const toggleLanguage = () => {
