@@ -758,13 +758,7 @@
                         <div class="form-helper">Unique username (letters and numbers).</div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="joinContact">Gmail / Email Address *</label>
-                        <div class="input-wrap">
-                            <input type="email" id="joinContact" class="form-input" placeholder="e.g. yourname@gmail.com" required autocomplete="email">
-                        </div>
-                        <div class="form-helper">An official verification link will be sent to your Gmail address.</div>
-                    </div>
+                    
 
                     <div class="form-group">
                         <label for="joinPass">Create SNI Password *</label>
@@ -795,70 +789,14 @@
                     <div class="auth-switch-prompt">
                         Already have an account? <a id="switchToSignInLink">Sign In here</a>
                     </div>
-                    <div style="margin-top: 12px; font-size: 0.82rem; text-align: center; color: #64748b;">
-                        Already registered? <a id="enterExistingOtpLink" style="color: #124b91; font-weight: 700; cursor: pointer; text-decoration: underline;">Enter your 6-digit OTP code here</a>
-                    </div>
+                    
                 </form>
 
             </div>
 
         </div>
 
-        <!-- VERIFICATION MODAL (For Real Gmail Verification with 6-Digit OTP) -->
-        <div id="verifyModal" class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-icon verify" id="verifyModalIcon">📩</div>
-                <h3 class="modal-title" id="verifyModalTitle">Enter Verification Code (OTP)</h3>
-                <p class="modal-text" id="verifyModalSubtitle">
-                    A 6-digit verification code has been dispatched to your Gmail:
-                    <br><strong class="modal-target" id="verifyModalTarget">email@gmail.com</strong>
-                </p>
-
-                <!-- OTP Input Section -->
-                <div id="otpInputSection" style="margin: 16px 0; padding: 18px 14px; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 14px; text-align: center;">
-                    <label for="otpCodeInput" style="display: block; font-size: 0.9rem; font-weight: 800; color: #071b3b; margin-bottom: 6px;">
-                        🔑 6-Digit Verification Code (OTP)
-                    </label>
-                    <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
-                        Check your Gmail inbox for the OTP code, enter it below, and click verify.
-                    </div>
-                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center; max-width: 320px; margin: 0 auto;">
-                        <input type="text" id="otpCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="• • • • • •" style="width: 150px; text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: 5px; padding: 10px 8px; border: 2px solid #94a3b8; border-radius: 10px; background: #ffffff; color: #071b3b; outline: none;" />
-                        <button type="button" id="submitOtpBtn" class="modal-btn modal-btn-primary" style="padding: 10px 16px; margin: 0; font-size: 0.85rem; font-weight: 800; background: #071b3b; color: #f5c75e; border-radius: 10px; cursor: pointer; white-space: nowrap;">
-                            Verify OTP →
-                        </button>
-                    </div>
-                    <div id="otpStatusMsg" style="font-size: 0.82rem; font-weight: 700; margin-top: 10px; display: none;"></div>
-                </div>
-
-                <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin: 12px 0; text-align: left; font-size: 0.8rem; color: #475569;">
-                    <p style="margin: 0 0 4px 0; font-weight: 700; color: #0f172a;">Instructions:</p>
-                    <ol style="margin: 0; padding-left: 18px; line-height: 1.5;">
-                        <li>Open your <strong>Gmail Inbox</strong> (check Spam folder if needed).</li>
-                        <li>Find the verification email from SNI with your 6-digit OTP code.</li>
-                        <li>Enter the OTP code above and click <strong>Verify OTP</strong>.</li>
-                        <li>Only after OTP verification is your request sent to Admin for approval.</li>
-                    </ol>
-                </div>
-
-                <div class="modal-actions" id="verifyModalActions">
-                    <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="modal-btn modal-btn-primary" style="background: #ea4335; color: #ffffff;">
-                        ✉️ Open Gmail Inbox
-                    </a>
-                    <button type="button" class="modal-btn modal-btn-secondary" id="resendVerifyEmailBtn" style="width: 100%;">
-                        🔄 Resend OTP Code
-                    </button>
-                    <div id="resendStatusMsg" style="font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none;"></div>
-                </div>
-
-                <div style="margin-top: 12px;">
-                    <button type="button" class="modal-btn modal-btn-secondary" id="closeVerifyModalBtn" style="width: 100%;">
-                        Dismiss &amp; Continue to Sign In
-                    </button>
-                </div>
-            </div>
-        </div>
-    </main>
+        </main>
 
     <footer>
         © 2026 <span>S Natural Intelligence (SNI)</span>. All Rights Reserved.
@@ -866,6 +804,7 @@
 
     <script>
         const RTDB_BASE = "https://sni-org-in-default-rtdb.firebaseio.com";
+        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
         const VALID_ADMIN_IDS = ['surya11008', 'admin', 'surya'];
         const VALID_ADMIN_PASSWORDS = [
             'Suri742766.', 'Surya742766.', 'suri742766.', 'surya742766.',
@@ -1081,7 +1020,7 @@
             }
         });
 
-        // 1. SIGN IN SUBMISSION
+        // 1. SIGN IN SUBMISSION (NO EMAIL / PHONE REQUIRED)
         signInForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAlert();
@@ -1110,42 +1049,42 @@
                         joinedAt: new Date().toISOString()
                     };
                     setCurrentUser(adminUser);
-                    showAlert('Welcome, Surya! Redirecting...', 'success');
+                    showAlert('Welcome, Admin Surya! Redirecting...', 'success');
                     setTimeout(() => {
                         redirectAfterLogin();
                     }, 800);
                     return;
                 }
 
-                // B. Fetch from Cloud RTDB
-                const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
+                // B. Query Unified RTDB for User Account
                 let userData = null;
-                if (res.ok) {
-                    userData = await res.json();
+                const rtdbRes = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
+                if (rtdbRes.ok) {
+                    userData = await rtdbRes.json();
                 }
 
-                // C. If not in RTDB, check Firestore in real-time
+                // C. Fallback to Firestore users collection
                 if (!userData) {
                     try {
-                        const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`);
+                        const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`);
                         if (fsRes.ok) {
                             const fsDoc = await fsRes.json();
                             if (fsDoc && fsDoc.fields) {
                                 const f = fsDoc.fields;
                                 userData = {
-                                    userId: f.userId?.stringValue || f.username?.stringValue || userId,
+                                    userId: f.id?.stringValue || f.userId?.stringValue || userId,
                                     fullName: f.fullName?.stringValue || f.name?.stringValue || userId,
-                                    contact: f.contact?.stringValue || f.email?.stringValue || '',
-                                    email: f.email?.stringValue || f.contact?.stringValue || '',
+                                    contact: f.contact?.stringValue || '',
+                                    email: f.email?.stringValue || '',
+                                    phone: f.phone?.stringValue || '',
                                     password: f.password?.stringValue || f.plainPassword?.stringValue || '',
-                                    role: f.role?.stringValue || 'member',
-                                    status: f.status?.stringValue || 'unverified',
-                                    contactVerified: f.contactVerified?.booleanValue ?? false,
-                                    emailVerified: f.emailVerified?.booleanValue ?? false,
-                                    isVerified: f.isVerified?.booleanValue ?? false,
-                                    joinedAt: f.registeredAt?.stringValue || f.createdAt?.stringValue || new Date().toISOString()
+                                    role: f.role?.stringValue || 'MEM',
+                                    status: f.status?.stringValue || 'pending',
+                                    contactVerified: true,
+                                    emailVerified: true,
+                                    joinedAt: f.createdAt?.stringValue || f.registeredAt?.stringValue || new Date().toISOString()
                                 };
-                                // Auto cache to RTDB
+                                // Self-heal back to RTDB
                                 fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
@@ -1160,53 +1099,6 @@
                     if (userData.password === pass) {
                         const isAdmin = isCardAdmin(userId, pass) || userData.role === 'admin' || userData.role === 'ADMIN';
 
-                        // Check Gmail / Email Verification for members
-                        if (!isAdmin && (userData.contactVerified === false || userData.status === 'unverified' || userData.emailVerified === false)) {
-                            // First, check if user has verified their email in Gmail
-                            let isNowVerifiedInFirebase = false;
-                            const emailToCheck = userData.email || userData.contact;
-                            if (emailToCheck) {
-                                try {
-                                    const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ email: emailToCheck, password: pass, returnSecureToken: true })
-                                    });
-                                    if (authRes.ok) {
-                                        const authData = await authRes.json();
-                                        const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ idToken: authData.idToken })
-                                        });
-                                        if (lookupRes.ok) {
-                                            const lookupData = await lookupRes.json();
-                                            isNowVerifiedInFirebase = lookupData.users?.[0]?.emailVerified === true;
-                                        }
-                                    }
-                                } catch(e) {}
-                            }
-
-                            if (isNowVerifiedInFirebase) {
-                                await handleEmailVerifiedSuccess(userId);
-                                showAlert('⏳ Waiting for Admin Approval: Email verified! Your application has been submitted to Admin (info@sni.org.in). You will be able to sign in once approved.', 'info');
-                                submitBtn.disabled = false;
-                                submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
-                                return;
-                            }
-
-                            showVerificationModal({
-                                userId,
-                                fullName: userData.fullName || userId,
-                                email: userData.email || userData.contact || '',
-                                pass: pass
-                            }, true);
-                            showAlert('⚠️ Gmail verification required before sign in. Please enter the 6-digit OTP sent to your Gmail.', 'error');
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
-                            return;
-                        }
-
                         const isApproved = isAdmin || userData.status === 'approved';
                         if (!isApproved) {
                             if (userData.status === 'rejected') {
@@ -1214,7 +1106,7 @@
                             } else if (userData.status === 'revoked') {
                                 showAlert('⛔ Your account access has been revoked by administrator.');
                             } else {
-                                showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
+                                showAlert('⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
                             }
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<span>Sign In</span><span>→</span>';
@@ -1244,89 +1136,19 @@
             }
         });
 
-        // Helper: Dispatch Real Official Verification Email via Google Firebase Auth with OTP Continue URL
-        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-
-        async function sendOfficialVerificationEmail(email, password, userId, otp = '') {
-            try {
-                let idToken = null;
-                // 1. Try to create user in Firebase Auth
-                const signUpRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password || 'SniUser123.',
-                        returnSecureToken: true
-                    })
-                });
-
-                if (signUpRes.ok) {
-                    const data = await signUpRes.json();
-                    idToken = data.idToken;
-                } else {
-                    // If user already exists in Firebase Auth, sign in to acquire idToken
-                    const signInRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: email,
-                            password: password || 'SniUser123.',
-                            returnSecureToken: true
-                        })
-                    });
-                    if (signInRes.ok) {
-                        const data = await signInRes.json();
-                        idToken = data.idToken;
-                    }
-                }
-
-                if (!idToken) {
-                    return { success: false, error: 'Could not acquire authentication token' };
-                }
-
-                const continueUrl = `${window.location.origin}/join?otp=${encodeURIComponent(otp)}&uid=${encodeURIComponent(userId)}`;
-                const oobRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        requestType: 'VERIFY_EMAIL',
-                        idToken: idToken,
-                        continueUrl: continueUrl
-                    })
-                });
-
-                if (oobRes.ok) {
-                    return { success: true };
-                } else {
-                    const err = await oobRes.json();
-                    return { success: false, error: err.error?.message };
-                }
-            } catch(e) {
-                console.error(e);
-                return { success: false, error: e.message };
-            }
-        }
-
-        // 2. JOIN (REGISTER) SUBMISSION - DISPATCH OTP TO GMAIL FIRST
+        // 2. JOIN (REGISTER) SUBMISSION (NO EMAIL / PHONE REQUIRED)
         joinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAlert();
 
             const fullName = document.getElementById('joinFullName').value.trim();
             const userId = document.getElementById('joinUserId').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-            const email = document.getElementById('joinContact').value.trim().toLowerCase();
             const pass = document.getElementById('joinPass').value.trim();
             const confirmPass = document.getElementById('joinConfirmPass').value.trim();
             const submitBtn = document.getElementById('joinSubmitBtn');
 
-            if (!fullName || !userId || !email || !pass) {
-                showAlert('Please fill in all required fields, including your Gmail address.');
-                return;
-            }
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showAlert('Please enter a valid Gmail / Email address (e.g. yourname@gmail.com).');
+            if (!fullName || !userId || !pass) {
+                showAlert('Please fill in all required fields (Full Name, SNI ID, and Password).');
                 return;
             }
 
@@ -1335,8 +1157,8 @@
                 return;
             }
 
-            if (pass.length < 8) {
-                showAlert('SNI Password must be at least 8 characters long.');
+            if (pass.length < 4) {
+                showAlert('SNI Password must be at least 4 characters long.');
                 return;
             }
 
@@ -1346,7 +1168,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Sending 6-Digit OTP to Gmail...</span>';
+            submitBtn.innerHTML = '<span>Submitting Registration...</span>';
 
             try {
                 // Check if user already exists
@@ -1362,46 +1184,34 @@
                 }
 
                 const isAdmin = isCardAdmin(userId, pass);
-
-                // Generate secure 6-digit numeric OTP and 15-minute expiration
-                const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                const otpExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
-
-                // 1. Dispatch official verification email with OTP via Firebase Auth
-                if (!isAdmin) {
-                    const emailResult = await sendOfficialVerificationEmail(email, pass, userId, verifyOtp);
-                    if (!emailResult.success) {
-                        console.warn('Firebase email dispatch warning:', emailResult.error);
-                    }
-                }
+                const targetStatus = isAdmin ? 'approved' : 'pending';
 
                 const newUser = {
                     userId: userId,
                     fullName: fullName,
-                    contact: email,
-                    email: email,
+                    contact: '',
+                    email: '',
                     phone: '',
                     password: pass,
                     role: isAdmin ? 'ADMIN' : 'MEM',
-                    status: isAdmin ? 'approved' : 'unverified',
-                    contactVerified: isAdmin ? true : false,
-                    emailVerified: isAdmin ? true : false,
-                    isVerified: isAdmin ? true : false,
-                    verificationOtp: isAdmin ? '' : verifyOtp,
-                    otpExpiresAt: isAdmin ? '' : otpExpiresAt,
-                    joinedAt: new Date().toISOString()
+                    status: targetStatus,
+                    contactVerified: true,
+                    emailVerified: true,
+                    isVerified: true,
+                    joinedAt: new Date().toISOString(),
+                    adminEmail: 'info@sni.org.in'
                 };
 
-                // Save to Cloud RTDB (status: 'unverified')
+                // Save to Cloud RTDB
                 await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newUser)
                 });
 
-                // Dual sync to Firestore users collection (NOT in pending_registrations until verified!)
+                // Dual sync to Firestore users collection
                 try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`, {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1411,20 +1221,19 @@
                                 username: { stringValue: userId },
                                 fullName: { stringValue: fullName },
                                 name: { stringValue: fullName },
-                                contact: { stringValue: email },
-                                email: { stringValue: email },
+                                contact: { stringValue: '' },
+                                email: { stringValue: '' },
                                 phone: { stringValue: '' },
                                 password: { stringValue: pass },
                                 plainPassword: { stringValue: pass },
                                 role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
-                                status: { stringValue: isAdmin ? 'approved' : 'unverified' },
-                                contactVerified: { booleanValue: isAdmin ? true : false },
-                                emailVerified: { booleanValue: isAdmin ? true : false },
-                                isVerified: { booleanValue: isAdmin ? true : false },
-                                verificationOtp: { stringValue: isAdmin ? '' : verifyOtp },
-                                otpExpiresAt: { stringValue: isAdmin ? '' : otpExpiresAt },
+                                status: { stringValue: targetStatus },
+                                contactVerified: { booleanValue: true },
+                                emailVerified: { booleanValue: true },
+                                isVerified: { booleanValue: true },
                                 registeredAt: { stringValue: newUser.joinedAt },
-                                createdAt: { stringValue: newUser.joinedAt }
+                                createdAt: { stringValue: newUser.joinedAt },
+                                adminEmail: { stringValue: 'info@sni.org.in' }
                             }
                         })
                     });
@@ -1432,26 +1241,53 @@
                     console.warn('Firestore sync failed:', e);
                 }
 
+                // If non-admin, immediately forward to Firestore pending_registrations collection for Admin approval
+                if (!isAdmin) {
+                    try {
+                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fields: {
+                                    id: { stringValue: userId },
+                                    userId: { stringValue: userId },
+                                    username: { stringValue: userId },
+                                    name: { stringValue: fullName },
+                                    fullName: { stringValue: fullName },
+                                    contact: { stringValue: '' },
+                                    email: { stringValue: '' },
+                                    phone: { stringValue: '' },
+                                    role: { stringValue: 'MEM' },
+                                    status: { stringValue: 'pending' },
+                                    contactVerified: { booleanValue: true },
+                                    emailVerified: { booleanValue: true },
+                                    isVerified: { booleanValue: true },
+                                    registeredAt: { stringValue: newUser.joinedAt },
+                                    createdAt: { stringValue: newUser.joinedAt },
+                                    adminEmail: { stringValue: 'info@sni.org.in' }
+                                }
+                            })
+                        });
+                    } catch(e) {
+                        console.warn('Pending registration forward failed:', e);
+                    }
+                }
+
+                joinForm.reset();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+
                 if (isAdmin) {
                     setCurrentUser(newUser);
                     showAlert(`Welcome, ${fullName}! Redirecting...`, 'success');
                     setTimeout(() => redirectAfterLogin(), 800);
                 } else {
-                    joinForm.reset();
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
-
-                    const pendingInfo = {
-                        userId,
-                        fullName,
-                        email,
-                        pass
-                    };
-                    try {
-                        localStorage.setItem('sni_pending_verify_user', JSON.stringify(pendingInfo));
-                    } catch(e) {}
-
-                    showVerificationModal(pendingInfo);
+                    switchMode('signin');
+                    const uInput = document.getElementById('signInUserId');
+                    if (uInput) uInput.value = userId;
+                    const pInput = document.getElementById('signInPass');
+                    if (pInput) pInput.focus();
+                    showAlert('⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
                 }
 
             } catch(err) {
@@ -1462,581 +1298,13 @@
             }
         });
 
-        // MODAL HANDLERS FOR EMAIL OTP VERIFICATION
-        let currentModalInfo = null;
-
-        function showOtpStatus(msg, color) {
-            const el = document.getElementById('otpStatusMsg');
-            if (el) {
-                el.style.display = 'block';
-                el.style.color = color;
-                el.textContent = msg;
-            }
-        }
-
-        function showVerificationModal(info, isLoginBlock = false) {
-            currentModalInfo = info;
-            const modal = document.getElementById('verifyModal');
-            const icon = document.getElementById('verifyModalIcon');
-            const title = document.getElementById('verifyModalTitle');
-            const subtitle = document.getElementById('verifyModalSubtitle');
-            const target = document.getElementById('verifyModalTarget');
-            const resendStatus = document.getElementById('resendStatusMsg');
-            const otpInput = document.getElementById('otpCodeInput');
-            const otpStatus = document.getElementById('otpStatusMsg');
-            const otpSection = document.getElementById('otpInputSection');
-
-            if (otpSection) otpSection.style.display = 'block';
-
-            if (resendStatus) {
-                resendStatus.style.display = 'none';
-                resendStatus.textContent = '';
-            }
-            if (otpStatus) {
-                otpStatus.style.display = 'none';
-                otpStatus.textContent = '';
-            }
-            if (otpInput) {
-                otpInput.value = (info && info.otp) ? info.otp : '';
-                setTimeout(() => otpInput.focus(), 200);
-            }
-
-            icon.className = 'modal-icon verify';
-            icon.innerHTML = '📩';
-            title.innerText = isLoginBlock ? 'Gmail OTP Verification Required' : 'Enter Verification Code (OTP)';
-            target.innerText = info.email || info.contact || info.userId;
-            subtitle.innerHTML = isLoginBlock
-                ? `Your SNI account <strong>${info.userId}</strong> requires Gmail OTP verification: <br><strong class="modal-target">${info.email || info.contact}</strong>.<br><small style="color: #64748b; display: block; margin-top: 6px;">Please check your Gmail for the 6-digit OTP code, enter it below, and click Verify OTP.</small>`
-                : `A 6-digit verification code (OTP) has been dispatched from SNI to your Gmail: <br><strong class="modal-target">${info.email || info.contact}</strong>.<br><small style="color: #b45309; font-weight: 700; display: block; margin-top: 6px;">⚠️ Check your Gmail inbox, enter the 6-digit code below, and click "Verify OTP".</small>`;
-
-            modal.classList.add('active');
-        }
-
-        // OTP SUBMISSION HANDLER
-        const submitOtpBtn = document.getElementById('submitOtpBtn');
-        const otpCodeInput = document.getElementById('otpCodeInput');
-
-        async function handleOtpSubmit() {
-            let info = currentModalInfo;
-            if (!info || !info.userId) {
-                try {
-                    const saved = localStorage.getItem('sni_pending_verify_user');
-                    if (saved) {
-                        info = JSON.parse(saved);
-                        currentModalInfo = info;
-                    }
-                } catch(e) {}
-            }
-            if (!info || !info.userId) {
-                const manualId = document.getElementById('joinUserId')?.value.trim() || document.getElementById('signInUserId')?.value.trim();
-                if (manualId) {
-                    info = { userId: manualId };
-                    currentModalInfo = info;
-                }
-            }
-            if (!info || !info.userId) {
-                showOtpStatus('⚠️ Session expired. Please fill out the registration form again.', '#dc2626');
-                return;
-            }
-            const enteredOtp = (otpCodeInput?.value || '').trim();
-            if (!enteredOtp || enteredOtp.length !== 6 || !/^\d{6}$/.test(enteredOtp)) {
-                showOtpStatus('⚠️ Please enter the full 6-digit numeric OTP code.', '#dc2626');
-                if (otpCodeInput) otpCodeInput.focus();
-                return;
-            }
-
-            if (submitOtpBtn) {
-                submitOtpBtn.disabled = true;
-                submitOtpBtn.textContent = 'Verifying...';
-            }
-            showOtpStatus('Verifying OTP code...', '#2563eb');
-
-            const success = await handleOtpVerificationSuccess(info.userId, enteredOtp);
-            if (submitOtpBtn) {
-                submitOtpBtn.disabled = false;
-                submitOtpBtn.textContent = 'Verify OTP →';
-            }
-        }
-
-        if (submitOtpBtn) {
-            submitOtpBtn.addEventListener('click', handleOtpSubmit);
-        }
-        if (otpCodeInput) {
-            otpCodeInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleOtpSubmit();
-                }
-            });
-        }
-
-        // Resend Verification Code Button Handler
-        const resendBtn = document.getElementById('resendVerifyEmailBtn');
-        if (resendBtn) {
-            resendBtn.addEventListener('click', async () => {
-                if (!currentModalInfo || !currentModalInfo.email || !currentModalInfo.userId) return;
-                const resendStatus = document.getElementById('resendStatusMsg');
-                resendBtn.disabled = true;
-                resendBtn.textContent = 'Sending OTP...';
-                if (resendStatus) {
-                    resendStatus.style.display = 'block';
-                    resendStatus.style.color = '#2563eb';
-                    resendStatus.textContent = 'Generating and dispatching new 6-digit OTP to your Gmail...';
-                }
-
-                // Generate fresh 6-digit OTP
-                const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                const newExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
-                currentModalInfo.otp = newOtp;
-
-                // Update in RTDB
-                try {
-                    await fetch(`${RTDB_BASE}/users/${encodeURIComponent(currentModalInfo.userId)}.json`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            verificationOtp: newOtp,
-                            otpExpiresAt: newExpiresAt
-                        })
-                    });
-                } catch(e) {}
-
-                // Update in Firestore
-                try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(currentModalInfo.userId)}?updateMask.fieldPaths=verificationOtp&updateMask.fieldPaths=otpExpiresAt&key=${FIREBASE_API_KEY}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            fields: {
-                                verificationOtp: { stringValue: newOtp },
-                                otpExpiresAt: { stringValue: newExpiresAt }
-                            }
-                        })
-                    });
-                } catch(e) {}
-
-                const res = await sendOfficialVerificationEmail(currentModalInfo.email, currentModalInfo.pass, currentModalInfo.userId, newOtp);
-                resendBtn.disabled = false;
-                resendBtn.textContent = '🔄 Resend OTP Code';
-                if (resendStatus) {
-                    if (res.success) {
-                        resendStatus.style.color = '#16a34a';
-                        resendStatus.textContent = '✅ New 6-digit OTP code sent! Please check your Gmail inbox.';
-                    } else {
-                        resendStatus.style.color = '#dc2626';
-                        resendStatus.textContent = '⚠️ ' + (res.error || 'Please wait a moment before requesting another OTP.');
-                    }
-                }
-            });
-        }
-
-        // SUCCESS MODAL AFTER OTP VERIFICATION
-        function showVerifiedSuccessModal(uid, fullName, email) {
-            const modal = document.getElementById('verifyModal');
-            const icon = document.getElementById('verifyModalIcon');
-            const title = document.getElementById('verifyModalTitle');
-            const subtitle = document.getElementById('verifyModalSubtitle');
-            const actions = document.getElementById('verifyModalActions');
-            const target = document.getElementById('verifyModalTarget');
-            const otpSection = document.getElementById('otpInputSection');
-
-            if (otpSection) otpSection.style.display = 'none';
-
-            icon.className = 'modal-icon success';
-            icon.innerHTML = '🎉';
-            title.innerText = 'Email Verified Successfully!';
-            target.innerText = email || uid;
-            subtitle.innerHTML = `
-                <div style="margin: 12px 0;">
-                    <div style="font-size: 1.1rem; font-weight: 900; color: #16a34a; margin-bottom: 10px;">
-                        Email Verified Successfully!
-                    </div>
-                    <div style="background: #fef3c7; border: 1.5px solid #fde68a; border-radius: 12px; padding: 14px 16px; color: #b45309; font-weight: 700; font-size: 0.88rem; line-height: 1.5; text-align: left;">
-                        ⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.
-                    </div>
-                </div>
-            `;
-
-            actions.innerHTML = `
-                <button type="button" class="modal-btn modal-btn-primary" onclick="proceedToSignInAfterVerify('${uid}')" style="background: #071b3b; color: #f5c75e; font-weight: 700; width: 100%;">
-                    🔑 Return to Sign In
-                </button>
-            `;
-
-            modal.classList.add('active');
-        }
-
-        window.proceedToSignInAfterVerify = function(uid) {
-            document.getElementById('verifyModal').classList.remove('active');
-            switchMode('signin');
-            const uInput = document.getElementById('signInUserId');
-            if (uInput) {
-                uInput.value = uid;
-                const pInput = document.getElementById('signInPass');
-                if (pInput) pInput.focus();
-            }
-            showAlert('⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
-        };
-
-        const closeVerifyBtn = document.getElementById('closeVerifyModalBtn');
-        if (closeVerifyBtn) {
-            closeVerifyBtn.addEventListener('click', () => {
-                document.getElementById('verifyModal').classList.remove('active');
-            });
-        }
-
-        // VERIFY ACCOUNT FROM 6-DIGIT OTP
-        async function handleOtpVerificationSuccess(uid, enteredOtp) {
-            try {
-                // 1. Fetch user data from RTDB
-                const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`);
-                let userData = null;
-                if (res.ok) {
-                    userData = await res.json();
-                }
-
-                if (!userData) {
-                    const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?key=${FIREBASE_API_KEY}`);
-                    if (fsRes.ok) {
-                        const fsDoc = await fsRes.json();
-                        if (fsDoc?.fields) {
-                            userData = {
-                                userId: fsDoc.fields.userId?.stringValue || uid,
-                                fullName: fsDoc.fields.fullName?.stringValue || uid,
-                                contact: fsDoc.fields.contact?.stringValue || fsDoc.fields.email?.stringValue || '',
-                                email: fsDoc.fields.email?.stringValue || fsDoc.fields.contact?.stringValue || '',
-                                password: fsDoc.fields.password?.stringValue || fsDoc.fields.plainPassword?.stringValue || '',
-                                verificationOtp: fsDoc.fields.verificationOtp?.stringValue || '',
-                                otpExpiresAt: fsDoc.fields.otpExpiresAt?.stringValue || '',
-                                status: fsDoc.fields.status?.stringValue || 'unverified'
-                            };
-                        }
-                    }
-                }
-
-                if (!userData) {
-                    showOtpStatus('❌ Account not found for verification.', '#dc2626');
-                    return false;
-                }
-
-                const emailToVerify = (userData.email || userData.contact || '').trim().toLowerCase();
-                const savedOtp = String(userData.verificationOtp || '').trim();
-                const cleanEntered = String(enteredOtp || '').trim();
-
-                // Check OTP match
-                if (!savedOtp || cleanEntered !== savedOtp) {
-                    showOtpStatus('❌ Incorrect OTP code. Please check your Gmail and try again.', '#dc2626');
-                    return false;
-                }
-
-                // Check expiration (15 minutes)
-                if (userData.otpExpiresAt && new Date(userData.otpExpiresAt).getTime() < Date.now()) {
-                    showOtpStatus('⚠️ This OTP code has expired. Please click "Resend OTP Code" to get a fresh code.', '#dc2626');
-                    return false;
-                }
-
-                showOtpStatus('✅ OTP verified successfully! Forwarding to Admin...', '#16a34a');
-
-                const targetStatus = (userData.status === 'approved' || uid === 'surya11008') ? 'approved' : 'pending';
-
-                // 1. Update RTDB
-                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contactVerified: true,
-                        emailVerified: true,
-                        isVerified: true,
-                        status: targetStatus,
-                        verifiedAt: new Date().toISOString(),
-                        adminEmail: 'info@sni.org.in'
-                    })
-                });
-
-                // 2. Update Firestore users collection
-                try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&updateMask.fieldPaths=adminEmail&key=${FIREBASE_API_KEY}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            fields: {
-                                contactVerified: { booleanValue: true },
-                                emailVerified: { booleanValue: true },
-                                isVerified: { booleanValue: true },
-                                status: { stringValue: targetStatus },
-                                verifiedAt: { stringValue: new Date().toISOString() },
-                                adminEmail: { stringValue: 'info@sni.org.in' }
-                            }
-                        })
-                    });
-                } catch(e) {}
-
-                // 3. ONLY NOW submit application to Admin (in pending_registrations collection)
-                if (targetStatus === 'pending') {
-                    try {
-                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(uid)}?key=${FIREBASE_API_KEY}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                fields: {
-                                    id: { stringValue: uid },
-                                    userId: { stringValue: uid },
-                                    username: { stringValue: uid },
-                                    name: { stringValue: userData.fullName || uid },
-                                    fullName: { stringValue: userData.fullName || uid },
-                                    contact: { stringValue: userData.email || userData.contact || '' },
-                                    email: { stringValue: userData.email || userData.contact || '' },
-                                    phone: { stringValue: '' },
-                                    role: { stringValue: 'MEM' },
-                                    status: { stringValue: 'pending' },
-                                    contactVerified: { booleanValue: true },
-                                    emailVerified: { booleanValue: true },
-                                    isVerified: { booleanValue: true },
-                                    verifiedAt: { stringValue: new Date().toISOString() },
-                                    adminEmail: { stringValue: 'info@sni.org.in' }
-                                }
-                            })
-                        });
-                    } catch(e) {}
-                }
-
-                try { localStorage.removeItem('sni_pending_verify_user'); } catch(e) {}
-                showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
-                return true;
-
-            } catch (e) {
-                console.error(e);
-                showOtpStatus('Verification failed due to a network error. Please try again.', '#dc2626');
-                return false;
-            }
-        }
-
-        // VERIFY ACCOUNT FROM EMAIL LINK (FALLBACK)
-        async function handleEmailVerifiedSuccess(uid, code = null) {
-            showAlert('Verifying your email with SNI & Google Firebase...', 'info');
-            try {
-                let isFirebaseEmailVerified = false;
-
-                // If oobCode is passed from Firebase email, apply it first
-                if (code) {
-                    try {
-                        const oobUpdateRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ oobCode: code })
-                        });
-                        if (oobUpdateRes.ok) {
-                            const oobData = await oobUpdateRes.json();
-                            if (oobData.emailVerified) {
-                                isFirebaseEmailVerified = true;
-                            }
-                        }
-                    } catch(e) {
-                        console.warn('oobCode apply error:', e);
-                    }
-                }
-
-                const res = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`);
-                let userData = null;
-                if (res.ok) {
-                    userData = await res.json();
-                }
-
-                if (!userData) {
-                    const fsRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?key=${FIREBASE_API_KEY}`);
-                    if (fsRes.ok) {
-                        const fsDoc = await fsRes.json();
-                        if (fsDoc?.fields) {
-                            userData = {
-                                userId: fsDoc.fields.userId?.stringValue || uid,
-                                fullName: fsDoc.fields.fullName?.stringValue || uid,
-                                contact: fsDoc.fields.contact?.stringValue || fsDoc.fields.email?.stringValue || '',
-                                email: fsDoc.fields.email?.stringValue || fsDoc.fields.contact?.stringValue || '',
-                                password: fsDoc.fields.password?.stringValue || fsDoc.fields.plainPassword?.stringValue || '',
-                                status: fsDoc.fields.status?.stringValue || 'unverified'
-                            };
-                        }
-                    }
-                }
-
-                if (!userData) {
-                    showAlert('❌ Account not found for verification.', 'error');
-                    return false;
-                }
-
-                const emailToVerify = (userData.email || userData.contact || '').trim().toLowerCase();
-                const passToVerify = userData.password || userData.plainPassword || 'SniUser123.';
-
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToVerify)) {
-                    showAlert('❌ Invalid email address. Please register with a valid Gmail address.', 'error');
-                    return false;
-                }
-
-                // If not already verified via oobCode, verify directly with Firebase Auth
-                if (!isFirebaseEmailVerified) {
-                    try {
-                        const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                email: emailToVerify,
-                                password: passToVerify,
-                                returnSecureToken: true
-                            })
-                        });
-                        if (authRes.ok) {
-                            const authData = await authRes.json();
-                            const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ idToken: authData.idToken })
-                            });
-                            if (lookupRes.ok) {
-                                const lookupData = await lookupRes.json();
-                                isFirebaseEmailVerified = lookupData.users?.[0]?.emailVerified === true;
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Firebase Auth lookup error:', e);
-                    }
-                }
-
-                if (!isFirebaseEmailVerified && uid !== 'surya11008') {
-                    showAlert('⚠️ Gmail verification required! Please check your Gmail for the OTP code or click the verification link.', 'error');
-                    showVerificationModal({
-                        userId: uid,
-                        fullName: userData.fullName || uid,
-                        email: emailToVerify,
-                        pass: passToVerify
-                    }, true);
-                    return false;
-                }
-
-                const targetStatus = (userData.status === 'approved' || uid === 'surya11008') ? 'approved' : 'pending';
-
-                // 1. Update RTDB
-                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(uid)}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contactVerified: true,
-                        emailVerified: true,
-                        isVerified: true,
-                        status: targetStatus,
-                        verifiedAt: new Date().toISOString(),
-                        adminEmail: 'info@sni.org.in'
-                    })
-                });
-
-                // 2. Update Firestore users collection
-                try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(uid)}?updateMask.fieldPaths=contactVerified&updateMask.fieldPaths=emailVerified&updateMask.fieldPaths=isVerified&updateMask.fieldPaths=status&updateMask.fieldPaths=verifiedAt&updateMask.fieldPaths=adminEmail&key=${FIREBASE_API_KEY}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            fields: {
-                                contactVerified: { booleanValue: true },
-                                emailVerified: { booleanValue: true },
-                                isVerified: { booleanValue: true },
-                                status: { stringValue: targetStatus },
-                                verifiedAt: { stringValue: new Date().toISOString() },
-                                adminEmail: { stringValue: 'info@sni.org.in' }
-                            }
-                        })
-                    });
-                } catch(e) {}
-
-                // 3. ONLY NOW submit application to Admin (in pending_registrations collection)
-                if (targetStatus === 'pending') {
-                    try {
-                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(uid)}?key=${FIREBASE_API_KEY}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                fields: {
-                                    id: { stringValue: uid },
-                                    userId: { stringValue: uid },
-                                    username: { stringValue: uid },
-                                    name: { stringValue: userData.fullName || uid },
-                                    fullName: { stringValue: userData.fullName || uid },
-                                    contact: { stringValue: userData.email || userData.contact || '' },
-                                    email: { stringValue: userData.email || userData.contact || '' },
-                                    phone: { stringValue: '' },
-                                    role: { stringValue: 'MEM' },
-                                    status: { stringValue: 'pending' },
-                                    contactVerified: { booleanValue: true },
-                                    emailVerified: { booleanValue: true },
-                                    isVerified: { booleanValue: true },
-                                    verifiedAt: { stringValue: new Date().toISOString() },
-                                    adminEmail: { stringValue: 'info@sni.org.in' }
-                                }
-                            })
-                        });
-                    } catch(e) {}
-                }
-
-                try { localStorage.removeItem('sni_pending_verify_user'); } catch(e) {}
-                showVerifiedSuccessModal(uid, userData.fullName || uid, userData.email || userData.contact);
-                return true;
-
-            } catch (e) {
-                console.error(e);
-                showAlert('Verification failed due to a network error. Please try again.', 'error');
-                return false;
-            }
-        }
-
-        // INITIAL CHECK
+        // INITIAL URL CHECK
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
-        const uidParam = urlParams.get('uid');
-        const otpParam = urlParams.get('otp');
-        const oobCode = urlParams.get('oobCode');
-
-        if (uidParam && otpParam) {
+        if (mode === 'join' || window.location.pathname.includes('join')) {
             switchMode('join');
-            showVerificationModal({
-                userId: uidParam,
-                fullName: uidParam,
-                email: '',
-                pass: '',
-                otp: otpParam
-            });
-            const otpIn = document.getElementById('otpCodeInput');
-            if (otpIn) {
-                otpIn.value = otpParam;
-                setTimeout(() => handleOtpSubmit(), 400);
-            }
-        } else if (mode === 'email_verified' && uidParam) {
-            handleEmailVerifiedSuccess(uidParam);
-        } else if (mode === 'verifyEmail' && oobCode) {
-            handleEmailVerifiedSuccess(uidParam, oobCode);
-        } else if (mode === 'join' || window.location.pathname.includes('join')) {
-            switchMode('join');
-            // Auto restore pending verification modal if present
-            try {
-                const savedPending = localStorage.getItem('sni_pending_verify_user');
-                if (savedPending && !otpParam) {
-                    const parsed = JSON.parse(savedPending);
-                    if (parsed && parsed.userId) {
-                        showVerificationModal(parsed);
-                    }
-                }
-            } catch(e) {}
         } else {
             switchMode('signin');
-        }
-
-        const existingOtpLink = document.getElementById('enterExistingOtpLink');
-        if (existingOtpLink) {
-            existingOtpLink.addEventListener('click', () => {
-                let saved = null;
-                try { saved = JSON.parse(localStorage.getItem('sni_pending_verify_user')); } catch(e) {}
-                const uid = saved?.userId || document.getElementById('joinUserId')?.value.trim() || prompt('Please enter your SNI User ID:')?.trim().toLowerCase();
-                if (uid) {
-                    showVerificationModal(saved || { userId: uid, email: document.getElementById('joinContact')?.value.trim() || uid });
-                }
-            });
         }
 
         checkExistingSession();

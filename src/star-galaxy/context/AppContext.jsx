@@ -99,27 +99,56 @@ export function normalizeRole(role, userId) {
 export function setUnifiedSession(user) {
   if (!user) return;
   const uid = user.userId || user.username || user.id;
+  const cleanUser = {
+    userId: uid,
+    id: uid,
+    username: uid,
+    fullName: user.fullName || user.name || uid,
+    name: user.fullName || user.name || uid,
+    contact: user.contact || user.phone || user.gmail || '',
+    phone: user.contact || user.phone || user.gmail || '',
+    role: normalizeRole(user.role, uid),
+    status: user.status || 'approved',
+    joinedAt: user.registeredAt || user.createdAt || new Date().toISOString()
+  };
 
   try {
-    // Isolated Star Galaxy session ONLY - NEVER overwrite or pollute SNI session
+    localStorage.setItem('sni_user_session', JSON.stringify(cleanUser));
+    localStorage.setItem('sni_current_user', JSON.stringify(cleanUser));
+    localStorage.setItem('sni_unified_session', JSON.stringify(cleanUser));
+    localStorage.setItem('live_counter_current_user', JSON.stringify(cleanUser));
     localStorage.setItem(SESSION_USER_KEY, uid);
     sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+
+    const cookiePayload = encodeURIComponent(JSON.stringify(cleanUser));
+    const maxAge = 365 * 24 * 60 * 60;
+    document.cookie = `sni_unified_user=${cookiePayload}; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+    document.cookie = `sni_session_active=true; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+    document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   } catch (e) {}
 }
 
 export function clearUnifiedSession() {
   try {
-    // Isolated Star Galaxy session cleanup ONLY - NEVER remove SNI session or cookies
+    localStorage.removeItem('sni_user_session');
+    localStorage.removeItem('sni_current_user');
+    localStorage.removeItem('sni_unified_session');
+    localStorage.removeItem('live_counter_current_user');
     localStorage.removeItem(SESSION_USER_KEY);
     localStorage.removeItem('star_galaxy_active_tab');
     localStorage.removeItem('star_galaxy_selected_activity');
     sessionStorage.removeItem('star_galaxy_pin_unlocked');
+
+    document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+    document.cookie = `sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+    document.cookie = `sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax`;
+    document.cookie = `sni_session_active=; Path=/; Max-Age=0; SameSite=Lax`;
   } catch (e) {}
 }
 
 export function getStoredUnifiedUser(userList = []) {
   try {
-    // Isolated Star Galaxy session check ONLY - NEVER auto-login from SNI session
     const savedUserId = localStorage.getItem(SESSION_USER_KEY);
     if (savedUserId) {
       const found = userList.find(u => 
@@ -128,6 +157,65 @@ export function getStoredUnifiedUser(userList = []) {
         (u.username && String(u.username).toLowerCase() === savedUserId.toLowerCase())
       );
       if (found && found.status === 'approved') return found;
+    }
+
+    const stored = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_unified_session') || localStorage.getItem('sni_current_user');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const uid = parsed.userId || parsed.id || parsed.username;
+      if (uid) {
+        const found = userList.find(u => 
+          u.id === uid || 
+          (u.userId && String(u.userId).toLowerCase() === String(uid).toLowerCase()) || 
+          (u.username && String(u.username).toLowerCase() === String(uid).toLowerCase())
+        );
+        if (found && found.status === 'approved') return found;
+        if (parsed.status === 'approved' || parsed.role === 'admin') {
+          return {
+            id: uid,
+            userId: uid,
+            username: uid,
+            name: parsed.fullName || parsed.name || uid,
+            fullName: parsed.fullName || parsed.name || uid,
+            role: parsed.role || 'member',
+            status: 'approved',
+            contact: parsed.contact || parsed.phone || ''
+          };
+        }
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      const cookies = document.cookie.split(';');
+      for (const c of cookies) {
+        const [k, v] = c.trim().split('=');
+        if (k === 'sni_unified_user' && v) {
+          try {
+            const u = JSON.parse(decodeURIComponent(v));
+            if (u && (u.userId || u.id)) {
+              const uid = u.userId || u.id;
+              const found = userList.find(x => 
+                x.id === uid || 
+                (x.userId && String(x.userId).toLowerCase() === String(uid).toLowerCase()) || 
+                (x.username && String(x.username).toLowerCase() === String(uid).toLowerCase())
+              );
+              if (found && found.status === 'approved') return found;
+              if (u.status === 'approved' || u.role === 'admin') {
+                return {
+                  id: uid,
+                  userId: uid,
+                  username: uid,
+                  name: u.fullName || u.name || uid,
+                  fullName: u.fullName || u.name || uid,
+                  role: u.role || 'member',
+                  status: 'approved',
+                  contact: u.contact || u.phone || ''
+                };
+              }
+            }
+          } catch (e) {}
+        }
+      }
     }
   } catch (e) {}
   return null;
@@ -267,18 +355,35 @@ export function AppProvider({ children }) {
     return INITIAL_DATA;
   });
 
-  // Current logged in user (restored from Star Galaxy session only)
+  // Current logged in user (restored automatically from unified SNI session or null)
   const [currentUser, setCurrentUser] = useState(() => {
     return getStoredUnifiedUser(data.users || []);
   });
 
-  // Keep Star Galaxy session synchronized if users list updates
+  // Cross-subdomain SSO & URL parameter session synchronization
   useEffect(() => {
     if (!currentUser) {
-      const starUser = getStoredUnifiedUser(data.users || []);
-      if (starUser) {
-        setCurrentUser(starUser);
+      const unified = getStoredUnifiedUser(data.users || []);
+      if (unified) {
+        setCurrentUser(unified);
+        return;
       }
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ssoUser = urlParams.get('sso_user');
+        if (ssoUser) {
+          const cleanSso = String(ssoUser).trim().toLowerCase();
+          const matched = (data.users || []).find(u => 
+            (u.id && u.id.toLowerCase() === cleanSso) ||
+            (u.userId && u.userId.toLowerCase() === cleanSso) ||
+            (u.username && u.username.toLowerCase() === cleanSso)
+          );
+          if (matched && matched.status === 'approved') {
+            setUnifiedSession(matched);
+            setCurrentUser(matched);
+          }
+        }
+      } catch (e) {}
     }
   }, [data.users, currentUser]);
 
@@ -800,9 +905,7 @@ export function AppProvider({ children }) {
             removePendingRegistrationFromFirestore(p.id).catch(() => {});
             return;
           }
-          // STRICT SECURITY: Only accept into pending if email is verified and has a valid email!
-          const hasEmail = (p.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) || (p.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.contact));
-          if (!hasEmail || p.emailVerified !== true || p.status === 'unverified') {
+          if (p.status === 'unverified') {
             removePendingRegistrationFromFirestore(p.id).catch(() => {});
             return;
           }
@@ -1350,49 +1453,7 @@ export function AppProvider({ children }) {
       return { success: false, error: 'Incorrect SNI Password. Please try again.' };
     }
 
-    // Check email verification (except for admin)
     const isAdmin = isUserAdmin(user) || String(user.role || '').toUpperCase() === 'ADMIN';
-    if (!isAdmin && (user.contactVerified === false || user.status === 'unverified' || user.emailVerified === false)) {
-      // Check if user has already clicked the verification link in Gmail
-      let isNowEmailVerified = false;
-      const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-      try {
-        const emailToCheck = user.email || user.contact;
-        const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: emailToCheck, password: cleanPass, returnSecureToken: true })
-        });
-        if (authRes.ok) {
-          const authData = await authRes.json();
-          const lookupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken: authData.idToken })
-          });
-          if (lookupRes.ok) {
-            const lookupData = await lookupRes.json();
-            isNowEmailVerified = lookupData.users?.[0]?.emailVerified === true;
-          }
-        }
-      } catch (e) {}
-
-      if (isNowEmailVerified) {
-        await verifyUserContact(user.id, null);
-        return {
-          success: false,
-          isPending: true,
-          error: '⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.'
-        };
-      }
-
-      return {
-        success: false,
-        isUnverified: true,
-        unverifiedUser: user,
-        error: '⚠️ Gmail verification required before sign in. Please open your Gmail and click the official verification link sent from SNI.'
-      };
-    }
 
     // Check approval status (Strictly required: only after admin approves can they sign in!)
     if (!isAdmin && user.status !== 'approved') {
@@ -1411,7 +1472,7 @@ export function AppProvider({ children }) {
       return {
         success: false,
         isPending: true,
-        error: '⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin. Please wait until the Admin approves your account before signing in.'
+        error: '⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.'
       };
     }
 
@@ -1503,21 +1564,13 @@ export function AppProvider({ children }) {
     const fullName = (formData.fullName || formData.name || '').trim();
     const username = (formData.username || formData.userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     const password = (formData.password || '').trim();
-    const contact = (formData.contact || formData.email || formData.phone || '').trim().toLowerCase();
     const nickname = (formData.nickname || '').trim();
     const moreDetails = (formData.moreDetails || formData.place || formData.optionalInfo || '').trim();
 
-    if (!fullName || !username || !password || !contact) {
+    if (!fullName || !username || !password) {
       return {
         success: false,
-        error: 'Full Name, SNI ID, Gmail address, and SNI Password are required.',
-      };
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
-      return {
-        success: false,
-        error: 'Please enter a valid Gmail / Email address (e.g. name@gmail.com).',
+        error: 'Full Name, SNI ID, and SNI Password are required.',
       };
     }
 
@@ -1564,21 +1617,8 @@ export function AppProvider({ children }) {
       }
     } catch (e) {}
 
-    const isAutoApproval = data?.settings?.autoUserApproval !== false;
-
-    // Generate secure 6-digit OTP code and expiration (15 minutes)
     const isAdm = cleanUserLower === 'surya11008';
-    const verifyOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
-
-    // 3. Dispatch real official verification email with OTP via Firebase Auth
-    if (!isAdm) {
-      try {
-        await sendOfficialVerificationEmail(contact, password, cleanUserLower, verifyOtp);
-      } catch (e) {
-        console.warn('Official email send warning:', e);
-      }
-    }
+    const targetStatus = isAdm ? 'approved' : 'pending';
 
     const newUser = {
       id: cleanUserLower,
@@ -1587,32 +1627,33 @@ export function AppProvider({ children }) {
       name: fullName,
       fullName: fullName,
       phone: '',
-      email: contact,
-      contact,
+      email: '',
+      contact: '',
       password,
       plainPassword: password,
       place: moreDetails,
       moreDetails,
       nickname,
-      role: 'MEM',
-      status: 'unverified',
-      contactVerified: false,
-      emailVerified: false,
-      isVerified: false,
-      verificationOtp: isAdm ? '' : verifyOtp,
-      otpExpiresAt: isAdm ? '' : otpExpiresAt,
-      verificationSentAt: new Date().toISOString(),
+      role: isAdm ? 'ADMIN' : 'MEM',
+      status: targetStatus,
+      contactVerified: true,
+      emailVerified: true,
+      isVerified: true,
+      verificationOtp: '',
+      otpExpiresAt: '',
+      verificationSentAt: '',
       personalPin: '',
       hasSetPersonalPin: false,
       pinLockEnabled: false,
       createdAt: formatDate(new Date()),
       registeredAt: new Date().toISOString(),
+      adminEmail: 'info@sni.org.in',
     };
 
-    // 1. Save to Firestore (only to users collection, NOT in pending_registrations until verified!)
+    // 1. Save to Firestore users collection
     await saveUserToFirestore(newUser);
 
-    // 2. Save to unified RTDB
+    // 2. Dual sync to unified RTDB
     try {
       await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(cleanUserLower)}.json`, {
         method: 'PUT',
@@ -1620,23 +1661,30 @@ export function AppProvider({ children }) {
         body: JSON.stringify({
           userId: cleanUserLower,
           fullName: fullName,
-          contact: contact,
+          contact: '',
           phone: '',
-          email: contact,
+          email: '',
           password: password,
-          role: 'MEM',
-          status: 'unverified',
-          contactVerified: false,
-          emailVerified: false,
-          isVerified: false,
-          verificationOtp: isAdm ? '' : verifyOtp,
-          otpExpiresAt: isAdm ? '' : otpExpiresAt,
-          verificationSentAt: newUser.verificationSentAt,
-          joinedAt: newUser.registeredAt
+          role: isAdm ? 'ADMIN' : 'MEM',
+          status: targetStatus,
+          contactVerified: true,
+          emailVerified: true,
+          isVerified: true,
+          joinedAt: newUser.registeredAt,
+          adminEmail: 'info@sni.org.in'
         })
       });
     } catch (e) {
       console.warn('RTDB sync on register error:', e);
+    }
+
+    // 3. If non-admin, immediately forward to Firestore pending_registrations
+    if (!isAdm) {
+      try {
+        await savePendingRegistrationToFirestore(newUser);
+      } catch (e) {
+        console.warn('Pending registration forward failed:', e);
+      }
     }
 
     // Optimistically update local React state
@@ -1647,14 +1695,13 @@ export function AppProvider({ children }) {
 
     return {
       success: true,
-      requiresVerification: true,
-      isAutoApproved: isAutoApproval,
-      contact,
-      email: contact,
+      requiresVerification: false,
+      isAutoApproved: isAdm,
       userId: cleanUserLower,
       password,
-      verifyOtp,
-      message: `🎉 Registration submitted successfully, ${fullName}! A 6-digit verification code (OTP) has been dispatched to your Gmail. Please enter the OTP to verify your account.`,
+      message: isAdm
+        ? `Welcome, Admin ${fullName}!`
+        : `⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.`,
       newUser,
     };
   };

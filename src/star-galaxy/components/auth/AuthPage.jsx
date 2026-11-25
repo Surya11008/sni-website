@@ -20,20 +20,11 @@ import {
 import InstallAppModal from '../common/InstallAppModal';
 
 export default function AuthPage() {
-  const { login, register, resetPasswordWithContact, verifyUserContact, sendOfficialVerificationEmail } = useApp();
+  const { login, register, resetPasswordWithContact } = useApp();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [showInstallModal, setShowInstallModal] = useState(false);
-
-  // Verification modal state
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [verifyModalData, setVerifyModalData] = useState(null);
   const [verifySuccessMsg, setVerifySuccessMsg] = useState('');
-  const [isResendingEmail, setIsResendingEmail] = useState(false);
-  const [resendEmailMsg, setResendEmailMsg] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [otpError, setOtpError] = useState('');
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -47,7 +38,6 @@ export default function AuthPage() {
   // Register form state (Unified SNI Join fields)
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
-  const [contact, setContact] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(true);
@@ -68,36 +58,17 @@ export default function AuthPage() {
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
-  // URL Parameter check for Verification mode (?mode=email_verified&uid=... or ?mode=verify&uid=...)
   useEffect(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const modeParam = urlParams.get('mode');
-      const uidParam = urlParams.get('uid');
-      const tokenParam = urlParams.get('token');
-      const otpParam = urlParams.get('otp');
-      const oobCodeParam = urlParams.get('oobCode');
-      const codeParam = tokenParam || otpParam || oobCodeParam;
-
-      if ((modeParam === 'email_verified' || modeParam === 'verify' || modeParam === 'verifyEmail' || otpParam) && uidParam) {
-        (async () => {
-          setLoginError('');
-          const res = await verifyUserContact(uidParam, codeParam);
-          if (res?.success) {
-            setVerifySuccessMsg(`🎉 Email verified successfully for ${uidParam}! Your application has been submitted to Admin. Status: Waiting for Admin Approval. You will be able to sign in once an administrator approves your account.`);
-            setMode('login');
-            setLoginIdentifier(uidParam);
-          } else {
-            setLoginError(res?.error || 'Verification failed. Please contact SNI Admin.');
-          }
-        })();
-      } else if (modeParam === 'join' || modeParam === 'register') {
+      if (modeParam === 'join' || modeParam === 'register') {
         setMode('register');
       }
     } catch (e) {}
-  }, [verifyUserContact]);
+  }, []);
 
-  // 1. SIGN IN HANDLER
+  // 1. SIGN IN HANDLER (NO EMAIL / PHONE REQUIRED)
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -119,20 +90,6 @@ export default function AuthPage() {
         try {
           speakWelcomeVoice();
         } catch (e) {}
-      } else if (res.isUnverified) {
-        const u = res.unverifiedUser || {};
-        const emailAddress = u.email || u.contact || '';
-        setResendEmailMsg('');
-        setVerifyModalData({
-          userId: u.id || cleanId,
-          fullName: u.fullName || u.name || cleanId,
-          contact: emailAddress,
-          email: emailAddress,
-          password: cleanPass,
-          isLoginBlock: true,
-        });
-        setShowVerifyModal(true);
-        setLoginError(res.error || 'Gmail verification required before sign in.');
       } else {
         setLoginError(res.error || 'Sign in failed. Please verify your credentials.');
       }
@@ -144,7 +101,7 @@ export default function AuthPage() {
     }
   };
 
-  // 2. JOIN (REGISTER) HANDLER - STRICTLY EMAIL ONLY
+  // 2. JOIN (REGISTER) HANDLER (NO EMAIL / PHONE REQUIRED)
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegError('');
@@ -152,17 +109,11 @@ export default function AuthPage() {
 
     const cleanFullName = fullName.trim();
     const cleanUserId = username.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    const cleanContact = contact.trim().toLowerCase();
     const cleanPass = password.trim();
     const cleanConfirm = confirmPassword.trim();
 
-    if (!cleanFullName || !cleanUserId || !cleanPass || !cleanContact) {
-      setRegError('Please fill in all required fields (Full Name, SNI ID, Gmail address, and Password).');
-      return;
-    }
-
-    if (!cleanContact.includes('@') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanContact)) {
-      setRegError('Please enter a valid Gmail / Email address (e.g. name@gmail.com).');
+    if (!cleanFullName || !cleanUserId || !cleanPass) {
+      setRegError('Please fill in all required fields (Full Name, SNI ID, and Password).');
       return;
     }
 
@@ -193,26 +144,19 @@ export default function AuthPage() {
         name: cleanFullName,
         username: cleanUserId,
         userId: cleanUserId,
-        contact: cleanContact,
-        email: cleanContact,
         password: cleanPass,
       });
 
       if (res.success) {
-        setRegSuccess(res.message || `Welcome to SNI, ${cleanFullName}! Verification OTP dispatched.`);
-        setResendEmailMsg('');
-        setOtpError('');
-        setOtpInput('');
-        setVerifyModalData({
-          userId: cleanUserId,
-          fullName: cleanFullName,
-          contact: cleanContact,
-          email: cleanContact,
-          password: cleanPass,
-          otp: res.verifyOtp,
-          isLoginBlock: false,
-        });
-        setShowVerifyModal(true);
+        setFullName('');
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
+        setMode('login');
+        setLoginIdentifier(cleanUserId);
+        setLoginPassword('');
+        setLoginSuccess('');
+        setLoginError('⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.');
       } else {
         setRegError(res.error || 'Registration failed. Please check the information and try again.');
       }
@@ -221,102 +165,6 @@ export default function AuthPage() {
       setRegError('Failed to register. Please try again.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleVerifyOtpSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setOtpError('');
-    const cleanOtp = otpInput.trim();
-    if (!cleanOtp || cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
-      setOtpError('⚠️ Please enter the full 6-digit numeric OTP code.');
-      return;
-    }
-
-    if (!verifyModalData?.userId) {
-      setOtpError('⚠️ Session expired. Please fill out the registration form again.');
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    try {
-      const res = await verifyUserContact(verifyModalData.userId, cleanOtp);
-      if (res?.success) {
-        setVerifyModalData(prev => ({
-          ...prev,
-          isVerifiedSuccess: true
-        }));
-        setVerifySuccessMsg(
-          'Email Verified Successfully!\n⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.'
-        );
-        setOtpInput('');
-      } else {
-        setOtpError(res?.error || '❌ Incorrect OTP code. Please check your Gmail and try again.');
-      }
-    } catch (err) {
-      setOtpError('Network error verifying OTP. Please try again.');
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  const handleResendEmail = async () => {
-    if (!verifyModalData?.email || !verifyModalData?.userId) return;
-    setIsResendingEmail(true);
-    setResendEmailMsg('');
-    setOtpError('');
-    try {
-      // Generate fresh 6-digit OTP
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      const newExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
-      setVerifyModalData(prev => ({ ...prev, otp: newOtp }));
-
-      // Update RTDB
-      try {
-        await fetch(`https://sni-org-in-default-rtdb.firebaseio.com/users/${encodeURIComponent(verifyModalData.userId)}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            verificationOtp: newOtp,
-            otpExpiresAt: newExpiresAt
-          })
-        });
-      } catch(e) {}
-
-      // Update Firestore
-      try {
-        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(verifyModalData.userId)}?updateMask.fieldPaths=verificationOtp&updateMask.fieldPaths=otpExpiresAt&key=${FIREBASE_API_KEY}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              verificationOtp: { stringValue: newOtp },
-              otpExpiresAt: { stringValue: newExpiresAt }
-            }
-          })
-        });
-      } catch(e) {}
-
-      if (typeof sendOfficialVerificationEmail === 'function') {
-        const res = await sendOfficialVerificationEmail(
-          verifyModalData.email,
-          verifyModalData.password || '',
-          verifyModalData.userId,
-          newOtp
-        );
-        if (res?.success) {
-          setResendEmailMsg('✅ Fresh 6-digit OTP code dispatched! Please check your Gmail inbox.');
-        } else {
-          setResendEmailMsg(`⚠️ ${res?.error || 'Failed to resend OTP. Please check your connection.'}`);
-        }
-      } else {
-        setResendEmailMsg('✅ Verification request recorded. Please check your Gmail.');
-      }
-    } catch (e) {
-      setResendEmailMsg('⚠️ Failed to resend email. Please retry.');
-    } finally {
-      setIsResendingEmail(false);
     }
   };
 
@@ -589,24 +437,6 @@ export default function AuthPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Gmail / Email Address *
-              </label>
-              <input
-                type="email"
-                required
-                placeholder="e.g. name@gmail.com"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 text-slate-900 focus:bg-white focus:border-[#124b91] focus:ring-2 focus:ring-[#124b91]/20 outline-none transition"
-                autoComplete="email"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                An official verification link will be sent to your Gmail address.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Create SNI Password *
               </label>
               <div className="relative">
@@ -813,146 +643,6 @@ export default function AuthPage() {
         isOpen={showInstallModal}
         onClose={() => setShowInstallModal(false)}
       />
-
-      {/* 📩 SNI Official Gmail Verification Modal with 6-Digit OTP */}
-      {showVerifyModal && verifyModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
-            {verifyModalData.isVerifiedSuccess ? (
-              <div className="py-2">
-                <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-3xl shadow-xs">
-                  🎉
-                </div>
-                <h3 className="text-xl font-black text-emerald-700 mb-2">
-                  Email Verified Successfully!
-                </h3>
-                <div className="my-4 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-left text-xs font-bold text-amber-900 leading-relaxed">
-                  ⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowVerifyModal(false);
-                    setMode('login');
-                    setLoginIdentifier(verifyModalData.userId);
-                    setLoginError('');
-                    setVerifySuccessMsg(
-                      '⏳ Waiting for Admin Approval: Your email is verified! Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.'
-                    );
-                  }}
-                  className="w-full py-3 px-4 rounded-xl bg-[#071b3b] hover:bg-[#124b91] text-[#f5c75e] font-extrabold text-xs shadow-md transition cursor-pointer"
-                >
-                  🔑 Return to Sign In
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="w-16 h-16 rounded-full bg-blue-50 border-2 border-blue-200 text-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
-                  📩
-                </div>
-                <h3 className="text-lg font-black text-slate-800">
-                  Enter Verification Code (OTP)
-                </h3>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  A 6-digit verification code (OTP) has been dispatched to your Gmail:
-                  <br />
-                  <span className="inline-block mt-2 font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
-                    {verifyModalData.email || verifyModalData.contact}
-                  </span>
-                </p>
-
-                {/* 🔑 6-Digit OTP Input Box */}
-                <div className="my-4 p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 text-center">
-                  <label className="block text-xs font-bold text-slate-800 mb-1">
-                    🔑 6-Digit Verification Code (OTP)
-                  </label>
-                  <p className="text-[11px] text-slate-500 mb-3">
-                    Check your Gmail inbox for the OTP code, enter it below, and click verify.
-                  </p>
-                  <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      placeholder="• • • • • •"
-                      value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleVerifyOtpSubmit();
-                        }
-                      }}
-                      className="w-36 text-center text-xl font-mono font-black tracking-widest px-3 py-2 border-2 border-slate-300 rounded-xl bg-white text-slate-800 outline-none focus:border-[#124b91]"
-                    />
-                    <button
-                      type="button"
-                      disabled={isVerifyingOtp}
-                      onClick={handleVerifyOtpSubmit}
-                      className="py-2.5 px-4 rounded-xl bg-[#071b3b] hover:bg-[#124b91] text-[#f5c75e] font-extrabold text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
-                    >
-                      {isVerifyingOtp ? 'Verifying...' : 'Verify OTP →'}
-                    </button>
-                  </div>
-                  {otpError && (
-                    <p className="text-xs font-bold text-rose-600 mt-2.5 animate-in fade-in">
-                      {otpError}
-                    </p>
-                  )}
-                </div>
-
-                {/* Step-by-step Instructions Box */}
-                <div className="mt-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-700">
-                  <p className="font-bold text-slate-900 mb-1.5">Instructions:</p>
-                  <ol className="list-decimal list-inside space-y-1 leading-relaxed text-[11px] text-slate-600">
-                    <li>Open your <strong>Gmail Inbox</strong> (or check Spam / Promotions folder).</li>
-                    <li>Find the email from SNI with your 6-digit OTP code.</li>
-                    <li>Enter the OTP code above and click <strong>Verify OTP</strong>.</li>
-                    <li>Only after OTP verification is your request sent to Admin for approval.</li>
-                  </ol>
-                </div>
-
-                {resendEmailMsg && (
-                  <div className="mt-3 p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                    {resendEmailMsg}
-                  </div>
-                )}
-
-                <div className="mt-4 space-y-2">
-                  <a
-                    href="https://mail.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition"
-                  >
-                    <Mail className="w-4 h-4" />
-                    <span>Open Gmail Inbox</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    disabled={isResendingEmail}
-                    onClick={handleResendEmail}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 transition cursor-pointer disabled:opacity-50"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{isResendingEmail ? 'Sending...' : '🔄 Resend OTP Code'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowVerifyModal(false)}
-                    className="w-full py-2 px-4 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-semibold cursor-pointer"
-                  >
-                    Dismiss &amp; Continue to Sign In
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
