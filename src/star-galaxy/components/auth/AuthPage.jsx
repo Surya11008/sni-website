@@ -210,9 +210,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100dvh-4rem)] sm:min-h-screen flex items-center justify-center py-4 sm:py-8 md:py-12 px-3 sm:px-6">
+    <div className="w-full flex items-center justify-center py-2 sm:py-6 md:py-10 px-3 sm:px-6 my-auto">
       {/* Official SNI Auth Card */}
-      <div className="w-full max-w-[460px] bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-amber-300/40 relative overflow-hidden p-5 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-[min(480px,100%)] bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-amber-300/40 relative overflow-hidden p-5 sm:p-7 md:p-8 animate-in fade-in zoom-in-95 duration-200">
         {/* Top Gold Gradient Stripe */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#071b3b] via-[#f5c75e] to-[#124b91]" />
 
