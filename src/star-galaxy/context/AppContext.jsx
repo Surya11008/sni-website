@@ -1618,7 +1618,7 @@ export function AppProvider({ children }) {
     } catch (e) {}
 
     const isAdm = cleanUserLower === 'surya11008';
-    const targetStatus = isAdm ? 'approved' : 'pending';
+    const targetStatus = isAdm ? 'approved' : (userData.status || 'unverified');
 
     const newUser = {
       id: cleanUserLower,
@@ -1626,9 +1626,9 @@ export function AppProvider({ children }) {
       username: cleanUserLower,
       name: fullName,
       fullName: fullName,
-      phone: '',
-      email: '',
-      contact: '',
+      phone: userData.phone || '',
+      email: userData.email || '',
+      contact: userData.phone || userData.contact || userData.email || '',
       password,
       plainPassword: password,
       place: moreDetails,
@@ -1636,12 +1636,14 @@ export function AppProvider({ children }) {
       nickname,
       role: isAdm ? 'ADMIN' : 'MEM',
       status: targetStatus,
-      contactVerified: true,
-      emailVerified: true,
-      isVerified: true,
-      verificationOtp: '',
-      otpExpiresAt: '',
-      verificationSentAt: '',
+      contactVerified: isAdm ? true : (userData.phoneVerified || false),
+      emailVerified: isAdm ? true : (userData.emailVerified || false),
+      phoneVerified: isAdm ? true : (userData.phoneVerified || false),
+      isVerified: isAdm ? true : (userData.isVerified || false),
+      verificationOtp: userData.verificationOtp || '',
+      otpExpiresAt: userData.otpExpiresAt || '',
+      verificationChannel: userData.verificationChannel || 'whatsapp',
+      verificationSentAt: userData.verificationSentAt || new Date().toISOString(),
       personalPin: '',
       hasSetPersonalPin: false,
       pinLockEnabled: false,
@@ -1661,15 +1663,18 @@ export function AppProvider({ children }) {
         body: JSON.stringify({
           userId: cleanUserLower,
           fullName: fullName,
-          contact: '',
-          phone: '',
-          email: '',
+          contact: newUser.contact,
+          phone: newUser.phone,
+          email: newUser.email,
           password: password,
           role: isAdm ? 'ADMIN' : 'MEM',
           status: targetStatus,
-          contactVerified: true,
-          emailVerified: true,
-          isVerified: true,
+          contactVerified: newUser.contactVerified,
+          emailVerified: newUser.emailVerified,
+          phoneVerified: newUser.phoneVerified,
+          isVerified: newUser.isVerified,
+          verificationOtp: newUser.verificationOtp,
+          otpExpiresAt: newUser.otpExpiresAt,
           joinedAt: newUser.registeredAt,
           adminEmail: 'info@sni.org.in'
         })
@@ -1678,8 +1683,8 @@ export function AppProvider({ children }) {
       console.warn('RTDB sync on register error:', e);
     }
 
-    // 3. If non-admin, immediately forward to Firestore pending_registrations
-    if (!isAdm) {
+    // 3. If already approved (Admin), forward to pending_registrations only if pending
+    if (!isAdm && targetStatus === 'pending') {
       try {
         await savePendingRegistrationToFirestore(newUser);
       } catch (e) {
@@ -1781,13 +1786,14 @@ export function AppProvider({ children }) {
     if (!isVerifiedNow) {
       return {
         success: false,
-        error: '❌ Incorrect OTP code. Please check your Gmail and try again.'
+        error: '❌ Incorrect verification code. Please check and try again.'
       };
     }
 
     const updatedFields = {
       contactVerified: true,
       emailVerified: true,
+      phoneVerified: true,
       isVerified: true,
       verifiedAt: new Date().toISOString(),
       adminEmail: 'info@sni.org.in',

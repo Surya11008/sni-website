@@ -824,6 +824,250 @@
                 font-size: 27px;
             }
         }
+
+        /* ========================================================
+           PHONE NUMBER REQUIRED & OTP VERIFICATION STYLES
+           ======================================================== */
+        .phone-step-view, .otp-step-view, .success-step-view {
+            display: none;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        .phone-step-view.active, .otp-step-view.active, .success-step-view.active {
+            display: block;
+        }
+
+        .phone-heading {
+            font-size: clamp(22px, 3.2vw, 27px);
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            letter-spacing: -0.4px;
+            margin-bottom: 6px;
+        }
+
+        .phone-subheading {
+            font-size: clamp(13px, 1.2vw, 14.5px);
+            color: #64748b;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 320px;
+            margin: 0 auto clamp(18px, 3vh, 26px);
+        }
+
+        .country-select-wrap {
+            position: relative;
+            margin-bottom: 18px;
+        }
+
+        .country-select-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 20px;
+            border-radius: 9999px;
+            border: 1.5px solid #d1d5db;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 15.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .country-select-btn:hover {
+            border-color: #94a3b8;
+        }
+
+        .country-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            padding: 6px;
+        }
+
+        .country-dropdown-menu.active {
+            display: block;
+        }
+
+        .country-opt-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .country-opt-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .phone-floating-input-wrap {
+            position: relative;
+            margin-bottom: 22px;
+        }
+
+        .phone-floating-label {
+            position: absolute;
+            top: -9px;
+            left: 18px;
+            background: #ffffff;
+            padding: 0 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #64748b;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .phone-input-box {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid #d1d5db;
+            border-radius: 9999px;
+            padding: 12px 20px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .phone-input-box:focus-within {
+            border-color: #0f172a;
+            box-shadow: 0 0 0 1px #0f172a;
+        }
+
+        .phone-dial-code {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        .phone-native-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+        }
+
+        .send-via-section {
+            margin-bottom: 26px;
+        }
+
+        .send-via-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .channel-pill-group {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+            gap: 4px;
+        }
+
+        .channel-pill-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 9999px;
+            border: none;
+            background: transparent;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .channel-pill-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .btn-continue-black {
+            width: 100%;
+            padding: 15px;
+            border-radius: 9999px;
+            border: none;
+            background: #000000;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-continue-black:hover {
+            background: #1f2937;
+        }
+
+        .btn-continue-black:active {
+            transform: scale(0.99);
+        }
+
+        .otp-input-large {
+            width: 100%;
+            max-width: 260px;
+            margin: 0 auto 20px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: 900;
+            font-size: 26px;
+            letter-spacing: 0.4em;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #0f172a;
+            outline: none;
+            display: block;
+        }
+
+        .otp-input-large:focus {
+            border-color: #000000;
+            background: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -976,7 +1220,7 @@
                     </div>
 
                     <button type="submit" class="btn-submit btn-join-special" id="joinSubmitBtn">
-                        <span>✨ Submit Registration</span>
+                        <span>✨ Continue to Verification →</span>
                     </button>
 
                     <div class="auth-switch-prompt">
@@ -984,6 +1228,111 @@
                     </div>
                     
                 </form>
+
+                <!-- 3. PHONE NUMBER REQUIRED STEP (MATCHES USER MOCKUP EXACTLY) -->
+                <div id="phoneStepView" class="phone-step-view">
+                    <h2 class="phone-heading">Phone number required</h2>
+                    <p class="phone-subheading">Add your phone number to continue. We'll send a one-time code to verify it.</p>
+
+                    <!-- Country Selector -->
+                    <div class="country-select-wrap">
+                        <button type="button" class="country-select-btn" id="countrySelectBtn">
+                            <span id="countrySelectedText">India (+91)</span>
+                            <span style="font-size: 14px; color: #64748b;">▼</span>
+                        </button>
+                        <div class="country-dropdown-menu" id="countryDropdownMenu"></div>
+                    </div>
+
+                    <!-- Phone Number Floating Input -->
+                    <div class="phone-floating-input-wrap">
+                        <label class="phone-floating-label">Phone number</label>
+                        <div class="phone-input-box">
+                            <span class="phone-dial-code" id="phoneDialCodePrefix">+91</span>
+                            <input type="tel" id="phoneNativeInput" class="phone-native-input" placeholder="Enter mobile number" inputmode="numeric" pattern="[0-9]*" autocomplete="tel">
+                        </div>
+                    </div>
+
+                    <!-- Send Code Via -->
+                    <div class="send-via-section">
+                        <label class="send-via-label">Send code via</label>
+                        <div class="channel-pill-group">
+                            <button type="button" class="channel-pill-btn active" id="channelWhatsappBtn">
+                                <svg style="width: 16px; height: 16px; fill: #25D366;" viewBox="0 0 24 24">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                </svg>
+                                <span>WhatsApp</span>
+                            </button>
+                            <button type="button" class="channel-pill-btn" id="channelSmsBtn">
+                                <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span>Text Message</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Black Continue Button -->
+                    <button type="button" class="btn-continue-black" id="phoneContinueBtn">
+                        <span>Continue</span>
+                    </button>
+
+                    <div style="text-align: center; margin-top: 18px;">
+                        <a id="backToJoinFormLink" style="color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;">← Back to account details</a>
+                    </div>
+                </div>
+
+                <!-- 4. OTP VERIFICATION STEP -->
+                <div id="otpStepView" class="otp-step-view">
+                    <div style="text-align: center; margin-bottom: 18px;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px;">
+                            💬
+                        </div>
+                        <h2 class="phone-heading">Enter verification code</h2>
+                        <p class="phone-subheading" id="otpSubtitle">Enter the 6-digit code sent to your phone.</p>
+                    </div>
+
+                    <div id="otpWhatsappHelper" style="text-align: center; margin-bottom: 16px; display: none;">
+                        <a id="otpWhatsappLink" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 20px; font-size: 12.5px; font-weight: 700; text-decoration: none;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                            <span>Open WhatsApp code preview →</span>
+                        </a>
+                    </div>
+
+                    <input type="text" id="otpNativeInput" class="otp-input-large" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="• • • • • •" autocomplete="one-time-code">
+
+                    <button type="button" class="btn-continue-black" id="otpVerifyBtn">
+                        <span>Verify &amp; Submit to Admin</span>
+                    </button>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 12.5px; padding: 0 4px;">
+                        <a id="resendOtpBtn" style="color: #0f172a; font-weight: 700; cursor: pointer; text-decoration: underline;">Resend code</a>
+                        <a id="changePhoneBtn" style="color: #64748b; font-weight: 600; cursor: pointer;">Change phone number</a>
+                    </div>
+                </div>
+
+                <!-- 5. SUCCESS STEP (WAITING FOR ADMIN APPROVAL) -->
+                <div id="successStepView" class="success-step-view">
+                    <div style="text-align: center; padding: 12px 0;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);">
+                            ✓
+                        </div>
+                        <h2 class="phone-heading">Phone Number Verified!</h2>
+                        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 16px; margin: 18px 0; text-align: left; font-size: 13.5px; color: #78350f; line-height: 1.55;">
+                            <p style="font-weight: 800; color: #451a03; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <span>⏳</span> Waiting for Admin Approval
+                            </p>
+                            <p id="successMessageText">
+                                Your phone number has been verified! Your application has been submitted to Admin (info@sni.org.in).
+                            </p>
+                            <p style="margin-top: 6px; color: #92400e; font-size: 12.5px;">
+                                Please wait until the Admin approves your account before signing in.
+                            </p>
+                        </div>
+                        <button type="button" class="btn-continue-black" id="successBackToLoginBtn">
+                            <span>Back to Sign In</span>
+                        </button>
+                    </div>
+                </div>
 
             </div>
 
@@ -1329,7 +1678,124 @@
             }
         });
 
-        // 2. JOIN (REGISTER) SUBMISSION (NO EMAIL / PHONE REQUIRED)
+        // ========================================================
+        // 2. JOIN MULTI-STEP FLOW WITH PHONE NUMBER & OTP VERIFICATION
+        // ========================================================
+        const COUNTRIES = [
+            { name: 'India', code: '+91', flag: '🇮🇳' },
+            { name: 'United States', code: '+1', flag: '🇺🇸' },
+            { name: 'United Kingdom', code: '+44', flag: '🇬🇧' },
+            { name: 'United Arab Emirates', code: '+971', flag: '🇦🇪' },
+            { name: 'Saudi Arabia', code: '+966', flag: '🇸🇦' },
+            { name: 'Australia', code: '+61', flag: '🇦🇺' },
+            { name: 'Canada', code: '+1', flag: '🇨🇦' },
+            { name: 'Singapore', code: '+65', flag: '🇸🇬' },
+            { name: 'Malaysia', code: '+60', flag: '🇲🇾' },
+            { name: 'Germany', code: '+49', flag: '🇩🇪' },
+            { name: 'Kuwait', code: '+965', flag: '🇰🇼' },
+            { name: 'Qatar', code: '+974', flag: '🇶🇦' }
+        ];
+
+        let selectedCountry = COUNTRIES[0];
+        let selectedChannel = 'whatsapp';
+        let pendingRegDetails = null;
+        let activeOtpData = null;
+
+        const phoneStepView = document.getElementById('phoneStepView');
+        const otpStepView = document.getElementById('otpStepView');
+        const successStepView = document.getElementById('successStepView');
+        const authHeaderEl = document.querySelector('.auth-header');
+        const authTabsEl = document.querySelector('.auth-tabs');
+
+        // Country picker population
+        const countrySelectBtn = document.getElementById('countrySelectBtn');
+        const countrySelectedText = document.getElementById('countrySelectedText');
+        const countryDropdownMenu = document.getElementById('countryDropdownMenu');
+        const phoneDialCodePrefix = document.getElementById('phoneDialCodePrefix');
+        const phoneNativeInput = document.getElementById('phoneNativeInput');
+
+        if (countryDropdownMenu) {
+            COUNTRIES.forEach(c => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'country-opt-btn';
+                btn.innerHTML = `<span>${c.flag} ${c.name}</span><span style="font-family: monospace; color: #64748b;">${c.code}</span>`;
+                btn.addEventListener('click', () => {
+                    selectedCountry = c;
+                    countrySelectedText.textContent = `${c.name} (${c.code})`;
+                    phoneDialCodePrefix.textContent = c.code;
+                    countryDropdownMenu.classList.remove('active');
+                    phoneNativeInput.focus();
+                });
+                countryDropdownMenu.appendChild(btn);
+            });
+        }
+
+        if (countrySelectBtn) {
+            countrySelectBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                countryDropdownMenu.classList.toggle('active');
+            });
+            document.addEventListener('click', () => {
+                if (countryDropdownMenu) countryDropdownMenu.classList.remove('active');
+            });
+        }
+
+        // Channel selector (WhatsApp vs SMS)
+        const channelWhatsappBtn = document.getElementById('channelWhatsappBtn');
+        const channelSmsBtn = document.getElementById('channelSmsBtn');
+
+        if (channelWhatsappBtn && channelSmsBtn) {
+            channelWhatsappBtn.addEventListener('click', () => {
+                selectedChannel = 'whatsapp';
+                channelWhatsappBtn.classList.add('active');
+                channelSmsBtn.classList.remove('active');
+            });
+            channelSmsBtn.addEventListener('click', () => {
+                selectedChannel = 'sms';
+                channelSmsBtn.classList.add('active');
+                channelWhatsappBtn.classList.remove('active');
+            });
+        }
+
+        function showStep(stepName) {
+            clearAlert();
+            joinForm.classList.remove('active');
+            signInForm.classList.remove('active');
+            phoneStepView.classList.remove('active');
+            otpStepView.classList.remove('active');
+            successStepView.classList.remove('active');
+
+            if (stepName === 'signin') {
+                authHeaderEl.style.display = 'block';
+                authTabsEl.style.display = 'flex';
+                switchMode('signin');
+            } else if (stepName === 'joinDetails') {
+                authHeaderEl.style.display = 'block';
+                authTabsEl.style.display = 'flex';
+                switchMode('join');
+            } else if (stepName === 'phone') {
+                authHeaderEl.style.display = 'none';
+                authTabsEl.style.display = 'none';
+                phoneStepView.classList.add('active');
+                phoneNativeInput.focus();
+            } else if (stepName === 'otp') {
+                authHeaderEl.style.display = 'none';
+                authTabsEl.style.display = 'none';
+                otpStepView.classList.add('active');
+                const otpInput = document.getElementById('otpNativeInput');
+                if (otpInput) {
+                    otpInput.value = '';
+                    otpInput.focus();
+                }
+            } else if (stepName === 'success') {
+                authHeaderEl.style.display = 'none';
+                authTabsEl.style.display = 'none';
+                successStepView.classList.add('active');
+            }
+        }
+
+        // Step 1: Join form details submission -> validate and show Phone step
         joinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearAlert();
@@ -1361,7 +1827,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Submitting Registration...</span>';
+            submitBtn.innerHTML = '<span>Checking Details...</span>';
 
             try {
                 // Check if user already exists
@@ -1371,35 +1837,159 @@
                     if (existing) {
                         showAlert(`⚠️ SNI ID "${userId}" is already registered. Please choose another ID or Sign In.`);
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+                        submitBtn.innerHTML = '<span>✨ Continue to Verification →</span>';
                         return;
                     }
                 }
 
-                const isAdmin = isCardAdmin(userId, pass);
-                const targetStatus = isAdmin ? 'approved' : 'pending';
+                pendingRegDetails = {
+                    fullName,
+                    userId,
+                    pass,
+                    joinedAt: new Date().toISOString()
+                };
 
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Continue to Verification →</span>';
+
+                // Transition to Step 2: Phone number required (Mockup screen)
+                showStep('phone');
+            } catch(err) {
+                console.warn(err);
+                pendingRegDetails = { fullName, userId, pass, joinedAt: new Date().toISOString() };
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Continue to Verification →</span>';
+                showStep('phone');
+            }
+        });
+
+        // Step 2: Continue button on Phone screen
+        const phoneContinueBtn = document.getElementById('phoneContinueBtn');
+        phoneContinueBtn.addEventListener('click', async () => {
+            clearAlert();
+            const phoneDigits = phoneNativeInput.value.replace(/[^0-9]/g, '').trim();
+            if (!phoneDigits || phoneDigits.length < 8) {
+                showAlert('Please enter a valid mobile number (at least 8-10 digits).');
+                return;
+            }
+
+            const fullPhone = `${selectedCountry.code}${phoneDigits}`;
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+            phoneContinueBtn.disabled = true;
+            phoneContinueBtn.innerHTML = '<span>Sending code...</span>';
+
+            const userId = pendingRegDetails.userId;
+            const fullName = pendingRegDetails.fullName;
+            const pass = pendingRegDetails.pass;
+
+            try {
+                // Save unverified user in RTDB
                 const newUser = {
                     userId: userId,
                     fullName: fullName,
-                    contact: '',
+                    contact: fullPhone,
+                    phone: fullPhone,
                     email: '',
-                    phone: '',
                     password: pass,
-                    role: isAdmin ? 'ADMIN' : 'MEM',
-                    status: targetStatus,
-                    contactVerified: true,
-                    emailVerified: true,
-                    isVerified: true,
-                    joinedAt: new Date().toISOString(),
+                    role: 'MEM',
+                    status: 'unverified',
+                    contactVerified: false,
+                    phoneVerified: false,
+                    emailVerified: false,
+                    isVerified: false,
+                    verificationOtp: otp,
+                    otpExpiresAt: expiresAt,
+                    verificationChannel: selectedChannel,
+                    joinedAt: pendingRegDetails.joinedAt,
                     adminEmail: 'info@sni.org.in'
                 };
 
-                // Save to Cloud RTDB
                 await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newUser)
+                });
+
+                activeOtpData = {
+                    userId,
+                    phone: fullPhone,
+                    otp,
+                    channel: selectedChannel,
+                    expiresAt
+                };
+
+                // Setup OTP view
+                document.getElementById('otpSubtitle').innerHTML = `Enter the 6-digit code sent via <strong>${selectedChannel === 'whatsapp' ? 'WhatsApp' : 'Text Message'}</strong> to <strong>${fullPhone}</strong>.`;
+
+                const whatsappHelper = document.getElementById('otpWhatsappHelper');
+                const whatsappLink = document.getElementById('otpWhatsappLink');
+                if (selectedChannel === 'whatsapp') {
+                    whatsappHelper.style.display = 'block';
+                    whatsappLink.href = `https://api.whatsapp.com/send?phone=${fullPhone.replace('+', '')}&text=${encodeURIComponent('SNI Verification Code: ' + otp + ' for ' + userId)}`;
+                } else {
+                    whatsappHelper.style.display = 'none';
+                }
+
+                phoneContinueBtn.disabled = false;
+                phoneContinueBtn.innerHTML = '<span>Continue</span>';
+
+                showStep('otp');
+            } catch (err) {
+                console.error(err);
+                showAlert('Network error sending code. Please try again.');
+                phoneContinueBtn.disabled = false;
+                phoneContinueBtn.innerHTML = '<span>Continue</span>';
+            }
+        });
+
+        // Step 3: Verify OTP code
+        const otpVerifyBtn = document.getElementById('otpVerifyBtn');
+        const otpNativeInput = document.getElementById('otpNativeInput');
+
+        otpVerifyBtn.addEventListener('click', async () => {
+            clearAlert();
+            const enteredCode = otpNativeInput.value.replace(/[^0-9]/g, '').trim();
+            if (enteredCode.length < 6) {
+                showAlert('Please enter the complete 6-digit verification code.');
+                return;
+            }
+
+            const userId = activeOtpData?.userId || pendingRegDetails?.userId;
+            otpVerifyBtn.disabled = true;
+            otpVerifyBtn.innerHTML = '<span>Verifying...</span>';
+
+            try {
+                // Fetch saved user data from RTDB to check OTP
+                const rtdbRes = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
+                let userData = null;
+                if (rtdbRes.ok) {
+                    userData = await rtdbRes.json();
+                }
+
+                const expectedOtp = String(userData?.verificationOtp || activeOtpData?.otp || '').trim();
+
+                if (!expectedOtp || enteredCode !== expectedOtp) {
+                    showAlert('❌ Incorrect verification code. Please check and try again.');
+                    otpVerifyBtn.disabled = false;
+                    otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
+                    return;
+                }
+
+                const updatePayload = {
+                    status: 'pending',
+                    phoneVerified: true,
+                    contactVerified: true,
+                    isVerified: true,
+                    verifiedAt: new Date().toISOString()
+                };
+
+                // Patch RTDB
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatePayload)
                 });
 
                 // Dual sync to Firestore users collection
@@ -1412,83 +2002,102 @@
                                 id: { stringValue: userId },
                                 userId: { stringValue: userId },
                                 username: { stringValue: userId },
-                                fullName: { stringValue: fullName },
-                                name: { stringValue: fullName },
-                                contact: { stringValue: '' },
+                                fullName: { stringValue: pendingRegDetails.fullName },
+                                name: { stringValue: pendingRegDetails.fullName },
+                                contact: { stringValue: activeOtpData.phone },
+                                phone: { stringValue: activeOtpData.phone },
                                 email: { stringValue: '' },
-                                phone: { stringValue: '' },
-                                password: { stringValue: pass },
-                                plainPassword: { stringValue: pass },
-                                role: { stringValue: isAdmin ? 'ADMIN' : 'MEM' },
-                                status: { stringValue: targetStatus },
+                                password: { stringValue: pendingRegDetails.pass },
+                                plainPassword: { stringValue: pendingRegDetails.pass },
+                                role: { stringValue: 'MEM' },
+                                status: { stringValue: 'pending' },
                                 contactVerified: { booleanValue: true },
-                                emailVerified: { booleanValue: true },
+                                phoneVerified: { booleanValue: true },
                                 isVerified: { booleanValue: true },
-                                registeredAt: { stringValue: newUser.joinedAt },
-                                createdAt: { stringValue: newUser.joinedAt },
+                                verifiedAt: { stringValue: updatePayload.verifiedAt },
+                                registeredAt: { stringValue: pendingRegDetails.joinedAt },
+                                createdAt: { stringValue: pendingRegDetails.joinedAt },
                                 adminEmail: { stringValue: 'info@sni.org.in' }
                             }
                         })
                     });
-                } catch(e) {
-                    console.warn('Firestore sync failed:', e);
-                }
+                } catch(e) {}
 
-                // If non-admin, immediately forward to Firestore pending_registrations collection for Admin approval
-                if (!isAdmin) {
-                    try {
-                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                fields: {
-                                    id: { stringValue: userId },
-                                    userId: { stringValue: userId },
-                                    username: { stringValue: userId },
-                                    name: { stringValue: fullName },
-                                    fullName: { stringValue: fullName },
-                                    contact: { stringValue: '' },
-                                    email: { stringValue: '' },
-                                    phone: { stringValue: '' },
-                                    role: { stringValue: 'MEM' },
-                                    status: { stringValue: 'pending' },
-                                    contactVerified: { booleanValue: true },
-                                    emailVerified: { booleanValue: true },
-                                    isVerified: { booleanValue: true },
-                                    registeredAt: { stringValue: newUser.joinedAt },
-                                    createdAt: { stringValue: newUser.joinedAt },
-                                    adminEmail: { stringValue: 'info@sni.org.in' }
-                                }
-                            })
-                        });
-                    } catch(e) {
-                        console.warn('Pending registration forward failed:', e);
-                    }
-                }
+                // ONLY NOW forward to Firestore pending_registrations collection for Admin review
+                try {
+                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields: {
+                                id: { stringValue: userId },
+                                userId: { stringValue: userId },
+                                username: { stringValue: userId },
+                                name: { stringValue: pendingRegDetails.fullName },
+                                fullName: { stringValue: pendingRegDetails.fullName },
+                                contact: { stringValue: activeOtpData.phone },
+                                phone: { stringValue: activeOtpData.phone },
+                                email: { stringValue: '' },
+                                role: { stringValue: 'MEM' },
+                                status: { stringValue: 'pending' },
+                                contactVerified: { booleanValue: true },
+                                phoneVerified: { booleanValue: true },
+                                isVerified: { booleanValue: true },
+                                verifiedAt: { stringValue: updatePayload.verifiedAt },
+                                registeredAt: { stringValue: pendingRegDetails.joinedAt },
+                                createdAt: { stringValue: pendingRegDetails.joinedAt },
+                                adminEmail: { stringValue: 'info@sni.org.in' }
+                            }
+                        })
+                    });
+                } catch(e) {}
 
-                joinForm.reset();
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+                otpVerifyBtn.disabled = false;
+                otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
 
-                if (isAdmin) {
-                    setCurrentUser(newUser);
-                    showAlert(`Welcome, ${fullName}! Redirecting...`, 'success');
-                    setTimeout(() => redirectAfterLogin(), 800);
-                } else {
-                    switchMode('signin');
-                    const uInput = document.getElementById('signInUserId');
-                    if (uInput) uInput.value = userId;
-                    const pInput = document.getElementById('signInPass');
-                    if (pInput) pInput.focus();
-                    showAlert('⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait until the Admin approves your account before signing in.', 'info');
-                }
+                document.getElementById('successMessageText').innerHTML = `Your phone number (<strong>${activeOtpData.phone}</strong>) has been verified and your registration request for SNI ID (<strong>${userId}</strong>) has been submitted to Admin (<strong>info@sni.org.in</strong>).`;
 
+                showStep('success');
             } catch(err) {
                 console.error(err);
-                showAlert('Error submitting registration. Please try again.');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨ Submit Registration</span>';
+                showAlert('Error verifying OTP. Please try again.');
+                otpVerifyBtn.disabled = false;
+                otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
             }
+        });
+
+        // Resend OTP
+        document.getElementById('resendOtpBtn').addEventListener('click', async () => {
+            const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+            const userId = activeOtpData.userId;
+
+            try {
+                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ verificationOtp: newOtp, otpExpiresAt: expiresAt })
+                });
+                activeOtpData.otp = newOtp;
+                if (selectedChannel === 'whatsapp') {
+                    document.getElementById('otpWhatsappLink').href = `https://api.whatsapp.com/send?phone=${activeOtpData.phone.replace('+', '')}&text=${encodeURIComponent('SNI Verification Code: ' + newOtp + ' for ' + userId)}`;
+                }
+                showAlert(`Fresh verification code generated!`, 'success');
+            } catch(e) {
+                showAlert('Failed to resend code.');
+            }
+        });
+
+        // Navigation links
+        document.getElementById('backToJoinFormLink').addEventListener('click', () => showStep('joinDetails'));
+        document.getElementById('changePhoneBtn').addEventListener('click', () => showStep('phone'));
+        document.getElementById('successBackToLoginBtn').addEventListener('click', () => {
+            showStep('signin');
+            if (activeOtpData?.userId) {
+                document.getElementById('signInUserId').value = activeOtpData.userId;
+                document.getElementById('signInPass').focus();
+            }
+            showAlert('⏳ Waiting for Admin Approval: Your phone number is verified. Please wait for Administrator approval before signing in.', 'info');
         });
 
         // INITIAL URL CHECK

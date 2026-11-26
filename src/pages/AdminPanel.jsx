@@ -201,7 +201,7 @@ export default function AdminPanel() {
               if (!u) return;
               const existing = userMap.get(key) || {};
               const isAdm = key === 'surya11008' || u.role === 'admin' || u.role === 'ADMIN' || existing.role === 'admin' || existing.role === 'ADMIN';
-              const isVerified = isAdm ? true : (u.emailVerified === true && (u.contactVerified === true || u.isVerified === true));
+              const isVerified = isAdm ? true : (u.isVerified === true || u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true);
               const userStatus = isAdm ? 'approved' : (u.status || existing.status || 'unverified');
               userMap.set(key, {
                 ...existing,
@@ -1175,18 +1175,19 @@ export default function AdminPanel() {
     const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
     if (isUserAdmin) return false;
     if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected' || u.status === 'unverified') return false;
-    // Strictly requires email to be verified first!
-    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    const hasValidEmail = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) || (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact));
-    return hasValidEmail && isEmailVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
+    const isContactVerified = u.isVerified === true || u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true;
+    const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
+                            (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact)) ||
+                            (u.phone && String(u.phone).trim().length >= 8);
+    return hasValidContact && isContactVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
   };
 
   const isUserUnverified = (u) => {
     const isUserAdmin = u.role === 'admin' || (u.email && u.email.startsWith('surya')) || (u.id && String(u.id).startsWith('surya'));
     if (isUserAdmin) return false;
     if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected') return false;
-    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return !isEmailVerified || u.status === 'unverified' || u.status === 'awaiting_verification';
+    const isContactVerified = u.isVerified === true || u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true;
+    return !isContactVerified || u.status === 'unverified' || u.status === 'awaiting_verification';
   };
 
   const isUserApproved = (u) => {
@@ -1506,15 +1507,20 @@ export default function AdminPanel() {
                                 {u.phone ? `Ph: ${u.phone}` : ''}
                               </div>
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                                {u.emailVerified || u.role === 'admin' || u.role === 'ADMIN' ? (
+                                {u.phoneVerified || (u.phone && (u.contactVerified || u.isVerified)) ? (
                                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
                                     <Check className="w-2.5 h-2.5 text-emerald-600" />
-                                    <span>Gmail Verified</span>
+                                    <span>Phone Verified</span>
+                                  </span>
+                                ) : u.emailVerified || u.role === 'admin' || u.role === 'ADMIN' ? (
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
+                                    <Check className="w-2.5 h-2.5 text-emerald-600" />
+                                    <span>Verified</span>
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold" title="Applicant must click the verification link in their Gmail inbox">
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold" title="Applicant must verify their phone or email before approval">
                                     <Clock className="w-2.5 h-2.5 text-amber-600" />
-                                    <span>Gmail Unverified</span>
+                                    <span>Unverified</span>
                                   </span>
                                 )}
                               </div>
