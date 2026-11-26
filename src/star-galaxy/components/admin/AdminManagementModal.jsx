@@ -30,10 +30,18 @@ export default function AdminManagementModal({ onClose }) {
     data,
     approveUser,
     rejectUser,
+    revokeUser,
+    changeUserRole,
     deleteUser,
     resetPassword,
+    adminResetPassword,
+    OFFICIAL_ROLES,
+    OFFICIAL_ROLE_IDS,
     setManagerRole,
     assignMemberToManager,
+    addManagerToUser,
+    removeManagerFromUser,
+    manualVerifyContact,
     updateManagerPermission,
     publishAppUpdate,
   } = useApp();
@@ -65,18 +73,54 @@ export default function AdminManagementModal({ onClose }) {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
 
-  const managers = data.users.filter(u => u.role === 'manager');
-  const approvedMembers = data.users.filter(u => u.role === 'member' && u.status === 'approved');
-  const pendingUsers = data.users.filter(u => u.status === 'pending');
+  const leadershipRoleIds = ['GL', 'UL', 'PTS', 'TS', 'PBCL', 'DEA', '(D) OS', 'OS', 'manager'];
+  const managers = (data?.users || []).filter(u => leadershipRoleIds.includes(u.role) || (Array.isArray(u.assignedMembers) && u.assignedMembers.length > 0));
+  const approvedMembers = data.users.filter(u => (u.role === 'MEM' || u.role === 'member') && u.status === 'approved');
+  const pendingUsers = (data?.users || []).filter(u => (u.status === 'pending' || u.status === 'waiting') && (u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true || u.isVerified === true) && u.id !== 'surya11008');
 
   const flashSuccess = (msg) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  const handleApprove = (userId) => {
-    approveUser(userId);
-    flashSuccess('User approved successfully!');
+  const handleApprove = async (userId, targetRole = 'MEM') => {
+    await approveUser(userId, targetRole);
+    flashSuccess('User approved successfully! Synced across SNI Website & Star Galaxy.');
+  };
+
+  const handleRevoke = async (userId) => {
+    if (userId === 'surya11008') {
+      alert('Administrator account cannot be revoked!');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to revoke this user account? They will lose access to the portal.')) return;
+    const res = await revokeUser(userId);
+    if (res?.success) {
+      flashSuccess('User access revoked! Synced across SNI Website & Star Galaxy.');
+    }
+  };
+
+  const handleManualVerify = async (userId) => {
+    if (!manualVerifyContact) return;
+    const res = await manualVerifyContact(userId);
+    if (res?.success) {
+      flashSuccess(`Contact for "${userId}" verified successfully!`);
+    } else {
+      alert(res?.error || 'Failed to verify contact.');
+    }
+  };
+
+  const handleChangeRole = async (userId, newRole) => {
+    if (userId === 'surya11008' && newRole !== 'ADMIN') {
+      alert('Administrator (surya11008) cannot be demoted.');
+      return;
+    }
+    const res = await changeUserRole(userId, newRole);
+    if (res?.success) {
+      flashSuccess(`Role changed to "${newRole}". Synced across SNI Website & Star Galaxy.`);
+    } else {
+      alert(res?.error || 'Failed to update role.');
+    }
   };
 
   const handleReject = (userId) => {
@@ -85,18 +129,18 @@ export default function AdminManagementModal({ onClose }) {
     flashSuccess('Application rejected.');
   };
 
-  const handleDeleteUser = (user) => {
-    if (user.role === 'admin' || user.id === 'surya11008') {
+  const handleDeleteUser = async (user) => {
+    if (user.role === 'ADMIN' || user.id === 'surya11008') {
       alert('Admin account cannot be deleted!');
       return;
     }
     const confirmed = window.confirm(
-      `Are you sure you want to permanently delete "${user.name}" (${user.phone})?\n\n⚠️ All user records and earned stars will be permanently deleted.`
+      `Are you sure you want to permanently delete "${user.name}" (${user.username || user.phone}) from both Firestore and Realtime Database?\n\n⚠️ All records will be permanently removed.`
     );
     if (!confirmed) return;
 
-    deleteUser(user.id);
-    flashSuccess(`User "${user.name}" has been deleted.`);
+    await deleteUser(user.id);
+    flashSuccess(`User "${user.name}" deleted permanently.`);
   };
 
   const handleResetPass = async (user) => {
@@ -106,9 +150,9 @@ export default function AdminManagementModal({ onClose }) {
     );
     if (!entered || !entered.trim()) return;
     const cleanNewPass = entered.trim();
-    const res = await resetPassword(user.id, cleanNewPass);
-    if (res.success) {
-      flashSuccess(`Password for "${user.name}" updated to: "${cleanNewPass}"`);
+    const res = await (adminResetPassword || resetPassword)(user.id, cleanNewPass);
+    if (res?.success) {
+      flashSuccess(`Password for "${user.name}" updated to: "${cleanNewPass}" (Synced across all databases)`);
     }
   };
 
@@ -121,6 +165,17 @@ export default function AdminManagementModal({ onClose }) {
   const handleAssignChange = async (memberId, managerId) => {
     await assignMemberToManager(memberId, managerId);
     flashSuccess('Member assigned to manager successfully!');
+  };
+
+  const handleAddManagerToUser = async (userId, managerId) => {
+    if (!managerId) return;
+    await addManagerToUser(userId, managerId);
+    flashSuccess('Manager assigned successfully!');
+  };
+
+  const handleRemoveManagerFromUser = async (userId, managerId) => {
+    await removeManagerFromUser(userId, managerId);
+    flashSuccess('Manager assignment removed!');
   };
 
   const handleSaveManagerPerm = (e) => {
@@ -280,53 +335,130 @@ export default function AdminManagementModal({ onClose }) {
                   className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-2"
                 >
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <strong className="text-xs text-slate-800">{u.name}</strong>
-                      <span className={`px-2 py-0.2 rounded-md text-[10px] font-extrabold uppercase ${
-                        u.role === 'admin' ? 'bg-amber-100 text-amber-800' :
-                        u.role === 'manager' ? 'bg-purple-100 text-purple-800' :
-                        'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        {u.role}
-                      </span>
+                      <select
+                        value={u.role || 'MEM'}
+                        disabled={u.id === 'surya11008'}
+                        onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase border cursor-pointer ${
+                          u.role === 'ADMIN' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                          leadershipRoleIds.includes(u.role) ? 'bg-purple-100 text-purple-900 border-purple-300' :
+                          'bg-emerald-50 text-emerald-900 border-emerald-300'
+                        }`}
+                        title="Change user official role"
+                      >
+                        {(OFFICIAL_ROLES || []).map(r => (
+                          <option key={r.id} value={r.id}>{r.id}</option>
+                        ))}
+                      </select>
                       {u.status === 'pending' && (
-                        <span className="px-2 py-0.2 rounded-md text-[10px] bg-rose-100 text-rose-800 font-bold">
+                        <span className="px-2 py-0.2 rounded-md text-[10px] bg-amber-100 text-amber-800 font-bold border border-amber-300">
                           PENDING
                         </span>
                       )}
+                      {u.status === 'revoked' && (
+                        <span className="px-2 py-0.2 rounded-md text-[10px] bg-rose-100 text-rose-800 font-bold border border-rose-300">
+                          REVOKED
+                        </span>
+                      )}
+                      {u.status === 'approved' && (
+                        <span className="px-2 py-0.2 rounded-md text-[10px] bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                          APPROVED
+                        </span>
+                      )}
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">
-                      Phone: <code className="text-slate-700">{u.phone}</code> • Place: {u.place || 'N/A'} • PIN: {u.personalPin || 'Not Set'}
+                    <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <span>Phone: <code className="text-slate-700">{u.phone || u.contact || 'N/A'}</code> • Place: {u.place || 'N/A'} • PIN: {u.personalPin || 'Not Set'}</span>
+                      {u.contactVerified || u.isVerified || u.role === 'ADMIN' ? (
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                          ✓ Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
+                            ⚠️ Unverified
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleManualVerify(u.id)}
+                            className="text-[10px] text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+                            title="Verify Contact"
+                          >
+                            Verify
+                          </button>
+                        </span>
+                      )}
                     </div>
-                    {u.role === 'member' && (
-                      <div className="mt-1 flex items-center gap-1.5 text-[11px]">
-                        <span className="text-slate-400">Assigned Manager:</span>
-                        <select
-                          value={u.assignedManagerId || ''}
-                          onChange={(e) => handleAssignChange(u.id, e.target.value)}
-                          className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-xs font-semibold text-slate-700"
-                        >
-                          <option value="">Unassigned</option>
-                          {managers.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    {u.role !== 'admin' && u.id !== 'surya11008' && (() => {
+                      const uMgrIds = Array.isArray(u.assignedManagerIds)
+                        ? u.assignedManagerIds
+                        : (u.assignedManagerId ? [u.assignedManagerId] : []);
+                      const assignedMgrs = managers.filter(m => uMgrIds.includes(m.id));
+                      const availableToAdd = managers.filter(m => m.id !== u.id && !uMgrIds.includes(m.id));
+
+                      return (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                          <span className="text-slate-500 font-semibold">Assigned Managers:</span>
+                          {assignedMgrs.length === 0 ? (
+                            <span className="text-slate-400 italic">None</span>
+                          ) : (
+                            assignedMgrs.map(m => (
+                              <span
+                                key={m.id}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 font-bold"
+                              >
+                                <span>👔 {m.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveManagerFromUser(u.id, m.id)}
+                                  className="text-indigo-400 hover:text-rose-600 font-black cursor-pointer text-[10px]"
+                                  title={`Remove ${m.name}`}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))
+                          )}
+                          {availableToAdd.length > 0 && (
+                            <select
+                              value=""
+                              onChange={(e) => {
+                                if (e.target.value) handleAddManagerToUser(u.id, e.target.value);
+                              }}
+                              className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-[11px] font-semibold text-slate-700 cursor-pointer"
+                            >
+                              <option value="">➕ Assign Manager...</option>
+                              {availableToAdd.map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1.5 ml-auto">
-                    {u.role !== 'admin' && (
+                  <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                    {u.status !== 'approved' && (
                       <button
-                        onClick={() => handleToggleManager(u.id, u.role)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-colors ${
-                          u.role === 'manager'
-                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                        }`}
+                        onClick={() => handleApprove(u.id, u.role || 'MEM')}
+                        className="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 cursor-pointer"
+                        title="Approve / Reactivate User"
                       >
-                        {u.role === 'manager' ? 'Demote to Member' : 'Make Manager'}
+                        <UserCheck className="w-3 h-3" />
+                        <span>Approve</span>
+                      </button>
+                    )}
+                    {u.status === 'approved' && u.role !== 'ADMIN' && u.id !== 'surya11008' && (
+                      <button
+                        onClick={() => handleRevoke(u.id)}
+                        className="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 flex items-center gap-1 cursor-pointer"
+                        title="Revoke access"
+                      >
+                        <UserX className="w-3 h-3 text-rose-600" />
+                        <span>Revoke</span>
                       </button>
                     )}
                     <button
@@ -337,10 +469,10 @@ export default function AdminManagementModal({ onClose }) {
                       <KeyRound className="w-3 h-3" />
                       <span>Reset Pass</span>
                     </button>
-                    {u.role !== 'admin' && (
+                    {u.role !== 'ADMIN' && u.id !== 'surya11008' && (
                       <button
                         onClick={() => handleDeleteUser(u)}
-                        className="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors flex items-center gap-1 shadow-2xs"
+                        className="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
                         title="Permanently Delete User"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -373,8 +505,23 @@ export default function AdminManagementModal({ onClose }) {
                   >
                     <div>
                       <h4 className="font-bold text-sm text-slate-800">{applicant.name}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Phone: <strong>{applicant.phone}</strong> • Place: {applicant.place} • Registered: {applicant.createdAt}
+                      <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
+                        <span>Phone: <strong>{applicant.phone || applicant.contact}</strong> • Place: {applicant.place} • Registered: {applicant.createdAt}</span>
+                        {applicant.contactVerified || applicant.isVerified ? (
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold text-[9px]">✓ Verified</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1">
+                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold text-[9px]">⚠️ Unverified</span>
+                            <button
+                              type="button"
+                              onClick={() => handleManualVerify(applicant.id)}
+                              className="text-[9px] text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+                              title="Verify Contact"
+                            >
+                              Verify
+                            </button>
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

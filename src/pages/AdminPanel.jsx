@@ -180,7 +180,7 @@ export default function AdminPanel() {
     try {
       const userMap = new Map();
 
-      // 1. Fetch from Firestore
+      // 1. Fetch from Firestore users
       try {
         const snap = await getDocs(collection(db, 'users'));
         snap.forEach((d) => {
@@ -188,6 +188,71 @@ export default function AdminPanel() {
         });
       } catch (e) {
         console.warn('Error fetching Firestore users:', e);
+      }
+
+      // 1b. Fetch from Firestore pending_registrations collection (SDK)
+      try {
+        const pSnap = await getDocs(collection(db, 'pending_registrations'));
+        pSnap.forEach((d) => {
+          const p = d.data() || {};
+          const existing = userMap.get(d.id) || {};
+          const isAdm = d.id === 'surya11008';
+          userMap.set(d.id, {
+            ...existing,
+            ...p,
+            id: d.id,
+            userId: p.userId || p.username || d.id,
+            displayName: p.fullName || p.name || existing.displayName || d.id,
+            phone: p.phone || existing.phone || p.contact || '',
+            contact: p.contact || p.phone || existing.contact || '',
+            email: p.email || existing.email || '',
+            status: isAdm ? 'approved' : (existing.status === 'approved' ? 'approved' : 'pending'),
+            phoneVerified: true,
+            contactVerified: true,
+            isVerified: true,
+            fromPendingColl: true,
+          });
+        });
+      } catch (e) {
+        console.warn('Error fetching Firestore pending_registrations:', e);
+      }
+
+      // 1c. Fetch from Firestore pending_registrations collection (REST API fallback)
+      try {
+        const pRes = await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations?key=AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI`);
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          if (pData.documents && Array.isArray(pData.documents)) {
+            pData.documents.forEach((docItem) => {
+              const docId = docItem.name.split('/').pop();
+              if (!docId) return;
+              const f = docItem.fields || {};
+              const existing = userMap.get(docId) || {};
+              const isAdm = docId === 'surya11008';
+              const pStatus = f.status?.stringValue || 'pending';
+              const phoneVal = f.phone?.stringValue || f.contact?.stringValue || existing.phone || '';
+              const nameVal = f.fullName?.stringValue || f.name?.stringValue || existing.displayName || docId;
+              userMap.set(docId, {
+                ...existing,
+                id: docId,
+                userId: f.userId?.stringValue || docId,
+                displayName: nameVal,
+                phone: phoneVal,
+                contact: f.contact?.stringValue || phoneVal,
+                email: f.email?.stringValue || existing.email || '',
+                password: f.password?.stringValue || f.plainPassword?.stringValue || existing.password || '',
+                status: isAdm ? 'approved' : (existing.status === 'approved' ? 'approved' : pStatus),
+                phoneVerified: true,
+                contactVerified: true,
+                isVerified: true,
+                createdAt: f.createdAt?.stringValue || f.registeredAt?.stringValue || existing.createdAt || '',
+                fromPendingColl: true,
+              });
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching REST pending_registrations:', e);
       }
 
       // 2. Fetch from Realtime Database (where auth.html registrations land)
@@ -1177,8 +1242,8 @@ export default function AdminPanel() {
     if (u.status === 'approved' || u.status === 'revoked' || u.status === 'rejected' || u.status === 'unverified') return false;
     const isContactVerified = u.isVerified === true || u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true;
     const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
-                            (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact)) ||
-                            (u.phone && String(u.phone).trim().length >= 8);
+                            (u.phone && String(u.phone).trim().length >= 8) ||
+                            (u.contact && String(u.contact).trim().length >= 8);
     return hasValidContact && isContactVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
   };
 
@@ -1501,10 +1566,10 @@ export default function AdminPanel() {
                             {/* Contact: Email & Phone */}
                             <td className="py-4 px-4">
                               <div className="text-xs text-slate-800 font-medium truncate">
-                                {u.email || u.contact || 'No email'}
+                                {u.phone || u.contact || u.email || 'No contact'}
                               </div>
                               <div className="text-[11px] text-slate-500 font-mono">
-                                {u.phone ? `Ph: ${u.phone}` : ''}
+                                {u.email && u.phone ? `Email: ${u.email}` : ''}
                               </div>
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                 {u.phoneVerified || (u.phone && (u.contactVerified || u.isVerified)) ? (

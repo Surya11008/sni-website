@@ -38,15 +38,17 @@ export default function AdminPendingApprovalsModal({ isOpenOverride, onCloseOver
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin' || currentUser?.id === 'surya11008';
   const [sessionApprovedIds, setSessionApprovedIds] = useState(() => new Set());
 
-  // Filter only applicants who have completed real email verification and are waiting for Admin approval
+  // Filter only applicants who have completed verification and are waiting for Admin approval
   const pendingUsers = (data?.users || []).filter(u => {
     if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     if (sessionApprovedIds.has(u.id)) return false;
     const s = (u.status || '').toLowerCase().trim();
     if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
-    const hasValidEmail = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) || (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact));
-    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return hasValidEmail && isEmailVerified && (s === 'pending' || s === 'waiting');
+    const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
+                            (u.phone && String(u.phone).trim().length >= 8) ||
+                            (u.contact && String(u.contact).trim().length >= 8);
+    const isContactVerified = u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true || u.isVerified === true;
+    return hasValidContact && isContactVerified && (s === 'pending' || s === 'waiting');
   });
 
   const [hasSkipped, setHasSkipped] = useState(() => {
@@ -513,7 +515,10 @@ export default function AdminPendingApprovalsModal({ isOpenOverride, onCloseOver
                   <div className="flex items-center gap-1.5 truncate">
                     <Phone className="w-3 h-3 text-sky-600 shrink-0" />
                     <span className="font-semibold text-slate-700">Contact:</span>
-                    <span className="font-bold text-slate-900 truncate">{user.contact || user.phone || 'N/A'}</span>
+                    <span className="font-bold text-slate-900 truncate">{user.phone || user.contact || user.email || 'N/A'}</span>
+                    <span className="px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold text-[9px] shrink-0">
+                      {user.phoneVerified ? '✓ Phone Verified' : (user.emailVerified ? '✓ Email' : '✓ Verified')}
+                    </span>
                   </div>
 
                   {user.moreDetails && (

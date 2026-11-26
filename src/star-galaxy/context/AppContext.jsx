@@ -910,7 +910,14 @@ export function AppProvider({ children }) {
             return;
           }
           const existing = userMap.get(p.id);
-          userMap.set(p.id, { ...(existing || {}), ...p, status: 'pending', emailVerified: true, contactVerified: true });
+          userMap.set(p.id, {
+            ...(existing || {}),
+            ...p,
+            status: 'pending',
+            phoneVerified: true,
+            contactVerified: true,
+            isVerified: true
+          });
         });
 
         return {
@@ -1823,6 +1830,40 @@ export function AppProvider({ children }) {
       // ONLY NOW forward to Firestore pending_registrations collection for Admin Approvals
       if (updatedFields.status === 'pending') {
         await savePendingRegistrationToFirestore(fullUser);
+        try {
+          const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+          const phoneVal = user.phone || user.contact || fullUser.phone || '';
+          const nameVal = user.name || user.fullName || fullUser.name || cleanId;
+          const passVal = user.password || user.plainPassword || fullUser.password || '';
+          await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(cleanId)}?key=${FIREBASE_API_KEY}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fields: {
+                id: { stringValue: cleanId },
+                userId: { stringValue: cleanId },
+                username: { stringValue: cleanId },
+                name: { stringValue: nameVal },
+                fullName: { stringValue: nameVal },
+                phone: { stringValue: phoneVal },
+                contact: { stringValue: phoneVal },
+                password: { stringValue: passVal },
+                plainPassword: { stringValue: passVal },
+                role: { stringValue: 'MEM' },
+                status: { stringValue: 'pending' },
+                contactVerified: { booleanValue: true },
+                phoneVerified: { booleanValue: true },
+                emailVerified: { booleanValue: true },
+                isVerified: { booleanValue: true },
+                verifiedAt: { stringValue: updatedFields.verifiedAt },
+                createdAt: { stringValue: user.createdAt || new Date().toISOString() },
+                adminEmail: { stringValue: 'info@sni.org.in' }
+              }
+            })
+          });
+        } catch (restErr) {
+          console.warn('REST write to pending_registrations warning:', restErr);
+        }
       }
     } catch (e) {}
 
@@ -1832,7 +1873,7 @@ export function AppProvider({ children }) {
       users: (prev.users || []).map(u => (u.id === cleanId ? { ...u, ...updatedFields } : u)),
     }));
 
-    return { success: true, message: 'Email successfully verified! Your application has been submitted to Admin for approval.' };
+    return { success: true, message: 'Phone number successfully verified! Your application has been submitted to Admin (info@sni.org.in) for approval.' };
   };
 
   const manualVerifyContact = async (userId) => {
@@ -2186,6 +2227,12 @@ export function AppProvider({ children }) {
     }
     await markRegistrationApprovedInFirestore(userId);
     await removePendingRegistrationFromFirestore(userId);
+    try {
+      const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+      await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {}
 
     // 5. Dual-sync to unified RTDB
     try {
@@ -2306,6 +2353,12 @@ export function AppProvider({ children }) {
     await deleteUserFromFirestore(userId, extraIds);
     await deleteUserFromRTDB(userId, extraIds);
     await removePendingRegistrationFromFirestore(userId);
+    try {
+      const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+      await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {}
 
     setData(prev => ({
       ...prev,

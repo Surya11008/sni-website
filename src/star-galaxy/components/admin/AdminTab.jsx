@@ -194,17 +194,19 @@ export default function AdminTab() {
     if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     const s = (u.status || '').toLowerCase().trim();
     if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
-    const hasValidEmail = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) || (u.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.contact));
-    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return hasValidEmail && isEmailVerified && (s === 'pending' || s === 'waiting');
+    const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
+                            (u.phone && String(u.phone).trim().length >= 8) ||
+                            (u.contact && String(u.contact).trim().length >= 8);
+    const isContactVerified = u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true || u.isVerified === true;
+    return hasValidContact && isContactVerified && (s === 'pending' || s === 'waiting');
   });
 
   const unverifiedUsers = (data?.users || []).filter(u => {
     if (!u || u.role === 'ADMIN' || u.role === 'admin' || u.id === 'surya11008') return false;
     const s = (u.status || '').toLowerCase().trim();
     if (s === 'approved' || s === 'revoked' || s === 'rejected') return false;
-    const isEmailVerified = u.emailVerified === true && (u.contactVerified === true || u.isVerified === true);
-    return !isEmailVerified || s === 'unverified';
+    const isContactVerified = u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true || u.isVerified === true;
+    return !isContactVerified || s === 'unverified';
   });
   const feedbackList = data.feedbackList || [];
 
@@ -1422,8 +1424,10 @@ export default function AdminTab() {
                           {t('phoneOrGmail') || 'Phone or Gmail'}
                         </span>
                         <div className="flex items-center justify-between gap-1 flex-wrap">
-                          <span className="font-bold text-slate-700">{applicant.contact || applicant.phone || 'N/A'}</span>
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[9px]">✓ Email Verified</span>
+                          <span className="font-bold text-slate-700">{applicant.phone || applicant.contact || applicant.email || 'N/A'}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[9px]">
+                            {applicant.phoneVerified ? '✓ Phone Verified' : (applicant.emailVerified ? '✓ Email Verified' : '✓ Verified')}
+                          </span>
                         </div>
                       </div>
                     </div>
