@@ -229,7 +229,7 @@
 
         .form-group label {
             display: block;
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 700;
             color: #334155;
             margin-bottom: 6px;
@@ -239,62 +239,94 @@
             position: relative;
             display: flex;
             align-items: center;
+            width: 100%;
         }
 
         .form-input {
             width: 100%;
-            padding: 11px 14px;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
             border: 1.5px solid #cbd5e1;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
             background: #f8fafc;
             color: #1e293b;
+            min-height: 48px;
             transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .form-input:focus {
             border-color: var(--blue);
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(18, 75, 145, 0.15);
+            box-shadow: 0 0 0 3.5px rgba(18, 75, 145, 0.16);
         }
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 44px;
+            height: 100%;
             background: none;
             border: none;
             cursor: pointer;
             color: #64748b;
-            font-size: 15px;
-            padding: 4px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 12px 12px 0;
+            transition: color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .toggle-password:hover {
+            color: var(--navy);
         }
 
         .form-helper {
-            font-size: 11.5px;
+            font-size: 12px;
             color: #64748b;
-            margin-top: 4px;
+            margin-top: 5px;
+            line-height: 1.4;
         }
 
         .form-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12.5px;
+            font-size: 13px;
             color: #64748b;
-            margin-bottom: 20px;
+            margin: 16px 0 20px;
+            min-height: 28px;
         }
 
         .form-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            line-height: 1.45;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            margin-top: 1px;
+            accent-color: var(--blue);
             cursor: pointer;
         }
 
         .btn-submit {
             width: 100%;
-            padding: 12px;
+            min-height: 48px;
+            padding: 13px 18px;
             border-radius: 12px;
             border: none;
             background: linear-gradient(135deg, var(--navy), var(--blue));
@@ -302,22 +334,24 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             box-shadow: 0 4px 14px rgba(7, 27, 59, 0.25);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .btn-submit:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(7, 27, 59, 0.35);
-            opacity: 0.96;
+            box-shadow: 0 6px 20px rgba(7, 27, 59, 0.35);
+            opacity: 0.98;
         }
 
         .btn-submit:active {
-            transform: translateY(0);
+            transform: scale(0.98);
         }
 
         .btn-join-special {
@@ -498,137 +532,192 @@
             color: white;
         }
 
-        /* MODAL STYLES FOR VERIFICATION */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(4, 17, 39, 0.85);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 20px;
-        }
-        .modal-overlay.active {
-            display: flex;
-        }
-        .modal-box {
-            background: white;
-            border-radius: 20px;
-            max-width: 460px;
-            width: 100%;
-            padding: 28px 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            text-align: center;
-            border: 2px solid #e2e8f0;
-            animation: popIn 0.25s ease-out;
-        }
-        @keyframes popIn {
-            from { transform: scale(0.92); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .modal-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-        }
-        .modal-icon.verify {
-            background: #eff6ff;
-            border: 2px solid #bfdbfe;
-            color: #2563eb;
-        }
-        .modal-icon.success {
-            background: #f0fdf4;
-            border: 2px solid #bbf7d0;
-            color: #16a34a;
-        }
-        .modal-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--navy);
-            margin-bottom: 8px;
-        }
-        .modal-text {
-            font-size: 13.5px;
-            color: #64748b;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-        .modal-target {
-            font-weight: 700;
-            color: #0f172a;
-            background: #f1f5f9;
-            padding: 3px 8px;
-            border-radius: 6px;
-            word-break: break-all;
-        }
-        .modal-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .modal-btn {
-            padding: 12px 18px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-        .modal-btn-primary {
-            background: #2563eb;
-            color: white;
-        }
-        .modal-btn-primary:hover {
-            background: #1d4ed8;
-        }
-        .modal-btn-whatsapp {
-            background: #22c55e;
-            color: white;
-        }
-        .modal-btn-whatsapp:hover {
-            background: #16a34a;
-        }
-        .modal-btn-secondary {
-            background: #f1f5f9;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-        }
-        .modal-btn-secondary:hover {
-            background: #e2e8f0;
-        }
-
         /* FOOTER */
         footer {
-            padding: 18px 15px;
+            padding: 18px 16px;
             text-align: center;
             color: #94a3b8;
-            font-size: 12px;
-            background: rgba(4, 17, 39, 0.9);
+            font-size: 12.5px;
+            background: rgba(4, 17, 39, 0.95);
+            border-top: 1px solid rgba(245, 199, 94, 0.15);
         }
 
         footer span {
             color: var(--gold);
+            font-weight: 700;
         }
 
-        @media (max-width: 500px) {
+        /* ========================================================
+           MULTI-DEVICE RESPONSIVE SYSTEM (PC, Tablet, Phone)
+           ======================================================== */
+
+        /* 1. PC / Desktop Screens (>= 1024px) */
+        @media (min-width: 1024px) {
+            header {
+                padding: 18px 8%;
+            }
+            .auth-wrapper {
+                padding: 48px 24px;
+            }
             .auth-card {
-                padding: 28px 20px;
+                max-width: 480px;
+                padding: 40px 36px;
+                border-radius: 26px;
+            }
+            .auth-header h1 {
+                font-size: 26px;
+            }
+            .auth-tab-btn {
+                padding: 11px;
+                font-size: 14.5px;
+            }
+            .btn-submit {
+                min-height: 50px;
+                font-size: 15.5px;
+            }
+        }
+
+        /* 2. Tablet Screens (641px - 1023px, iPad / Tablets) */
+        @media (min-width: 641px) and (max-width: 1023px) {
+            header {
+                padding: 16px 5%;
+            }
+            .auth-wrapper {
+                padding: 36px 20px;
+            }
+            .auth-card {
+                max-width: 470px;
+                padding: 34px 28px;
+                border-radius: 22px;
+            }
+            .auth-header h1 {
+                font-size: 24px;
+            }
+            .form-input {
+                min-height: 48px;
+                font-size: 15px;
+            }
+            .btn-submit {
+                min-height: 48px;
+                font-size: 15px;
+            }
+        }
+
+        /* 3. Mobile Phone Screens (<= 640px, Android & iOS Phones) */
+        @media (max-width: 640px) {
+            header {
+                padding: 12px 16px;
+            }
+            .logo {
+                gap: 8px;
+            }
+            .logo img {
+                width: 36px;
+                height: 36px;
+            }
+            .logo-text strong {
+                font-size: 17px;
+                letter-spacing: 1.5px;
+            }
+            .logo-text small {
+                font-size: 7.5px;
+            }
+            .nav-home-link {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .auth-wrapper {
+                padding: 16px 12px;
+            }
+            .auth-card {
+                width: 100%;
+                max-width: 100%;
+                padding: 24px 18px;
+                border-radius: 20px;
+                box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+            }
+            .auth-header {
+                margin-bottom: 18px;
+            }
+            .auth-badge-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+                margin-bottom: 8px;
+            }
+            .auth-header h1 {
+                font-size: 21px;
+                margin-bottom: 4px;
+            }
+            .auth-header p {
+                font-size: 12.5px;
+            }
+            .auth-tabs {
+                margin-bottom: 20px;
+                padding: 3px;
+            }
+            .auth-tab-btn {
+                padding: 10px 8px;
+                font-size: 13.5px;
+                min-height: 44px;
+            }
+            /* Crucial: 16px font-size prevents iOS Safari auto-zoom on mobile */
+            .form-input {
+                font-size: 16px !important;
+                min-height: 48px;
+                padding: 12px 14px;
+                border-radius: 12px;
+            }
+            .form-group {
+                margin-bottom: 14px;
+            }
+            .form-group label {
+                font-size: 12.5px;
+                margin-bottom: 5px;
+            }
+            .form-options {
+                margin: 14px 0 18px;
+                font-size: 12px;
+            }
+            .btn-submit {
+                min-height: 48px;
+                font-size: 15px;
+                border-radius: 12px;
+            }
+            .auth-switch-prompt {
+                font-size: 12.5px;
+                margin-top: 16px;
             }
             .profile-apps-grid {
                 grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            footer {
+                padding: 14px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* 4. Small Mobile Phones (<= 380px, e.g. iPhone SE, Galaxy Z Flip cover) */
+        @media (max-width: 380px) {
+            .auth-card {
+                padding: 20px 14px;
+                border-radius: 16px;
+            }
+            .auth-badge-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            .auth-header h1 {
+                font-size: 19px;
+            }
+            .auth-tab-btn {
+                font-size: 12.5px;
+                padding: 8px 4px;
+            }
+            .form-checkbox {
+                font-size: 12px;
             }
         }
     </style>
