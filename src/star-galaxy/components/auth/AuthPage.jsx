@@ -208,6 +208,11 @@ export default function AuthPage() {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
+    if (!cleanUserId || !cleanPass) {
+      setRegError('Account details missing. Please click below to re-enter your Name, SNI ID, and Password.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Register account in unverified status with phone and OTP
@@ -226,7 +231,7 @@ export default function AuthPage() {
         isVerified: false,
       });
 
-      if (res.success || res.userId) {
+      if (res && (res.success || res.userId)) {
         setPendingOtpData({
           userId: cleanUserId,
           phone: fullPhone,
@@ -242,11 +247,11 @@ export default function AuthPage() {
         );
         setJoinStep('otp');
       } else {
-        setRegError(res.error || 'Failed to submit phone details. Please try again.');
+        setRegError((res && res.error) || 'Failed to submit phone details. Please try again.');
       }
     } catch (err) {
-      console.error(err);
-      setRegError('Network error while processing phone verification. Please retry.');
+      console.error('Registration processing error:', err);
+      setRegError(err?.message || 'Error processing phone verification. Please retry.');
     } finally {
       setIsSubmitting(false);
     }

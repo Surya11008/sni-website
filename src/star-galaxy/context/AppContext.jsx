@@ -1560,12 +1560,13 @@ export function AppProvider({ children }) {
     }
   };
 
-  const register = async (formData) => {
-    const fullName = (formData.fullName || formData.name || '').trim();
-    const username = (formData.username || formData.userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    const password = (formData.password || '').trim();
-    const nickname = (formData.nickname || '').trim();
-    const moreDetails = (formData.moreDetails || formData.place || formData.optionalInfo || '').trim();
+  const register = async (userData = {}) => {
+    const formData = userData || {};
+    const fullName = String(formData.fullName || formData.name || '').trim();
+    const username = String(formData.username || formData.userId || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const password = String(formData.password || '').trim();
+    const nickname = String(formData.nickname || '').trim();
+    const moreDetails = String(formData.moreDetails || formData.place || formData.optionalInfo || '').trim();
 
     if (!fullName || !username || !password) {
       return {
@@ -1592,9 +1593,9 @@ export function AppProvider({ children }) {
 
     // 1. User ID must be unique in local state / Firestore
     const existingUser = (data?.users || []).find(u =>
-      (u.username && u.username.toLowerCase() === cleanUserLower) ||
-      (u.id && u.id.toLowerCase() === cleanUserLower) ||
-      (u.userId && String(u.userId).toLowerCase() === cleanUserLower)
+      (u?.username && String(u.username).toLowerCase() === cleanUserLower) ||
+      (u?.id && String(u.id).toLowerCase() === cleanUserLower) ||
+      (u?.userId && String(u.userId).toLowerCase() === cleanUserLower)
     );
     if (existingUser) {
       return {
