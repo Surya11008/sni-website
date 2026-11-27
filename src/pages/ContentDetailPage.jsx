@@ -20,7 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
-import { NotionLinkPreview } from '../components/notion';
+import { NotionCover, NotionToolbar, NotionEditor, NotionLinkPreview, NotionEmbedDrawer } from '../components/notion';
 import WATVSubNav from '../components/WATVSubNav';
 import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import {
@@ -40,6 +40,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Heart,
+  Sparkles,
+  Check,
+  X,
   MessageSquare,
   Send,
   MessageCircle,
@@ -81,6 +84,23 @@ export default function ContentDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState([]);
 
+  // Notion Editor states for Edit mode
+  const [icon, setIcon] = useState('📖');
+  const [targetPages, setTargetPages] = useState([]);
+  const [showMediaAttachments, setShowMediaAttachments] = useState(false);
+  const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
+  const [showEmbedDrawer, setShowEmbedDrawer] = useState(false);
+
+  // Flattened available pages
+  const allAvailablePages = DEFAULT_PORTAL_STRUCTURE.flatMap((cat) =>
+    cat.pages.map((p) => ({
+      pageSlug: p.pageSlug,
+      title: p.titleEn,
+      categorySlug: cat.categorySlug,
+      categoryTitle: cat.titleEn,
+    }))
+  );
+
   const isAdmin =
     userProfile?.role === 'admin' ||
     currentUser?.email === 'surya11008@sni.org.in' ||
@@ -105,12 +125,14 @@ export default function ContentDetailPage() {
             setSourceCollection('page_contents');
             setTitle(data.title || data.titleEn || data.titleTe || '');
             setDesc(data.desc || data.content || data.descEn || data.descTe || '');
+            setIcon(data.icon || '📖');
             setImageUrl(data.imageUrl || '');
             setVideoUrl(data.videoUrl || '');
             setAudioUrl(data.audioUrl || '');
             setFileUrl(data.fileUrl || '');
             setDownloadUrl(data.downloadUrl || '');
             setWebsiteUrl(data.websiteUrl || data.embedUrl || '');
+            setTargetPages(data.targetPages && data.targetPages.length > 0 ? data.targetPages : [data.pageSlug || paramPageSlug]);
 
             // Keep address bar in clean semantic format: sni.org.in/Home/Worship/Sermons/:contentId
             const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
@@ -319,6 +341,32 @@ export default function ContentDetailPage() {
       : null;
   };
 
+  // Toggle page in targetPages list
+  const toggleTargetPage = (slug) => {
+    setTargetPages((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  };
+
+  // Handle Embed & Link Preview Insertion from NotionEmbedDrawer
+  const handleInsertEmbed = (embed) => {
+    if (embed.type === 'video') {
+      setVideoUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else if (embed.type === 'audio') {
+      setAudioUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else if (embed.type === 'pdf') {
+      setFileUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else {
+      setWebsiteUrl(embed.url);
+      setShowMediaAttachments(true);
+    }
+    const token = embed.type === 'bookmark' ? `\n\n[bookmark](${embed.url})\n\n` : `\n\n[embed](${embed.url})\n\n`;
+    setDesc((prev) => (prev ? prev + token : embed.url));
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -335,6 +383,8 @@ export default function ContentDetailPage() {
         desc: desc.trim(),
         descEn: desc.trim(),
         descTe: desc.trim(),
+        icon: icon || '📖',
+        targetPages: targetPages.length > 0 ? targetPages : [article.pageSlug || paramPageSlug],
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
         audioUrl: audioUrl.trim() || null,
@@ -544,47 +594,210 @@ export default function ContentDetailPage() {
           </div>
         </div>
 
-        {/* Admin Edit Drawer */}
+        {/* NOTION-STYLE DOCUMENT EDITOR FOR EDIT MODE (Matching User's Screenshot) */}
         {isEditing && (
-          <div className="p-6 rounded-3xl bg-slate-50 border border-[#C59B27]/50 shadow-lg space-y-4">
-            <h3 className="text-sm font-bold text-slate-800">Edit Article</h3>
-            <form onSubmit={handleUpdate} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white"
-                  required
-                />
+          <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* 1. Notion Top Navigation & Action Bar */}
+            <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
+              <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
+                <Link to={`/category/${currentCategorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
+                <span>/</span>
+                <span className="text-slate-900 font-bold truncate">{subPageTitle}</span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
+                  <Sparkles className="w-3 h-3 text-[#C59B27]" />
+                  Notion Document (Edit Mode)
+                </span>
               </div>
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Content</label>
-                <textarea
-                  rows={6}
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
+
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-bold"
+                  className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/60 font-semibold text-xs transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleUpdate}
                   disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold"
+                  className="px-5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                  <Check className="w-4 h-4 text-[#F4B942]" />
+                  <span>{submitting ? 'Saving...' : 'Save Changes'}</span>
                 </button>
               </div>
-            </form>
+            </div>
+
+            {/* Notion Embed & Link Preview Drawer */}
+            <NotionEmbedDrawer
+              isOpen={showEmbedDrawer}
+              onClose={() => setShowEmbedDrawer(false)}
+              onInsert={handleInsertEmbed}
+            />
+
+            {/* 2. Cover Component (Snippet 2) */}
+            <NotionCover
+              url={imageUrl}
+              onChange={setImageUrl}
+              onRemove={() => setImageUrl('')}
+              editable={true}
+            />
+
+            {/* 3. Toolbar & Document Content (Snippet 2 & 3) */}
+            <div className="mx-auto md:max-w-3xl lg:max-w-4xl pb-16">
+              <NotionToolbar
+                initialData={{ icon, title }}
+                onTitleChange={setTitle}
+                onIconChange={setIcon}
+                pageTitle={subPageTitle}
+                editable={true}
+                onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
+                onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                onOpenEmbed={() => setShowEmbedDrawer(true)}
+                targetPagesCount={targetPages.length}
+                hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
+              />
+
+              {/* Cross-post Drawer */}
+              {showMultiPageSelect && (
+                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Cross-post to other pages:</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMultiPageSelect(false)}
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+                    {allAvailablePages.map((p) => {
+                      const isSelected = targetPages.includes(p.pageSlug);
+                      return (
+                        <button
+                          key={`${p.categorySlug}-${p.pageSlug}`}
+                          type="button"
+                          onClick={() => toggleTargetPage(p.pageSlug)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
+                            isSelected
+                              ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
+                          <span>{p.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Media Attachments Drawer */}
+              {showMediaAttachments && (
+                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in duration-150 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Attachments & External Links:</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaAttachments(false)}
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
+                      <input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Audio URL (Audio Link)</label>
+                      <input
+                        type="url"
+                        value={audioUrl}
+                        onChange={(e) => setAudioUrl(e.target.value)}
+                        placeholder="https://example.com/audio.mp3"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Document / PDF Link</label>
+                      <input
+                        type="url"
+                        value={fileUrl}
+                        onChange={(e) => setFileUrl(e.target.value)}
+                        placeholder="https://drive.google.com/..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Download Link</label>
+                      <input
+                        type="url"
+                        value={downloadUrl}
+                        onChange={(e) => setDownloadUrl(e.target.value)}
+                        placeholder="https://drive.google.com/uc?export=download&id=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Website URL Embed</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://example.com"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. BlockNote Notion Block Editor */}
+              <div className="px-6 md:px-12 py-2">
+                <NotionEditor
+                  initialContent={desc}
+                  onChange={setDesc}
+                  editable={true}
+                />
+              </div>
+
+              {/* 5. Bottom Notion Action Bar */}
+              <div className="mx-6 md:mx-12 pt-6 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                >
+                  Discard
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleUpdate}
+                    disabled={submitting}
+                    className="px-6 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4 text-[#F4B942]" />
+                    <span>{submitting ? 'Saving...' : 'Save Changes'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
