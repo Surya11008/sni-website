@@ -28,6 +28,12 @@ import {
   Sparkles,
   X,
   Check,
+  Lightbulb,
+  Heading1,
+  Heading2,
+  Heading3,
+  Pilcrow,
+  CheckSquare,
 } from 'lucide-react';
 
 // ==============================================================
@@ -76,6 +82,94 @@ const FONT_SIZES = [
   { label: 'Extra Large', value: '28px' },
 ];
 
+// Notion Slash Command Blocks
+const SLASH_BLOCKS = [
+  {
+    id: 'text',
+    label: 'Text',
+    desc: 'Just start writing with plain text',
+    icon: '📝',
+    cmd: (editor) => editor.execFormatBlock('p'),
+  },
+  {
+    id: 'h1',
+    label: 'Heading 1',
+    desc: 'Big section heading',
+    icon: '🔤',
+    cmd: (editor) => editor.execFormatBlock('h1'),
+  },
+  {
+    id: 'h2',
+    label: 'Heading 2',
+    desc: 'Medium section heading',
+    icon: '🔤',
+    cmd: (editor) => editor.execFormatBlock('h2'),
+  },
+  {
+    id: 'h3',
+    label: 'Heading 3',
+    desc: 'Small section heading',
+    icon: '🔤',
+    cmd: (editor) => editor.execFormatBlock('h3'),
+  },
+  {
+    id: 'callout',
+    label: 'Callout Box',
+    desc: 'Notion callout with icon and colored background',
+    icon: '💡',
+    cmd: (editor) => editor.insertCallout(),
+  },
+  {
+    id: 'quote',
+    label: 'Scripture Quote',
+    desc: 'Bible verse or spiritual quote block with gold accent',
+    icon: '📖',
+    cmd: (editor) => editor.insertScriptureQuote(),
+  },
+  {
+    id: 'bullet',
+    label: 'Bulleted List',
+    desc: 'Create a simple bulleted list',
+    icon: '⏺️',
+    cmd: (editor) => editor.execCmd('insertUnorderedList'),
+  },
+  {
+    id: 'numbered',
+    label: 'Numbered List',
+    desc: 'Create a numbered list (1, 2, 3...)',
+    icon: '🔢',
+    cmd: (editor) => editor.execCmd('insertOrderedList'),
+  },
+  {
+    id: 'table',
+    label: 'Table',
+    desc: 'Insert a clean 3x3 table with headers',
+    icon: '📊',
+    cmd: (editor) => editor.insertTable(),
+  },
+  {
+    id: 'divider',
+    label: 'Divider',
+    desc: 'Visually divide sections with a clean line',
+    icon: '➖',
+    cmd: (editor) => editor.insertDivider(),
+  },
+  {
+    id: 'image',
+    label: 'Image',
+    desc: 'Embed an image with a web URL',
+    icon: '🖼️',
+    cmd: (editor) => editor.openImageModal(),
+  },
+  {
+    id: 'link',
+    label: 'Web Link',
+    desc: 'Insert a hyperlink to an article or site',
+    icon: '🔗',
+    cmd: (editor) => editor.openLinkModal(),
+  },
+];
+
 function loadGoogleFont(query) {
   if (!query || typeof document === 'undefined') return;
   const id = `gfont-${query.replace(/[^a-zA-Z0-9]/g, '-')}`;
@@ -91,8 +185,9 @@ export default function RichTextEditor({
   value = '',
   onChange,
   label = 'Content',
-  placeholder = 'Start typing your article here... (Telugu, English, formatting, quotes, and links supported)',
+  placeholder = "Type '/' for Notion blocks or start writing...",
   rows = 12,
+  isNotionStyle = true,
 }) {
   const editorRef = useRef(null);
 
@@ -118,6 +213,18 @@ export default function RichTextEditor({
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isBulletList, setIsBulletList] = useState(false);
   const [isNumberedList, setIsNumberedList] = useState(false);
+
+  // Notion Floating Selection Bubble
+  const [bubbleToolbar, setBubbleToolbar] = useState({ visible: false, x: 0, y: 0 });
+
+  // Notion Slash Command Menu
+  const [slashMenu, setSlashMenu] = useState({
+    visible: false,
+    query: '',
+    selectedIndex: 0,
+    x: 0,
+    y: 0,
+  });
 
   // Modals
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -162,12 +269,15 @@ export default function RichTextEditor({
   // Close menus on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (!e.target.closest('.editor-dropdown-container')) {
+      if (!e.target.closest('.editor-dropdown-container') && !e.target.closest('.editor-floating-bubble')) {
         setShowStyleMenu(false);
         setShowFontMenu(false);
         setShowFontSizeMenu(false);
         setShowTextColorMenu(false);
         setShowHighlightMenu(false);
+      }
+      if (!e.target.closest('.notion-slash-menu')) {
+        setSlashMenu((prev) => ({ ...prev, visible: false }));
       }
     };
     window.addEventListener('mousedown', handleOutsideClick);
@@ -191,6 +301,25 @@ export default function RichTextEditor({
       setIsBulletList(document.queryCommandState('insertUnorderedList'));
       setIsNumberedList(document.queryCommandState('insertOrderedList'));
     } catch {}
+
+    // Check Selection for Floating Bubble
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.toString().trim().length > 0 && editorRef.current) {
+      try {
+        const range = sel.getRangeAt(0);
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          const rect = range.getBoundingClientRect();
+          const editorRect = editorRef.current.getBoundingClientRect();
+          setBubbleToolbar({
+            visible: true,
+            x: Math.max(20, Math.min(window.innerWidth - 300, rect.left + rect.width / 2)),
+            y: rect.top - 46,
+          });
+          return;
+        }
+      } catch {}
+    }
+    setBubbleToolbar({ visible: false, x: 0, y: 0 });
   }, []);
 
   const handleInput = () => {
@@ -214,7 +343,7 @@ export default function RichTextEditor({
   };
 
   // Block format
-  const handleFormatBlock = (tag, label) => {
+  const execFormatBlock = (tag) => {
     setSelectedStyle(tag);
     setShowStyleMenu(false);
     execCmd('formatBlock', tag);
@@ -232,7 +361,6 @@ export default function RichTextEditor({
   const handleSelectFontSize = (size) => {
     setSelectedFontSize(size);
     setShowFontSizeMenu(false);
-    // Apply inline style to selection
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const span = document.createElement('span');
@@ -247,9 +375,28 @@ export default function RichTextEditor({
     }
   };
 
+  // Notion Callout Block
+  const insertCallout = () => {
+    const calloutHtml = `
+      <div class="notion-callout" style="display: flex; gap: 12px; align-items: flex-start; background: #fffdf0; border: 1px solid #fef08a; border-radius: 14px; padding: 14px 18px; margin: 16px 0; box-shadow: 0 1px 3px rgba(234, 179, 8, 0.08);">
+        <span style="font-size: 1.4rem; line-height: 1; user-select: none;">💡</span>
+        <div style="flex: 1; color: #713f12; font-weight: 500;">
+          <p style="margin: 0; font-size: 1em;">ముఖ్యమైన సమాచారం లేదా గమనికను ఇక్కడ రాయండి...</p>
+        </div>
+      </div>
+      <p><br/></p>
+    `;
+    execCmd('insertHTML', calloutHtml);
+  };
+
   // Scripture Quote Block
   const insertScriptureQuote = () => {
-    const quoteHtml = `<blockquote style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 14px 18px; margin: 16px 0; border-radius: 0 12px 12px 0; font-style: italic; color: #1e293b; box-shadow: 0 1px 3px rgba(197, 155, 39, 0.1);"><p style="margin: 0; font-size: 1.05em; font-weight: 500;">“రాయండి లేదా బైబిల్ వాక్యాన్ని ఇక్కడ పేస్ట్ చేయండి...”</p></blockquote><p><br/></p>`;
+    const quoteHtml = `
+      <blockquote style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 14px 18px; margin: 16px 0; border-radius: 0 12px 12px 0; font-style: italic; color: #1e293b; box-shadow: 0 1px 3px rgba(197, 155, 39, 0.08);">
+        <p style="margin: 0; font-size: 1.05em; font-weight: 500;">“రాయండి లేదా బైబిల్ వాక్యాన్ని ఇక్కడ పేస్ట్ చేయండి...”</p>
+      </blockquote>
+      <p><br/></p>
+    `;
     execCmd('insertHTML', quoteHtml);
   };
 
@@ -312,18 +459,21 @@ export default function RichTextEditor({
     }
 
     const textToDisplay = linkText || linkUrl;
-    const finalUrl = linkUrl.startsWith('http://') || linkUrl.startsWith('https://') || linkUrl.startsWith('/') 
-      ? linkUrl 
+    const finalUrl = linkUrl.startsWith('http://') || linkUrl.startsWith('https://') || linkUrl.startsWith('/')
+      ? linkUrl
       : `https://${linkUrl}`;
     const linkHtml = `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer" style="color: #C59B27; font-weight: 600; text-decoration: underline;">${textToDisplay}</a>`;
-    
+
     execCmd('insertHTML', linkHtml);
     setShowLinkModal(false);
     setLinkUrl('');
     setLinkText('');
   };
 
-  // Image Dialog
+  const openImageModal = () => {
+    setShowImageModal(true);
+  };
+
   const applyImage = (e) => {
     e.preventDefault();
     if (!imageUrl) return;
@@ -334,25 +484,78 @@ export default function RichTextEditor({
     setImageAlt('');
   };
 
-  // HTML Source toggle
-  const toggleHtmlSource = () => {
-    if (showHtmlSource) {
-      // Switching from code to WYSIWYG
-      if (editorRef.current) {
-        editorRef.current.innerHTML = htmlSource;
+  // Filtered Slash Blocks
+  const filteredBlocks = SLASH_BLOCKS.filter(
+    (b) =>
+      b.label.toLowerCase().includes(slashMenu.query.toLowerCase()) ||
+      b.desc.toLowerCase().includes(slashMenu.query.toLowerCase()) ||
+      b.id.toLowerCase().includes(slashMenu.query.toLowerCase())
+  );
+
+  const executeSlashBlock = (block) => {
+    setSlashMenu({ visible: false, query: '', selectedIndex: 0, x: 0, y: 0 });
+
+    // Remove the typed slash text
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer;
+      if (node && node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        const slashIdx = text.lastIndexOf('/');
+        if (slashIdx !== -1) {
+          node.textContent = text.slice(0, slashIdx);
+        }
       }
-      if (onChange) onChange(htmlSource);
-      setShowHtmlSource(false);
-    } else {
-      // Switching from WYSIWYG to code
-      const currentHtml = editorRef.current ? editorRef.current.innerHTML : value;
-      setHtmlSource(currentHtml);
-      setShowHtmlSource(true);
     }
+
+    const editorActions = {
+      execFormatBlock,
+      insertCallout,
+      insertScriptureQuote,
+      execCmd,
+      insertTable,
+      insertDivider,
+      openImageModal,
+      openLinkModal,
+    };
+    block.cmd(editorActions);
   };
 
-  // Handle hotkeys
+  // Keyboard navigation & Slash Command detection
   const handleKeyDown = (e) => {
+    // If Slash Menu is visible
+    if (slashMenu.visible) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSlashMenu((prev) => ({
+          ...prev,
+          selectedIndex: (prev.selectedIndex + 1) % Math.max(1, filteredBlocks.length),
+        }));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSlashMenu((prev) => ({
+          ...prev,
+          selectedIndex: (prev.selectedIndex - 1 + filteredBlocks.length) % Math.max(1, filteredBlocks.length),
+        }));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredBlocks.length > 0) {
+          executeSlashBlock(filteredBlocks[slashMenu.selectedIndex] || filteredBlocks[0]);
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        setSlashMenu((prev) => ({ ...prev, visible: false }));
+        return;
+      }
+    }
+
+    // Standard hotkeys (Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+K)
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
@@ -370,7 +573,58 @@ export default function RichTextEditor({
     }
   };
 
-  const minHeightPx = Math.max(220, (rows || 10) * 26);
+  const handleKeyUp = (e) => {
+    updateActiveFormatting();
+
+    // Check if user pressed '/' to open Notion Slash Menu
+    if (e.key === '/') {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        setSlashMenu({
+          visible: true,
+          query: '',
+          selectedIndex: 0,
+          x: Math.min(window.innerWidth - 320, Math.max(20, rect.left)),
+          y: rect.bottom + 8,
+        });
+      }
+    } else if (slashMenu.visible) {
+      // Update query after slash
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const node = sel.getRangeAt(0).startContainer;
+        if (node && node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          const slashIdx = text.lastIndexOf('/');
+          if (slashIdx !== -1) {
+            const query = text.slice(slashIdx + 1).trim();
+            setSlashMenu((prev) => ({ ...prev, query, selectedIndex: 0 }));
+          } else {
+            setSlashMenu((prev) => ({ ...prev, visible: false }));
+          }
+        }
+      }
+    }
+  };
+
+  // HTML Source toggle
+  const toggleHtmlSource = () => {
+    if (showHtmlSource) {
+      if (editorRef.current) {
+        editorRef.current.innerHTML = htmlSource;
+      }
+      if (onChange) onChange(htmlSource);
+      setShowHtmlSource(false);
+    } else {
+      const currentHtml = editorRef.current ? editorRef.current.innerHTML : value;
+      setHtmlSource(currentHtml);
+      setShowHtmlSource(true);
+    }
+  };
+
+  const minHeightPx = Math.max(260, (rows || 10) * 28);
 
   return (
     <div
@@ -386,14 +640,17 @@ export default function RichTextEditor({
         }`}
       >
         {/* ============================================================== */}
-        {/* 1. TOP BAR: LABEL & UTILITY CONTROLS                           */}
+        {/* 1. TOP BAR: NOTION MINIMAL HEADER & UTILITIES                  */}
         {/* ============================================================== */}
-        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-3 text-xs">
+        <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800 text-xs sm:text-sm">{label}</span>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              <Check className="w-3 h-3 text-emerald-600" />
-              Telugu & English
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80">
+              <Sparkles className="w-3 h-3 text-[#C59B27]" />
+              Notion Writing Canvas
+            </span>
+            <span className="hidden md:inline text-[11px] text-slate-400">
+              (Type <code className="bg-slate-200/70 px-1 py-0.5 rounded font-mono text-slate-700">/</code> for blocks)
             </span>
           </div>
 
@@ -402,7 +659,7 @@ export default function RichTextEditor({
             <button
               type="button"
               onClick={() => execCmd('undo')}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
               title="Undo (Ctrl+Z)"
             >
               <Undo className="w-4 h-4" />
@@ -412,7 +669,7 @@ export default function RichTextEditor({
             <button
               type="button"
               onClick={() => execCmd('redo')}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
               title="Redo (Ctrl+Y)"
             >
               <Redo className="w-4 h-4" />
@@ -429,7 +686,7 @@ export default function RichTextEditor({
                   ? 'bg-amber-100 text-amber-900 border border-amber-300'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
-              title="Edit HTML Source Code"
+              title="Toggle HTML Source View"
             >
               <Code className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{showHtmlSource ? 'Visual Mode' : 'HTML Code'}</span>
@@ -439,8 +696,8 @@ export default function RichTextEditor({
             <button
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
-              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Editor'}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Notion Mode'}
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
@@ -448,11 +705,11 @@ export default function RichTextEditor({
         </div>
 
         {/* ============================================================== */}
-        {/* 2. MODERN STREAMLINED TOOLBAR                                  */}
+        {/* 2. SLICK INTEGRATED TOOLBAR                                    */}
         {/* ============================================================== */}
         {!showHtmlSource && (
-          <div className="px-3 py-2 bg-white border-b border-slate-200/80 flex items-center gap-1 flex-wrap text-slate-700 text-xs editor-dropdown-container">
-            {/* Style Dropdown (Paragraph, H1, H2, H3, Quote) */}
+          <div className="px-3 py-2 bg-white border-b border-slate-100 flex items-center gap-1 flex-wrap text-slate-700 text-xs editor-dropdown-container">
+            {/* Style Dropdown */}
             <div className="relative">
               <button
                 type="button"
@@ -464,7 +721,7 @@ export default function RichTextEditor({
                   setShowHighlightMenu(false);
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 font-medium transition cursor-pointer text-slate-700"
-                title="Heading / Paragraph Style"
+                title="Heading / Paragraph Block"
               >
                 <span>
                   {selectedStyle === 'h1'
@@ -474,48 +731,61 @@ export default function RichTextEditor({
                     : selectedStyle === 'h3'
                     ? 'Heading 3'
                     : selectedStyle === 'blockquote'
-                    ? 'Quote'
-                    : 'Paragraph'}
+                    ? 'Scripture Quote'
+                    : 'Text'}
                 </span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {showStyleMenu && (
-                <div className="absolute left-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
                   <button
                     type="button"
-                    onClick={() => handleFormatBlock('p', 'Paragraph')}
+                    onClick={() => execFormatBlock('p')}
                     className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs font-normal"
                   >
-                    Normal Text (Paragraph)
+                    📝 Text (Paragraph)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleFormatBlock('h1', 'Heading 1')}
+                    onClick={() => execFormatBlock('h1')}
                     className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-sm font-bold text-slate-900"
                   >
-                    Heading 1
+                    🔤 Heading 1 (Large)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleFormatBlock('h2', 'Heading 2')}
+                    onClick={() => execFormatBlock('h2')}
                     className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs font-bold text-slate-800"
                   >
-                    Heading 2
+                    🔤 Heading 2 (Medium)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleFormatBlock('h3', 'Heading 3')}
+                    onClick={() => execFormatBlock('h3')}
                     className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs font-semibold text-slate-700"
                   >
-                    Heading 3
+                    🔤 Heading 3 (Small)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleFormatBlock('blockquote', 'Quote')}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs italic text-amber-900 border-t border-slate-100"
+                    onClick={() => {
+                      insertCallout();
+                      setShowStyleMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-amber-50/60 text-xs font-medium text-amber-800 border-t border-slate-100"
                   >
-                    “ Quote / Verse ”
+                    💡 Notion Callout Box
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      insertScriptureQuote();
+                      setShowStyleMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-amber-50/60 text-xs italic text-amber-900"
+                  >
+                    📖 Scripture / Bible Quote
                   </button>
                 </div>
               )}
@@ -533,9 +803,8 @@ export default function RichTextEditor({
                   setShowHighlightMenu(false);
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 font-medium transition cursor-pointer text-slate-700 max-w-[150px] truncate"
-                title="Select Font (Telugu & Latin)"
+                title="Telugu & Latin Fonts"
               >
-                <Type className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <span className="truncate">{selectedFont.name.split(' ')[0]}</span>
                 <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
               </button>
@@ -543,7 +812,7 @@ export default function RichTextEditor({
               {showFontMenu && (
                 <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
                   <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    Telugu Fonts
+                    Telugu & Latin Fonts
                   </div>
                   {FONTS.map((font) => (
                     <button
@@ -557,43 +826,6 @@ export default function RichTextEditor({
                     >
                       <span className="truncate">{font.name}</span>
                       {selectedFont.name === font.name && <Check className="w-3.5 h-3.5 text-[#C59B27]" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Font Size Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowFontSizeMenu(!showFontSizeMenu);
-                  setShowStyleMenu(false);
-                  setShowFontMenu(false);
-                  setShowTextColorMenu(false);
-                  setShowHighlightMenu(false);
-                }}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 font-medium transition cursor-pointer text-slate-700"
-                title="Font Size"
-              >
-                <span>{selectedFontSize}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-
-              {showFontSizeMenu && (
-                <div className="absolute left-0 top-full mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
-                  {FONT_SIZES.map((sz) => (
-                    <button
-                      key={sz.value}
-                      type="button"
-                      onClick={() => handleSelectFontSize(sz.value)}
-                      className={`w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs flex items-center justify-between ${
-                        selectedFontSize === sz.value ? 'font-bold text-[#C59B27]' : 'text-slate-700'
-                      }`}
-                    >
-                      <span>{sz.label}</span>
-                      <span className="text-[10px] text-slate-400">{sz.value}</span>
                     </button>
                   ))}
                 </div>
@@ -732,42 +964,6 @@ export default function RichTextEditor({
 
             <div className="w-[1px] h-4 bg-slate-200 mx-0.5" />
 
-            {/* ALIGNMENTS */}
-            <button
-              type="button"
-              onClick={() => execCmd('justifyLeft')}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Align Left"
-            >
-              <AlignLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => execCmd('justifyCenter')}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Align Center"
-            >
-              <AlignCenter className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => execCmd('justifyRight')}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Align Right"
-            >
-              <AlignRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => execCmd('justifyFull')}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Justify"
-            >
-              <AlignJustify className="w-4 h-4" />
-            </button>
-
-            <div className="w-[1px] h-4 bg-slate-200 mx-0.5" />
-
             {/* LISTS */}
             <button
               type="button"
@@ -792,15 +988,26 @@ export default function RichTextEditor({
 
             <div className="w-[1px] h-4 bg-slate-200 mx-0.5" />
 
+            {/* NOTION CALLOUT BUTTON */}
+            <button
+              type="button"
+              onClick={insertCallout}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-amber-50 text-amber-900 font-medium transition cursor-pointer text-xs"
+              title="Insert Notion Callout Box"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+              <span>Callout</span>
+            </button>
+
             {/* SCRIPTURE QUOTE BUTTON */}
             <button
               type="button"
               onClick={insertScriptureQuote}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold border border-amber-200/80 transition cursor-pointer text-xs"
-              title="Insert Bible Verse / Sacred Quote Box"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50/80 hover:bg-amber-100 text-amber-900 font-semibold border border-amber-200/80 transition cursor-pointer text-xs"
+              title="Insert Scripture Verse / Quote Box"
             >
               <BookOpen className="w-3.5 h-3.5 text-[#C59B27]" />
-              <span className="hidden sm:inline">వాక్యం / Quote</span>
+              <span>వాక్యం</span>
             </button>
 
             {/* INSERTS: LINK, IMAGE, TABLE, HR */}
@@ -808,14 +1015,14 @@ export default function RichTextEditor({
               type="button"
               onClick={openLinkModal}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Insert Hyperlink (Ctrl+K)"
+              title="Insert Link (Ctrl+K)"
             >
               <LinkIcon className="w-4 h-4" />
             </button>
 
             <button
               type="button"
-              onClick={() => setShowImageModal(true)}
+              onClick={openImageModal}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
               title="Insert Image"
             >
@@ -826,7 +1033,7 @@ export default function RichTextEditor({
               type="button"
               onClick={insertTable}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Insert Table (3x3)"
+              title="Insert Table"
             >
               <TableIcon className="w-4 h-4" />
             </button>
@@ -835,7 +1042,7 @@ export default function RichTextEditor({
               type="button"
               onClick={insertDivider}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-              title="Insert Horizontal Divider Line"
+              title="Insert Divider Line"
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -857,7 +1064,7 @@ export default function RichTextEditor({
         {/* ============================================================== */}
         {/* 3. WRITING CANVAS OR HTML SOURCE VIEW                          */}
         {/* ============================================================== */}
-        <div className="flex-1 overflow-y-auto bg-white p-4 sm:p-6" style={{ minHeight: `${minHeightPx}px` }}>
+        <div className="flex-1 overflow-y-auto bg-white p-4 sm:p-8" style={{ minHeight: `${minHeightPx}px` }}>
           {showHtmlSource ? (
             <textarea
               value={htmlSource}
@@ -874,13 +1081,13 @@ export default function RichTextEditor({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
-              onKeyUp={updateActiveFormatting}
+              onKeyUp={handleKeyUp}
               onMouseUp={updateActiveFormatting}
               onKeyDown={handleKeyDown}
               data-placeholder={placeholder}
-              className="rich-html-content outline-none text-slate-800 text-sm sm:text-base leading-relaxed selection:bg-amber-200/80 min-h-full"
+              className="rich-html-content outline-none text-slate-800 text-base sm:text-lg leading-relaxed selection:bg-amber-200/80 min-h-full max-w-4xl mx-auto"
               style={{
-                minHeight: `${minHeightPx - 50}px`,
+                minHeight: `${minHeightPx - 60}px`,
                 fontFamily: selectedFont.family !== 'inherit' ? selectedFont.family : undefined,
               }}
               spellCheck="true"
@@ -891,7 +1098,7 @@ export default function RichTextEditor({
         {/* ============================================================== */}
         {/* 4. FOOTER STATUS BAR                                           */}
         {/* ============================================================== */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+        <div className="px-4 py-2 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 font-medium">
           <div className="flex items-center gap-3">
             <span>
               <strong className="text-slate-700 font-bold">{wordCount}</strong> words
@@ -914,7 +1121,120 @@ export default function RichTextEditor({
       </div>
 
       {/* ============================================================== */}
-      {/* 5. LINK MODAL                                                  */}
+      {/* 5. NOTION FLOATING SELECTION BUBBLE TOOLBAR                    */}
+      {/* ============================================================== */}
+      {bubbleToolbar.visible && (
+        <div
+          className="fixed z-50 editor-floating-bubble -translate-x-1/2 flex items-center gap-0.5 bg-[#0f172a] text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in zoom-in-95 duration-100"
+          style={{ left: `${bubbleToolbar.x}px`, top: `${bubbleToolbar.y}px` }}
+        >
+          <button
+            type="button"
+            onClick={() => execCmd('bold')}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${isBold ? 'text-[#C59B27] font-bold' : 'text-white'}`}
+            title="Bold"
+          >
+            <Bold className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('italic')}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${isItalic ? 'text-[#C59B27]' : 'text-white'}`}
+            title="Italic"
+          >
+            <Italic className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('underline')}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${isUnderline ? 'text-[#C59B27]' : 'text-white'}`}
+            title="Underline"
+          >
+            <Underline className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('strikeThrough')}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition ${isStrikethrough ? 'text-[#C59B27]' : 'text-white'}`}
+            title="Strikethrough"
+          >
+            <Strikethrough className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="w-[1px] h-3.5 bg-slate-700 mx-1" />
+
+          <button
+            type="button"
+            onClick={openLinkModal}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-white transition"
+            title="Link"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={insertScriptureQuote}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-amber-400 transition"
+            title="Quote"
+          >
+            <Quote className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={insertCallout}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-yellow-300 transition"
+            title="Notion Callout"
+          >
+            <Lightbulb className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 6. NOTION SLASH COMMAND (/) MENU                               */}
+      {/* ============================================================== */}
+      {slashMenu.visible && (
+        <div
+          className="fixed z-50 notion-slash-menu w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-80 overflow-y-auto"
+          style={{ left: `${slashMenu.x}px`, top: `${slashMenu.y}px` }}
+        >
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center justify-between border-b border-slate-100">
+            <span>Basic Notion Blocks</span>
+            <span className="font-mono text-slate-400">Esc to close</span>
+          </div>
+
+          <div className="py-1">
+            {filteredBlocks.length === 0 ? (
+              <div className="px-3 py-3 text-xs text-slate-400 text-center">No blocks match your search</div>
+            ) : (
+              filteredBlocks.map((block, idx) => {
+                const isSelected = idx === slashMenu.selectedIndex;
+                return (
+                  <button
+                    key={block.id}
+                    type="button"
+                    onClick={() => executeSlashBlock(block)}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2.5 transition cursor-pointer ${
+                      isSelected ? 'bg-amber-50 text-[#071B3B]' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
+                  >
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-sm shrink-0">
+                      {block.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold leading-none mb-1">{block.label}</div>
+                      <div className="text-[10px] text-slate-500 truncate">{block.desc}</div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 7. LINK MODAL                                                  */}
       {/* ============================================================== */}
       {showLinkModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
@@ -979,7 +1299,7 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 6. IMAGE MODAL                                                 */}
+      {/* 8. IMAGE MODAL                                                 */}
       {/* ============================================================== */}
       {showImageModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
