@@ -11,6 +11,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blocknote/core": "^0.57.0",
+    "@blocknote/mantine": "^0.57.0",
+    "@blocknote/react": "^0.57.0",
     "canvas-confetti": "^1.9.4",
     "firebase": "^13.4.0",
     "lucide-react": "^1.77.0",

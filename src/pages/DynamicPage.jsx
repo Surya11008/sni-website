@@ -21,6 +21,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
+import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty } from '../components/notion';
 import {
   ChevronRight,
   Plus,
@@ -379,10 +380,10 @@ export default function DynamicPage() {
           )}
         </div>
 
-        {/* NOTION-STYLE NEW / EDIT CONTENT PAGE */}
+        {/* NOTION-STYLE DOCUMENT EDITOR (Matches Notion Architecture) */}
         {isFormOpen && (
-          <div className="mb-14 max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-            {/* 1. Notion Top Action Bar */}
+          <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* 1. Notion Top Navigation & Action Bar */}
             <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
               <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
                 <Link to={`/category/${categorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
@@ -390,7 +391,7 @@ export default function DynamicPage() {
                 <span className="text-slate-900 font-bold truncate">{pageTitle}</span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
                   <Sparkles className="w-3 h-3 text-[#C59B27]" />
-                  Notion Page
+                  Notion Document
                 </span>
               </div>
 
@@ -414,207 +415,31 @@ export default function DynamicPage() {
               </div>
             </div>
 
-            {/* 2. Notion Cover Image Banner */}
-            {imageUrl ? (
-              <div className="relative h-56 sm:h-64 w-full group overflow-hidden bg-slate-100">
-                <img
-                  src={imageUrl}
-                  alt="Page Cover"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCoverPicker(!showCoverPicker)}
-                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    <span>Change cover</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setImageUrl('')}
-                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-red-600 text-white text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Remove</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-6 px-6 sm:px-10 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCoverPicker(!showCoverPicker)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-                >
-                  <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Add cover</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowIconPicker(!showIconPicker)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-                >
-                  <Smile className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Add icon</span>
-                </button>
-              </div>
-            )}
+            {/* 2. Cover Component (Snippet 2) */}
+            <NotionCover
+              url={imageUrl}
+              onChange={setImageUrl}
+              onRemove={() => setImageUrl('')}
+              editable={true}
+            />
 
-            {/* Cover Picker Popover */}
-            {showCoverPicker && (
-              <div className="mx-6 sm:mx-10 mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-slate-800">Choose Notion Cover Image</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowCoverPicker(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
-                  {NOTION_PRESET_COVERS.map((cov) => (
-                    <button
-                      key={cov.name}
-                      type="button"
-                      onClick={() => {
-                        setImageUrl(cov.url);
-                        setShowCoverPicker(false);
-                      }}
-                      className="group relative h-20 rounded-xl overflow-hidden border border-slate-200 hover:border-[#C59B27] transition cursor-pointer"
-                    >
-                      <img src={cov.url} alt={cov.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                      <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 flex items-end p-2">
-                        <span className="text-[10px] font-bold text-white truncate drop-shadow">{cov.name}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Or paste custom image URL:</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="https://images.unsplash.com/..."
-                      className="flex-1 p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCoverPicker(false)}
-                      className="px-4 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold cursor-pointer transition hover:bg-[#0F294A]"
-                    >
-                      Set Cover
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* 3. Toolbar & Document Content (Snippet 2 & 3) */}
+            <div className="mx-auto md:max-w-3xl lg:max-w-4xl pb-16">
+              <NotionToolbar
+                initialData={{ icon, title }}
+                onTitleChange={setTitle}
+                onIconChange={setIcon}
+                pageTitle={pageTitle}
+                editable={true}
+                onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
+                onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                targetPagesCount={targetPages.length}
+                hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
+              />
 
-            {/* 3. Notion Icon Floating Badge */}
-            <div className={`px-6 sm:px-10 relative z-20 ${imageUrl ? '-mt-10 sm:-mt-12' : 'mt-2'}`}>
-              <div className="relative inline-block">
-                <button
-                  type="button"
-                  onClick={() => setShowIconPicker(!showIconPicker)}
-                  className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xl border-4 border-white flex items-center justify-center text-3xl sm:text-4xl cursor-pointer hover:scale-105 transition select-none"
-                  title="Click to Change Page Icon"
-                >
-                  <span>{icon}</span>
-                </button>
-
-                {/* Emoji Picker Popover */}
-                {showIconPicker && (
-                  <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-700">Choose Notion Icon</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowIconPicker(false)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-6 gap-2">
-                      {NOTION_EMOJIS.map((em, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setIcon(em);
-                            setShowIconPicker(false);
-                          }}
-                          className={`w-9 h-9 rounded-xl hover:bg-amber-50 flex items-center justify-center text-xl transition cursor-pointer ${
-                            icon === em ? 'bg-amber-100 ring-2 ring-[#C59B27]' : ''
-                          }`}
-                        >
-                          {em}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 4. Notion Page Body: Title, Properties & Content */}
-            <form onSubmit={handleSaveContent} className="px-6 sm:px-10 pt-3 pb-8 space-y-5">
-              {/* Seamless Notion Title */}
-              <div>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Untitled"
-                  className="w-full text-3xl sm:text-4xl lg:text-5xl font-black text-[#071B3B] bg-transparent border-none outline-none focus:ring-0 placeholder:text-slate-300 py-1 leading-tight"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              {/* Notion Properties Grid */}
-              <div className="py-2.5 border-y border-slate-100 flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="font-semibold text-slate-500">Page:</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold">
-                    {pageTitle}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowMultiPageSelect(!showMultiPageSelect)}
-                    className="text-[11px] font-semibold text-[#C59B27] hover:underline cursor-pointer ml-1"
-                  >
-                    {targetPages.length > 1 ? `(${targetPages.length} pages)` : '+ Cross-post'}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <Paperclip className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="font-semibold text-slate-500">Media:</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowMediaAttachments(!showMediaAttachments)}
-                    className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-[#071B3B] font-bold text-[11px] transition cursor-pointer flex items-center gap-1"
-                  >
-                    {(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) ? 'Attached (View)' : '+ Attach Media'}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5 ml-auto text-[11px] text-slate-400">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Today</span>
-                </div>
-              </div>
-
-              {/* Collapsible Cross-post Drawer */}
+              {/* Cross-post Drawer */}
               {showMultiPageSelect && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
+                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">Cross-post to other pages:</span>
                     <button
@@ -648,9 +473,9 @@ export default function DynamicPage() {
                 </div>
               )}
 
-              {/* Collapsible Media Attachments Drawer */}
+              {/* Media Attachments Drawer */}
               {showMediaAttachments && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in duration-150 text-xs">
+                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in duration-150 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">Attachments & External Links:</span>
                     <button
@@ -719,19 +544,17 @@ export default function DynamicPage() {
                 </div>
               )}
 
-              {/* 5. Seamless Notion Rich Text Canvas */}
-              <div className="pt-2">
-                <RichTextEditor
-                  label="Document Content"
-                  value={desc}
+              {/* 4. BlockNote Notion Block Editor (Snippet 2 & 3) */}
+              <div className="px-6 md:px-12 py-2">
+                <NotionEditor
+                  initialContent={desc}
                   onChange={setDesc}
-                  placeholder="Type '/' for Notion blocks or start typing your message..."
-                  rows={12}
+                  editable={true}
                 />
               </div>
 
-              {/* 6. Bottom Notion Action Bar */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              {/* 5. Bottom Notion Action Bar */}
+              <div className="mx-6 md:mx-12 pt-6 border-t border-slate-100 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => { setIsFormOpen(false); setEditingItem(null); }}
@@ -740,7 +563,8 @@ export default function DynamicPage() {
                   Discard
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSaveContent}
                   disabled={formSubmitting}
                   className="px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
@@ -754,7 +578,7 @@ export default function DynamicPage() {
                   </span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
@@ -1369,68 +1193,9 @@ export default function DynamicPage() {
             )}
           </div>
         ) : (
-          /* Editorial Default Welcome if no user-submitted content exists yet */
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 md:p-12 shadow-sm w-full max-w-[1600px] mx-auto space-y-6">
-            <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-              <div className="w-14 h-14 rounded-2xl bg-[#0F294A] text-[#F4B942] flex items-center justify-center shrink-0 shadow-sm">
-                <PortalIcon name={page?.iconName || 'BookOpen'} className="w-7 h-7" />
-              </div>
-              <div>
-                <span className="text-xs uppercase font-bold text-[#C59B27] tracking-wider">
-                  {categoryTitle}
-                </span>
-                <h2
-                  className={`text-2xl sm:text-3xl font-bold text-[#0F294A] ${
-                    isTelugu ? 'font-krishna' : 'font-serif'
-                  }`}
-                >
-                  {pageTitle}
-                </h2>
-              </div>
-            </div>
-
-            <div
-              className={`text-slate-700 text-sm sm:text-base leading-relaxed space-y-3 ${
-                isTelugu ? 'font-telugu leading-loose' : ''
-              }`}
-            >
-              <p>
-                {isTelugu
-                  ? `దేవుని సంఘ సమాఖ్య ${categoryTitle} విభాగంలోని "${pageTitle}" పేజీకి స్వాగతం.`
-                  : `Welcome to the official "${pageTitle}" section within ${categoryTitle}.`}
-              </p>
-            </div>
-
-            <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#0F294A] hover:text-[#C59B27] transition"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Return to Welcome</span>
-              </Link>
-
-              {isAdmin && (
-                <button
-                  onClick={handleOpenAddForm}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] border border-[#F4B942]/40 text-xs font-bold transition shadow-sm cursor-pointer"
-                >
-                  <Plus className="w-4 h-4 text-[#F4B942]" />
-                  <span>+ Add Content to This Page</span>
-                </button>
-              )}
-            </div>
-          </div>
+          /* Notion Empty State (Snippet 1) */
+          <NotionEmpty pageTitle={pageTitle} onCreate={handleOpenAddForm} />
         )}
-
-        {/* Dynamic Page Photo Gallery & Visual Media (Admin editable) */}
-        <div className="pt-10 border-t border-slate-200 mt-12">
-          <PhotoGalleryManager
-            targetPage={`${categorySlug}_${pageSlug}`}
-            sectionTitleEn={`${pageTitle} Photo Gallery`}
-            sectionTitleTe={`${pageTitle} చిత్రమాలిక`}
-          />
-        </div>
       </main>
     </div>
   );
