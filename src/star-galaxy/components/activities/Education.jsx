@@ -67,7 +67,9 @@ export default function Education({ onBack }) {
   } = useApp();
 
   // Enforce privacy: regular member always sees own activity
-  const targetMemberId = currentUser?.id;
+  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
+    ? selectedMemberId
+    : currentUser?.id;
 
   const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
   const activityData = getMemberActivity(targetMemberId);
@@ -298,10 +300,10 @@ export default function Education({ onBack }) {
         </div>
 
         {/* 3. All-Time Overall Total Stars */}
-        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-300/40">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-4 shadow-md flex flex-col justify-between relative overflow-hidden border border-amber-400/40">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
-              <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
+              <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
               <span>Overall Total Stars</span>
             </span>
             <span className="text-[10px] font-bold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-300/30">
@@ -316,7 +318,7 @@ export default function Education({ onBack }) {
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-blue-100 font-semibold border-t border-white/20 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold border-t border-white/10 pt-2">
             <span>{overallBreakdown.education.count} Total Days Attended</span>
             <span className="text-[10px] text-amber-300 font-bold">All History</span>
           </div>

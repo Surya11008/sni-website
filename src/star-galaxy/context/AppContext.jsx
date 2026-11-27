@@ -99,56 +99,27 @@ export function normalizeRole(role, userId) {
 export function setUnifiedSession(user) {
   if (!user) return;
   const uid = user.userId || user.username || user.id;
-  const cleanUser = {
-    userId: uid,
-    id: uid,
-    username: uid,
-    fullName: user.fullName || user.name || uid,
-    name: user.fullName || user.name || uid,
-    contact: user.contact || user.phone || user.gmail || '',
-    phone: user.contact || user.phone || user.gmail || '',
-    role: normalizeRole(user.role, uid),
-    status: user.status || 'approved',
-    joinedAt: user.registeredAt || user.createdAt || new Date().toISOString()
-  };
 
   try {
-    localStorage.setItem('sni_user_session', JSON.stringify(cleanUser));
-    localStorage.setItem('sni_current_user', JSON.stringify(cleanUser));
-    localStorage.setItem('sni_unified_session', JSON.stringify(cleanUser));
-    localStorage.setItem('live_counter_current_user', JSON.stringify(cleanUser));
+    // Isolated Star Galaxy session ONLY - NEVER overwrite or pollute SNI session
     localStorage.setItem(SESSION_USER_KEY, uid);
     sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
-
-    const cookiePayload = encodeURIComponent(JSON.stringify(cleanUser));
-    const maxAge = 365 * 24 * 60 * 60;
-    document.cookie = `sni_unified_user=${cookiePayload}; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
-    document.cookie = `sni_session_active=true; Domain=.sni.org.in; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
-    document.cookie = `sni_unified_user=${cookiePayload}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-    document.cookie = `sni_session_active=true; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   } catch (e) {}
 }
 
 export function clearUnifiedSession() {
   try {
-    localStorage.removeItem('sni_user_session');
-    localStorage.removeItem('sni_current_user');
-    localStorage.removeItem('sni_unified_session');
-    localStorage.removeItem('live_counter_current_user');
+    // Isolated Star Galaxy session cleanup ONLY - NEVER remove SNI session or cookies
     localStorage.removeItem(SESSION_USER_KEY);
     localStorage.removeItem('star_galaxy_active_tab');
     localStorage.removeItem('star_galaxy_selected_activity');
     sessionStorage.removeItem('star_galaxy_pin_unlocked');
-
-    document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
-    document.cookie = `sni_session_active=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;
-    document.cookie = `sni_unified_user=; Path=/; Max-Age=0; SameSite=Lax`;
-    document.cookie = `sni_session_active=; Path=/; Max-Age=0; SameSite=Lax`;
   } catch (e) {}
 }
 
 export function getStoredUnifiedUser(userList = []) {
   try {
+    // Isolated Star Galaxy session check ONLY - NEVER auto-login from SNI session
     const savedUserId = localStorage.getItem(SESSION_USER_KEY);
     if (savedUserId) {
       const found = userList.find(u => 
@@ -157,65 +128,6 @@ export function getStoredUnifiedUser(userList = []) {
         (u.username && String(u.username).toLowerCase() === savedUserId.toLowerCase())
       );
       if (found && found.status === 'approved') return found;
-    }
-
-    const stored = localStorage.getItem('sni_user_session') || localStorage.getItem('sni_unified_session') || localStorage.getItem('sni_current_user');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const uid = parsed.userId || parsed.id || parsed.username;
-      if (uid) {
-        const found = userList.find(u => 
-          u.id === uid || 
-          (u.userId && String(u.userId).toLowerCase() === String(uid).toLowerCase()) || 
-          (u.username && String(u.username).toLowerCase() === String(uid).toLowerCase())
-        );
-        if (found && found.status === 'approved') return found;
-        if (parsed.status === 'approved' || parsed.role === 'admin') {
-          return {
-            id: uid,
-            userId: uid,
-            username: uid,
-            name: parsed.fullName || parsed.name || uid,
-            fullName: parsed.fullName || parsed.name || uid,
-            role: parsed.role || 'member',
-            status: 'approved',
-            contact: parsed.contact || parsed.phone || ''
-          };
-        }
-      }
-    }
-
-    if (typeof document !== 'undefined') {
-      const cookies = document.cookie.split(';');
-      for (const c of cookies) {
-        const [k, v] = c.trim().split('=');
-        if (k === 'sni_unified_user' && v) {
-          try {
-            const u = JSON.parse(decodeURIComponent(v));
-            if (u && (u.userId || u.id)) {
-              const uid = u.userId || u.id;
-              const found = userList.find(x => 
-                x.id === uid || 
-                (x.userId && String(x.userId).toLowerCase() === String(uid).toLowerCase()) || 
-                (x.username && String(x.username).toLowerCase() === String(uid).toLowerCase())
-              );
-              if (found && found.status === 'approved') return found;
-              if (u.status === 'approved' || u.role === 'admin') {
-                return {
-                  id: uid,
-                  userId: uid,
-                  username: uid,
-                  name: u.fullName || u.name || uid,
-                  fullName: u.fullName || u.name || uid,
-                  role: u.role || 'member',
-                  status: 'approved',
-                  contact: u.contact || u.phone || ''
-                };
-              }
-            }
-          } catch (e) {}
-        }
-      }
     }
   } catch (e) {}
   return null;
@@ -355,35 +267,18 @@ export function AppProvider({ children }) {
     return INITIAL_DATA;
   });
 
-  // Current logged in user (restored automatically from unified SNI session or null)
+  // Current logged in user (restored from Star Galaxy session only)
   const [currentUser, setCurrentUser] = useState(() => {
     return getStoredUnifiedUser(data.users || []);
   });
 
-  // Cross-subdomain SSO & URL parameter session synchronization
+  // Keep Star Galaxy session synchronized if users list updates
   useEffect(() => {
     if (!currentUser) {
-      const unified = getStoredUnifiedUser(data.users || []);
-      if (unified) {
-        setCurrentUser(unified);
-        return;
+      const starUser = getStoredUnifiedUser(data.users || []);
+      if (starUser) {
+        setCurrentUser(starUser);
       }
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const ssoUser = urlParams.get('sso_user');
-        if (ssoUser) {
-          const cleanSso = String(ssoUser).trim().toLowerCase();
-          const matched = (data.users || []).find(u => 
-            (u.id && u.id.toLowerCase() === cleanSso) ||
-            (u.userId && u.userId.toLowerCase() === cleanSso) ||
-            (u.username && u.username.toLowerCase() === cleanSso)
-          );
-          if (matched && matched.status === 'approved') {
-            setUnifiedSession(matched);
-            setCurrentUser(matched);
-          }
-        }
-      } catch (e) {}
     }
   }, [data.users, currentUser]);
 
@@ -1691,35 +1586,10 @@ export function AppProvider({ children }) {
       console.warn('RTDB sync on register error:', e);
     }
 
-    // 3. Forward to pending_registrations if pending
+    // 3. If already approved (Admin), forward to pending_registrations only if pending
     if (!isAdm && targetStatus === 'pending') {
       try {
         await savePendingRegistrationToFirestore(newUser);
-        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
-        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(cleanUserLower)}?key=${FIREBASE_API_KEY}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              id: { stringValue: cleanUserLower },
-              userId: { stringValue: cleanUserLower },
-              username: { stringValue: cleanUserLower },
-              name: { stringValue: fullName },
-              fullName: { stringValue: fullName },
-              phone: { stringValue: newUser.phone || '' },
-              contact: { stringValue: newUser.contact || cleanUserLower },
-              password: { stringValue: password },
-              plainPassword: { stringValue: password },
-              role: { stringValue: 'MEM' },
-              status: { stringValue: 'pending' },
-              contactVerified: { booleanValue: true },
-              isVerified: { booleanValue: true },
-              createdAt: { stringValue: newUser.createdAt || new Date().toISOString() },
-              registeredAt: { stringValue: newUser.registeredAt || new Date().toISOString() },
-              adminEmail: { stringValue: 'info@sni.org.in' }
-            }
-          })
-        });
       } catch (e) {
         console.warn('Pending registration forward failed:', e);
       }

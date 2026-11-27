@@ -1,14 +1,15 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Target, BarChart3, Settings, ShieldCheck } from 'lucide-react';
+import { Target, BarChart3, MoreHorizontal, Settings, ShieldCheck } from 'lucide-react';
 
 export default function BottomNav() {
   const { activeTab, setActiveTab, currentUser, t } = useApp();
 
   const tabs = [
-    { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
-    { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
-    { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings, color: 'text-slate-600', activeBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-bold' },
+    { id: 'activities', label: t('navActivities') || 'Activities', icon: Target, color: 'text-indigo-600', activeBg: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xs font-black' },
+    { id: 'status', label: t('navStatus') || 'Status', icon: BarChart3, color: 'text-emerald-600', activeBg: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs font-black' },
+    { id: 'more', label: t('navMore') || 'More', icon: MoreHorizontal, color: 'text-amber-600', activeBg: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs font-black' },
+    { id: 'settings', label: t('navSettings') || 'Settings', icon: Settings, color: 'text-purple-600', activeBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs font-black' },
   ];
 
   return (
@@ -38,7 +39,7 @@ export default function BottomNav() {
           <button
             onClick={() => setActiveTab('admin')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all ${
-              activeTab === 'admin' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold scale-105 shadow-xs' : 'text-blue-900 hover:text-blue-600'
+              activeTab === 'admin' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black scale-105 shadow-xs' : 'text-purple-600 hover:text-purple-800'
             }`}
           >
             <ShieldCheck className="w-5 h-5" />

@@ -636,11 +636,11 @@ export default function DynamicPage() {
 
         {/* If Stars Page & Tracker Tab is Active & Not in Article Reader/Form, render Embedded Star Galaxy */}
         {isStarsPage && starsViewTab === 'tracker' && !activeArticle && !isFormOpen ? (
-          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden p-2 sm:p-4">
+          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden">
             <StarGalaxyApp />
           </div>
         ) : isDiaryPage && diaryViewTab === 'diary' && !activeArticle && !isFormOpen ? (
-          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden p-2 sm:p-4">
+          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl overflow-hidden">
             <AppProvider>
               <GospelDiary />
             </AppProvider>

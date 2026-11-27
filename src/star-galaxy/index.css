@@ -1,9 +1,27 @@
+@import "tailwindcss";
+
 :root {
   --app-font-scale: 1;
 }
 
+html {
+  font-size: calc(16px * var(--app-font-scale, 1));
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+}
+
 /* ================= 🔤 FONT STYLES (TYPEFACES) ================= */
-[data-font="sans"] {
+[data-font="sans"],
+body:not([data-font]) {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 [data-font="outfit"],

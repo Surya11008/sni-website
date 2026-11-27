@@ -196,9 +196,7 @@ export default function AdminTab() {
     if (s === 'approved' || s === 'unverified' || s === 'rejected' || s === 'revoked') return false;
     const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
                             (u.phone && String(u.phone).trim().length >= 8) ||
-                            (u.contact && String(u.contact).trim().length >= 2) ||
-                            (u.userId && String(u.userId).trim().length >= 2) ||
-                            (u.id && String(u.id).trim().length >= 2);
+                            (u.contact && String(u.contact).trim().length >= 8);
     const isContactVerified = u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true || u.isVerified === true;
     return hasValidContact && isContactVerified && (s === 'pending' || s === 'waiting');
   });

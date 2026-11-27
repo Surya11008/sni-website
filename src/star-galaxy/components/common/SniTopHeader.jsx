@@ -5,6 +5,11 @@ import InstallAppModal from './InstallAppModal';
 export default function SniTopHeader() {
   const [showInstallModal, setShowInstallModal] = useState(false);
 
+  // If embedded on SNI portal page, hide duplicate SNI navbar
+  if (typeof window !== 'undefined' && window.location.pathname.includes('/page/program/stars')) {
+    return null;
+  }
+
   const handleInstallClick = async () => {
     if (window.deferredPWAInstallPrompt) {
       try {

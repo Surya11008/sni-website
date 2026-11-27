@@ -33,6 +33,7 @@ const ACTIVITIES_LIST = [
   { id: 'elohimAcademy', name: 'Elohim Academy', emoji: '🏆', color: 'bg-violet-50 text-violet-800 border-violet-300' },
   { id: 'preachingAcademy', name: 'Preaching Academy', emoji: '📖', color: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
   { id: 'newSongAcademy', name: 'New Song Academy', emoji: '🎶', color: 'bg-rose-50 text-rose-800 border-rose-300' },
+  { id: 'gospelDiary', name: 'Gospel Diary', emoji: '✍️', color: 'bg-yellow-50 text-yellow-800 border-yellow-300' },
 ];
 
 export default function AdminAllStatusFeed() {
@@ -388,6 +389,37 @@ export default function AdminAllStatusFeed() {
           });
         }
 
+        // 11. Gospel Diary (safe extraction for both Object and Array schemas)
+        let memberDiaries = [];
+        if (data?.gospelDiary) {
+          if (Array.isArray(data.gospelDiary)) {
+            memberDiaries = data.gospelDiary.filter(gd => gd && (gd.memberId === memberId || gd.userId === memberId));
+          } else if (typeof data.gospelDiary === 'object' && Array.isArray(data.gospelDiary[memberId])) {
+            memberDiaries = data.gospelDiary[memberId];
+          }
+        }
+
+        memberDiaries.forEach(gd => {
+          if (!gd) return;
+          const title = String(gd.title || 'Personal Entry');
+          const snippet = String(gd.writing || gd.content || '').slice(0, 80);
+          const dStr = String(gd.date || 'N/A');
+
+          items.push({
+            id: `gd-${memberId}-${gd.id || dStr}`,
+            memberId,
+            memberName,
+            memberRole,
+            activityId: 'gospelDiary',
+            activityName: 'Gospel Diary',
+            activityEmoji: '✍️',
+            date: dStr,
+            time: '',
+            content: `Diary: "${title}" • ${snippet}${snippet.length >= 80 ? '...' : ''}`,
+            status: 'Recorded',
+            statusType: 'completed',
+          });
+        });
       });
     } catch (err) {
       console.error('Error compiling allInputs for AdminAllStatusFeed:', err);

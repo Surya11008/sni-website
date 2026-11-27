@@ -8,7 +8,9 @@ export default function Fruits({ onBack }) {
   const { selectedMemberId, data, getMemberActivity, updateMemberActivity, currentUser, dateRange, canEditMember, canUserModifyPastDates, getMemberOverallStarsBreakdown } = useApp();
 
   // Enforce privacy: regular member always sees own activity
-  const targetMemberId = currentUser?.id;
+  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
+    ? selectedMemberId
+    : currentUser?.id;
 
   const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
   const activityData = getMemberActivity(targetMemberId);
@@ -328,27 +330,27 @@ export default function Fruits({ onBack }) {
         </div>
 
         {/* Card 2: Date Cycle / Filtered Range */}
-        <div className="rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
+        <div className="rounded-3xl bg-gradient-to-br from-fuchsia-800 via-purple-900 to-indigo-950 text-white p-4 text-center shadow-lg border-2 border-amber-300/70 relative overflow-hidden cute-glow-border">
           <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3 text-amber-400" />
             <span>Date Cycle (This Week)</span>
           </div>
-          <div className="text-[11px] font-bold text-purple-100 mt-0.5">
+          <div className="text-[11px] font-bold text-purple-200 mt-0.5">
             {dateRange.startDate} → {dateRange.endDate}
           </div>
           <div className="mt-1 flex items-center justify-center gap-1.5">
             <span className="text-3xl sm:text-4xl font-black text-amber-300">{cycleStars}</span>
             <Star className="w-6 h-6 fill-amber-400 text-amber-400 animate-pulse" />
           </div>
-          <p className="text-[10px] text-purple-100 mt-0.5">
+          <p className="text-[10px] text-purple-200 mt-0.5">
             {filteredFruits.length} fruit record{filteredFruits.length !== 1 ? 's' : ''} in cycle
           </p>
         </div>
 
         {/* Card 3: All-Time Overall */}
-        <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-600 to-sky-700 text-white p-4 text-center shadow-md border-2 border-blue-300/50 relative overflow-hidden">
-          <div className="text-[10px] font-black text-blue-200 uppercase tracking-wider flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-blue-300" />
+        <div className="rounded-3xl bg-gradient-to-br from-slate-800 via-purple-950 to-indigo-950 text-white p-4 text-center shadow-md border-2 border-purple-400/50 relative overflow-hidden">
+          <div className="text-[10px] font-black text-purple-200 uppercase tracking-wider flex items-center justify-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-purple-300" />
             <span>Overall All-Time</span>
           </div>
           <div className="text-[11px] font-bold text-white/90 mt-0.5">From Start to Present</div>
@@ -356,7 +358,7 @@ export default function Fruits({ onBack }) {
             <span className="text-2xl sm:text-3xl font-black text-amber-300">{overallBreakdown.fruits.stars}</span>
             <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
           </div>
-          <p className="text-[10px] text-blue-100 mt-0.5">
+          <p className="text-[10px] text-purple-200 mt-0.5">
             {overallBreakdown.fruits.count} total fruits recorded
           </p>
         </div>

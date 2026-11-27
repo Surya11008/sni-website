@@ -30,7 +30,7 @@ import PreachingAcademy from '../activities/PreachingAcademy';
 import NewSongAcademy from '../activities/NewSongAcademy';
 
 export default function ActivitiesTab() {
-  const { selectedMemberId, setSelectedMemberId, data, getMemberStarsBreakdown, getMemberOverallStarsBreakdown, currentUser, t } = useApp();
+  const { selectedMemberId, data, getMemberStarsBreakdown, getMemberOverallStarsBreakdown, currentUser, t } = useApp();
   const [selectedActivity, setSelectedActivityState] = useState(() => {
     try {
       return localStorage.getItem('star_galaxy_selected_activity') || null;
@@ -61,15 +61,12 @@ export default function ActivitiesTab() {
     return () => window.removeEventListener('star-galaxy-select-activity', handleSelectAct);
   }, []);
 
-  const isAdmin = currentUser?.role === 'admin' ||
-    currentUser?.email === 'surya11008@sni.org.in' ||
-    String(currentUser?.id).toLowerCase() === 'surya11008';
+  // Privacy Rule: Regular members see ONLY their own stars!
+  const targetMemberId = (currentUser?.role === 'admin' || currentUser?.role === 'manager')
+    ? selectedMemberId
+    : currentUser?.id;
 
-  // Admin can view and edit ANY member's activities; regular members view their own
-  const targetMemberId = (isAdmin && selectedMemberId) ? selectedMemberId : currentUser?.id;
-  const selectedMember = (isAdmin && selectedMemberId)
-    ? ((data.users || []).find(u => String(u.id) === String(selectedMemberId)) || currentUser)
-    : currentUser;
+  const selectedMember = data.users.find(u => u.id === targetMemberId) || currentUser;
   const breakdown = getMemberStarsBreakdown(targetMemberId);
   const overallBreakdown = getMemberOverallStarsBreakdown(targetMemberId);
 
@@ -82,9 +79,9 @@ export default function ActivitiesTab() {
       emoji: '📢',
       stars: breakdown.simplePreaching.stars,
       overallStars: overallBreakdown.simplePreaching.stars,
-      color: 'from-white via-slate-50 to-sky-50/50 border-2 border-slate-200 hover:border-sky-400 text-slate-800',
-      badgeColor: 'bg-sky-100/80 text-sky-900 border border-sky-300 font-black shadow-2xs',
-      iconBg: 'bg-sky-500 text-white shadow-xs',
+      color: 'from-sky-100 via-sky-50 to-blue-100 border-2 border-sky-400 text-sky-950',
+      badgeColor: 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-xs',
       component: SimplePreaching,
     },
     {
@@ -94,9 +91,9 @@ export default function ActivitiesTab() {
       emoji: '🌐',
       stars: breakdown.connections.stars,
       overallStars: overallBreakdown.connections.stars,
-      color: 'from-white via-slate-50 to-purple-50/50 border-2 border-slate-200 hover:border-purple-400 text-slate-800',
-      badgeColor: 'bg-purple-100/80 text-purple-900 border border-purple-300 font-black shadow-2xs',
-      iconBg: 'bg-purple-500 text-white shadow-xs',
+      color: 'from-purple-100 via-purple-50 to-indigo-100 border-2 border-purple-400 text-purple-950',
+      badgeColor: 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xs',
       component: Connections,
     },
     {
@@ -106,9 +103,9 @@ export default function ActivitiesTab() {
       emoji: '🍇',
       stars: breakdown.fruits.stars,
       overallStars: overallBreakdown.fruits.stars,
-      color: 'from-white via-slate-50 to-rose-50/50 border-2 border-slate-200 hover:border-rose-400 text-slate-800',
-      badgeColor: 'bg-rose-100/80 text-rose-900 border border-rose-300 font-black shadow-2xs',
-      iconBg: 'bg-rose-500 text-white shadow-xs',
+      color: 'from-pink-100 via-pink-50 to-rose-100 border-2 border-pink-400 text-pink-950',
+      badgeColor: 'bg-gradient-to-r from-pink-500 to-rose-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-xs',
       component: Fruits,
     },
     {
@@ -118,9 +115,9 @@ export default function ActivitiesTab() {
       emoji: '🐑',
       stars: breakdown.lostSheep.stars,
       overallStars: overallBreakdown.lostSheep.stars,
-      color: 'from-white via-slate-50 to-emerald-50/50 border-2 border-slate-200 hover:border-emerald-400 text-slate-800',
-      badgeColor: 'bg-emerald-100/80 text-emerald-900 border border-emerald-300 font-black shadow-2xs',
-      iconBg: 'bg-emerald-500 text-white shadow-xs',
+      color: 'from-emerald-100 via-emerald-50 to-teal-100 border-2 border-emerald-400 text-emerald-950',
+      badgeColor: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xs',
       component: LostSheep,
     },
     {
@@ -130,9 +127,9 @@ export default function ActivitiesTab() {
       emoji: '📅',
       stars: breakdown.preachingMeeting.stars,
       overallStars: overallBreakdown.preachingMeeting.stars,
-      color: 'from-white via-slate-50 to-amber-50/50 border-2 border-slate-200 hover:border-amber-400 text-slate-800',
-      badgeColor: 'bg-amber-100/80 text-amber-950 border border-amber-300 font-black shadow-2xs',
-      iconBg: 'bg-amber-500 text-white shadow-xs',
+      color: 'from-amber-100 via-amber-50 to-yellow-100 border-2 border-amber-400 text-amber-950',
+      badgeColor: 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-xs',
       component: PreachingMeeting,
     },
     {
@@ -142,9 +139,9 @@ export default function ActivitiesTab() {
       emoji: '⏰',
       stars: breakdown.worshipArrival.stars,
       overallStars: overallBreakdown.worshipArrival.stars,
-      color: 'from-white via-slate-50 to-blue-50/50 border-2 border-slate-200 hover:border-blue-400 text-slate-800',
-      badgeColor: 'bg-blue-100/80 text-blue-900 border border-blue-300 font-black shadow-2xs',
-      iconBg: 'bg-blue-500 text-white shadow-xs',
+      color: 'from-blue-100 via-cyan-50 to-sky-100 border-2 border-blue-400 text-blue-950',
+      badgeColor: 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-xs',
       component: WorshipArrival,
     },
     {
@@ -154,9 +151,9 @@ export default function ActivitiesTab() {
       emoji: '📚',
       stars: breakdown.education.stars,
       overallStars: overallBreakdown.education.stars,
-      color: 'from-white via-slate-50 to-orange-50/50 border-2 border-slate-200 hover:border-orange-400 text-slate-800',
-      badgeColor: 'bg-orange-100/80 text-orange-950 border border-orange-300 font-black shadow-2xs',
-      iconBg: 'bg-orange-500 text-white shadow-xs',
+      color: 'from-orange-100 via-orange-50 to-amber-100 border-2 border-orange-400 text-orange-950',
+      badgeColor: 'bg-gradient-to-r from-orange-500 to-amber-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-xs',
       component: Education,
     },
     {
@@ -166,9 +163,9 @@ export default function ActivitiesTab() {
       emoji: '🏆',
       stars: breakdown.elohimAcademy.stars,
       overallStars: overallBreakdown.elohimAcademy.stars,
-      color: 'from-white via-indigo-50/40 to-purple-50/40 border-2 border-indigo-200 hover:border-indigo-400 text-slate-800 ring-1 ring-indigo-200/50',
-      badgeColor: 'bg-indigo-100 text-indigo-950 border border-indigo-300 font-black shadow-2xs',
-      iconBg: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-amber-300 shadow-xs',
+      color: 'from-indigo-100 via-indigo-50 to-purple-100 border-2 border-indigo-400 text-indigo-950',
+      badgeColor: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xs',
       component: ElohimAcademy,
     },
     {
@@ -178,9 +175,9 @@ export default function ActivitiesTab() {
       emoji: '📖',
       stars: breakdown.preachingAcademy.stars,
       overallStars: overallBreakdown.preachingAcademy.stars,
-      color: 'from-white via-slate-50 to-teal-50/50 border-2 border-slate-200 hover:border-teal-400 text-slate-800',
-      badgeColor: 'bg-teal-100/80 text-teal-900 border border-teal-300 font-black shadow-2xs',
-      iconBg: 'bg-teal-500 text-white shadow-xs',
+      color: 'from-teal-100 via-teal-50 to-emerald-100 border-2 border-teal-400 text-teal-950',
+      badgeColor: 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xs',
       component: PreachingAcademy,
     },
     {
@@ -190,9 +187,9 @@ export default function ActivitiesTab() {
       emoji: '🎶',
       stars: breakdown.newSongAcademy.stars,
       overallStars: overallBreakdown.newSongAcademy.stars,
-      color: 'from-white via-slate-50 to-pink-50/50 border-2 border-slate-200 hover:border-pink-400 text-slate-800',
-      badgeColor: 'bg-pink-100/80 text-pink-900 border border-pink-300 font-black shadow-2xs',
-      iconBg: 'bg-pink-500 text-white shadow-xs',
+      color: 'from-rose-100 via-rose-50 to-pink-100 border-2 border-rose-400 text-rose-950',
+      badgeColor: 'bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black shadow-xs',
+      iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-xs',
       component: NewSongAcademy,
     },
   ];
@@ -214,44 +211,18 @@ export default function ActivitiesTab() {
       {/* ⏰ Continuous Today 11:59:59 PM Input Deadline Countdown Banner */}
       <TodayDeadlineCountdown variant="banner" />
 
-      {/* 👑 Admin Managing Member Notice Banner */}
-      {isAdmin && selectedMemberId && selectedMemberId !== currentUser?.id && (
-        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-sm shadow-xs shrink-0">
-              👑
-            </span>
-            <div>
-              <span className="font-extrabold text-xs sm:text-sm text-amber-950 block">
-                Admin Control Active: Managing Activities & Stars for "{selectedMember?.name}"
-              </span>
-              <p className="text-[11px] text-amber-800">
-                Any stars, activities, checkboxes, or scores you modify below directly update this member's official record.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSelectedMemberId(currentUser?.id)}
-            className="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs transition cursor-pointer shrink-0 shadow-2xs"
-          >
-            Switch to My Account
-          </button>
-        </div>
-      )}
-
       {/* 🌟 Cute Colorful Top Bar: Total Stars on Left, Cute Date Filter on Right */}
-      <div className="bg-gradient-to-r from-white via-amber-50/40 to-white border-2 border-amber-200/80 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 border-2 border-amber-300 rounded-3xl p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-sm cute-glow-border">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1 font-black text-blue-950 text-2xl sm:text-3xl">
-            <Star className="w-7 h-7 fill-[#F4B942] text-amber-300 animate-spin-slow" />
+          <div className="flex items-center gap-1 font-black text-amber-950 text-2xl sm:text-3xl">
+            <Star className="w-7 h-7 fill-amber-400 text-amber-500 animate-spin-slow" />
             <span>{breakdown.totalStars}</span>
           </div>
           <div>
-            <span className="text-xs font-black text-blue-950 uppercase tracking-wider block">
+            <span className="text-xs font-black text-amber-800 uppercase tracking-wider block">
               {t('totalStars') || 'Total Stars'}
             </span>
-            <span className="text-[11px] text-amber-800 font-bold">
+            <span className="text-[11px] text-amber-700/80 font-bold">
               {selectedMember?.name}
             </span>
           </div>
@@ -262,7 +233,7 @@ export default function ActivitiesTab() {
       </div>
 
       {/* 10 Clean Activities Cards with Cute Colorful Borders & Bouncy Animation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {activities.map((act, index) => {
           const Icon = act.icon;
           return (
@@ -302,8 +273,8 @@ export default function ActivitiesTab() {
       </div>
 
       {/* 👑 Overall Summary Card (From the Beginning to Present) at bottom */}
-      <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-700 text-white rounded-3xl p-5 border-2 border-amber-300/50 shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/20">
+      <div className="bg-gradient-to-r from-purple-950 via-indigo-950 to-blue-950 text-white rounded-3xl p-5 border-2 border-amber-300 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-indigo-800">
           <div>
             <span className="text-xs font-black text-amber-300 uppercase tracking-widest block">
               Overall (From Beginning to Present)

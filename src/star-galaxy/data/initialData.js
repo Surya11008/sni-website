@@ -13,7 +13,7 @@ export const INITIAL_DATA = {
     "fontSize": "normal",
     "fontStyle": "sans",
     "pinLockEnabled": true,
-    "autoUserApproval": true
+    "autoUserApproval": false
   },
   "users": [
   {
@@ -31,665 +31,9 @@ export const INITIAL_DATA = {
     "moreDetails": "Headquarters Admin",
     "createdAt": "2026-10-01",
     "contact": "surya11008",
-    "role": "admin"
-  },
-  {
-    "id": "usr-1793449012255",
-    "role": "manager",
-    "username": "suri007",
-    "moreDetails": "Hai....",
-    "contact": "846494784",
-    "hasSetPersonalPin": true,
-    "pin": "1234",
-    "nickname": "Suri star",
-    "personalPin": "742766",
-    "createdAt": "2026-10-31",
-    "password": "suri7427.",
-    "place": "Hai....",
-    "assignedMembers": [],
-    "status": "approved",
-    "phone": "846494784",
-    "name": "Suri"
-  },
-  {
-    "id": "usr-1793453765567",
-    "moreDetails": "",
-    "phone": "kondalusiruguri13@gmail.com",
-    "personalPin": "123456",
-    "contact": "kondalusiruguri13@gmail.com",
-    "status": "approved",
-    "name": "Kondalu",
-    "createdAt": "2026-10-31",
-    "password": "Kond@lu#8623",
-    "nickname": "",
-    "username": "Kondalu80",
-    "place": "",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793453932196",
-    "personalPin": "123456",
-    "moreDetails": "Nellore",
-    "place": "Nellore",
-    "createdAt": "2026-10-31",
-    "contact": "nagalapurampravallika@gmail.com",
-    "name": "N. Pravallika",
-    "status": "approved",
-    "password": "PRAVA@11",
-    "nickname": "Princess",
-    "username": "PRAVALLKA@11",
-    "phone": "nagalapurampravallika@gmail.com",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793454177510",
-    "personalPin": "123456",
-    "moreDetails": "Nellore",
-    "createdAt": "2026-10-31",
-    "status": "approved",
-    "name": "DuddukuruHaritha",
-    "phone": "8885333870",
-    "username": "Haritha43",
-    "contact": "8885333870",
-    "nickname": "Hari",
-    "place": "Nellore",
-    "password": "kuru2543",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793459575257",
-    "nickname": "Nani",
-    "username": "Paul1122",
-    "personalPin": "123456",
-    "phone": "9390632783",
-    "createdAt": "2026-10-31",
-    "moreDetails": "",
-    "status": "approved",
-    "name": "Murigim Paul Praveen Kumar",
-    "password": "Murigim@9390",
-    "place": "",
-    "role": "member",
-    "contact": "9390632783"
-  },
-  {
-    "id": "usr-1793459741843",
-    "status": "approved",
-    "username": "Sudarshan111",
-    "createdAt": "2026-10-31",
-    "nickname": "Yaramala",
-    "moreDetails": "Nellore",
-    "personalPin": "123456",
-    "password": "mother1948",
-    "place": "Nellore",
-    "name": "Sudaranarao. Yaramala",
-    "phone": "9908973668",
-    "role": "member",
-    "contact": "9908973668"
-  },
-  {
-    "id": "usr-1793459801434",
-    "name": "Bodala shadrach",
-    "status": "approved",
-    "contact": "6303888235",
-    "moreDetails": "",
-    "phone": "6303888235",
-    "personalPin": "123456",
-    "createdAt": "2026-10-31",
-    "role": "member",
-    "place": "",
-    "username": "shadrach45",
-    "nickname": "Nellore star",
-    "password": "mother45"
-  },
-  {
-    "id": "usr-1793459970759",
-    "phone": "7569599319",
-    "username": "manesh36",
-    "nickname": "Boss",
-    "createdAt": "2026-10-31",
-    "name": "MANEESH KUMAR",
-    "password": "kandra11436",
-    "status": "approved",
-    "personalPin": "123456",
-    "moreDetails": "",
-    "contact": "7569599319",
-    "place": "",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793460171307",
-    "username": "Vera star",
-    "nickname": "Vera star",
-    "contact": "Vvevky@gmail.com",
-    "name": "Bodala Meshach",
-    "password": "meshach@123",
-    "place": "Nellore",
-    "role": "member",
-    "moreDetails": "Nellore",
-    "status": "approved",
-    "personalPin": "123456",
-    "phone": "Vvevky@gmail.com",
-    "createdAt": "2026-10-31"
-  },
-  {
-    "id": "usr-1793460413990",
-    "createdAt": "2026-10-31",
-    "status": "approved",
-    "phone": "9640623346",
-    "role": "member",
-    "username": "Dany184885",
-    "contact": "9640623346",
-    "nickname": "Daniel star �?\"",
-    "place": "Nellore",
-    "name": "Dany sthvik",
-    "password": "sathvik1948",
-    "personalPin": "123456",
-    "moreDetails": "Nellore"
-  },
-  {
-    "id": "usr-1793460993920",
-    "place": "Nellore",
-    "name": "Kuncham Maruthi",
-    "password": "maruthi@123",
-    "createdAt": "2026-10-31",
-    "username": "maruthi21777",
-    "nickname": "Laddu",
-    "role": "member",
-    "status": "approved",
-    "contact": "maruthikunchammaruthi@gmail.com",
-    "moreDetails": "Nellore",
-    "personalPin": "123456",
-    "phone": "maruthikunchammaruthi@gmail.com"
-  },
-  {
-    "id": "usr-1793461704559",
-    "name": "Sheeba",
-    "username": "sheeba 2215",
-    "contact": "ssheebarani0@gmail.com",
-    "nickname": "Sheeba",
-    "status": "approved",
-    "password": "thanks2fathermother",
-    "phone": "ssheebarani0@gmail.com",
-    "place": "Nellore",
-    "personalPin": "123456",
-    "createdAt": "2026-10-31",
-    "moreDetails": "Nellore",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793461707203",
-    "name": "Sowmya",
-    "phone": "sowmyadasari13@gmail.com",
-    "contact": "sowmyadasari13@gmail.com",
-    "createdAt": "2026-10-31",
-    "personalPin": "123456",
-    "moreDetails": "Nellore Main Zion",
-    "status": "approved",
-    "username": "Sowmya94",
-    "nickname": "Shining light",
-    "role": "member",
-    "place": "Nellore Main Zion",
-    "password": "Dasari94"
-  },
-  {
-    "id": "usr-1793462512351",
-    "phone": "9110513384",
-    "moreDetails": "Ongole",
-    "createdAt": "2026-10-31",
-    "name": "Joseph",
-    "personalPin": "123456",
-    "username": "Joseph 2008",
-    "contact": "9110513384",
-    "nickname": "Joseph",
-    "status": "approved",
-    "place": "Ongole",
-    "password": "Joseph@1796",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793462635067",
-    "name": "Chaitnya",
-    "nickname": "Chaitu",
-    "username": "888533",
-    "phone": "8074809457",
-    "personalPin": "123456",
-    "createdAt": "2026-10-31",
-    "moreDetails": "FM",
-    "contact": "8074809457",
-    "password": "807480",
-    "role": "member",
-    "place": "FM",
-    "status": "approved"
-  },
-  {
-    "id": "usr-1793462962945",
-    "place": "Guduru pbc nellore",
-    "name": "Pamala Pravallika",
-    "status": "approved",
-    "role": "member",
-    "password": "630342",
-    "moreDetails": "Guduru pbc nellore",
-    "contact": "6303421500",
-    "phone": "6303421500",
-    "nickname": "Pravallika Otter",
-    "createdAt": "2026-10-31",
-    "personalPin": "123456",
-    "username": "Sushvika 24"
-  },
-  {
-    "id": "usr-1793463603487",
-    "moreDetails": "",
-    "password": "Gpfm587988**",
-    "personalPin": "587988",
-    "status": "approved",
-    "role": "member",
-    "username": "julieyou",
-    "nickname": "몽글몽글",
-    "phone": "9346582626",
-    "contact": "9346582626",
-    "hasSetPersonalPin": true,
-    "place": "",
-    "name": "Julie",
-    "createdAt": "2026-10-31"
-  },
-  {
-    "id": "usr-1793467171257",
-    "place": "Nellore AP East league",
-    "password": "rahul144000",
-    "contact": "mrjeshu38@gmail.com",
-    "username": "Rahul57",
-    "role": "member",
-    "nickname": "Lightning Star",
-    "personalPin": "123456",
-    "status": "approved",
-    "moreDetails": "Nellore AP East league",
-    "createdAt": "2026-10-31",
-    "phone": "mrjeshu38@gmail.com",
-    "name": "Satyavedu Rahul"
-  },
-  {
-    "id": "usr-1793469067845",
-    "role": "member",
-    "nickname": "Madhu",
-    "username": "Madhavi35",
-    "personalPin": "123456",
-    "contact": "7993897889",
-    "moreDetails": "Ongole",
-    "password": "199623",
-    "phone": "7993897889",
-    "place": "Ongole",
-    "name": "Muppavarapu Madhavi",
-    "createdAt": "2026-10-31",
-    "status": "approved"
-  },
-  {
-    "id": "usr-1793544856018",
-    "role": "member",
-    "contact": "8074814646",
-    "createdAt": "2026-11-01",
-    "place": "Nellore",
-    "status": "approved",
-    "nickname": "Muraa",
-    "name": "Thoti murari",
-    "personalPin": "123456",
-    "username": "Murari__555",
-    "moreDetails": "Nellore",
-    "phone": "8074814646",
-    "password": "Mura@2005",
-    "registeredAt": "2026-11-01T14:54:16.018Z"
-  },
-  {
-    "id": "usr-1793547814282",
-    "moreDetails": "Hsushs",
-    "personalPin": "123456",
-    "createdAt": "2026-11-01",
-    "contact": "Jd8jsi",
-    "place": "Hsushs",
-    "role": "member",
-    "registeredAt": "2026-11-01T15:43:34.282Z",
-    "password": "surya@123",
-    "phone": "Jd8jsi",
-    "nickname": "Jsushs",
-    "username": "Surya123",
-    "name": "Surya",
-    "status": "approved"
-  },
-  {
-    "id": "usr-1793548139598",
-    "createdAt": "2026-11-01",
-    "place": "Nellore Main  Zion",
-    "status": "approved",
-    "role": "member",
-    "username": "Rosy2547",
-    "contact": "9502182956",
-    "nickname": "Rosy",
-    "registeredAt": "2026-11-01T15:48:59.598Z",
-    "password": "Freyajosie",
-    "personalPin": "123456",
-    "phone": "9502182956",
-    "name": "Tiragati Baby",
-    "moreDetails": "Nellore Main  Zion"
-  },
-  {
-    "id": "usr-1793550931421",
-    "role": "member",
-    "phone": "kanaparthipraveena@83",
-    "moreDetails": "Nellore",
-    "registeredAt": "2026-11-01T16:35:31.421Z",
-    "place": "Nellore",
-    "password": "password",
-    "personalPin": "123456",
-    "contact": "kanaparthipraveena@83",
-    "createdAt": "2026-11-01",
-    "name": "Queeny Jessica",
-    "nickname": "✨Bright star ✨",
-    "username": "Queeny777",
-    "status": "approved"
-  },
-  {
-    "id": "usr-1793554981269",
-    "name": "Praveena",
-    "username": "Praveena11",
-    "status": "approved",
-    "nickname": "⭐Glory star ⭐",
-    "contact": "Yaramalasudarsan5@gmail. com",
-    "phone": "Yaramalasudarsan5@gmail. com",
-    "password": "jerusalem1947",
-    "registeredAt": "2026-11-01T17:43:01.269Z",
-    "role": "member",
-    "place": "Nellore",
-    "createdAt": "2026-11-01",
-    "personalPin": "123456",
-    "moreDetails": "Nellore"
-  },
-  {
-    "id": "usr-1793556050957",
-    "role": "member",
-    "createdAt": "2026-11-01",
-    "phone": "elohimgod11635@gmail.com",
-    "status": "approved",
-    "personalPin": "123456",
-    "hasSetPersonalPin": true,
-    "place": "",
-    "moreDetails": "",
-    "password": "mother70",
-    "name": "James",
-    "registeredAt": "2026-11-01T18:00:50.957Z",
-    "contact": "elohimgod11635@gmail.com",
-    "nickname": "BlessedStar",
-    "username": "James 11635"
-  },
-  {
-    "id": "usr-1793557533157",
-    "status": "approved",
-    "createdAt": "2026-11-01",
-    "registeredAt": "2026-11-01T18:25:33.157Z",
-    "role": "member",
-    "place": "Ongole",
-    "username": "Lilly 1111",
-    "nickname": "Lilly",
-    "contact": "9885003869",
-    "phone": "9885003869",
-    "moreDetails": "Ongole",
-    "password": "lilly1111",
-    "name": "Pothurajula saileela",
-    "personalPin": "123456"
-  },
-  {
-    "id": "usr-1793588099989",
-    "createdAt": "2026-11-02",
-    "registeredAt": "2026-11-02T02:54:59.990Z",
-    "place": "Sullurpeta",
-    "role": "member",
-    "username": "Shifra2139",
-    "contact": "8790269673",
-    "nickname": "Shifra Star",
-    "status": "approved",
-    "phone": "8790269673",
-    "password": "258036",
-    "personalPin": "123456",
-    "moreDetails": "Sullurpeta",
-    "name": "G.Shifra"
-  },
-  {
-    "id": "usr-1793591812307",
-    "place": "Nellore",
-    "createdAt": "2026-11-02",
-    "name": "Mutluru malathi",
-    "personalPin": "123456",
-    "contact": "7093510470",
-    "moreDetails": "Nellore",
-    "status": "approved",
-    "role": "member",
-    "nickname": "Malathi",
-    "registeredAt": "2026-11-02T03:56:52.308Z",
-    "username": "Malathi02",
-    "phone": "7093510470",
-    "password": "malathi@123"
-  },
-  {
-    "id": "usr-1793591822320",
-    "name": "Baina. VimalaBharathi",
-    "registeredAt": "2026-11-02T03:57:02.320Z",
-    "phone": "9494286806",
-    "createdAt": "2026-11-02",
-    "contact": "9494286806",
-    "password": "Raja1958",
-    "moreDetails": "Nellore Zion",
-    "role": "member",
-    "place": "Nellore Zion",
-    "personalPin": "123456",
-    "status": "approved",
-    "username": "Vimala12",
-    "nickname": "Chinni"
-  },
-  {
-    "id": "usr-1793592948203",
-    "contact": "mmalathi1906@gmail.com",
-    "username": "Ramanamma70",
-    "moreDetails": "Nellore",
-    "registeredAt": "2026-11-02T04:15:48.203Z",
-    "role": "member",
-    "nickname": "Ramana",
-    "personalPin": "123456",
-    "createdAt": "2026-11-02",
-    "password": "ramanamma@709",
-    "phone": "mmalathi1906@gmail.com",
-    "place": "Nellore",
-    "name": "Mutluru ramanamma",
-    "status": "approved"
-  },
-  {
-    "id": "usr-1793600679485",
-    "role": "member",
-    "registeredAt": "2026-11-02T06:24:39.485Z",
-    "place": "Nellore",
-    "personalPin": "123456",
-    "password": "sumanth48",
-    "contact": "9381722232",
-    "status": "approved",
-    "moreDetails": "Nellore",
-    "phone": "9381722232",
-    "name": "Ch.sumant",
-    "username": "Sumanth928",
-    "nickname": "Suma",
-    "createdAt": "2026-11-02"
-  },
-  {
-    "id": "usr-1793630173434",
-    "registeredAt": "2026-11-02T14:36:13.434Z",
-    "place": "",
-    "createdAt": "2026-11-02",
-    "role": "member",
-    "contact": "9493456143",
-    "status": "approved",
-    "password": "248613",
-    "personalPin": "123456",
-    "phone": "9493456143",
-    "moreDetails": "",
-    "name": "Bakeeru sarada",
-    "nickname": "",
-    "username": "Sarada21244"
-  },
-  {
-    "id": "usr-1793632349199",
-    "password": "mutluri123",
-    "contact": "7093510470",
-    "registeredAt": "2026-11-02T15:12:29.199Z",
-    "phone": "7093510470",
-    "role": "member",
-    "nickname": "Amma",
-    "username": "Ramanamma",
-    "place": "Nelloremain zion",
-    "createdAt": "2026-11-02",
-    "personalPin": "123456",
-    "moreDetails": "Nelloremain zion",
-    "status": "approved",
-    "name": "M. Ramanamma"
-  },
-  {
-    "id": "usr-1793632523462",
-    "moreDetails": "Nellore main zion",
-    "password": "kalithoti123",
-    "status": "approved",
-    "personalPin": "123456",
-    "phone": "9966073918",
-    "role": "member",
-    "username": "Bujjammaq",
-    "nickname": "Bujji",
-    "name": "K. Bujjamma",
-    "registeredAt": "2026-11-02T15:15:23.463Z",
-    "contact": "9966073918",
-    "createdAt": "2026-11-02",
-    "place": "Nellore main zion"
-  },
-  {
-    "id": "usr-1793632743054",
-    "name": "S. Ramadevi",
-    "contact": "9618541646",
-    "phone": "9618541646",
-    "moreDetails": "Nellore zion",
-    "status": "approved",
-    "registeredAt": "2026-11-02T15:19:03.055Z",
-    "personalPin": "123456",
-    "nickname": "Rama",
-    "username": "Ramadevi",
-    "role": "member",
-    "place": "Nellore zion",
-    "createdAt": "2026-11-02",
-    "password": "rama123"
-  },
-  {
-    "id": "usr-1793632869071",
-    "name": "G. Ramanamma",
-    "phone": "7842010489",
-    "contact": "7842010489",
-    "createdAt": "2026-11-02",
-    "personalPin": "123456",
-    "status": "approved",
-    "username": "Gollapalli",
-    "moreDetails": "Nellore main zion",
-    "registeredAt": "2026-11-02T15:21:09.071Z",
-    "nickname": "Gollapalli",
-    "role": "member",
-    "place": "Nellore main zion",
-    "password": "ramanamma12"
-  },
-  {
-    "id": "usr-1793633984167",
-    "password": "mungara123",
-    "place": "Nellore zion",
-    "contact": "7893686186",
-    "name": "M. Tirupatamma",
-    "nickname": "Mungara",
-    "username": "Tirupatamma",
-    "status": "approved",
-    "createdAt": "2026-11-02",
-    "registeredAt": "2026-11-02T15:39:44.168Z",
-    "personalPin": "123456",
-    "phone": "7893686186",
-    "moreDetails": "Nellore zion",
-    "role": "member"
-  },
-  {
-    "id": "usr-1793634161956",
-    "status": "approved",
-    "createdAt": "2026-11-02",
-    "registeredAt": "2026-11-02T15:42:41.956Z",
-    "place": "Nellore zion",
-    "role": "member",
-    "username": "Revathi",
-    "nickname": "Reva",
-    "phone": "7981510797",
-    "contact": "7981510797",
-    "moreDetails": "Nellore zion",
-    "password": "boddupuri123",
-    "name": "B. Revathi",
-    "personalPin": "123456"
-  },
-  {
-    "id": "usr-1793634300514",
-    "place": "Nellore zion",
-    "moreDetails": "Nellore zion",
-    "registeredAt": "2026-11-02T15:45:00.514Z",
-    "contact": "9398775828",
-    "personalPin": "123456",
-    "role": "member",
-    "createdAt": "2026-11-02",
-    "password": "gudi1234",
-    "name": "G. Sipora",
-    "phone": "9398775828",
-    "status": "approved",
-    "nickname": "Gudi",
-    "username": "Sipora"
-  },
-  {
-    "id": "usr-1793634378398",
-    "registeredAt": "2026-11-02T15:46:18.398Z",
-    "role": "member",
-    "password": "mannepalli",
-    "status": "approved",
-    "moreDetails": "Nellore",
-    "username": "Sharmila",
-    "phone": "6305029218",
-    "nickname": "Sharmila",
-    "personalPin": "123456",
-    "place": "Nellore",
-    "name": "M. Sharmila",
-    "contact": "6305029218",
-    "createdAt": "2026-11-02"
-  },
-  {
-    "id": "usr-1793669160211",
-    "phone": "9652854891",
-    "name": "G. Prameela",
-    "status": "approved",
-    "registeredAt": "2026-11-03T01:26:00.211Z",
-    "createdAt": "2026-11-03",
-    "contact": "9652854891",
-    "role": "member",
-    "nickname": "Jonah",
-    "username": "Prameela",
-    "personalPin": "123456",
-    "place": "Nellore zion",
-    "moreDetails": "Nellore zion",
-    "password": "gurram"
-  },
-  {
-    "id": "usr-1793688040501",
-    "registeredAt": "2026-11-03T06:40:40.501Z",
-    "name": "Duddukuru dakshayani",
-    "place": "Nellore",
-    "phone": "9393009890",
-    "nickname": "Dachuu",
-    "username": "Dakshayani12",
-    "status": "approved",
-    "moreDetails": "Nellore",
-    "createdAt": "2026-11-03",
-    "password": "dakshayani@123",
-    "role": "member",
-    "personalPin": "123456",
-    "contact": "9393009890"
+    "role": "ADMIN",
+    "contactVerified": true,
+    "isVerified": true
   }
 ],
   "managerPermissions": {},
@@ -806,8 +150,158 @@ export const INITIAL_DATA = {
     }
   ],
   "feedbackList": [],
-  "activitiesData": {},
-  "gospelDiary": {},
+  "activitiesData": {
+    "surya11008": {
+      "simplePreaching": {},
+      "worshipArrival": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ],
+      "fruits": []
+    },
+    "usr-1793449012255": {
+      "preachingMeeting": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ],
+      "elohimAcademy": {
+        "levelChecks": [
+          1
+        ],
+        "somChecks": [],
+        "timestamps": {}
+      }
+    },
+    "usr-1793459575257": {
+      "worshipArrival": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ]
+    },
+    "usr-1793459801434": {
+      "simplePreaching": {
+        "2026-10-31": 2
+      },
+      "worshipArrival": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ]
+    },
+    "usr-1793461704559": {
+      "worshipArrival": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ],
+      "simplePreaching": {
+        "2026-10-31": 100
+      }
+    },
+    "usr-1793460993920": {
+      "fruits": [
+        {
+          "name": "Brother Praise",
+          "date": "2026-10-31"
+        }
+      ],
+      "preachingMeeting": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ],
+      "newSongAcademy": {
+        "songChecks": [
+          1,
+          2
+        ],
+        "timestamps": {}
+      }
+    },
+    "usr-1793462635067": {
+      "simplePreaching": {
+        "2026-10-31": 3
+      },
+      "connections": [
+        {
+          "name": "Contact 1",
+          "date": "2026-10-31"
+        }
+      ],
+      "fruits": [
+        {
+          "name": "Fruit 1",
+          "date": "2026-10-31"
+        }
+      ],
+      "lostSheep": [],
+      "preachingMeeting": [
+        {
+          "date": "2026-10-31",
+          "checked": true,
+          "onTime": true
+        }
+      ],
+      "education": [
+        {
+          "date": "2026-10-31",
+          "checked": true
+        }
+      ],
+      "elohimAcademy": {
+        "levelChecks": [
+          1
+        ],
+        "somChecks": [],
+        "timestamps": {}
+      },
+      "newSongAcademy": {
+        "songChecks": [
+          1
+        ],
+        "timestamps": {}
+      }
+    }
+  },
+  "gospelDiary": {
+    "surya11008": [
+      {
+        "id": "diary-1793473810900",
+        "date": "2026-11-01",
+        "title": "New Jerusalem Day Celebration",
+        "writing": "🪴 Notification 🪴\n\nTitle: 2026 New Jerusalem Day Commemoration Service and Celebration\n\nMay all Zion family members working hard for the salvation of mankind across the world receive abundant Holy Spirit blessings.\n\n2026 New Jerusalem Day Service and Schedule Guide:\n1. Date: Monday, November 9, 2025\n2. Time: 1:00 PM\n3. Place: Each Zion\n4. Celebration: Sabbath Afternoon Worship Service format (no offerings)\n5. After Service: Watching special videos sent by Mother\n6. Meal Time: 11:00 AM - Special meal prepared with Mother's love before worship\n\nThe day Mother came to this earth in the flesh to save us sinners 🙇🏻‍♂️\n\nLet us receive abundant blessings through New Jerusalem Day ✨\n\nThank you ~",
+        "mood": "❤️",
+        "createdAt": "2026-10-31T19:10:10.900Z"
+      }
+    ],
+    "usr-1793449012255": [
+      {
+        "id": "diary-1793475808877",
+        "userId": "usr-1793449012255",
+        "authorName": "Suri",
+        "date": "2026-11-01",
+        "title": "Nzusbsjs",
+        "writing": "Isjsjsbsjsns",
+        "mood": "😊",
+        "createdAt": "2026-10-31T19:43:28.877Z"
+      }
+    ]
+  },
   "sharedFiles": [],
   "mediaCategories": ["Special", "Children"]
 };
