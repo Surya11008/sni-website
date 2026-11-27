@@ -1125,9 +1125,10 @@ export default function AdminPanel() {
       }
 
       await addDoc(collection(db, 'portal_pages'), payload);
-      showFeedback('success', `Page "${cleanTitle}" added to navigation!`);
+      showFeedback('success', `Page "${cleanTitle}" added to ${newPage.categorySlug.toUpperCase()} navigation!`);
+      const targetCat = newPage.categorySlug === 'custom' ? (payload.customCategorySlug || 'more') : newPage.categorySlug;
       setNewPage({
-        categorySlug: 'home',
+        categorySlug: targetCat,
         customCategoryTitle: '',
         title: '',
         titleTe: '',
@@ -1137,6 +1138,8 @@ export default function AdminPanel() {
         iconName: 'FileText',
       });
       await fetchPages();
+      setPageCategoryFilter(targetCat);
+      setCollapsedCategories((prev) => ({ ...prev, [targetCat]: false }));
     } catch (err) {
       showFeedback('error', 'Failed to add page: ' + err.message);
     } finally {
@@ -1886,14 +1889,14 @@ export default function AdminPanel() {
                       onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
                     >
-                      <option value="home">Home (ముఖ్య పేజీ)</option>
-                      <option value="worship">Worship (ఆరాధన)</option>
-                      <option value="bible-truth">Bible & Truth (సత్యం & బైబిల్)</option>
-                      <option value="family">Family & Faith (కుటుంబం & విశ్వాసం)</option>
-                      <option value="grow">Grow (ఆత్మీయ ఎదుగుదల)</option>
-                      <option value="go-come">Go & Come (ప్రపంచ సువార్త)</option>
-                      <option value="program">Program (కార్యక్రమాలు)</option>
-                      <option value="more">More (మరిన్ని విభాగాలు)</option>
+                      <option value="home">Home</option>
+                      <option value="worship">Worship</option>
+                      <option value="bible-truth">Bible & Truth</option>
+                      <option value="family">Family & Faith</option>
+                      <option value="grow">Grow</option>
+                      <option value="go-come">Go & Come</option>
+                      <option value="program">Program</option>
+                      <option value="more">More</option>
                       <option value="custom">+ Create Brand New Category</option>
                     </select>
                   </div>
@@ -1910,7 +1913,7 @@ export default function AdminPanel() {
                         onChange={(e) =>
                           setNewPage({ ...newPage, customCategoryTitle: e.target.value })
                         }
-                        placeholder="e.g. Fellowship / సహవాసం"
+                        placeholder="e.g. Fellowship"
                         className="w-full p-2 rounded-xl border border-slate-300 bg-white"
                       />
                     </div>
@@ -1932,13 +1935,13 @@ export default function AdminPanel() {
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      Page Title (Telugu / తెలుగు శీర్షిక)
+                      Page Title (Telugu)
                     </label>
                     <input
                       type="text"
                       value={newPage.titleTe}
                       onChange={(e) => setNewPage({ ...newPage, titleTe: e.target.value })}
-                      placeholder="e.g. నూతన పాటల పండుగ"
+                      placeholder="e.g. Telugu Title (optional)"
                       className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
                     />
                   </div>
@@ -1961,7 +1964,7 @@ export default function AdminPanel() {
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      Description / వివరణ (optional)
+                      Description (optional)
                     </label>
                     <textarea
                       rows={2}
@@ -2166,11 +2169,6 @@ export default function AdminPanel() {
                                       <h4 className="text-xs font-bold text-[#0F294A]">
                                         {cat.titleEn}
                                       </h4>
-                                      {cat.titleTe && (
-                                        <span className="text-[11px] font-telugu text-slate-500">
-                                          ({cat.titleTe})
-                                        </span>
-                                      )}
                                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-semibold font-mono">
                                         /{cat.categorySlug}
                                       </span>
@@ -2225,7 +2223,7 @@ export default function AdminPanel() {
                                                     : 'bg-slate-200 text-slate-700'
                                                 }`}
                                               >
-                                                {p.isCustom ? '⭐ Custom' : '🏛️ System'}
+                                                {p.isCustom ? '⭐ Active Page' : '🏛️ System Page'}
                                               </span>
                                               <span className="text-[10px] font-mono text-slate-400">
                                                 /page/{cat.categorySlug}/{p.pageSlug}
@@ -2244,13 +2242,20 @@ export default function AdminPanel() {
                                               </p>
                                             )}
 
-                                            <div className="flex items-center gap-3 mt-2">
+                                            <div className="flex items-center gap-3 mt-2 flex-wrap">
                                               <Link
                                                 to={`/page/${cat.categorySlug}/${p.pageSlug}`}
                                                 className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F294A] hover:text-[#C59B27] hover:underline"
                                               >
                                                 <span>Open Page</span>
                                                 <ExternalLink className="w-3 h-3 text-[#C59B27]" />
+                                              </Link>
+                                              <Link
+                                                to={`/page/${cat.categorySlug}/${p.pageSlug}?new=true`}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200 transition"
+                                              >
+                                                <Plus className="w-3 h-3 text-[#C59B27]" />
+                                                <span>+ Write Note</span>
                                               </Link>
                                               <button
                                                 type="button"
@@ -2490,20 +2495,20 @@ export default function AdminPanel() {
 
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        Page Title (Telugu / తెలుగు శీర్షిక)
+                        Page Title (Telugu)
                       </label>
                       <input
                         type="text"
                         value={pageEditForm.titleTe}
                         onChange={(e) => setPageEditForm({ ...pageEditForm, titleTe: e.target.value })}
-                        placeholder="తెలుగు శీర్షిక..."
+                        placeholder="Telugu Title..."
                         className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-telugu"
                       />
                     </div>
 
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        Description / వివరణ
+                        Description
                       </label>
                       <textarea
                         rows={3}
@@ -2601,188 +2606,134 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            {/* In-Place Article Create / Edit Form */}
+            {/* Notion Document Editor Launcher */}
             {isContentFormOpen && (
-              <div className="bg-white rounded-3xl border border-[#C59B27]/50 p-6 sm:p-8 shadow-xl animate-in fade-in duration-200">
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                  <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
-                    <Pencil className="w-4 h-4 text-[#C59B27]" />
-                    <span>{editingContent ? 'Edit Article' : 'Compose New Article'}</span>
-                  </h3>
+              <div className="bg-gradient-to-br from-white via-amber-50/20 to-slate-50 rounded-3xl border border-[#C59B27]/60 p-6 sm:p-8 shadow-xl animate-in fade-in duration-200">
+                <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-black text-lg shadow-sm">
+                      📝
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-[#0F294A]">
+                        {editingContent ? 'Edit Note / Article in Notion Document Editor' : 'Write New Note / Article (Notion Editor)'}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Select any target page across the portal to open the modern Notion-style document editor with full rich text, calendar tracking, media embeds, and custom emojis.
+                      </p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => { setIsContentFormOpen(false); setEditingContent(null); }}
-                    className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
+                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <form onSubmit={handleSaveContent} className="space-y-5 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Category Slug *
-                      </label>
-                      <select
-                        value={newContent.categorySlug}
-                        onChange={(e) => setNewContent({ ...newContent, categorySlug: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold"
+                {editingContent ? (
+                  <div className="p-5 rounded-2xl bg-white border border-amber-200 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#C59B27]">
+                          {editingContent.categorySlug} / {editingContent.pageSlug}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-0.5">
+                          {editingContent.title || editingContent.titleEn || 'Selected Article'}
+                        </h4>
+                      </div>
+                      <Link
+                        to={`/Home/${editingContent.categorySlug || 'worship'}/${editingContent.pageSlug || 'sermons'}/${editingContent.id}?edit=true`}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm"
                       >
-                        <option value="home">home (Home)</option>
-                        <option value="worship">worship</option>
-                        <option value="bible-truth">bible-truth (Truth)</option>
-                        <option value="family">family</option>
-                        <option value="grow">grow</option>
-                        <option value="go-come">go-come</option>
-                        <option value="program">program</option>
-                        <option value="more">more</option>
-                      </select>
+                        <Pencil className="w-4 h-4" />
+                        <span>Open in Notion Document Editor →</span>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Page Selector Form */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-xs">
+                          1. Select Category *
+                        </label>
+                        <select
+                          value={newContent.categorySlug}
+                          onChange={(e) => {
+                            const newCat = e.target.value;
+                            const targetCatObj = fullPortalStructure.find((c) => c.categorySlug === newCat);
+                            const firstSub = targetCatObj?.pages?.[0]?.pageSlug || 'new-updates';
+                            setNewContent({ ...newContent, categorySlug: newCat, pageSlug: firstSub });
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold"
+                        >
+                          {fullPortalStructure.map((cat) => (
+                            <option key={cat.categorySlug} value={cat.categorySlug}>
+                              {cat.titleEn}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-xs">
+                          2. Select Sub-Page *
+                        </label>
+                        <select
+                          value={newContent.pageSlug}
+                          onChange={(e) => setNewContent({ ...newContent, pageSlug: e.target.value })}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold"
+                        >
+                          {(fullPortalStructure.find((c) => c.categorySlug === newContent.categorySlug)?.pages || []).map((p) => (
+                            <option key={p.pageSlug} value={p.pageSlug}>
+                              {p.titleEn || p.title} ({p.pageSlug})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <Link
+                          to={`/page/${newContent.categorySlug || 'home'}/${newContent.pageSlug || 'new-updates'}?new=true`}
+                          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider shadow-md transition cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4 stroke-[3]" />
+                          <span>Open Notion Document Editor →</span>
+                        </Link>
+                      </div>
                     </div>
 
+                    {/* Quick Launch Cards */}
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Page Slug *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={newContent.pageSlug}
-                        onChange={(e) => setNewContent({ ...newContent, pageSlug: e.target.value })}
-                        placeholder="e.g. sermons, father, baptism..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs"
-                      />
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Quick Write by Section:</span>
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        {[
+                          { title: 'New Updates', cat: 'home', page: 'new-updates', icon: '📢' },
+                          { title: 'Events', cat: 'home', page: 'events', icon: '🎉' },
+                          { title: 'Schedule', cat: 'home', page: 'schedule', icon: '📅' },
+                          { title: 'Sermons', cat: 'worship', page: 'sermons', icon: '📖' },
+                          { title: 'Songs & Praise', cat: 'worship', page: 'songs', icon: '🎵' },
+                          { title: 'Youth & Faith', cat: 'family', page: 'youth', icon: '🌱' },
+                        ].map((q) => (
+                          <Link
+                            key={q.page}
+                            to={`/page/${q.cat}/${q.page}?new=true`}
+                            className="p-3 bg-white hover:bg-amber-50/50 rounded-2xl border border-slate-200 hover:border-[#C59B27] transition flex flex-col items-center text-center shadow-2xs group"
+                          >
+                            <span className="text-2xl mb-1 group-hover:scale-110 transition">{q.icon}</span>
+                            <span className="text-xs font-bold text-slate-800 group-hover:text-[#0F294A]">{q.title}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5">Write Note →</span>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Single Unified Title */}
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">
-                      Article Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newContent.title}
-                      onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
-                      placeholder="Enter article title..."
-                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                    />
-                  </div>
-
-                  {/* Single Unified Rich Content Editor */}
-                  <RichTextEditor
-                    label="Article Content"
-                    value={newContent.desc}
-                    onChange={(val) => setNewContent({ ...newContent, desc: val })}
-                    placeholder="Write article content here... (Telugu, English, formatting, quotes, and links supported)"
-                    rows={8}
-                  />
-
-                  {/* Collapsible Media & Attachments Section */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
-                    <button
-                      type="button"
-                      onClick={() => setAdminShowMedia(!adminShowMedia)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Paperclip className="w-4 h-4 text-[#C59B27]" />
-                        <span>Add Cover Image, Video, Audio or Links (Optional)</span>
-                        {(newContent.imageUrl || newContent.videoUrl || newContent.audioUrl || newContent.fileUrl || newContent.downloadUrl || newContent.websiteUrl) && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
-                            Attached
-                          </span>
-                        )}
-                      </div>
-                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${adminShowMedia ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {adminShowMedia && (
-                      <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Image URL</label>
-                          <input
-                            type="url"
-                            value={newContent.imageUrl}
-                            onChange={(e) => setNewContent({ ...newContent, imageUrl: e.target.value })}
-                            placeholder="https://images.unsplash..."
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
-                          <input
-                            type="url"
-                            value={newContent.videoUrl}
-                            onChange={(e) => setNewContent({ ...newContent, videoUrl: e.target.value })}
-                            placeholder="https://youtube.com/..."
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube / Direct)</label>
-                          <input
-                            type="url"
-                            value={newContent.audioUrl}
-                            onChange={(e) => setNewContent({ ...newContent, audioUrl: e.target.value })}
-                            placeholder="https://example.com/audio.mp3"
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">File / PDF URL</label>
-                          <input
-                            type="url"
-                            value={newContent.fileUrl}
-                            onChange={(e) => setNewContent({ ...newContent, fileUrl: e.target.value })}
-                            placeholder="https://drive.google..."
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
-                          <input
-                            type="url"
-                            value={newContent.downloadUrl}
-                            onChange={(e) => setNewContent({ ...newContent, downloadUrl: e.target.value })}
-                            placeholder="https://drive.google.com/uc?export=download&id=..."
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                            <Globe className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Website URL (Embed / Interactive Link)</span>
-                          </label>
-                          <input
-                            type="url"
-                            value={newContent.websiteUrl}
-                            onChange={(e) => setNewContent({ ...newContent, websiteUrl: e.target.value })}
-                            placeholder="https://example.com or https://..."
-                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => { setIsContentFormOpen(false); setEditingContent(null); }}
-                      className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider shadow-md disabled:opacity-50"
-                    >
-                      {loading ? 'Saving...' : editingContent ? 'Update Article' : 'Publish Article'}
-                    </button>
-                  </div>
-                </form>
+                )}
               </div>
             )}
 
@@ -2826,16 +2777,16 @@ export default function AdminPanel() {
                     </Link>
 
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleEditContentClick(item)}
-                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
-                        title="Edit Article"
+                      <Link
+                        to={`/Home/${item.categorySlug || 'worship'}/${item.pageSlug || 'sermons'}/${item.id}?edit=true`}
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition inline-flex items-center"
+                        title="Edit in Notion Document Editor"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-                      </button>
+                      </Link>
                       <button
                         onClick={() => handleDeleteContentItem(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                         title="Delete Article"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -3370,11 +3321,6 @@ export default function AdminPanel() {
                                       <span className="font-extrabold text-xs text-slate-800 truncate">
                                         {cat.titleEn}
                                       </span>
-                                      {cat.titleTe && (
-                                        <span className="text-[11px] text-slate-400 font-telugu hidden sm:inline">
-                                          ({cat.titleTe})
-                                        </span>
-                                      )}
                                     </div>
                                   </div>
 

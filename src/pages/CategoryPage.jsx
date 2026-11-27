@@ -147,11 +147,11 @@ export default function CategoryPage() {
 
           {isAdmin && (
             <Link
-              to="/admin"
+              to={currentCategory.pages?.length > 0 ? `/page/${categorySlug}/${currentCategory.pages[0].pageSlug}?new=true` : `/admin`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-amber-400 text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm shrink-0"
             >
-              <Plus className="w-4 h-4" />
-              <span>+ Add Page or Content</span>
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>+ Write Note in this Category</span>
             </Link>
           )}
         </div>
@@ -268,11 +268,11 @@ export default function CategoryPage() {
                     </p>
                     {isAdmin && (
                       <Link
-                        to={`/page/${categorySlug}/${subPage.pageSlug}`}
+                        to={`/page/${categorySlug}/${subPage.pageSlug}?new=true`}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-[#C59B27] hover:underline"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Add Content to this Sub-Page</span>
+                        <span>Write Note in this Sub-Page</span>
                       </Link>
                     )}
                   </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   collection,
   query,
@@ -294,7 +294,6 @@ export default function DynamicPage() {
     const info = getPageInfo(categorySlug, pageSlug);
     setPageInfo(info);
     setActiveArticle(null);
-    setIsFormOpen(false);
     setSelectedCalendarDate(null);
     setCalendarDateRange('all');
     setCalendarEventType('all');
@@ -303,8 +302,15 @@ export default function DynamicPage() {
     } else if (['new-updates', 'events'].includes(pageSlug)) {
       setViewMode('list');
     }
+
+    const searchParams = new URLSearchParams(location.search);
+    if (isAdmin && (searchParams.get('new') === 'true' || searchParams.get('create') === 'true' || location.state?.openCreate)) {
+      handleOpenAddForm();
+    } else {
+      setIsFormOpen(false);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [categorySlug, pageSlug, portalStructure]);
+  }, [categorySlug, pageSlug, portalStructure, location.search, location.state, isAdmin]);
 
   // Load page contents from Firestore `page_contents` (checking both pageSlug & targetPages)
   const fetchPageContents = async () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   doc,
   getDoc,
@@ -72,8 +72,17 @@ export default function ContentDetailPage() {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState([]);
 
+  const location = useLocation();
+
   // Admin edit form state - Unified Single Language Input
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('edit') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [imageUrl, setImageUrl] = useState('');

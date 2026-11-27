@@ -453,7 +453,11 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
   }
 
   for (const customPage of customPagesFromFirestore) {
-    const catSlug = (customPage.customCategorySlug || customPage.categorySlug || 'more').toLowerCase();
+    const catSlug = (
+      customPage.categorySlug && customPage.categorySlug !== 'custom'
+        ? customPage.categorySlug
+        : customPage.customCategorySlug || 'more'
+    ).toLowerCase();
     let cat = structure.find((c) => c.categorySlug === catSlug);
 
     if (!cat) {
