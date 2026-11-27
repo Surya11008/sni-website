@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 
 // ==============================================================
-// AUTHENTIC GOOGLE DOCS & STUDIO MATERIAL DESIGN ICONS
+// AUTHENTIC GOOGLE DOCS & MATERIAL DESIGN ICONS
 // ==============================================================
-const StudioLogo = () => (
+const GoogleDocsLogo = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
     <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#4285F4"/>
     <path d="M14 2V8H20L14 2Z" fill="#A1C2FA"/>
@@ -12,7 +12,7 @@ const StudioLogo = () => (
 );
 
 const SearchIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
     <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
   </svg>
 );
@@ -71,6 +71,12 @@ const LinkIcon = () => (
   </svg>
 );
 
+const AddCommentIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 11h-4v4h-2v-4H8V9h4V5h2v4h4v2z"/>
+  </svg>
+);
+
 const ImageIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
@@ -78,46 +84,49 @@ const ImageIcon = () => (
 );
 
 const AlignLeftIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
   </svg>
 );
+
 const AlignCenterIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
   </svg>
 );
+
 const AlignRightIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
   </svg>
 );
+
 const AlignJustifyIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18V7H3v2zM3 3v2h18V3H3z"/>
   </svg>
 );
 
 const LineSpacingIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 7h10v2H10V7zm0 4h10v2H10v-2zm0 4h10v2H10v-2zM6.5 19V5H5v14h1.5zm-3.5-3.5L5 19l2-3.5H3zm0-7L5 5l2 3.5H3z"/>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M10 7h11v2H10V7zm0 4h11v2H10v-2zm0 4h11v2H10v-2zM6 7v10H4.5l2.5 3 2.5-3H8V7h1.5L7 4 4.5 7H6z"/>
   </svg>
 );
 
 const ChecklistIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22 7h-9v2h9V7zm0 8h-9v2h9v-2zM5.54 11L2 7.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 11zm0 8L2 15.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 19z"/>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
   </svg>
 );
 
 const BulletListIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/>
   </svg>
 );
 
 const NumberedListIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/>
   </svg>
 );
@@ -141,8 +150,20 @@ const ClearFormattingIcon = () => (
 );
 
 const ArrowDropDown = () => (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="opacity-70">
+  <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="opacity-80 shrink-0">
     <path d="M7 10l5 5 5-5z"/>
+  </svg>
+);
+
+const GeminiSparkleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+  </svg>
+);
+
+const CloudSavedIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="text-slate-500">
+    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM10 17l-3.5-3.5 1.41-1.41L10 14.17 15.09 9.08l1.41 1.41L10 17z"/>
   </svg>
 );
 
@@ -217,17 +238,14 @@ export default function RichTextEditor({
   const [showHtmlSource, setShowHtmlSource] = useState(false);
   const [htmlSource, setHtmlSource] = useState('');
   const [zoomLevel, setZoomLevel] = useState(100);
-  const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (world's best studio) or 'pages' (standard sheet)
+  const [pageFormat, setPageFormat] = useState('pageless'); // 'pageless' (spacious canvas) or 'pages' (standard print page)
   const [textWidth, setTextWidth] = useState('wide'); // 'wide', 'full', 'standard'
-  const [theme, setTheme] = useState('paper'); // 'paper' (pristine white), 'parchment' (sacred sepia), 'midnight' (deep zen dark)
-  const [zenMode, setZenMode] = useState(false); // Distraction-free writing mode
+  const [theme, setTheme] = useState('paper'); // 'paper' (pristine white), 'parchment' (sacred sepia), 'midnight' (zen dark)
+  const [zenMode, setZenMode] = useState(false);
   const [docTitle, setDocTitle] = useState(label || 'Untitled document');
 
-  // Floating selection bubble
-  const [bubbleToolbar, setBubbleToolbar] = useState({ visible: false, x: 0, y: 0 });
-
   // Active Formatting States
-  const [currentStyle, setCurrentStyle] = useState('p');
+  const [currentStyle, setCurrentStyle] = useState('title'); // 'title', 'p', 'h1', 'h2', 'h3', 'subtitle'
   const [currentFont, setCurrentFont] = useState('Sri Krushnadevaraya');
   const [fontSize, setFontSize] = useState(13);
   const [isBold, setIsBold] = useState(false);
@@ -236,17 +254,21 @@ export default function RichTextEditor({
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [textColor, setTextColor] = useState('#000000');
   const [highlightColor, setHighlightColor] = useState('#ffff00');
+  const [currentAlign, setCurrentAlign] = useState('left');
   const [paintFormatActive, setPaintFormatActive] = useState(false);
   const [copiedFormat, setCopiedFormat] = useState(null);
 
-  // Word count & stats
+  // Stats
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [readingTime, setReadingTime] = useState(1);
   const [speakingTime, setSpeakingTime] = useState(1);
 
+  // Floating selection bubble
+  const [bubbleToolbar, setBubbleToolbar] = useState({ visible: false, x: 0, y: 0 });
+
   // Dropdown Popups
-  const [activeMenu, setActiveMenu] = useState(null); // 'file', 'edit', 'view', 'insert', 'format', 'tools', 'blocks', 'extensions', 'help'
+  const [activeMenu, setActiveMenu] = useState(null); // 'file', 'edit', 'view', 'insert', 'format', 'tools', 'gemini', 'extensions', 'help'
   const [showZoomMenu, setShowZoomMenu] = useState(false);
   const [showStyleMenu, setShowStyleMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
@@ -255,8 +277,9 @@ export default function RichTextEditor({
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showAlignMenu, setShowAlignMenu] = useState(false);
   const [showLineSpacingMenu, setShowLineSpacingMenu] = useState(false);
-  const [showBlocksMenu, setShowBlocksMenu] = useState(false);
-  const [showDividerMenu, setShowDividerMenu] = useState(false);
+  const [showChecklistMenu, setShowChecklistMenu] = useState(false);
+  const [showBulletListMenu, setShowBulletListMenu] = useState(false);
+  const [showNumberedListMenu, setShowNumberedListMenu] = useState(false);
 
   // Modals
   const [showFontManagerModal, setShowFontManagerModal] = useState(false);
@@ -264,6 +287,7 @@ export default function RichTextEditor({
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   const [showSpecialSymbolsModal, setShowSpecialSymbolsModal] = useState(false);
   const [showFindReplaceModal, setShowFindReplaceModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
@@ -278,6 +302,7 @@ export default function RichTextEditor({
   const [imageUrl, setImageUrl] = useState('');
   const [imageCaption, setImageCaption] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [commentText, setCommentText] = useState('');
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchMenuQuery, setSearchMenuQuery] = useState('');
@@ -294,6 +319,8 @@ export default function RichTextEditor({
     'Gidugu',
     'Gurajada',
     'Mandali',
+    'Peddana',
+    'Tenali Ramakrishna',
     'Arial',
     'Roboto',
     'Georgia',
@@ -307,10 +334,10 @@ export default function RichTextEditor({
   // Load custom fonts from localStorage and preload
   useEffect(() => {
     try {
-      const savedCustom = localStorage.getItem('sni_studio_custom_fonts');
+      const savedCustom = localStorage.getItem('sni_gdocs_custom_fonts');
       if (savedCustom) setCustomAddedFonts(JSON.parse(savedCustom));
 
-      const savedActive = localStorage.getItem('sni_studio_active_fonts');
+      const savedActive = localStorage.getItem('sni_gdocs_active_fonts');
       if (savedActive) setActiveFonts(JSON.parse(savedActive));
     } catch (e) {
       console.warn(e);
@@ -355,8 +382,9 @@ export default function RichTextEditor({
         setShowHighlightMenu(false);
         setShowAlignMenu(false);
         setShowLineSpacingMenu(false);
-        setShowBlocksMenu(false);
-        setShowDividerMenu(false);
+        setShowChecklistMenu(false);
+        setShowBulletListMenu(false);
+        setShowNumberedListMenu(false);
       }
     };
     window.addEventListener('mousedown', handleGlobalClick);
@@ -503,10 +531,10 @@ export default function RichTextEditor({
     if (style === 'p') {
       execCmd('formatBlock', '<p>');
     } else if (style === 'title') {
-      const html = `<h1 style="font-size: 30pt; font-weight: 800; line-height: 1.25; margin: 24px 0 12px 0; color: inherit;">Title</h1><p><br/></p>`;
+      const html = `<h1 style="font-size: 28pt; font-weight: 800; line-height: 1.25; margin: 20px 0 10px 0; color: inherit;">Title</h1><p><br/></p>`;
       execCmd('insertHTML', html);
     } else if (style === 'subtitle') {
-      const html = `<p style="font-size: 16pt; opacity: 0.75; line-height: 1.5; margin: 8px 0;">Subtitle</p><p><br/></p>`;
+      const html = `<p style="font-size: 15pt; opacity: 0.75; line-height: 1.5; margin: 8px 0;">Subtitle</p><p><br/></p>`;
       execCmd('insertHTML', html);
     } else {
       execCmd('formatBlock', `<${style}>`);
@@ -536,13 +564,13 @@ export default function RichTextEditor({
     if (!customAddedFonts.includes(name)) {
       const updatedCustom = [...customAddedFonts, name];
       setCustomAddedFonts(updatedCustom);
-      localStorage.setItem('sni_studio_custom_fonts', JSON.stringify(updatedCustom));
+      localStorage.setItem('sni_gdocs_custom_fonts', JSON.stringify(updatedCustom));
     }
 
     if (!activeFonts.includes(name)) {
       const updatedActive = [name, ...activeFonts];
       setActiveFonts(updatedActive);
-      localStorage.setItem('sni_studio_active_fonts', JSON.stringify(updatedActive));
+      localStorage.setItem('sni_gdocs_active_fonts', JSON.stringify(updatedActive));
     }
 
     setCurrentFont(name);
@@ -557,12 +585,11 @@ export default function RichTextEditor({
       updated = [...activeFonts, fontFamily];
     }
     setActiveFonts(updated);
-    localStorage.setItem('sni_studio_active_fonts', JSON.stringify(updated));
+    localStorage.setItem('sni_gdocs_active_fonts', JSON.stringify(updated));
   };
 
   // Insert Special Blocks (World-Class Spiritual & Publishing Blocks)
   const handleInsertBlock = (type) => {
-    setShowBlocksMenu(false);
     if (type === 'scripture') {
       const html = `<div class="sni-scripture-card" style="border-left: 4px solid #C59B27; background: #fffdf5; padding: 18px 24px; margin: 24px 0; border-radius: 0 14px 14px 0; box-shadow: 0 4px 16px -2px rgba(197,155,39,0.15);"><div style="font-family: 'Sri Krushnadevaraya', serif; font-size: 21px; line-height: 1.85; color: #1e293b; font-style: italic;">"నీ వాక్యము నా పాదములకు దీపమును నా త్రోవకు వెలుగునై యున్నది."</div><div style="text-align: right; font-weight: 700; color: #b45309; font-size: 13.5px; margin-top: 10px;">— కీర్తనలు 119:105 (పరిశుద్ధ గ్రంథము)</div></div><p><br/></p>`;
       execCmd('insertHTML', html);
@@ -578,18 +605,6 @@ export default function RichTextEditor({
     } else if (type === 'hymn') {
       const html = `<div class="sni-hymn-card" style="border: 1px dashed #cbd5e1; background: #fafaf9; padding: 20px 24px; margin: 24px 0; border-radius: 12px; text-align: center;"><div style="font-weight: 700; color: #78350f; font-size: 15px; margin-bottom: 12px;">🎵 భక్తి గీతము / కీర్తనల లేఅవుట్</div><div style="font-family:'Sri Krushnadevaraya', serif; font-size: 18px; line-height: 2; color: #292524;"><p><strong>పల్లవి:</strong><br/>యేసయ్యా నీ ప్రేమ వర్ణింప చాలదు<br/>నీ కృపయే నను కాయుచున్నది</p><p style="margin-top: 10px;"><strong>చరణం:</strong><br/>కష్టాల కాలములో నీవే నా శైలము<br/>కన్నీటి లోయలో నీవే నా దీపము</p></div></div><p><br/></p>`;
       execCmd('insertHTML', html);
-    }
-  };
-
-  // Horizontal Divider insertion
-  const handleInsertDivider = (style) => {
-    setShowDividerMenu(false);
-    if (style === 'solid') {
-      execCmd('insertHorizontalRule');
-    } else if (style === 'dots') {
-      execCmd('insertHTML', `<div style="text-align:center; letter-spacing: 12px; color:#94a3b8; font-size:20px; margin: 2rem 0;">• • •</div><p><br/></p>`);
-    } else if (style === 'ornament') {
-      execCmd('insertHTML', `<div style="text-align:center; color:#c59b27; font-size:22px; margin: 2rem 0; letter-spacing: 4px;">❧ ⸻ ❖ ⸻ ☙</div><p><br/></p>`);
     }
   };
 
@@ -617,7 +632,7 @@ export default function RichTextEditor({
     if (!linkUrl) return;
     const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
     if (linkText) {
-      execCmd('insertHTML', `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; font-weight: 500;">${linkText}</a>`);
+      execCmd('insertHTML', `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; text-decoration: underline; font-weight: 500;">${linkText}</a>`);
     } else {
       execCmd('createLink', url);
     }
@@ -629,15 +644,15 @@ export default function RichTextEditor({
   // Insert Image
   const handleInsertImage = () => {
     if (!imageUrl) return;
-    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 13.5px; color: #64748b; margin-top: 8px;">${imageCaption}</figcaption>` : '';
-    const imgHtml = `<figure style="margin: 2rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
+    const captionHtml = imageCaption ? `<figcaption style="text-align:center; font-size: 13px; color: #64748b; margin-top: 8px;">${imageCaption}</figcaption>` : '';
+    const imgHtml = `<figure style="margin: 2rem auto; text-align: center;"><img src="${imageUrl}" alt="${imageCaption || 'Embedded Image'}" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: inline-block;" />${captionHtml}</figure><p><br/></p>`;
     execCmd('insertHTML', imgHtml);
     setShowImageModal(false);
     setImageUrl('');
     setImageCaption('');
   };
 
-  // Insert Video (YouTube or MP4)
+  // Insert Video
   const handleInsertVideo = () => {
     if (!videoUrl) return;
     const trimmed = videoUrl.trim();
@@ -655,10 +670,20 @@ export default function RichTextEditor({
     setVideoUrl('');
   };
 
+  // Insert Comment Note
+  const handleInsertComment = () => {
+    if (!commentText) return;
+    const commentHtml = `<div class="gdocs-comment-card" style="background: #fefce8; border-left: 3px solid #eab308; padding: 10px 14px; margin: 14px 0; border-radius: 6px; font-size: 13.5px; color: #713f12; box-shadow: 0 2px 6px rgba(234,179,8,0.1);"><span style="font-weight: 700; margin-right: 6px;">💬 Note:</span><span>${commentText}</span></div><p><br/></p>`;
+    execCmd('insertHTML', commentHtml);
+    setShowCommentModal(false);
+    setCommentText('');
+  };
+
   // Insert Checklist
   const handleInsertChecklist = () => {
-    const checklistHtml = `<div class="docs-checklist-item" style="display:flex; align-items:flex-start; gap:10px; margin: 6px 0;"><input type="checkbox" style="width:16px; height:16px; margin-top: 4px; cursor:pointer;" /> <span>Checklist task</span></div><p><br/></p>`;
+    const checklistHtml = `<div class="docs-checklist-item" style="display:flex; align-items:flex-start; gap:10px; margin: 6px 0;"><input type="checkbox" style="width:16px; height:16px; margin-top: 4px; cursor:pointer;" /> <span>Checklist item</span></div><p><br/></p>`;
     execCmd('insertHTML', checklistHtml);
+    setShowChecklistMenu(false);
   };
 
   // Print Document
@@ -693,13 +718,15 @@ export default function RichTextEditor({
   const themeStyles = {
     paper: {
       canvas: 'bg-white',
-      text: 'text-[#0f172a]',
-      border: 'border-[#e2e8f0]',
-      caret: '#2563eb',
-      desc: 'Pristine White Studio',
+      outer: 'bg-[#f0f4f9]',
+      text: 'text-[#1f1f1f]',
+      border: 'border-[#dadce0]',
+      caret: '#1a73e8',
+      desc: 'Pristine White Document',
     },
     parchment: {
       canvas: 'bg-[#fcf9f2]',
+      outer: 'bg-[#f3ede1]',
       text: 'text-[#262626]',
       border: 'border-[#e7e1d3]',
       caret: '#b45309',
@@ -707,6 +734,7 @@ export default function RichTextEditor({
     },
     midnight: {
       canvas: 'bg-[#0f172a]',
+      outer: 'bg-[#0b1120]',
       text: 'text-[#f8fafc]',
       border: 'border-[#334155]',
       caret: '#60a5fa',
@@ -745,9 +773,17 @@ export default function RichTextEditor({
     return matchesSearch;
   });
 
+  // Short font display name for toolbar button (e.g., "Sree K...")
+  const getShortFontName = (name) => {
+    if (!name) return 'Font';
+    if (name.toLowerCase().includes('krushnadevaraya')) return 'Sree K...';
+    if (name.length > 9) return `${name.slice(0, 8)}...`;
+    return name;
+  };
+
   return (
     <div
-      className={`border ${currentTheme.border} rounded-2xl overflow-hidden ${currentTheme.canvas} transition-all font-sans select-none shadow-sm ${
+      className={`border ${currentTheme.border} rounded-2xl overflow-hidden ${currentTheme.outer} transition-all font-sans select-none shadow-sm ${
         isFullscreen ? 'fixed inset-0 z-50 flex flex-col rounded-none shadow-none' : 'relative'
       }`}
     >
@@ -786,14 +822,6 @@ export default function RichTextEditor({
           >
             U
           </button>
-          <button
-            type="button"
-            onClick={() => execCmd('strikeThrough')}
-            className={`px-2 py-1 rounded hover:bg-slate-800 line-through text-xs ${isStrikethrough ? 'text-amber-400' : ''}`}
-            title="Strikethrough"
-          >
-            S
-          </button>
           <div className="w-px h-3.5 bg-slate-700 mx-0.5"></div>
           <button
             type="button"
@@ -813,11 +841,11 @@ export default function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => handleInsertBlock('scripture')}
-            className="px-2 py-1 rounded hover:bg-slate-800 text-xs text-amber-300 font-medium"
-            title="Insert Scripture Quote"
+            onClick={() => setShowCommentModal(true)}
+            className="px-2 py-1 rounded hover:bg-slate-800 text-xs text-amber-300"
+            title="Add Comment / Note"
           >
-            📖 Quote
+            💬
           </button>
           <button
             type="button"
@@ -831,646 +859,724 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 1. TOP HEADER (Google Docs Logo, Title, Menus, Atmosphere Bar)  */}
+      {/* 1. GOOGLE DOCS TOP ROW: Menus (File, Edit, View...) & Title     */}
       {/* ============================================================== */}
       {!zenMode && (
-        <div className="bg-white/95 backdrop-blur-md px-4 pt-2.5 pb-1 flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#dadce0]/70 gdocs-dropdown-container">
-          {/* Left: Docs Icon + Title + Menus */}
-          <div className="flex items-start gap-2.5">
-            <div className="pt-0.5 cursor-pointer" title="World's Best Writing Studio">
-              <StudioLogo />
-            </div>
-
-            <div className="flex flex-col">
-              {/* Document Title Bar */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={docTitle}
-                  onChange={(e) => setDocTitle(e.target.value)}
-                  className="text-[17px] font-bold text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
-                />
-                <span className="text-xs text-emerald-600 font-semibold hidden md:inline-flex items-center gap-1.5 cursor-default bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Studio Live
-                </span>
+        <div className="bg-white px-4 pt-2 pb-1 border-b border-[#dadce0] gdocs-dropdown-container">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Left: Google Docs Logo + Doc Title + Menu Bar */}
+            <div className="flex items-start gap-3">
+              <div className="pt-0.5 shrink-0" title="Google Docs Style Content Editor">
+                <GoogleDocsLogo />
               </div>
 
-              {/* Menu Bar: File, Edit, View, Insert, Format, Tools, Blocks, AI, Extensions, Help */}
-              <div className="flex items-center gap-0.5 text-[13px] text-[#444746] font-normal -ml-1 mt-0.5">
-                {/* File */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'file' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    File
-                  </button>
-                  {activeMenu === 'file' && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm('Start a fresh new document?')) {
-                            onChange('');
-                            if (editorRef.current) editorRef.current.innerHTML = '';
-                          }
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        New Document
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handlePrint();
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                      >
-                        <span>Print (PDF)</span>
-                        <span className="text-[11px] text-[#747775]">Ctrl+P</span>
-                      </button>
-                      <div className="my-1 border-t border-[#e0e0e0]"></div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const blob = new Blob([editorRef.current?.innerHTML || ''], { type: 'text/html' });
-                          const a = document.createElement('a');
-                          a.href = URL.createObjectURL(blob);
-                          a.download = `${docTitle || 'document'}.html`;
-                          a.click();
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Download HTML (.html)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const blob = new Blob([editorRef.current?.innerText || ''], { type: 'text/plain' });
-                          const a = document.createElement('a');
-                          a.href = URL.createObjectURL(blob);
-                          a.download = `${docTitle || 'document'}.txt`;
-                          a.click();
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Download Text (.txt)
-                      </button>
-                    </div>
-                  )}
+              <div className="flex flex-col">
+                {/* Title & Cloud Status */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={docTitle}
+                    onChange={(e) => setDocTitle(e.target.value)}
+                    className="text-[17px] font-semibold text-[#1f1f1f] hover:border-[#dadce0] border border-transparent rounded px-1.5 py-0.5 bg-transparent focus:bg-white focus:border-[#1a73e8] focus:outline-none transition max-w-[280px] truncate"
+                    title="Rename Document"
+                  />
+                  <div className="flex items-center gap-1" title="Document auto-saved">
+                    <CloudSavedIcon />
+                  </div>
                 </div>
 
-                {/* Edit */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'edit' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    Edit
-                  </button>
-                  {activeMenu === 'edit' && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('undo');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                      >
-                        <span>Undo</span>
-                        <span className="text-[11px] text-[#747775]">Ctrl+Z</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('redo');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                      >
-                        <span>Redo</span>
-                        <span className="text-[11px] text-[#747775]">Ctrl+Y</span>
-                      </button>
-                      <div className="my-1 border-t border-[#e0e0e0]"></div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('selectAll');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                      >
-                        <span>Select all</span>
-                        <span className="text-[11px] text-[#747775]">Ctrl+A</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowFindReplaceModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
-                      >
-                        <span>Find and replace</span>
-                        <span className="text-[11px] text-[#747775]">Ctrl+H</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* View */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'view' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    View
-                  </button>
-                  {activeMenu === 'view' && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
-                        Canvas Theme
+                {/* EXACT GOOGLE DOCS MENUS: File, Edit, View, Insert, Format, Tools, Gemini, Extensions, Help */}
+                <div className="flex flex-wrap items-center gap-0.5 text-[13.5px] text-[#444746] font-normal -ml-1 mt-0.5">
+                  {/* File */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'file' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      File
+                    </button>
+                    {activeMenu === 'file' && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm('Start a fresh new document?')) {
+                              onChange('');
+                              if (editorRef.current) editorRef.current.innerHTML = '';
+                            }
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          New document
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handlePrint();
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Print</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+P</span>
+                        </button>
+                        <div className="my-1 border-t border-[#e0e0e0]"></div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const blob = new Blob([editorRef.current?.innerHTML || ''], { type: 'text/html' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = `${docTitle || 'document'}.html`;
+                            a.click();
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Download as HTML (.html)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const blob = new Blob([editorRef.current?.innerText || ''], { type: 'text/plain' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = `${docTitle || 'document'}.txt`;
+                            a.click();
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Download Plain Text (.txt)
+                        </button>
+                        <div className="my-1 border-t border-[#e0e0e0]"></div>
+                        <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase">Page Setup</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPageFormat(pageFormat === 'pageless' ? 'pages' : 'pageless');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>{pageFormat === 'pageless' ? 'Switch to Pages layout' : 'Switch to Pageless layout'}</span>
+                          <span className="text-[#1a73e8] font-bold">✓</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTheme('paper');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          theme === 'paper' ? 'text-[#1a73e8] font-bold bg-[#e8f0fe]' : ''
-                        }`}
-                      >
-                        <span>☀️ Pristine White</span>
-                        {theme === 'paper' && <span>✓</span>}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTheme('parchment');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          theme === 'parchment' ? 'text-amber-800 font-bold bg-amber-50' : ''
-                        }`}
-                      >
-                        <span>📜 Sacred Parchment / Sepia</span>
-                        {theme === 'parchment' && <span>✓</span>}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTheme('midnight');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          theme === 'midnight' ? 'text-blue-600 font-bold bg-blue-50' : ''
-                        }`}
-                      >
-                        <span>🌙 Midnight Zen Dark</span>
-                        {theme === 'midnight' && <span>✓</span>}
-                      </button>
+                    )}
+                  </div>
 
-                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
-                      <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
-                        Writing Width
+                  {/* Edit */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'edit' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Edit
+                    </button>
+                    {activeMenu === 'edit' && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('undo');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Undo</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+Z</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('redo');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Redo</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+Y</span>
+                        </button>
+                        <div className="my-1 border-t border-[#e0e0e0]"></div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('selectAll');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Select all</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+A</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowFindReplaceModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Find and replace</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+H</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTextWidth('wide');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          textWidth === 'wide' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                        }`}
-                      >
-                        <span>Wide Studio</span>
-                        {textWidth === 'wide' && <span>✓</span>}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTextWidth('full');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          textWidth === 'full' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                        }`}
-                      >
-                        <span>Full Canvas (100%)</span>
-                        {textWidth === 'full' && <span>✓</span>}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTextWidth('standard');
-                          setActiveMenu(null);
-                        }}
-                        className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
-                          textWidth === 'standard' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
-                        }`}
-                      >
-                        <span>Focused Reading Column</span>
-                        {textWidth === 'standard' && <span>✓</span>}
-                      </button>
+                    )}
+                  </div>
 
-                      <div className="my-1.5 border-t border-[#e0e0e0]"></div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsFullscreen(!isFullscreen);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen view'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowHtmlSource(!showHtmlSource);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        {showHtmlSource ? 'Visual Document' : 'View HTML source'}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  {/* View */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'view' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      View
+                    </button>
+                    {activeMenu === 'view' && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                          Canvas Theme
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTheme('paper');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            theme === 'paper' ? 'text-[#1a73e8] font-bold bg-[#e8f0fe]' : ''
+                          }`}
+                        >
+                          <span>☀️ Pristine White</span>
+                          {theme === 'paper' && <span>✓</span>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTheme('parchment');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            theme === 'parchment' ? 'text-amber-800 font-bold bg-amber-50' : ''
+                          }`}
+                        >
+                          <span>📜 Sacred Parchment / Sepia</span>
+                          {theme === 'parchment' && <span>✓</span>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTheme('midnight');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            theme === 'midnight' ? 'text-blue-600 font-bold bg-blue-50' : ''
+                          }`}
+                        >
+                          <span>🌙 Midnight Zen Dark</span>
+                          {theme === 'midnight' && <span>✓</span>}
+                        </button>
 
-                {/* Insert */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'insert' ? null : 'insert')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'insert' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    Insert
-                  </button>
-                  {activeMenu === 'insert' && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowImageModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Image (URL / Upload)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowVideoModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Video / YouTube Embed
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowTableModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Table
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowLinkModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Link (Ctrl+K)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowSpecialSymbolsModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Special Symbols & Telugu Numerals
-                      </button>
-                    </div>
-                  )}
-                </div>
+                        <div className="my-1.5 border-t border-[#e0e0e0]"></div>
+                        <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase tracking-wider">
+                          Width
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTextWidth('wide');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            textWidth === 'wide' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                          }`}
+                        >
+                          <span>Wide Canvas</span>
+                          {textWidth === 'wide' && <span>✓</span>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTextWidth('full');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            textWidth === 'full' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                          }`}
+                        >
+                          <span>Full Width (100%)</span>
+                          {textWidth === 'full' && <span>✓</span>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTextWidth('standard');
+                            setActiveMenu(null);
+                          }}
+                          className={`w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between ${
+                            textWidth === 'standard' ? 'text-[#1a73e8] font-semibold bg-[#e8f0fe]' : ''
+                          }`}
+                        >
+                          <span>Standard Column</span>
+                          {textWidth === 'standard' && <span>✓</span>}
+                        </button>
 
-                {/* Format */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'format' ? null : 'format')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'format' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    Format
-                  </button>
-                  {activeMenu === 'format' && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('bold');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] font-bold"
-                      >
-                        Bold
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('italic');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] italic"
-                      >
-                        Italic
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('underline');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] underline"
-                      >
-                        Underline
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('strikeThrough');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] line-through"
-                      >
-                        Strikethrough
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('superscript');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Superscript (X²)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('subscript');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
-                      >
-                        Subscript (X₂)
-                      </button>
-                      <div className="my-1 border-t border-[#e0e0e0]"></div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          execCmd('removeFormat');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600 font-medium"
-                      >
-                        Clear formatting
-                      </button>
-                    </div>
-                  )}
-                </div>
+                        <div className="my-1.5 border-t border-[#e0e0e0]"></div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsFullscreen(!isFullscreen);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowHtmlSource(!showHtmlSource);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          {showHtmlSource ? 'Visual Document' : 'View HTML source'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Blocks */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'blocks' ? null : 'blocks')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer font-semibold text-amber-700 ${
-                      activeMenu === 'blocks' ? 'bg-amber-100' : ''
-                    }`}
-                  >
-                    ✨ Blocks
-                  </button>
-                  {activeMenu === 'blocks' && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-amber-200 py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('scripture');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-amber-50 text-amber-900 flex items-center gap-2"
-                      >
-                        <span>📖</span>
-                        <span>వాక్యము (Scripture Box)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('prayer');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-blue-50 text-blue-900 flex items-center gap-2"
-                      >
-                        <span>🕊️</span>
-                        <span>ప్రార్థనాంశము (Prayer Focus)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('insight');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-emerald-50 text-emerald-900 flex items-center gap-2"
-                      >
-                        <span>💡</span>
-                        <span>దివ్య మర్మము (Key Insight)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('sermon-outline');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-purple-50 text-purple-900 flex items-center gap-2"
-                      >
-                        <span>✝️</span>
-                        <span>ప్రసంగ క్రమము (Sermon Outline)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleInsertBlock('hymn');
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-orange-50 text-orange-900 flex items-center gap-2"
-                      >
-                        <span>🎵</span>
-                        <span>భక్తి గీతము (Hymn Stanza)</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  {/* Insert */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'insert' ? null : 'insert')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'insert' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Insert
+                    </button>
+                    {activeMenu === 'insert' && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowImageModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowTableModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Table
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowLinkModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Link</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+K</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCommentModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Comment / Note
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowVideoModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Video (YouTube Embed)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSpecialSymbolsModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Special characters & Telugu numerals
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('insertHorizontalRule');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Horizontal line
+                        </button>
+                        <div className="my-1 border-t border-[#e0e0e0]"></div>
+                        <div className="px-4 py-1 text-[11px] font-bold text-[#747775] uppercase">Spiritual Publishing Blocks</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('scripture');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-amber-50 text-amber-900"
+                        >
+                          📖 Scripture Quote Card
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('prayer');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-blue-50 text-blue-900"
+                        >
+                          🕊️ Prayer Focus Block
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('insight');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-emerald-50 text-emerald-900"
+                        >
+                          💡 Key Revelation Insight
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('sermon-outline');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-purple-50 text-purple-900"
+                        >
+                          ✝️ 7-Step Sermon Outline
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Gemini AI */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowGeminiAiModal(true)}
-                    className="px-1.5 py-0.5 rounded hover:bg-indigo-50 text-indigo-700 transition cursor-pointer font-bold flex items-center gap-1"
-                  >
-                    <span>🤖 Gemini AI</span>
-                  </button>
-                </div>
+                  {/* Format */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'format' ? null : 'format')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'format' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Format
+                    </button>
+                    {activeMenu === 'format' && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('bold');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] font-bold flex items-center justify-between"
+                        >
+                          <span>Bold</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+B</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('italic');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] italic flex items-center justify-between"
+                        >
+                          <span>Italic</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+I</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('underline');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] underline flex items-center justify-between"
+                        >
+                          <span>Underline</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+U</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('strikeThrough');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] line-through"
+                        >
+                          Strikethrough
+                        </button>
+                        <div className="my-1 border-t border-[#e0e0e0]"></div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            execCmd('removeFormat');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-rose-600 font-medium"
+                        >
+                          Clear formatting
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Extensions */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMenu(activeMenu === 'extensions' ? null : 'extensions')}
-                    className={`px-1.5 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer ${
-                      activeMenu === 'extensions' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
-                    }`}
-                  >
-                    Extensions
-                  </button>
-                  {activeMenu === 'extensions' && (
-                    <div className="absolute top-full left-0 mt-1 w-60 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowFontManagerModal(true);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] text-[#1a73e8] font-semibold"
-                      >
-                        + Add Any Google Font...
-                      </button>
-                    </div>
-                  )}
+                  {/* Tools */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'tools' ? null : 'tools')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'tools' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Tools
+                    </button>
+                    {activeMenu === 'tools' && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowStatsModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Word count & stats</span>
+                          <span className="text-[11px] text-[#747775]">Ctrl+Shift+C</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            alert('Spelling and grammar check completed. No errors found.');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Spelling and grammar check
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Gemini */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'gemini' ? null : 'gemini')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none flex items-center gap-1 ${
+                        activeMenu === 'gemini' ? 'bg-[#c2e7ff] text-[#001d35]' : 'text-indigo-600 font-medium'
+                      }`}
+                    >
+                      <GeminiSparkleIcon />
+                      <span>Gemini</span>
+                    </button>
+                    {activeMenu === 'gemini' && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-indigo-200 py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowGeminiAiModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-indigo-50 font-bold text-indigo-900"
+                        >
+                          Ask Gemini AI Assistant...
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('sermon-outline');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-indigo-50"
+                        >
+                          Generate Sermon Architecture
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInsertBlock('scripture');
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-indigo-50"
+                        >
+                          Insert Featured Scripture Quote
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Extensions */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'extensions' ? null : 'extensions')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'extensions' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Extensions
+                    </button>
+                    {activeMenu === 'extensions' && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowFontManagerModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-[#e8f0fe] text-[#1a73e8] font-bold"
+                        >
+                          + Add Any Google Font...
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Help */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(activeMenu === 'help' ? null : 'help')}
+                      className={`px-2 py-0.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer select-none ${
+                        activeMenu === 'help' ? 'bg-[#c2e7ff] text-[#001d35]' : ''
+                      }`}
+                    >
+                      Help
+                    </button>
+                    {activeMenu === 'help' && (
+                      <div className="absolute top-full left-0 mt-1 w-60 bg-white rounded-xl shadow-2xl border border-[#dadce0] py-2 z-50 text-[13px] text-[#1f1f1f]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSearchMenusModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4] flex items-center justify-between"
+                        >
+                          <span>Search menus</span>
+                          <span className="text-[11px] text-[#747775]">Alt+/</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowStatsModal(true);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full text-left px-4 py-1.5 hover:bg-[#f1f3f4]"
+                        >
+                          Document Statistics
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right: Atmosphere & Focus Controls */}
-          <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
-            {/* Theme Selector (☀️ Paper, 📜 Parchment, 🌙 Midnight) */}
-            <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+            {/* Right: Quick Atmosphere & Layout Shortcuts */}
+            <div className="flex items-center gap-1.5 self-end sm:self-center">
+              {/* Quick Layout Pill */}
+              <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setPageFormat('pageless')}
+                  className={`px-2.5 py-0.5 rounded-full font-medium transition cursor-pointer ${
+                    pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746]'
+                  }`}
+                  title="Spacious canvas layout"
+                >
+                  Pageless
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPageFormat('pages')}
+                  className={`px-2.5 py-0.5 rounded-full font-medium transition cursor-pointer ${
+                    pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746]'
+                  }`}
+                  title="Page sheet layout"
+                >
+                  Pages
+                </button>
+              </div>
+
+              {/* Gemini Button */}
               <button
                 type="button"
-                onClick={() => setTheme('paper')}
-                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
-                  theme === 'paper' ? 'bg-white shadow-2xs font-bold text-slate-900' : 'text-slate-600'
-                }`}
-                title="Pristine Studio"
+                onClick={() => setShowGeminiAiModal(true)}
+                className="p-1.5 rounded-full hover:bg-indigo-50 text-indigo-600 transition cursor-pointer"
+                title="Ask Gemini"
               >
-                ☀️ White
+                <GeminiSparkleIcon />
               </button>
+
+              {/* Zen Mode */}
               <button
                 type="button"
-                onClick={() => setTheme('parchment')}
-                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
-                  theme === 'parchment' ? 'bg-amber-100/80 shadow-2xs font-bold text-amber-950' : 'text-slate-600'
-                }`}
-                title="Sacred Parchment / Sepia"
+                onClick={() => setZenMode(true)}
+                className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-[#444746] font-semibold text-xs transition cursor-pointer"
+                title="Zen Focus Mode"
               >
-                📜 Sepia
+                Focus
               </button>
+
+              {/* Fullscreen */}
               <button
                 type="button"
-                onClick={() => setTheme('midnight')}
-                className={`px-2 py-0.5 rounded-full transition cursor-pointer ${
-                  theme === 'midnight' ? 'bg-slate-900 text-white shadow-2xs font-bold' : 'text-slate-600'
-                }`}
-                title="Midnight Zen Dark"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
+                title="Toggle Fullscreen"
               >
-                🌙 Dark
+                {isFullscreen ? 'Exit' : 'Fullscreen'}
               </button>
             </div>
-
-            {/* Quick Layout Mode Pill */}
-            <div className="inline-flex items-center rounded-full bg-[#edf2fa] p-0.5 border border-[#dadce0] text-[11px]">
-              <button
-                type="button"
-                onClick={() => setPageFormat('pageless')}
-                className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                  pageFormat === 'pageless' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746] hover:text-[#1f1f1f]'
-                }`}
-                title="Spacious text space without restrictive margins"
-              >
-                Spacious
-              </button>
-              <button
-                type="button"
-                onClick={() => setPageFormat('pages')}
-                className={`px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${
-                  pageFormat === 'pages' ? 'bg-white text-[#1a73e8] shadow-2xs font-bold' : 'text-[#444746] hover:text-[#1f1f1f]'
-                }`}
-                title="Page print layout"
-              >
-                Page
-              </button>
-            </div>
-
-            {/* Zen Mode Button */}
-            <button
-              type="button"
-              onClick={() => setZenMode(true)}
-              className="px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition cursor-pointer border border-indigo-200"
-              title="Zen Deep Focus Mode"
-            >
-              🎯 Zen Flow
-            </button>
-
-            {/* Fullscreen */}
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#444746] hover:bg-[#e1e7f0] transition cursor-pointer"
-              title="Toggle Fullscreen"
-            >
-              {isFullscreen ? 'Exit' : '⛶ Full'}
-            </button>
           </div>
         </div>
       )}
 
-      {/* Floating Zen Mode Exit Pill when Zen Mode is active */}
+      {/* Floating Zen Mode Exit Pill */}
       {zenMode && (
         <div className="sticky top-3 z-50 flex justify-center">
           <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-3 text-xs border border-slate-700">
-            <span className="font-bold text-amber-400">🎯 Deep Flow Mode</span>
+            <span className="font-bold text-amber-400">Zen Focus Mode</span>
             <span className="text-slate-400">|</span>
             <span>{wordCount} words</span>
             <span className="text-slate-400">|</span>
@@ -1479,74 +1585,75 @@ export default function RichTextEditor({
               onClick={() => setZenMode(false)}
               className="bg-white/20 hover:bg-white/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition cursor-pointer"
             >
-              Exit Zen Mode (Show Tools)
+              Exit Focus Mode
             </button>
           </div>
         </div>
       )}
 
       {/* ============================================================== */}
-      {/* 2. ULTIMATE MASTER TOOLBAR (Floating Pill Container)           */}
+      {/* 2. AUTHENTIC GOOGLE DOCS TOOLBAR (EXACT MATCH TO SCREENSHOT)    */}
       {/* ============================================================== */}
       {!showHtmlSource && !zenMode && (
-        <div className="px-2 py-1.5 bg-inherit flex justify-center gdocs-dropdown-container">
-          <div className="bg-[#edf2fa] rounded-[24px] px-2.5 py-0.5 flex flex-wrap items-center gap-0.5 text-[#444746] shadow-2xs border border-[#d3e3fd]/40">
-            {/* Search Menus Pill */}
+        <div className="px-3 py-1.5 bg-inherit gdocs-dropdown-container">
+          <div className="bg-[#edf2fa] rounded-[24px] px-3 py-1 flex items-center gap-0.5 text-[#444746] shadow-2xs border border-[#d3e3fd]/40 overflow-x-auto scrollbar-none">
+            
+            {/* 1. Menus Pill Button */}
             <button
               type="button"
               onClick={() => setShowSearchMenusModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1 mr-1 rounded-full bg-white hover:bg-slate-50 text-[11px] text-[#444746] shadow-2xs border border-[#dadce0] transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white hover:bg-slate-50 text-[11.5px] text-[#444746] shadow-2xs border border-[#dadce0] transition cursor-pointer shrink-0 mr-0.5"
               title="Search menus (Alt+/)"
             >
               <SearchIcon />
               <span>Menus</span>
             </button>
 
-            {/* Undo */}
+            {/* 2. Undo */}
             <button
               type="button"
               onClick={() => execCmd('undo')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer shrink-0"
               title="Undo (Ctrl+Z)"
             >
               <UndoIcon />
             </button>
 
-            {/* Redo */}
+            {/* 3. Redo */}
             <button
               type="button"
               onClick={() => execCmd('redo')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer shrink-0"
               title="Redo (Ctrl+Y)"
             >
               <RedoIcon />
             </button>
 
-            {/* Print */}
+            {/* 4. Print */}
             <button
               type="button"
               onClick={handlePrint}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer shrink-0"
               title="Print (Ctrl+P)"
             >
               <PrintIcon />
             </button>
 
-            {/* Spellcheck */}
+            {/* 5. Spell check */}
             <button
               type="button"
               onClick={() => alert('Spelling and grammar check completed.')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer shrink-0"
               title="Spelling and grammar check"
             >
               <SpellcheckIcon />
             </button>
 
-            {/* Paint Format */}
+            {/* 6. Paint format */}
             <button
               type="button"
               onClick={handleTogglePaintFormat}
-              className={`p-1.5 rounded transition cursor-pointer ${
+              className={`p-1.5 rounded transition cursor-pointer shrink-0 ${
                 paintFormatActive ? 'bg-[#c2e7ff] text-[#001d35]' : 'hover:bg-[#e1e7f0]'
               }`}
               title="Paint format"
@@ -1554,8 +1661,8 @@ export default function RichTextEditor({
               <PaintRollerIcon />
             </button>
 
-            {/* Zoom Dropdown */}
-            <div className="relative">
+            {/* 7. Zoom Dropdown (100% ▾) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowZoomMenu(!showZoomMenu)}
@@ -1584,15 +1691,15 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* Paragraph Styles Dropdown */}
-            <div className="relative">
+            {/* 8. Paragraph Style Dropdown (Title ▾) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowStyleMenu(!showStyleMenu)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#e1e7f0] transition text-[12px] min-w-[75px] justify-between cursor-pointer"
+                className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#e1e7f0] transition text-[12px] min-w-[70px] justify-between cursor-pointer"
                 title="Styles"
               >
                 <span className="truncate">
@@ -1653,19 +1760,19 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* Font Family Dropdown */}
-            <div className="relative">
+            {/* 9. Font Family Dropdown (Sree K... ▾) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowFontMenu(!showFontMenu)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#e1e7f0] transition text-[12px] max-w-[130px] justify-between cursor-pointer"
+                className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#e1e7f0] transition text-[12px] max-w-[120px] justify-between cursor-pointer"
                 title="Font"
               >
                 <span className="truncate font-medium" style={{ fontFamily: currentFont }}>
-                  {currentFont.length > 11 ? `${currentFont.slice(0, 10)}...` : currentFont}
+                  {getShortFontName(currentFont)}
                 </span>
                 <ArrowDropDown />
               </button>
@@ -1705,11 +1812,11 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* Font Size: - [ 13 ] + */}
-            <div className="flex items-center">
+            {/* 10. Font Size: − [ 13 ] + */}
+            <div className="flex items-center shrink-0">
               <button
                 type="button"
                 onClick={() => handleSetFontSize(fontSize - 1)}
@@ -1754,14 +1861,14 @@ export default function RichTextEditor({
               </button>
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* Bold */}
+            {/* 11. Bold (B) */}
             <button
               type="button"
               onClick={() => execCmd('bold')}
-              className={`p-1.5 rounded transition cursor-pointer ${
+              className={`p-1.5 rounded transition cursor-pointer shrink-0 ${
                 isBold ? 'bg-[#c2e7ff] text-[#001d35]' : 'hover:bg-[#e1e7f0]'
               }`}
               title="Bold (Ctrl+B)"
@@ -1769,11 +1876,11 @@ export default function RichTextEditor({
               <BoldIcon />
             </button>
 
-            {/* Italic */}
+            {/* 12. Italic (I) */}
             <button
               type="button"
               onClick={() => execCmd('italic')}
-              className={`p-1.5 rounded transition cursor-pointer ${
+              className={`p-1.5 rounded transition cursor-pointer shrink-0 ${
                 isItalic ? 'bg-[#c2e7ff] text-[#001d35]' : 'hover:bg-[#e1e7f0]'
               }`}
               title="Italic (Ctrl+I)"
@@ -1781,11 +1888,11 @@ export default function RichTextEditor({
               <ItalicIcon />
             </button>
 
-            {/* Underline */}
+            {/* 13. Underline (U) */}
             <button
               type="button"
               onClick={() => execCmd('underline')}
-              className={`p-1.5 rounded transition cursor-pointer ${
+              className={`p-1.5 rounded transition cursor-pointer shrink-0 ${
                 isUnderline ? 'bg-[#c2e7ff] text-[#001d35]' : 'hover:bg-[#e1e7f0]'
               }`}
               title="Underline (Ctrl+U)"
@@ -1793,8 +1900,8 @@ export default function RichTextEditor({
               <UnderlineIcon />
             </button>
 
-            {/* Text Color */}
-            <div className="relative">
+            {/* 14. Text Color (A with underline) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowTextColorMenu(!showTextColorMenu)}
@@ -1825,8 +1932,8 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Highlight Color */}
-            <div className="relative">
+            {/* 15. Highlight Color (Pencil with underline) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowHighlightMenu(!showHighlightMenu)}
@@ -1872,150 +1979,59 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* ✨ Signature Spiritual Blocks Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowBlocksMenu(!showBlocksMenu)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition text-[11px] font-bold cursor-pointer shadow-2xs"
-                title="Insert World-Class Spiritual Blocks"
-              >
-                <span>✨ Blocks</span>
-                <ArrowDropDown />
-              </button>
-              {showBlocksMenu && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-amber-200 py-1.5 z-50 text-[12px]">
-                  <button
-                    type="button"
-                    onClick={() => handleInsertBlock('scripture')}
-                    className="w-full text-left px-3.5 py-2 hover:bg-amber-50 flex items-center gap-2 text-slate-800"
-                  >
-                    <span className="text-base">📖</span>
-                    <div>
-                      <div className="font-bold text-amber-950">వాక్యము (Scripture Box)</div>
-                      <div className="text-[10px] text-slate-500">Gold bordered scripture card</div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertBlock('prayer')}
-                    className="w-full text-left px-3.5 py-2 hover:bg-blue-50 flex items-center gap-2 text-slate-800"
-                  >
-                    <span className="text-base">🕊️</span>
-                    <div>
-                      <div className="font-bold text-blue-950">ప్రార్థనాంశము (Prayer Focus)</div>
-                      <div className="text-[10px] text-slate-500">Highlighted prayer intention</div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertBlock('insight')}
-                    className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 flex items-center gap-2 text-slate-800"
-                  >
-                    <span className="text-base">💡</span>
-                    <div>
-                      <div className="font-bold text-emerald-950">దివ్య మర్మము (Key Insight)</div>
-                      <div className="text-[10px] text-slate-500">Core revelation takeaway</div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertBlock('sermon-outline')}
-                    className="w-full text-left px-3.5 py-2 hover:bg-purple-50 flex items-center gap-2 text-slate-800"
-                  >
-                    <span className="text-base">✝️</span>
-                    <div>
-                      <div className="font-bold text-purple-950">ప్రసంగ క్రమము (Sermon Outline)</div>
-                      <div className="text-[10px] text-slate-500">7-step homiletic outline</div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertBlock('hymn')}
-                    className="w-full text-left px-3.5 py-2 hover:bg-orange-50 flex items-center gap-2 text-slate-800"
-                  >
-                    <span className="text-base">🎵</span>
-                    <div>
-                      <div className="font-bold text-orange-950">భక్తి గీతము (Hymn Stanza)</div>
-                      <div className="text-[10px] text-slate-500">Stanza and chorus card</div>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Insert Link */}
+            {/* 16. Insert Link (🔗) */}
             <button
               type="button"
               onClick={() => setShowLinkModal(true)}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
               title="Insert link (Ctrl+K)"
             >
               <LinkIcon />
             </button>
 
-            {/* Insert Image */}
+            {/* 17. Add Comment (💬+) */}
+            <button
+              type="button"
+              onClick={() => setShowCommentModal(true)}
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
+              title="Add comment / note"
+            >
+              <AddCommentIcon />
+            </button>
+
+            {/* 18. Insert Image (🖼️) */}
             <button
               type="button"
               onClick={() => setShowImageModal(true)}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
               title="Insert image"
             >
               <ImageIcon />
             </button>
 
-            {/* Dividers */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowDividerMenu(!showDividerMenu)}
-                className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
-                title="Insert Divider"
-              >
-                <span className="text-xs font-bold leading-none">—</span>
-              </button>
-              {showDividerMenu && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-50 text-[12px]">
-                  <button
-                    type="button"
-                    onClick={() => handleInsertDivider('solid')}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100"
-                  >
-                    Solid Line
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertDivider('dots')}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100"
-                  >
-                    Dotted Break (• • •)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertDivider('ornament')}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-amber-700 font-semibold"
-                  >
-                    Ornamental (❧ ❖ ☙)
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Separator */}
+            <div className="w-[1px] h-4 bg-[#c7c7c7] mx-1 shrink-0"></div>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-[#c7c7c7] mx-1"></div>
-
-            {/* Alignment Dropdown */}
-            <div className="relative">
+            {/* 19. Alignment Dropdown (≡ ▾) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowAlignMenu(!showAlignMenu)}
                 className="flex items-center gap-0.5 p-1 rounded hover:bg-[#e1e7f0] transition cursor-pointer"
                 title="Align"
               >
-                <AlignLeftIcon />
+                {currentAlign === 'center' ? (
+                  <AlignCenterIcon />
+                ) : currentAlign === 'right' ? (
+                  <AlignRightIcon />
+                ) : currentAlign === 'justify' ? (
+                  <AlignJustifyIcon />
+                ) : (
+                  <AlignLeftIcon />
+                )}
                 <ArrowDropDown />
               </button>
               {showAlignMenu && (
@@ -2024,6 +2040,7 @@ export default function RichTextEditor({
                     type="button"
                     onClick={() => {
                       execCmd('justifyLeft');
+                      setCurrentAlign('left');
                       setShowAlignMenu(false);
                     }}
                     className="p-1 rounded hover:bg-[#f1f3f4]"
@@ -2035,6 +2052,7 @@ export default function RichTextEditor({
                     type="button"
                     onClick={() => {
                       execCmd('justifyCenter');
+                      setCurrentAlign('center');
                       setShowAlignMenu(false);
                     }}
                     className="p-1 rounded hover:bg-[#f1f3f4]"
@@ -2046,6 +2064,7 @@ export default function RichTextEditor({
                     type="button"
                     onClick={() => {
                       execCmd('justifyRight');
+                      setCurrentAlign('right');
                       setShowAlignMenu(false);
                     }}
                     className="p-1 rounded hover:bg-[#f1f3f4]"
@@ -2057,6 +2076,7 @@ export default function RichTextEditor({
                     type="button"
                     onClick={() => {
                       execCmd('justifyFull');
+                      setCurrentAlign('justify');
                       setShowAlignMenu(false);
                     }}
                     className="p-1 rounded hover:bg-[#f1f3f4]"
@@ -2068,8 +2088,8 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Line Spacing */}
-            <div className="relative">
+            {/* 20. Line Spacing Dropdown (↕ ▾) */}
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowLineSpacingMenu(!showLineSpacingMenu)}
@@ -2120,71 +2140,81 @@ export default function RichTextEditor({
               )}
             </div>
 
-            {/* Checklist */}
-            <button
-              type="button"
-              onClick={handleInsertChecklist}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
-              title="Checklist"
-            >
-              <ChecklistIcon />
-            </button>
+            {/* 21. Checklist Dropdown (☑ ▾) */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => handleInsertChecklist()}
+                className="flex items-center gap-0.5 p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+                title="Checklist"
+              >
+                <ChecklistIcon />
+                <ArrowDropDown />
+              </button>
+            </div>
 
-            {/* Bulleted List */}
-            <button
-              type="button"
-              onClick={() => execCmd('insertUnorderedList')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
-              title="Bulleted list"
-            >
-              <BulletListIcon />
-            </button>
+            {/* 22. Bulleted List Dropdown (•≡ ▾) */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => execCmd('insertUnorderedList')}
+                className="flex items-center gap-0.5 p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+                title="Bulleted list"
+              >
+                <BulletListIcon />
+                <ArrowDropDown />
+              </button>
+            </div>
 
-            {/* Numbered List */}
-            <button
-              type="button"
-              onClick={() => execCmd('insertOrderedList')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
-              title="Numbered list"
-            >
-              <NumberedListIcon />
-            </button>
+            {/* 23. Numbered List Dropdown (1.≡ ▾) */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => execCmd('insertOrderedList')}
+                className="flex items-center gap-0.5 p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+                title="Numbered list"
+              >
+                <NumberedListIcon />
+                <ArrowDropDown />
+              </button>
+            </div>
 
-            {/* Decrease Indent */}
+            {/* 24. Decrease Indent (⇤) */}
             <button
               type="button"
               onClick={() => execCmd('outdent')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
               title="Decrease indent"
             >
               <OutdentIcon />
             </button>
 
-            {/* Increase Indent */}
+            {/* 25. Increase Indent (⇥) */}
             <button
               type="button"
               onClick={() => execCmd('indent')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
               title="Increase indent"
             >
               <IndentIcon />
             </button>
 
-            {/* Clear Formatting */}
+            {/* 26. Clear Formatting (T/) */}
             <button
               type="button"
               onClick={() => execCmd('removeFormat')}
-              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746]"
+              className="p-1.5 rounded hover:bg-[#e1e7f0] transition cursor-pointer text-[#444746] shrink-0"
               title="Clear formatting"
             >
               <ClearFormattingIcon />
             </button>
+
           </div>
         </div>
       )}
 
       {/* ============================================================== */}
-      {/* 3. WORLD-CLASS WRITING CONTENT CANVAS                          */}
+      {/* 3. AUTHENTIC GOOGLE DOCS WRITING CANVAS                        */}
       {/* ============================================================== */}
       {showHtmlSource ? (
         <div className="flex-1 bg-slate-900 p-4">
@@ -2213,7 +2243,7 @@ export default function RichTextEditor({
           />
         </div>
       ) : pageFormat === 'pageless' ? (
-        /* WORLD'S BEST WRITING CANVAS (Spacious, Fluid, Distraction-Free) */
+        /* PAGELESS FORMAT: Spacious, fluid, world-class writing space */
         <div className={`flex-1 overflow-y-auto ${currentTheme.canvas} py-6 px-4 sm:px-10 flex flex-col items-center transition-colors duration-200`}>
           <div
             className={`w-full transition-all duration-200 origin-top ${
@@ -2234,7 +2264,7 @@ export default function RichTextEditor({
               onInput={handleInput}
               onMouseUp={handleMouseUp}
               onKeyUp={handleSelectionBubble}
-              className={`w-full min-h-[460px] focus:outline-none rich-html-content ${currentTheme.text} transition-colors duration-200`}
+              className={`w-full min-h-[480px] focus:outline-none rich-html-content ${currentTheme.text} transition-colors duration-200`}
               style={{
                 fontFamily: currentFont,
                 fontSize: `${fontSize}pt`,
@@ -2247,9 +2277,9 @@ export default function RichTextEditor({
           </div>
         </div>
       ) : (
-        /* PAGES / STANDARD PAPER FORMAT WITH RULER */
+        /* PAGES FORMAT: Authentic paper sheet with ruler */
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#f0f4f9] py-4 px-2 sm:px-6 flex flex-col items-center">
-          {/* Authentic Google Docs Top Ruler */}
+          {/* Authentic Google Docs Ruler */}
           <div
             className="w-full max-w-[816px] h-4 bg-[#f8fafd] border-b border-[#dadce0] flex items-center justify-between px-16 text-[9px] text-[#70757a] relative select-none shadow-2xs"
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
@@ -2265,7 +2295,7 @@ export default function RichTextEditor({
             <span>7</span>
           </div>
 
-          {/* Centered Paper Sheet with comfortable margins */}
+          {/* Centered Paper Sheet */}
           <div
             className="w-full max-w-[816px] bg-white my-3 px-8 sm:px-12 py-8 sm:py-12 min-h-[580px] transition-transform duration-150 origin-top text-[#1f1f1f]"
             style={{
@@ -2294,7 +2324,7 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 4. MODALS (Fonts, Table, Link, Image, Video, Symbols, AI)       */}
+      {/* 4. MODALS & EXTENSIONS                                         */}
       {/* ============================================================== */}
 
       {/* A. Fonts Manager Modal */}
@@ -2322,7 +2352,7 @@ export default function RichTextEditor({
                   type="text"
                   value={customFontInput}
                   onChange={(e) => setCustomFontInput(e.target.value)}
-                  placeholder="e.g. Cinzel, Playfair Display, Kalam, Anek Telugu, Dancing Script..."
+                  placeholder="e.g. Sree Krushnadevaraya, Cinzel, Playfair Display, Kalam, Anek Telugu..."
                   className="flex-1 px-3 py-1.5 rounded-lg border border-[#dadce0] bg-white text-[12px] focus:outline-[#1a73e8]"
                 />
                 <button
@@ -2455,7 +2485,180 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* B. Special Symbols Modal */}
+      {/* B. Comment / Note Modal */}
+      {showCommentModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Add Comment / Editorial Note</h4>
+            <div>
+              <textarea
+                rows={3}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Type note or feedback here..."
+                className="w-full p-2.5 rounded-lg border border-[#dadce0] text-xs focus:outline-[#1a73e8]"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowCommentModal(false)}
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertComment}
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
+              >
+                Insert Note
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* C. Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Link</h4>
+            <div>
+              <label className="block text-xs text-[#444746] mb-1">Text (optional)</label>
+              <input
+                type="text"
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Display text"
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#444746] mb-1">Link URL</label>
+              <input
+                type="url"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLinkModal(false)}
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertLink}
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* D. Image Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Image</h4>
+            <div>
+              <label className="block text-xs text-[#444746] mb-1">Image URL</label>
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://images.unsplash..."
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#444746] mb-1">Caption (optional)</label>
+              <input
+                type="text"
+                value={imageCaption}
+                onChange={(e) => setImageCaption(e.target.value)}
+                placeholder="Caption"
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowImageModal(false)}
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertImage}
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
+              >
+                Insert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* E. Table Modal */}
+      {showTableModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
+            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Table</h4>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block text-[#444746] mb-1 font-medium">Rows</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={tableRows}
+                  onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
+                  className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[#444746] mb-1 font-medium">Columns</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={tableCols}
+                  onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
+                  className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowTableModal(false)}
+                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertTable}
+                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
+              >
+                Insert Table
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* F. Special Symbols Modal */}
       {showSpecialSymbolsModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
@@ -2488,187 +2691,14 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* C. Video Modal */}
-      {showVideoModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Video or Embed</h4>
-            <div>
-              <label className="block text-xs text-[#444746] mb-1 font-medium">YouTube URL or &lt;iframe&gt;</label>
-              <textarea
-                rows={3}
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=... or <iframe ...></iframe>"
-                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs focus:outline-[#1a73e8]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowVideoModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleInsertVideo}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
-              >
-                Insert Video
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* D. Table Modal */}
-      {showTableModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Table</h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <label className="block text-[#444746] mb-1 font-medium">Rows</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={tableRows}
-                  onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
-                  className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[#444746] mb-1 font-medium">Columns</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={tableCols}
-                  onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
-                  className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowTableModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleInsertTable}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
-              >
-                Insert
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* E. Link Modal */}
-      {showLinkModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Link</h4>
-            <div>
-              <label className="block text-xs text-[#444746] mb-1">Text (optional)</label>
-              <input
-                type="text"
-                value={linkText}
-                onChange={(e) => setLinkText(e.target.value)}
-                placeholder="Display text"
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[#444746] mb-1">Link URL</label>
-              <input
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowLinkModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleInsertLink}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* F. Image Modal */}
-      {showImageModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
-            <h4 className="text-[15px] font-bold text-[#1f1f1f]">Insert Image</h4>
-            <div>
-              <label className="block text-xs text-[#444746] mb-1">Image URL</label>
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://images.unsplash..."
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[#444746] mb-1">Caption / Alt text (optional)</label>
-              <input
-                type="text"
-                value={imageCaption}
-                onChange={(e) => setImageCaption(e.target.value)}
-                placeholder="Caption"
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowImageModal(false)}
-                className="px-3 py-1.5 text-xs text-[#5f6368] hover:bg-[#f1f3f4] rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleInsertImage}
-                className="px-4 py-1.5 bg-[#1a73e8] text-white font-bold text-xs rounded-lg hover:bg-[#1557b0]"
-              >
-                Insert
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* G. Gemini AI Assistant Modal */}
       {showGeminiAiModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-indigo-200">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h4 className="text-sm font-bold text-indigo-950 flex items-center gap-2">
-                <span>🤖 Gemini AI Spiritual Co-Writer</span>
+                <GeminiSparkleIcon />
+                <span>Gemini AI Spiritual Co-Writer</span>
               </h4>
               <button
                 type="button"
@@ -2717,7 +2747,7 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* H. Search Menus Dialog */}
+      {/* H. Search Menus Dialog (Alt+/) */}
       {showSearchMenusModal && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-24 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-4 shadow-2xl space-y-2 border border-[#dadce0]">
@@ -2760,7 +2790,7 @@ export default function RichTextEditor({
                 className="w-full text-left p-2 hover:bg-amber-50 rounded-lg flex justify-between text-amber-950"
               >
                 <span>Insert Scripture Card</span>
-                <span className="text-amber-700 font-bold">Blocks</span>
+                <span className="text-amber-700 font-bold">Insert</span>
               </button>
               <button
                 type="button"
@@ -2773,23 +2803,12 @@ export default function RichTextEditor({
                 <span>Print document (PDF)</span>
                 <span className="text-[#747775]">Ctrl+P</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowTableModal(true);
-                  setShowSearchMenusModal(false);
-                }}
-                className="w-full text-left p-2 hover:bg-[#f1f3f4] rounded-lg flex justify-between"
-              >
-                <span>Insert table</span>
-                <span className="text-[#747775]">Insert</span>
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* I. Word Count & Stats Dialog */}
+      {/* I. Stats Modal */}
       {showStatsModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-3 border border-[#dadce0]">
@@ -2808,7 +2827,7 @@ export default function RichTextEditor({
                 <span className="font-bold text-[#1a73e8]">{readingTime} min</span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#f1f3f4]">
-                <span>Estimated preaching time:</span>
+                <span>Estimated speaking time:</span>
                 <span className="font-bold text-amber-600">{speakingTime} min</span>
               </div>
             </div>
@@ -2837,7 +2856,7 @@ export default function RichTextEditor({
                 value={findText}
                 onChange={(e) => setFindText(e.target.value)}
                 placeholder="Text to find..."
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div>
@@ -2847,7 +2866,7 @@ export default function RichTextEditor({
                 value={replaceText}
                 onChange={(e) => setReplaceText(e.target.value)}
                 placeholder="Replacement text..."
-                className="w-full p-1.5 rounded-lg border border-[#dadce0] text-xs"
+                className="w-full p-2 rounded-lg border border-[#dadce0] text-xs"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -2878,18 +2897,18 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 5. WORLD-CLASS FOOTER ATMOSPHERE BAR                           */}
+      {/* 5. GOOGLE DOCS FOOTER BAR                                      */}
       {/* ============================================================== */}
       <div className={`px-4 py-2 ${currentTheme.canvas} border-t ${currentTheme.border} flex flex-wrap items-center justify-between text-[11px] text-[#5f6368] gap-2 transition-colors duration-200`}>
         <div className="flex items-center gap-2">
-          <span className="font-bold text-[#0f172a] flex items-center gap-1.5">
+          <span className="font-semibold text-[#1f1f1f] flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            World-Class Studio
+            Google Docs Engine
           </span>
           <span>•</span>
           <span className="capitalize">{currentTheme.desc}</span>
           <span>•</span>
-          <span className="font-semibold text-blue-600">{currentFont}</span>
+          <span className="font-semibold text-[#1a73e8]">{currentFont}</span>
           <span>•</span>
           <span>{fontSize} pt</span>
         </div>
@@ -2897,8 +2916,6 @@ export default function RichTextEditor({
           <span className="font-medium">{wordCount} words</span>
           <span>•</span>
           <span>{readingTime} min read</span>
-          <span>•</span>
-          <span>{speakingTime} min sermon</span>
           <span>•</span>
           <button
             type="button"

@@ -44,6 +44,9 @@ import {
   Check,
   Star,
   Globe,
+  ChevronDown,
+  Paperclip,
+  Layers,
 } from 'lucide-react';
 
 export default function DynamicPage() {
@@ -77,6 +80,10 @@ export default function DynamicPage() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [targetPages, setTargetPages] = useState([]);
+
+  // Collapsible sections for clean, simple writing experience
+  const [showMediaAttachments, setShowMediaAttachments] = useState(false);
+  const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
 
   // Flattened list of all portal subpages for multi-page assignment
   const allAvailablePages = DEFAULT_PORTAL_STRUCTURE.flatMap((cat) =>
@@ -149,6 +156,8 @@ export default function DynamicPage() {
     setDownloadUrl('');
     setWebsiteUrl('');
     setTargetPages([pageSlug]);
+    setShowMediaAttachments(false);
+    setShowMultiPageSelect(false);
     setIsFormOpen(true);
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
@@ -166,6 +175,8 @@ export default function DynamicPage() {
     setDownloadUrl(item.downloadUrl || '');
     setWebsiteUrl(item.websiteUrl || item.embedUrl || '');
     setTargetPages(item.targetPages && item.targetPages.length > 0 ? item.targetPages : [item.pageSlug || pageSlug]);
+    setShowMediaAttachments(Boolean(item.imageUrl || item.videoUrl || item.audioUrl || item.fileUrl || item.downloadUrl || item.websiteUrl || item.embedUrl));
+    setShowMultiPageSelect(false);
     setIsFormOpen(true);
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
