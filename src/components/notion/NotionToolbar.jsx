@@ -29,11 +29,14 @@ export function NotionToolbar({
   hasMedia = false,
   fontFamily = 'Inter',
   onFontChange,
+  contentFontFamily = '',
+  onContentFontChange,
 }) {
   const [icon, setIcon] = useState(initialData.icon || '📖');
   const [title, setTitle] = useState(cleanObjectReplacementChars(initialData.title || initialData.titleEn || ''));
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
+  const [fontPickerTarget, setFontPickerTarget] = useState('title'); // 'title' | 'content'
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -47,7 +50,10 @@ export function NotionToolbar({
     if (fontFamily) {
       loadGoogleFont(fontFamily);
     }
-  }, [fontFamily]);
+    if (contentFontFamily) {
+      loadGoogleFont(contentFontFamily);
+    }
+  }, [fontFamily, contentFontFamily]);
 
   const handleTitleChange = (e) => {
     const val = cleanObjectReplacementChars(e.target.value);
@@ -62,7 +68,16 @@ export function NotionToolbar({
   };
 
   const handleSelectFont = (fName) => {
-    if (onFontChange) onFontChange(fName);
+    if (fontPickerTarget === 'title') {
+      if (onFontChange) onFontChange(fName);
+      // Synchronize content font if matching or unset so both change smoothly
+      if (onContentFontChange && (!contentFontFamily || contentFontFamily === fontFamily)) {
+        onContentFontChange(fName);
+      }
+    } else {
+      if (onContentFontChange) onContentFontChange(fName);
+    }
+    setShowFontPicker(false);
   };
 
   return (
@@ -139,16 +154,19 @@ export function NotionToolbar({
           )}
         </div>
 
-        {/* Font Selector & Google Fonts Option */}
+        {/* Title Font Selector */}
         <div className="flex items-center gap-1.5">
           <Type className="w-3.5 h-3.5 text-indigo-600" />
-          <span className="font-semibold text-slate-500">Font:</span>
+          <span className="font-semibold text-slate-500">Title Font:</span>
           {editable ? (
             <button
               type="button"
-              onClick={() => setShowFontPicker(true)}
+              onClick={() => {
+                setFontPickerTarget('title');
+                setShowFontPicker(true);
+              }}
               className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-indigo-50 hover:border-indigo-300 text-[#071B3B] font-bold text-[11px] transition cursor-pointer flex items-center gap-1.5 border border-slate-200"
-              title="Change note font or add from Google Fonts"
+              title="Change title font or add from Google Fonts"
             >
               <span style={{ fontFamily: `'${fontFamily}', sans-serif` }}>{fontFamily}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -159,6 +177,35 @@ export function NotionToolbar({
               style={{ fontFamily: `'${fontFamily}', sans-serif` }}
             >
               {fontFamily}
+            </span>
+          )}
+        </div>
+
+        {/* Content Font Selector */}
+        <div className="flex items-center gap-1.5">
+          <Type className="w-3.5 h-3.5 text-amber-600" />
+          <span className="font-semibold text-slate-500">Content Font:</span>
+          {editable ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFontPickerTarget('content');
+                setShowFontPicker(true);
+              }}
+              className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-amber-50 hover:border-amber-300 text-[#071B3B] font-bold text-[11px] transition cursor-pointer flex items-center gap-1.5 border border-slate-200"
+              title="Change body/content font or add from Google Fonts"
+            >
+              <span style={{ fontFamily: `'${contentFontFamily || fontFamily}', sans-serif` }}>
+                {contentFontFamily || fontFamily}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+          ) : (
+            <span
+              className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold text-[11px]"
+              style={{ fontFamily: `'${contentFontFamily || fontFamily}', sans-serif` }}
+            >
+              {contentFontFamily || fontFamily}
             </span>
           )}
         </div>
@@ -221,10 +268,10 @@ export function NotionToolbar({
       {/* Font Picker Modal */}
       {showFontPicker && editable && (
         <FontPickerModal
-          selectedFont={fontFamily}
+          selectedFont={fontPickerTarget === 'title' ? fontFamily : (contentFontFamily || fontFamily)}
           onSelectFont={handleSelectFont}
           onClose={() => setShowFontPicker(false)}
-          title="Select Note Font & Google Fonts"
+          title={fontPickerTarget === 'title' ? 'Select Title Font & Google Fonts' : 'Select Content Font & Google Fonts'}
         />
       )}
     </div>

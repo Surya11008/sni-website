@@ -144,6 +144,7 @@ export default function DynamicPage() {
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
   const [fontFamily, setFontFamily] = useState('Inter');
+  const [contentFontFamily, setContentFontFamily] = useState('Inter');
 
   // Calendar tracking & scheduling states
   const isCalendarPage = ['new-updates', 'events', 'schedule'].includes(pageSlug);
@@ -342,6 +343,7 @@ export default function DynamicPage() {
       // Preload Google Fonts for all items
       items.forEach((item) => {
         if (item.fontFamily) loadGoogleFont(item.fontFamily);
+        if (item.contentFontFamily) loadGoogleFont(item.contentFontFamily);
       });
     } catch (err) {
       console.warn('Error fetching contents:', err);
@@ -365,6 +367,7 @@ export default function DynamicPage() {
     setDesc('');
     setIcon(pageSlug === 'schedule' ? '🗓️' : pageSlug === 'events' ? '✨' : '📖');
     setFontFamily('Inter');
+    setContentFontFamily('Inter');
     setImageUrl('');
     setVideoUrl('');
     setAudioUrl('');
@@ -395,7 +398,9 @@ export default function DynamicPage() {
     setDesc(cleanObjectReplacementChars(item.desc || item.content || item.descEn || item.descTe || ''));
     setIcon(item.icon || '📖');
     setFontFamily(item.fontFamily || 'Inter');
+    setContentFontFamily(item.contentFontFamily || item.fontFamily || 'Inter');
     if (item.fontFamily) loadGoogleFont(item.fontFamily);
+    if (item.contentFontFamily) loadGoogleFont(item.contentFontFamily);
     setImageUrl(item.imageUrl || '');
     setVideoUrl(item.videoUrl || '');
     setAudioUrl(item.audioUrl || '');
@@ -483,6 +488,7 @@ export default function DynamicPage() {
         targetPages: targetPages.length > 0 ? targetPages : [pageSlug],
         icon: icon || '📖',
         fontFamily: fontFamily || 'Inter',
+        contentFontFamily: contentFontFamily || fontFamily || 'Inter',
         title: cleanTitle,
         titleEn: cleanTitle,
         titleTe: cleanTitle,
@@ -815,6 +821,8 @@ export default function DynamicPage() {
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
                 fontFamily={fontFamily}
                 onFontChange={setFontFamily}
+                contentFontFamily={contentFontFamily}
+                onContentFontChange={setContentFontFamily}
               />
 
               {/* Schedule & Calendar Details Drawer */}
@@ -1244,6 +1252,7 @@ export default function DynamicPage() {
                   onChange={setDesc}
                   editable={true}
                   fontFamily={fontFamily}
+                  contentFontFamily={contentFontFamily}
                 />
               </div>
 
@@ -1476,6 +1485,7 @@ export default function DynamicPage() {
                 content={getDesc(activeArticle)}
                 isTelugu={isTelugu}
                 fontFamily={activeArticle.fontFamily}
+                contentFontFamily={activeArticle.contentFontFamily || activeArticle.fontFamily}
                 className="text-base sm:text-lg"
               />
             </div>

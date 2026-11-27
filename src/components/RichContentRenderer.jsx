@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
 import { NotionLinkPreview, NotionEmbed, getEmbedInfo } from './notion';
 import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManager';
@@ -17,12 +17,22 @@ import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManage
  * - Notion Web Bookmarks & Live Embeds
  * - Raw HTML from Google Docs & BlockNote Rich Text Editor
  */
-export default function RichContentRenderer({ content = '', isTelugu = false, className = '', fontFamily = '' }) {
+export default function RichContentRenderer({
+  content = '',
+  isTelugu = false,
+  className = '',
+  fontFamily = '',
+  contentFontFamily = '',
+}) {
+  const activeFont = contentFontFamily || fontFamily || '';
+  const rendererIdRef = useRef(`rich-renderer-${Math.random().toString(36).substr(2, 9)}`);
+  const rendererId = rendererIdRef.current;
+
   useEffect(() => {
-    if (fontFamily) {
-      loadGoogleFont(fontFamily);
+    if (activeFont) {
+      loadGoogleFont(activeFont);
     }
-  }, [fontFamily]);
+  }, [activeFont]);
 
   if (!content) return null;
 
@@ -30,17 +40,41 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
   const sanitizedContent = cleanObjectReplacementChars(content);
   if (!sanitizedContent) return null;
 
-  const fontStyle = fontFamily ? { fontFamily: `'${fontFamily}', sans-serif` } : undefined;
+  const fontStyle = activeFont ? { fontFamily: `'${activeFont}', sans-serif` } : undefined;
 
   // Check if content is HTML (from BlockNote or Google Docs)
   const isHtml = /<[a-z][\s\S]*>/i.test(sanitizedContent);
   if (isHtml) {
     return (
       <div
+        id={rendererId}
         className={`rich-html-content text-slate-800 text-base sm:text-lg leading-relaxed sm:leading-loose ${className}`}
         style={fontStyle}
-        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-      />
+      >
+        {activeFont && (
+          <style>{`
+            #${rendererId},
+            #${rendererId} *,
+            #${rendererId} p,
+            #${rendererId} span,
+            #${rendererId} div,
+            #${rendererId} h1,
+            #${rendererId} h2,
+            #${rendererId} h3,
+            #${rendererId} h4,
+            #${rendererId} h5,
+            #${rendererId} h6,
+            #${rendererId} li,
+            #${rendererId} blockquote,
+            #${rendererId} table,
+            #${rendererId} td,
+            #${rendererId} th {
+              font-family: '${activeFont}', sans-serif !important;
+            }
+          `}</style>
+        )}
+        <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+      </div>
     );
   }
 
@@ -263,11 +297,31 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
 
   return (
     <div
-      className={`space-y-5 text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
-        isTelugu ? 'font-telugu' : ''
+      id={rendererId}
+      className={`rich-content-container space-y-5 text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
+        isTelugu && !activeFont ? 'font-telugu' : ''
       } ${className}`}
       style={fontStyle}
     >
+      {activeFont && (
+        <style>{`
+          #${rendererId},
+          #${rendererId} *,
+          #${rendererId} p,
+          #${rendererId} span,
+          #${rendererId} div,
+          #${rendererId} h1,
+          #${rendererId} h2,
+          #${rendererId} h3,
+          #${rendererId} h4,
+          #${rendererId} h5,
+          #${rendererId} h6,
+          #${rendererId} li,
+          #${rendererId} blockquote {
+            font-family: '${activeFont}', sans-serif !important;
+          }
+        `}</style>
+      )}
       {blocks.map((block, idx) => {
         switch (block.type) {
           case 'video':

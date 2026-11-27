@@ -41,11 +41,23 @@ iframe, video, embed, object {
 /* Notion BlockNote Editor font inheritance & typography */
 .notion-blocknote-editor,
 .bn-container,
+.bn-default-styles,
 .bn-editor,
+.bn-block,
 .bn-block-content,
 .bn-inline-content,
 [data-content-editable-leaf],
-.notion-editor-wrapper {
+.notion-editor-wrapper,
+.notion-editor-wrapper p,
+.notion-editor-wrapper span,
+.notion-editor-wrapper div,
+.notion-editor-wrapper h1,
+.notion-editor-wrapper h2,
+.notion-editor-wrapper h3,
+.notion-editor-wrapper h4,
+.notion-editor-wrapper h5,
+.notion-editor-wrapper h6,
+.notion-editor-wrapper li {
   font-family: inherit !important;
 }
 

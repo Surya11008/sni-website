@@ -101,6 +101,7 @@ export default function ContentDetailPage() {
   // Notion Editor states for Edit mode
   const [icon, setIcon] = useState('📖');
   const [fontFamily, setFontFamily] = useState('Inter');
+  const [contentFontFamily, setContentFontFamily] = useState('Inter');
   const [targetPages, setTargetPages] = useState([]);
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
@@ -143,7 +144,9 @@ export default function ContentDetailPage() {
             setDesc(cleanObjectReplacementChars(data.desc || data.content || data.descEn || data.descTe || ''));
             setIcon(data.icon || '📖');
             setFontFamily(data.fontFamily || 'Inter');
+            setContentFontFamily(data.contentFontFamily || data.fontFamily || 'Inter');
             if (data.fontFamily) loadGoogleFont(data.fontFamily);
+            if (data.contentFontFamily) loadGoogleFont(data.contentFontFamily);
             setImageUrl(data.imageUrl || '');
             setVideoUrl(data.videoUrl || '');
             setAudioUrl(data.audioUrl || '');
@@ -405,6 +408,7 @@ export default function ContentDetailPage() {
         descTe: cleanDesc,
         icon: icon || '📖',
         fontFamily: fontFamily || 'Inter',
+        contentFontFamily: contentFontFamily || fontFamily || 'Inter',
         targetPages: targetPages.length > 0 ? targetPages : [article.pageSlug || paramPageSlug],
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
@@ -718,6 +722,8 @@ export default function ContentDetailPage() {
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
                 fontFamily={fontFamily}
                 onFontChange={setFontFamily}
+                contentFontFamily={contentFontFamily}
+                onContentFontChange={setContentFontFamily}
               />
 
               {/* Cross-post Drawer */}
@@ -834,6 +840,7 @@ export default function ContentDetailPage() {
                   onChange={setDesc}
                   editable={true}
                   fontFamily={fontFamily}
+                  contentFontFamily={contentFontFamily}
                 />
               </div>
 
@@ -969,6 +976,7 @@ export default function ContentDetailPage() {
             content={articleDesc}
             isTelugu={isTelugu}
             fontFamily={article?.fontFamily}
+            contentFontFamily={article?.contentFontFamily || article?.fontFamily}
             className="text-base sm:text-lg"
           />
         </article>

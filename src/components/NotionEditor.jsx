@@ -11,9 +11,14 @@ export default function NotionEditor({
   editable = true,
   placeholder = "Type '/' for commands or start typing...",
   fontFamily = 'Inter',
+  contentFontFamily = '',
 }) {
   const [ready, setReady] = useState(false);
   const containerRef = useRef(null);
+  const editorIdRef = useRef(`notion-editor-${Math.random().toString(36).substr(2, 9)}`);
+  const editorId = editorIdRef.current;
+
+  const activeFont = contentFontFamily || fontFamily || 'Inter';
 
   // Initialize editor
   const editor = useCreateBlockNote({
@@ -26,10 +31,10 @@ export default function NotionEditor({
 
   // Load selected Google Font dynamically
   useEffect(() => {
-    if (fontFamily) {
-      loadGoogleFont(fontFamily);
+    if (activeFont) {
+      loadGoogleFont(activeFont);
     }
-  }, [fontFamily]);
+  }, [activeFont]);
 
   // Clean and prevent [OBJ] characters on paste
   useEffect(() => {
@@ -104,9 +109,34 @@ export default function NotionEditor({
   return (
     <div
       ref={containerRef}
+      id={editorId}
       className="notion-editor-wrapper py-2 min-h-[300px]"
-      style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}
+      style={{ fontFamily: `'${activeFont}', sans-serif` }}
     >
+      <style>{`
+        #${editorId},
+        #${editorId} .bn-container,
+        #${editorId} .bn-default-styles,
+        #${editorId} .bn-editor,
+        #${editorId} .ProseMirror,
+        #${editorId} .bn-block,
+        #${editorId} .bn-block-content,
+        #${editorId} .bn-inline-content,
+        #${editorId} [data-content-type],
+        #${editorId} p,
+        #${editorId} span,
+        #${editorId} div,
+        #${editorId} h1,
+        #${editorId} h2,
+        #${editorId} h3,
+        #${editorId} h4,
+        #${editorId} h5,
+        #${editorId} h6,
+        #${editorId} li,
+        #${editorId} blockquote {
+          font-family: '${activeFont}', sans-serif !important;
+        }
+      `}</style>
       <BlockNoteView
         editor={editor}
         editable={editable}
