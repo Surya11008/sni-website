@@ -50,6 +50,7 @@ import {
   ChevronRight,
   Sparkles,
   Layers,
+  Paperclip,
 } from 'lucide-react';
 
 const OFFICIAL_ROLES = [
@@ -145,6 +146,7 @@ export default function AdminPanel() {
   const [contentCategoryFilter, setContentCategoryFilter] = useState('all');
   const [editingContent, setEditingContent] = useState(null);
   const [isContentFormOpen, setIsContentFormOpen] = useState(false);
+  const [adminShowMedia, setAdminShowMedia] = useState(false);
   const [newContent, setNewContent] = useState({
     categorySlug: 'worship',
     pageSlug: 'sermons',
@@ -1159,6 +1161,7 @@ export default function AdminPanel() {
       downloadUrl: item.downloadUrl || '',
       websiteUrl: item.websiteUrl || item.embedUrl || '',
     });
+    setAdminShowMedia(Boolean(item.imageUrl || item.videoUrl || item.audioUrl || item.fileUrl || item.downloadUrl || item.websiteUrl || item.embedUrl));
     setIsContentFormOpen(true);
   };
 
@@ -1935,6 +1938,7 @@ export default function AdminPanel() {
                     downloadUrl: '',
                     websiteUrl: '',
                   });
+                  setAdminShowMedia(false);
                   setIsContentFormOpen(true);
                 }}
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
@@ -2021,70 +2025,92 @@ export default function AdminPanel() {
                     rows={8}
                   />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Image URL</label>
-                      <input
-                        type="url"
-                        value={newContent.imageUrl}
-                        onChange={(e) => setNewContent({ ...newContent, imageUrl: e.target.value })}
-                        placeholder="https://images.unsplash..."
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
-                      <input
-                        type="url"
-                        value={newContent.videoUrl}
-                        onChange={(e) => setNewContent({ ...newContent, videoUrl: e.target.value })}
-                        placeholder="https://youtube.com/..."
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube / Direct)</label>
-                      <input
-                        type="url"
-                        value={newContent.audioUrl}
-                        onChange={(e) => setNewContent({ ...newContent, audioUrl: e.target.value })}
-                        placeholder="https://example.com/audio.mp3"
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">File / PDF URL</label>
-                      <input
-                        type="url"
-                        value={newContent.fileUrl}
-                        onChange={(e) => setNewContent({ ...newContent, fileUrl: e.target.value })}
-                        placeholder="https://drive.google..."
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
-                      <input
-                        type="url"
-                        value={newContent.downloadUrl}
-                        onChange={(e) => setNewContent({ ...newContent, downloadUrl: e.target.value })}
-                        placeholder="https://drive.google.com/uc?export=download&id=..."
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Website URL (Embed / Interactive Link)</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={newContent.websiteUrl}
-                        onChange={(e) => setNewContent({ ...newContent, websiteUrl: e.target.value })}
-                        placeholder="https://example.com or https://..."
-                        className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs"
-                      />
-                    </div>
+                  {/* Collapsible Media & Attachments Section */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
+                    <button
+                      type="button"
+                      onClick={() => setAdminShowMedia(!adminShowMedia)}
+                      className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Paperclip className="w-4 h-4 text-[#C59B27]" />
+                        <span>Add Cover Image, Video, Audio or Links (Optional)</span>
+                        {(newContent.imageUrl || newContent.videoUrl || newContent.audioUrl || newContent.fileUrl || newContent.downloadUrl || newContent.websiteUrl) && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
+                            Attached
+                          </span>
+                        )}
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${adminShowMedia ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {adminShowMedia && (
+                      <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">Image URL</label>
+                          <input
+                            type="url"
+                            value={newContent.imageUrl}
+                            onChange={(e) => setNewContent({ ...newContent, imageUrl: e.target.value })}
+                            placeholder="https://images.unsplash..."
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
+                          <input
+                            type="url"
+                            value={newContent.videoUrl}
+                            onChange={(e) => setNewContent({ ...newContent, videoUrl: e.target.value })}
+                            placeholder="https://youtube.com/..."
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube / Direct)</label>
+                          <input
+                            type="url"
+                            value={newContent.audioUrl}
+                            onChange={(e) => setNewContent({ ...newContent, audioUrl: e.target.value })}
+                            placeholder="https://example.com/audio.mp3"
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">File / PDF URL</label>
+                          <input
+                            type="url"
+                            value={newContent.fileUrl}
+                            onChange={(e) => setNewContent({ ...newContent, fileUrl: e.target.value })}
+                            placeholder="https://drive.google..."
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
+                          <input
+                            type="url"
+                            value={newContent.downloadUrl}
+                            onChange={(e) => setNewContent({ ...newContent, downloadUrl: e.target.value })}
+                            placeholder="https://drive.google.com/uc?export=download&id=..."
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                            <Globe className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Website URL (Embed / Interactive Link)</span>
+                          </label>
+                          <input
+                            type="url"
+                            value={newContent.websiteUrl}
+                            onChange={(e) => setNewContent({ ...newContent, websiteUrl: e.target.value })}
+                            placeholder="https://example.com or https://..."
+                            className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

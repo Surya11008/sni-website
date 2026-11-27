@@ -44,6 +44,8 @@ import {
   Music,
   Download,
   Globe,
+  ChevronDown,
+  Paperclip,
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
@@ -73,6 +75,7 @@ export default function ContentDetailPage() {
   const [fileUrl, setFileUrl] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [showEditMedia, setShowEditMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isAdmin =
@@ -502,7 +505,10 @@ export default function ContentDetailPage() {
             {isAdmin && (
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => {
+                    setShowEditMedia(Boolean(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl));
+                    setIsEditing(!isEditing);
+                  }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#071B3B] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer shadow-xs"
                 >
                   <Pencil className="w-3.5 h-3.5 text-[#C59B27]" />
@@ -548,70 +554,92 @@ export default function ContentDetailPage() {
                 rows={8}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
-                  <input
-                    type="url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
-                  <input
-                    type="url"
-                    value={audioUrl}
-                    onChange={(e) => setAudioUrl(e.target.value)}
-                    placeholder="https://example.com/audio.mp3"
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive link)</label>
-                  <input
-                    type="url"
-                    value={fileUrl}
-                    onChange={(e) => setFileUrl(e.target.value)}
-                    placeholder="https://example.com/document.pdf"
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Direct Download URL (Instant download link)</label>
-                  <input
-                    type="url"
-                    value={downloadUrl}
-                    onChange={(e) => setDownloadUrl(e.target.value)}
-                    placeholder="https://drive.google.com/uc?export=download&id=..."
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Website URL (Embed / Interactive Link)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://example.com or https://..."
-                    className="w-full p-2 rounded-xl border border-slate-300 text-xs bg-white"
-                  />
-                </div>
+              {/* Collapsible Media & Attachments Section */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
+                <button
+                  type="button"
+                  onClick={() => setShowEditMedia(!showEditMedia)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-[#C59B27]" />
+                    <span>Add Cover Image, Video, Audio or Links (Optional)</span>
+                    {(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
+                        Attached
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showEditMedia ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showEditMedia && (
+                  <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
+                      <input
+                        type="url"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
+                      <input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
+                      <input
+                        type="url"
+                        value={audioUrl}
+                        onChange={(e) => setAudioUrl(e.target.value)}
+                        placeholder="https://example.com/audio.mp3"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive link)</label>
+                      <input
+                        type="url"
+                        value={fileUrl}
+                        onChange={(e) => setFileUrl(e.target.value)}
+                        placeholder="https://example.com/document.pdf"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL (Instant download link)</label>
+                      <input
+                        type="url"
+                        value={downloadUrl}
+                        onChange={(e) => setDownloadUrl(e.target.value)}
+                        placeholder="https://drive.google.com/uc?export=download&id=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Website URL (Embed / Interactive Link)</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://example.com or https://..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

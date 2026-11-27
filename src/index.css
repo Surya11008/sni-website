@@ -154,6 +154,13 @@ iframe, video, embed, object {
   line-height: 1.8;
 }
 
+.rich-html-content[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  cursor: text;
+  pointer-events: none;
+}
+
 /* Floating Hearts Animation */
 @keyframes floatHeartUp {
   0% {

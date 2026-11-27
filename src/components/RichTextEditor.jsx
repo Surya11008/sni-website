@@ -230,8 +230,12 @@ export default function RichTextEditor({
   label = 'Document Content',
   placeholder = 'Start writing your sacred message or article here...',
   rows = 14,
+  defaultSimpleMode = true,
 }) {
   const editorRef = useRef(null);
+
+  // Simple Mode vs Full Studio Mode (Default: Simple Mode for effortless, fast writing)
+  const [isSimpleMode, setIsSimpleMode] = useState(defaultSimpleMode);
 
   // Layout & Ambiance States
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -861,7 +865,7 @@ export default function RichTextEditor({
       {/* ============================================================== */}
       {/* 1. GOOGLE DOCS TOP ROW: Menus (File, Edit, View...) & Title     */}
       {/* ============================================================== */}
-      {!zenMode && (
+      {!zenMode && !isSimpleMode && (
         <div className="bg-white px-4 pt-2 pb-1 border-b border-[#dadce0] gdocs-dropdown-container">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             {/* Left: Google Docs Logo + Doc Title + Menu Bar */}
@@ -1592,9 +1596,167 @@ export default function RichTextEditor({
       )}
 
       {/* ============================================================== */}
-      {/* 2. AUTHENTIC GOOGLE DOCS TOOLBAR (EXACT MATCH TO SCREENSHOT)    */}
+      {/* 2. TOOLBARS                                                    */}
       {/* ============================================================== */}
-      {!showHtmlSource && !zenMode && (
+      {/* A. SIMPLE MODE TOOLBAR (Clean, modern & effortless) */}
+      {isSimpleMode && !zenMode && (
+        <div className="bg-slate-50/95 border-b border-slate-200/90 px-3 py-2 flex flex-wrap items-center justify-between gap-2 select-none">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Paragraph / Heading Style */}
+            <select
+              value={currentStyle}
+              onChange={(e) => handleSetParagraphStyle(e.target.value)}
+              className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer shadow-2xs"
+              title="Heading / Paragraph Style"
+            >
+              <option value="p">Normal Text</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
+
+            {/* Font Selector */}
+            <select
+              value={currentFont}
+              onChange={(e) => handleSelectFont(e.target.value)}
+              className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer shadow-2xs max-w-[155px] truncate"
+              title="Font Family"
+            >
+              <option value="Sri Krushnadevaraya">Sri Krushnadevaraya (తెలుగు)</option>
+              <option value="Noto Sans Telugu">Noto Sans Telugu (తెలుగు)</option>
+              <option value="Suranna">Suranna (తెలుగు)</option>
+              <option value="Ramabhadra">Ramabhadra (తెలుగు)</option>
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Playfair Display">Playfair Display</option>
+            </select>
+
+            <div className="w-px h-4 bg-slate-300 mx-0.5"></div>
+
+            {/* Bold, Italic, Underline */}
+            <button
+              type="button"
+              onClick={() => execCmd('bold')}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold transition cursor-pointer ${
+                isBold ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+              title="Bold (Ctrl+B)"
+            >
+              B
+            </button>
+            <button
+              type="button"
+              onClick={() => execCmd('italic')}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs italic transition cursor-pointer ${
+                isItalic ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+              title="Italic (Ctrl+I)"
+            >
+              I
+            </button>
+            <button
+              type="button"
+              onClick={() => execCmd('underline')}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs underline transition cursor-pointer ${
+                isUnderline ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+              title="Underline (Ctrl+U)"
+            >
+              U
+            </button>
+
+            <div className="w-px h-4 bg-slate-300 mx-0.5"></div>
+
+            {/* Bullet and Numbered Lists */}
+            <button
+              type="button"
+              onClick={() => execCmd('insertUnorderedList')}
+              className="px-2 py-1 flex items-center gap-1 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer"
+              title="Bullet List"
+            >
+              <span>• List</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => execCmd('insertOrderedList')}
+              className="px-2 py-1 flex items-center gap-1 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer"
+              title="Numbered List"
+            >
+              <span>1. List</span>
+            </button>
+
+            <div className="w-px h-4 bg-slate-300 mx-0.5"></div>
+
+            {/* Scripture Quote */}
+            <button
+              type="button"
+              onClick={() => handleInsertBlock('scripture')}
+              className="px-2.5 py-1 flex items-center gap-1 rounded-lg text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 transition cursor-pointer"
+              title="Insert Scripture Quote Block"
+            >
+              <span>📖 Quote</span>
+            </button>
+
+            {/* Link */}
+            <button
+              type="button"
+              onClick={() => setShowLinkModal(true)}
+              className="px-2 py-1 flex items-center gap-1 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer"
+              title="Insert Link"
+            >
+              <span>🔗 Link</span>
+            </button>
+
+            {/* Image */}
+            <button
+              type="button"
+              onClick={() => setShowImageModal(true)}
+              className="px-2 py-1 flex items-center gap-1 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer"
+              title="Insert Image"
+            >
+              <span>🖼️ Image</span>
+            </button>
+
+            <div className="w-px h-4 bg-slate-300 mx-0.5"></div>
+
+            {/* Undo / Redo */}
+            <button
+              type="button"
+              onClick={() => execCmd('undo')}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer"
+              title="Undo"
+            >
+              ↶
+            </button>
+            <button
+              type="button"
+              onClick={() => execCmd('redo')}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer"
+              title="Redo"
+            >
+              ↷
+            </button>
+          </div>
+
+          {/* Right: Word Count & Mode Switch */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
+              {wordCount} words
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSimpleMode(false)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold transition shadow-2xs cursor-pointer"
+              title="Switch to Full Studio Mode with all Google Docs menus & advanced tools"
+            >
+              <span>🛠️ Studio Mode</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* B. AUTHENTIC GOOGLE DOCS TOOLBAR (When in Studio Mode) */}
+      {!isSimpleMode && !showHtmlSource && !zenMode && (
         <div className="px-3 py-1.5 bg-inherit gdocs-dropdown-container">
           <div className="bg-[#edf2fa] rounded-[24px] px-3 py-1 flex items-center gap-0.5 text-[#444746] shadow-2xs border border-[#d3e3fd]/40 overflow-x-auto scrollbar-none">
             
@@ -2209,6 +2371,16 @@ export default function RichTextEditor({
               <ClearFormattingIcon />
             </button>
 
+            {/* Switch back to Simple Mode */}
+            <button
+              type="button"
+              onClick={() => setIsSimpleMode(true)}
+              className="ml-2 px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-[#071B3B] border border-amber-300 text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1 shrink-0"
+              title="Return to clean, simple writing mode"
+            >
+              <span>✨ Simple Mode</span>
+            </button>
+
           </div>
         </div>
       )}
@@ -2240,6 +2412,24 @@ export default function RichTextEditor({
             }}
             className="w-full h-full p-4 font-mono text-xs text-emerald-400 bg-slate-950 rounded border border-slate-800 focus:outline-none resize-y"
             placeholder="Edit raw HTML code..."
+          />
+        </div>
+      ) : isSimpleMode ? (
+        /* SIMPLE WRITING CANVAS (Clean, spacious, fast & effortless) */
+        <div className="p-4 sm:p-6 bg-white min-h-[380px] flex flex-col">
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={handleInput}
+            onMouseUp={handleMouseUp}
+            onKeyUp={handleSelectionBubble}
+            className="w-full min-h-[340px] focus:outline-none rich-html-content text-slate-800 text-sm sm:text-base leading-relaxed"
+            style={{
+              fontFamily: currentFont,
+              caretColor: '#C59B27',
+              lineHeight: 1.85,
+            }}
+            data-placeholder={placeholder}
           />
         </div>
       ) : pageFormat === 'pageless' ? (

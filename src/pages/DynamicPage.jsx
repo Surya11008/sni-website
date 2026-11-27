@@ -352,15 +352,15 @@ export default function DynamicPage() {
           <div className="mb-12 bg-white rounded-3xl border-2 border-[#F4B942]/50 p-6 sm:p-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center font-bold shadow-xs">
                   {editingItem ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[#071B3B]">
-                    {editingItem ? `Edit Content: "${getText(editingItem, 'title')}"` : `Add New Content to "${pageTitle}"`}
+                    {editingItem ? `Edit: ${getText(editingItem, 'title')}` : `New Content in "${pageTitle}"`}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Use full rich-text tools, headings, blockquotes, images, and videos.
+                    Write cleanly and easily. Full Telugu and English formatting supported natively.
                   </p>
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function DynamicPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveContent} className="space-y-6">
+            <form onSubmit={handleSaveContent} className="space-y-5">
               {/* Single Unified Title */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -384,131 +384,158 @@ export default function DynamicPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter content title..."
-                  className="w-full p-3 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 font-medium"
+                  placeholder="Enter article title..."
+                  className="w-full p-3 rounded-2xl border border-slate-300 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 transition shadow-2xs"
                   required
                 />
               </div>
 
               {/* Single Unified Rich Content Editor */}
               <RichTextEditor
-                label="Content (Google Docs Styled WYSIWYG Editor)"
+                label="Content"
                 value={desc}
                 onChange={setDesc}
-                placeholder="Write or paste your article content here. Formatting, tables, font styles, colors, and lists are preserved natively..."
-                rows={9}
+                placeholder="Start typing your article here... (Telugu, English, lists, scriptures and links supported)"
+                rows={10}
               />
 
-              {/* Multiple Pages Connection Selector */}
-              <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200">
-                <label className="block text-xs font-bold text-[#071B3B] mb-1">
-                  Connect to Multiple Pages
-                </label>
-                <p className="text-[11px] text-slate-500 mb-3">
-                  Select which pages this content should appear on:
-                </p>
-                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
-                  {allAvailablePages.map((p) => {
-                    const isSelected = targetPages.includes(p.pageSlug);
-                    return (
-                      <button
-                        key={`${p.categorySlug}-${p.pageSlug}`}
-                        type="button"
-                        onClick={() => toggleTargetPage(p.pageSlug)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
-                          isSelected
-                            ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
-                        <span>{p.title}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Collapsible Media & Attachments Section */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
+                <button
+                  type="button"
+                  onClick={() => setShowMediaAttachments(!showMediaAttachments)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-[#C59B27]" />
+                    <span>Add Cover Image, Video, Audio or Links (Optional)</span>
+                    {(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
+                        Attached
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showMediaAttachments ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showMediaAttachments && (
+                  <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
+                      <input
+                        type="url"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
+                      <input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
+                      <input
+                        type="url"
+                        value={audioUrl}
+                        onChange={(e) => setAudioUrl(e.target.value)}
+                        placeholder="https://example.com/audio.mp3"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive)</label>
+                      <input
+                        type="url"
+                        value={fileUrl}
+                        onChange={(e) => setFileUrl(e.target.value)}
+                        placeholder="https://drive.google.com/... or /docs/..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
+                      <input
+                        type="url"
+                        value={downloadUrl}
+                        onChange={(e) => setDownloadUrl(e.target.value)}
+                        placeholder="https://drive.google.com/uc?export=download&id=..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Website URL (Embed / Interactive Link)</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://example.com or https://..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Media & URL Attachments: Image, Video, Audio, Document, Download */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Image Cover URL (optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
+              {/* Collapsible Publish to Other Pages Section */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
+                <button
+                  type="button"
+                  onClick={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-indigo-600" />
+                    <span>Publish to other pages also (Optional)</span>
+                    <span className="text-[11px] text-slate-400 font-normal">
+                      (Active: <strong className="text-slate-700">{pageTitle}</strong>)
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showMultiPageSelect ? 'rotate-180' : ''}`} />
+                </button>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Video URL (YouTube or Direct Link)
-                  </label>
-                  <input
-                    type="url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Audio URL (YouTube or Direct Link)
-                  </label>
-                  <input
-                    type="url"
-                    value={audioUrl}
-                    onChange={(e) => setAudioUrl(e.target.value)}
-                    placeholder="https://example.com/audio.mp3"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Document / File URL (PDF, Drive)
-                  </label>
-                  <input
-                    type="url"
-                    value={fileUrl}
-                    onChange={(e) => setFileUrl(e.target.value)}
-                    placeholder="https://drive.google.com/... or /docs/..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Direct Download URL (Instant download link)
-                  </label>
-                  <input
-                    type="url"
-                    value={downloadUrl}
-                    onChange={(e) => setDownloadUrl(e.target.value)}
-                    placeholder="https://drive.google.com/uc?export=download&id=..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Website URL (Embed / Interactive Link)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://example.com or https://..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                  />
-                </div>
+                {showMultiPageSelect && (
+                  <div className="p-4 border-t border-slate-200/80 bg-white space-y-2 animate-in fade-in duration-150">
+                    <p className="text-[11px] text-slate-500">
+                      Click any pages where this article should also be displayed:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+                      {allAvailablePages.map((p) => {
+                        const isSelected = targetPages.includes(p.pageSlug);
+                        return (
+                          <button
+                            key={`${p.categorySlug}-${p.pageSlug}`}
+                            type="button"
+                            onClick={() => toggleTargetPage(p.pageSlug)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
+                              isSelected
+                                ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
+                                : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
+                            <span>{p.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -523,13 +550,16 @@ export default function DynamicPage() {
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {formSubmitting
-                    ? 'Saving...'
-                    : editingItem
-                    ? 'Save Changes'
-                    : 'Publish Content'}
+                  <Check className="w-4 h-4 text-[#F4B942]" />
+                  <span>
+                    {formSubmitting
+                      ? 'Saving...'
+                      : editingItem
+                      ? 'Save Changes'
+                      : 'Publish Content'}
+                  </span>
                 </button>
               </div>
             </form>
