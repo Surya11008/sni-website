@@ -21,7 +21,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { usePortal } from '../context/PortalContext';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
-import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionLinkPreview, NotionEmbedDrawer } from '../components/notion';
 import WATVSubNav from '../components/WATVSubNav';
 import { formatSlugToTitle } from '../config/portalStructure';
@@ -621,9 +620,7 @@ export default function ContentDetailPage() {
                   }}
                 />
               </div>
-            ) : (
-              <AudioSpeakerButton text={articleDesc} title={articleTitle} />
-            )}
+            ) : null}
           </div>
 
           <div className="flex items-center gap-3">

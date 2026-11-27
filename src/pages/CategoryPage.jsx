@@ -8,7 +8,6 @@ import { usePortal } from '../context/PortalContext';
 import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
 import WATVSubNav from '../components/WATVSubNav';
-import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import {
   Calendar,
@@ -390,11 +389,6 @@ export default function CategoryPage() {
                           {/* Card Footer */}
                           <div className="px-5 pb-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <AudioSpeakerButton
-                                buttonStyle="icon"
-                                text={itemDesc}
-                                title={itemTitle}
-                              />
                               {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                                   <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
@@ -484,7 +478,6 @@ export default function CategoryPage() {
                           </div>
 
                           <div className="flex sm:flex-col items-center gap-2 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
-                            <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
                             {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                                 <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
@@ -519,7 +512,6 @@ export default function CategoryPage() {
                           </div>
 
                           <div className="flex items-center gap-2.5 shrink-0 text-xs">
-                            <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
                             {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                                 <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />

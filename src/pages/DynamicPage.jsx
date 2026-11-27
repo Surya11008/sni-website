@@ -21,7 +21,6 @@ import PortalIcon from '../components/PortalIcon';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
-import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
 import AllEmojisPicker from '../components/common/AllEmojisPicker';
 import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManager';
@@ -1544,11 +1543,6 @@ export default function DynamicPage() {
               </button>
 
               <div className="flex items-center gap-2.5">
-                <AudioSpeakerButton
-                  text={getDesc(activeArticle)}
-                  title={getText(activeArticle, 'title')}
-                />
-
                 {isAdmin && (
                   <div className="flex items-center gap-2">
                     <button
@@ -2117,11 +2111,6 @@ export default function DynamicPage() {
                       {/* Actions / Attachments / Audio / Edit */}
                       <div className="px-6 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          <AudioSpeakerButton
-                            buttonStyle="icon"
-                            text={itemDesc}
-                            title={itemTitle}
-                          />
                           {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                               <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
@@ -2525,7 +2514,6 @@ export default function DynamicPage() {
                             <Download className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
                         {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                             <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
