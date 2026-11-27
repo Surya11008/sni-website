@@ -79,9 +79,9 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-[58px] sm:top-[64px] z-40 bg-white/95 backdrop-blur-md border-b-2 border-indigo-200/80 shadow-xs px-3 sm:px-6 md:px-8 py-2.5 sm:py-3">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-indigo-200/80 shadow-xs px-3 sm:px-5 md:px-6 py-1.5 sm:py-2">
       {/* Main Top Header: Logo on Left, Desktop Nav in Center, Stars, Language & Logout on Right */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         {/* Brand Logo & Title: ONE SINGLE LINE, NO "WELCOME TO" */}
         <div className="flex items-center gap-1.5 sm:gap-2 select-none">
           <span className="text-xl sm:text-2xl animate-cute-wiggle inline-block">⭐</span>
@@ -162,7 +162,7 @@ export default function Header() {
       </div>
 
       {/* Subheader: User Name, 11:59:59 PM Live Countdown Timer (Visible at all times), and Member Selector (Admin/Leader only) */}
-      <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+      <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
         {/* Display User Name & Role */}
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
