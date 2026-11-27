@@ -16,6 +16,8 @@ export function NotionToolbar({
   onToggleMedia,
   onToggleMultiPage,
   onOpenEmbed,
+  onToggleSchedule,
+  hasSchedule = false,
   targetPagesCount = 1,
   hasMedia = false,
 }) {
@@ -129,6 +131,24 @@ export function NotionToolbar({
             </button>
           )}
         </div>
+
+        {editable && onToggleSchedule && (
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+            <span className="font-semibold text-slate-500">Schedule:</span>
+            <button
+              type="button"
+              onClick={onToggleSchedule}
+              className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] transition cursor-pointer flex items-center gap-1 ${
+                hasSchedule
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-[#071B3B]'
+              }`}
+            >
+              {hasSchedule ? '📅 Scheduled (Edit)' : '+ Date & Time'}
+            </button>
+          </div>
+        )}
 
         {editable && onToggleMedia && (
           <div className="flex items-center gap-1.5">

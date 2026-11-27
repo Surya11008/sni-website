@@ -25,8 +25,17 @@ import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
 import WATVSubNav from '../components/WATVSubNav';
 import OnlineWorshipSection from '../components/OnlineWorshipSection';
+import CalendarScheduleHub, {
+  getItemDateStr,
+  formatReadableDate,
+  getGoogleCalendarUrl,
+  downloadICSFile,
+  EVENT_TYPES,
+  RECURRENCE_OPTIONS,
+} from '../components/CalendarScheduleHub';
 import {
   ChevronRight,
+  ChevronLeft,
   Plus,
   X,
   Calendar,
@@ -58,6 +67,16 @@ import {
   Smile,
   Tag,
   Sparkles,
+  Clock,
+  MapPin,
+  CalendarDays,
+  CalendarCheck,
+  CalendarPlus,
+  Repeat,
+  Copy,
+  CheckCheck,
+  Bell,
+  ArrowRight,
 } from 'lucide-react';
 
 // Curated Notion preset spiritual cover wallpapers
@@ -122,6 +141,21 @@ export default function DynamicPage() {
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
 
+  // Calendar tracking & scheduling states
+  const isCalendarPage = ['new-updates', 'events', 'schedule'].includes(pageSlug);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [calendarDateRange, setCalendarDateRange] = useState('all');
+  const [calendarEventType, setCalendarEventType] = useState('all');
+
+  // Form Fields for Schedule & Calendar
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [eventType, setEventType] = useState('Worship Service');
+  const [eventLocation, setEventLocation] = useState('');
+  const [recurrence, setRecurrence] = useState('none');
+  const [showCalendarScheduler, setShowCalendarScheduler] = useState(false);
+  const [copiedScheduleId, setCopiedScheduleId] = useState(null);
+
   const isAdmin = userProfile?.role === 'admin';
 
   // Load category and page definitions from real-time portalStructure
@@ -130,6 +164,14 @@ export default function DynamicPage() {
     setPageInfo(info);
     setActiveArticle(null);
     setIsFormOpen(false);
+    setSelectedCalendarDate(null);
+    setCalendarDateRange('all');
+    setCalendarEventType('all');
+    if (pageSlug === 'schedule') {
+      setViewMode('calendar');
+    } else if (['new-updates', 'events'].includes(pageSlug)) {
+      setViewMode('list');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [categorySlug, pageSlug, portalStructure]);
 
@@ -171,12 +213,12 @@ export default function DynamicPage() {
     }
   }, [pageSlug]);
 
-  // Open Form for Adding New Content
-  const handleOpenAddForm = () => {
+  // Open Form for Adding New Content (Supports pre-filling date from Calendar)
+  const handleOpenAddForm = (initialDateStr = null) => {
     setEditingItem(null);
     setTitle('');
     setDesc('');
-    setIcon('📖');
+    setIcon(pageSlug === 'schedule' ? '🗓️' : pageSlug === 'events' ? '✨' : '📖');
     setImageUrl('');
     setVideoUrl('');
     setAudioUrl('');
@@ -184,6 +226,12 @@ export default function DynamicPage() {
     setDownloadUrl('');
     setWebsiteUrl('');
     setTargetPages([pageSlug]);
+    setEventDate(typeof initialDateStr === 'string' ? initialDateStr : '');
+    setEventTime('');
+    setEventType(pageSlug === 'events' ? 'Sacred Assembly' : 'Worship Service');
+    setEventLocation('');
+    setRecurrence('none');
+    setShowCalendarScheduler(Boolean(initialDateStr) || isCalendarPage);
     setShowMediaAttachments(false);
     setShowMultiPageSelect(false);
     setShowCoverPicker(false);
@@ -206,6 +254,12 @@ export default function DynamicPage() {
     setDownloadUrl(item.downloadUrl || '');
     setWebsiteUrl(item.websiteUrl || item.embedUrl || '');
     setTargetPages(item.targetPages && item.targetPages.length > 0 ? item.targetPages : [item.pageSlug || pageSlug]);
+    setEventDate(item.eventDate || item.date || '');
+    setEventTime(item.eventTime || item.time || '');
+    setEventType(item.eventType || 'Worship Service');
+    setEventLocation(item.eventLocation || item.location || '');
+    setRecurrence(item.recurrence || 'none');
+    setShowCalendarScheduler(Boolean(item.eventDate || item.eventTime || isCalendarPage));
     setShowMediaAttachments(Boolean(item.videoUrl || item.audioUrl || item.fileUrl || item.downloadUrl || item.websiteUrl || item.embedUrl));
     setShowMultiPageSelect(false);
     setShowCoverPicker(false);
@@ -286,6 +340,11 @@ export default function DynamicPage() {
         downloadUrl: downloadUrl.trim() || null,
         websiteUrl: websiteUrl.trim() || null,
         embedUrl: websiteUrl.trim() || null,
+        eventDate: eventDate.trim() || null,
+        eventTime: eventTime.trim() || null,
+        eventType: eventType || 'Worship Service',
+        eventLocation: eventLocation.trim() || null,
+        recurrence: recurrence || 'none',
         updatedAt: serverTimestamp(),
       };
 
@@ -313,6 +372,25 @@ export default function DynamicPage() {
     } finally {
       setFormSubmitting(false);
     }
+  };
+
+  // Copy schedule details
+  const handleCopySchedule = (item, e) => {
+    if (e) e.stopPropagation();
+    const dateStr = getItemDateStr(item) || 'Upcoming';
+    const text = [
+      `📅 ${item.title || item.titleEn}`,
+      item.eventType ? `📌 Type: ${item.eventType}` : '',
+      `🗓 Date: ${dateStr}`,
+      item.eventTime ? `⏰ Time: ${item.eventTime}` : '',
+      item.eventLocation ? `📍 Venue: ${item.eventLocation}` : '',
+      item.desc ? `\n${item.desc.replace(/<[^>]*>/g, '').slice(0, 160)}...` : '',
+      `\n🔗 ${window.location.origin}/page/${categorySlug}/${pageSlug}`,
+    ].filter(Boolean).join('\n');
+
+    navigator.clipboard.writeText(text);
+    setCopiedScheduleId(item.id);
+    setTimeout(() => setCopiedScheduleId(null), 2500);
   };
 
   // Handle deleting content by Admin
@@ -346,6 +424,32 @@ export default function DynamicPage() {
     if (filterType === 'file') return Boolean(item.fileUrl || item.downloadUrl);
     if (filterType === 'link') return Boolean(item.websiteUrl || item.embedUrl);
 
+    // Calendar Date Filtering (for New Updates, Events, Schedule)
+    const itemDateStr = getItemDateStr(item);
+
+    if (selectedCalendarDate) {
+      if (itemDateStr !== selectedCalendarDate) return false;
+    }
+
+    if (calendarDateRange !== 'all' && itemDateStr) {
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      if (calendarDateRange === 'today') {
+        if (itemDateStr !== today) return false;
+      } else if (calendarDateRange === 'upcoming') {
+        if (itemDateStr < today) return false;
+      } else if (calendarDateRange === 'past') {
+        if (itemDateStr >= today) return false;
+      } else if (calendarDateRange === 'this_month') {
+        const monthPrefix = today.slice(0, 7);
+        if (!itemDateStr.startsWith(monthPrefix)) return false;
+      }
+    }
+
+    if (calendarEventType !== 'all') {
+      if ((item.eventType || 'Worship Service') !== calendarEventType) return false;
+    }
+
     return true;
   });
 
@@ -363,6 +467,11 @@ export default function DynamicPage() {
       const titleA = (a.title || a.titleEn || '').toLowerCase();
       const titleB = (b.title || b.titleEn || '').toLowerCase();
       return titleA.localeCompare(titleB);
+    }
+    if (sortBy === 'eventDate') {
+      const dsA = getItemDateStr(a) || '9999-99-99';
+      const dsB = getItemDateStr(b) || '9999-99-99';
+      return dsA.localeCompare(dsB);
     }
     // Default newest
     const tA = a.createdAt?.seconds || 0;
@@ -503,9 +612,105 @@ export default function DynamicPage() {
                 onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
                 onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
                 onOpenEmbed={() => setShowEmbedDrawer(true)}
+                onToggleSchedule={() => setShowCalendarScheduler(!showCalendarScheduler)}
+                hasSchedule={Boolean(eventDate || eventTime)}
                 targetPagesCount={targetPages.length}
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
               />
+
+              {/* Schedule & Calendar Details Drawer */}
+              {(showCalendarScheduler || isCalendarPage) && (
+                <div className="mx-6 md:mx-12 mt-3 p-5 rounded-3xl bg-gradient-to-br from-amber-50/60 via-white to-slate-50 border border-amber-200/90 shadow-xs space-y-4 text-xs animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between border-b border-amber-200/60 pb-2.5">
+                    <div className="flex items-center gap-2 font-black text-slate-800">
+                      <CalendarDays className="w-4 h-4 text-[#C59B27]" />
+                      <span className="text-sm">📅 Schedule & Calendar Details (తేదీ & సమయ పట్టిక)</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      Calendar Integration
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Event / Schedule Date (తేదీ)</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={eventDate}
+                        onChange={(e) => setEventDate(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Time / Hours (సమయం)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={eventTime}
+                        onChange={(e) => setEventTime(e.target.value)}
+                        placeholder="e.g. 10:00 AM - 12:30 PM"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Category / Event Type</span>
+                      </label>
+                      <select
+                        value={eventType}
+                        onChange={(e) => setEventType(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                      >
+                        {EVENT_TYPES.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.icon} {t.labelEn} ({t.labelTe})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Venue / Location (స్థలం)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={eventLocation}
+                        onChange={(e) => setEventLocation(e.target.value)}
+                        placeholder="e.g. Main Fellowship Hall, Upper Room"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                        <Repeat className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Recurrence (పునరావృతం)</span>
+                      </label>
+                      <select
+                        value={recurrence}
+                        onChange={(e) => setRecurrence(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                      >
+                        {RECURRENCE_OPTIONS.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Cross-post Drawer */}
               {showMultiPageSelect && (
@@ -727,6 +932,81 @@ export default function DynamicPage() {
               </h1>
             </div>
 
+            {/* Sacred Schedule & Calendar Details Banner (If scheduled item) */}
+            {(activeArticle.eventDate || activeArticle.eventTime || activeArticle.eventLocation) && (
+              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-50/80 via-white to-slate-50 border-2 border-[#C59B27]/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-3 py-0.5 rounded-full bg-[#071B3B] text-[#F4B942] text-[10px] font-black uppercase tracking-wider">
+                      📅 Scheduled Service / Event
+                    </span>
+                    {activeArticle.eventType && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-[10px] font-bold">
+                        {activeArticle.eventType}
+                      </span>
+                    )}
+                    {activeArticle.recurrence && activeArticle.recurrence !== 'none' && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
+                        Repeat: {activeArticle.recurrence.replace('weekly_', '').toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs sm:text-sm text-slate-800 font-bold flex-wrap">
+                    {activeArticle.eventDate && (
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 text-[#C59B27]" />
+                        <span>{formatReadableDate(activeArticle.eventDate, isTelugu)}</span>
+                      </span>
+                    )}
+                    {activeArticle.eventTime && (
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-[#C59B27]" />
+                        <span>{activeArticle.eventTime}</span>
+                      </span>
+                    )}
+                    {activeArticle.eventLocation && (
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <MapPin className="w-4 h-4 text-rose-500" />
+                        <span>{activeArticle.eventLocation}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <a
+                    href={getGoogleCalendarUrl(activeArticle)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <CalendarPlus className="w-3.5 h-3.5" />
+                    <span>Add to Google Calendar</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={(e) => downloadICSFile(activeArticle, e)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200 transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#C59B27]" />
+                    <span>Download .ICS</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopySchedule(activeArticle, e)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200 transition cursor-pointer"
+                  >
+                    {copiedScheduleId === activeArticle.id ? (
+                      <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 text-slate-500" />
+                    )}
+                    <span>Copy Schedule</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Main Featured Image Banner (if available) */}
             {activeArticle.imageUrl && (
               <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-md">
@@ -913,7 +1193,28 @@ export default function DynamicPage() {
         ) : contents.length > 0 ? (
           /* Cards Grid: clicking any card opens the article in-page */
           <div className="space-y-4">
-            {/* Notion-Style Organization Controls: Search, Filter Tabs, Sort, and 4 Views */}
+            {/* Calendar & Schedule Tracking Hub for New Updates, Events & Schedule */}
+            {isCalendarPage && (
+              <CalendarScheduleHub
+                pageSlug={pageSlug}
+                pageTitle={pageTitle}
+                contents={contents}
+                selectedDate={selectedCalendarDate}
+                onSelectDate={setSelectedCalendarDate}
+                dateRangePreset={calendarDateRange}
+                onChangeDatePreset={setCalendarDateRange}
+                selectedEventType={calendarEventType}
+                onChangeEventType={setCalendarEventType}
+                onOpenAddSchedule={(dStr) => handleOpenAddForm(dStr)}
+                onOpenArticle={(item) => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
+                isAdmin={isAdmin}
+                isTelugu={isTelugu}
+                viewMode={viewMode}
+                onToggleViewMode={setViewMode}
+              />
+            )}
+
+            {/* Notion-Style Organization Controls: Search, Filter Tabs, Sort, and 5 Views */}
             <div className="space-y-3 border-b border-slate-200 pb-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 {/* Search Bar */}
@@ -946,11 +1247,24 @@ export default function DynamicPage() {
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
+                    <option value="eventDate">Schedule Date (Earliest First)</option>
                     <option value="title">Alphabetical (A - Z)</option>
                   </select>
 
-                  {/* 4 Notion Views: Grid, List, Table, Compact */}
+                  {/* 5 Views: Calendar, Grid, List, Table, Compact */}
                   <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('calendar')}
+                      className={`p-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                        viewMode === 'calendar'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Calendar & Timeline View"
+                    >
+                      <CalendarDays className="w-4 h-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
@@ -1482,10 +1796,34 @@ export default function DynamicPage() {
                           <h4 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-[#071B3B] truncate">
                             {itemTitle}
                           </h4>
+                          {(item.eventDate || item.eventTime) && (
+                            <span className="text-[11px] font-semibold text-amber-700 block truncate">
+                              📅 {formatReadableDate(item.eventDate, isTelugu)} {item.eventTime ? `• ${item.eventTime}` : ''}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0 text-xs">
+                      <div className="flex items-center gap-2 shrink-0 text-xs">
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <a
+                            href={getGoogleCalendarUrl(item)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-slate-400 hover:text-indigo-600 rounded transition"
+                            title="Add to Google Calendar"
+                          >
+                            <CalendarPlus className="w-3.5 h-3.5" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={(e) => downloadICSFile(item, e)}
+                            className="p-1 text-slate-400 hover:text-amber-600 rounded transition cursor-pointer"
+                            title="Download .ICS file"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                         <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
                         {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
@@ -1520,10 +1858,216 @@ export default function DynamicPage() {
                 })}
               </div>
             )}
+
+            {/* CALENDAR & TIMELINE AGENDA VIEW */}
+            {viewMode === 'calendar' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <CalendarCheck className="w-5 h-5 text-[#C59B27]" />
+                    <h3 className="text-base sm:text-lg font-black text-[#071B3B]">
+                      {selectedCalendarDate
+                        ? `Schedules for ${formatReadableDate(selectedCalendarDate, isTelugu)}`
+                        : 'Upcoming Schedule Timeline'}
+                    </h3>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      {displayContents.length} {displayContents.length === 1 ? 'item' : 'items'}
+                    </span>
+                  </div>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddForm(selectedCalendarDate)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold transition shadow-xs cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Add Schedule</span>
+                    </button>
+                  )}
+                </div>
+
+                {displayContents.length === 0 ? (
+                  <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-12 text-center space-y-3">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center">
+                      <CalendarDays className="w-7 h-7" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-800">
+                      {selectedCalendarDate ? 'No schedules found on this date' : 'No upcoming schedules available'}
+                    </h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      {selectedCalendarDate
+                        ? `There are no scheduled worship services or events recorded for ${formatReadableDate(selectedCalendarDate, isTelugu)}.`
+                        : 'Use the calendar controls above to explore dates or schedule a new service.'}
+                    </p>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAddForm(selectedCalendarDate)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-black uppercase tracking-wider transition shadow-sm cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                        <span>Schedule on this Date</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {displayContents.map((item) => {
+                      const itemTitle = getText(item, 'title');
+                      const itemDesc = getDesc(item).replace(/<[^>]*>/g, '');
+                      const itemDateStr = getItemDateStr(item);
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
+                          className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:-translate-y-1 hover:border-[#C59B27]/60"
+                        >
+                          <div className="space-y-3">
+                            {/* Card Top Pill: Date, Time & Event Type */}
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              {item.eventType && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200/80 text-[10px] font-black uppercase tracking-wider">
+                                  <span>📌 {item.eventType}</span>
+                                </span>
+                              )}
+                              {item.isPinned && (
+                                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-[#071B3B] font-extrabold text-[10px]">
+                                  📌 Pinned
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Schedule Date & Time Highlighting */}
+                            <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/30 flex items-center justify-between gap-2">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-1.5 text-xs font-black text-[#071B3B]">
+                                  <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+                                  <span>{formatReadableDate(itemDateStr, isTelugu) || 'Schedule Date'}</span>
+                                </div>
+                                {item.eventTime && (
+                                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+                                    <Clock className="w-3 h-3 text-[#C59B27]" />
+                                    <span>{item.eventTime}</span>
+                                  </div>
+                                )}
+                              </div>
+                              {item.recurrence && item.recurrence !== 'none' && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white border border-amber-200 text-amber-900 shrink-0">
+                                  Repeat: {item.recurrence.replace('weekly_', '').toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Venue / Location */}
+                            {item.eventLocation && (
+                              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
+                                <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                <span className="truncate">{item.eventLocation}</span>
+                              </div>
+                            )}
+
+                            {/* Title & Description */}
+                            <h4 className="text-base sm:text-lg font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors leading-snug line-clamp-2">
+                              {item.icon && <span className="mr-1.5 select-none">{item.icon}</span>}
+                              <span>{itemTitle}</span>
+                            </h4>
+
+                            <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                              {itemDesc}
+                            </p>
+                          </div>
+
+                          {/* Action Footer: Calendar Export & Copy */}
+                          <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <a
+                                href={getGoogleCalendarUrl(item)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[11px] font-bold transition border border-slate-200/80"
+                                title="Add to Google Calendar"
+                              >
+                                <CalendarPlus className="w-3 h-3 text-[#C59B27]" />
+                                <span>Google</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={(e) => downloadICSFile(item, e)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 text-[11px] font-bold transition border border-slate-200/80 cursor-pointer"
+                                title="Download .ICS file"
+                              >
+                                <Download className="w-3 h-3 text-[#C59B27]" />
+                                <span>.ICS</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleCopySchedule(item, e)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                                title="Copy Schedule"
+                              >
+                                {copiedScheduleId === item.id ? (
+                                  <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+
+                            {isAdmin && (
+                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleOpenEditForm(item, e)}
+                                  className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                  title="Edit schedule"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteContent(item.id, e)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                  title="Delete schedule"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
-          /* Notion Empty State (Snippet 1) */
-          <NotionEmpty pageTitle={pageTitle} onCreate={handleOpenAddForm} />
+          /* Notion Empty State (Snippet 1) with Calendar integration */
+          <div className="space-y-6">
+            {isCalendarPage && (
+              <CalendarScheduleHub
+                pageSlug={pageSlug}
+                pageTitle={pageTitle}
+                contents={[]}
+                selectedDate={selectedCalendarDate}
+                onSelectDate={setSelectedCalendarDate}
+                dateRangePreset={calendarDateRange}
+                onChangeDatePreset={setCalendarDateRange}
+                selectedEventType={calendarEventType}
+                onChangeEventType={setCalendarEventType}
+                onOpenAddSchedule={(dStr) => handleOpenAddForm(dStr)}
+                onOpenArticle={() => {}}
+                isAdmin={isAdmin}
+                isTelugu={isTelugu}
+                viewMode={viewMode}
+                onToggleViewMode={setViewMode}
+              />
+            )}
+            <NotionEmpty pageTitle={pageTitle} onCreate={handleOpenAddForm} />
+          </div>
         )}
       </main>
     </div>
