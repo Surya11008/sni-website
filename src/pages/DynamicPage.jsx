@@ -142,6 +142,7 @@ export default function DynamicPage() {
   const [fileUrl, setFileUrl] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [primaryPageSlug, setPrimaryPageSlug] = useState(pageSlug);
   const [targetPages, setTargetPages] = useState([]);
 
   // Notion Page states
@@ -365,6 +366,7 @@ export default function DynamicPage() {
 
   useEffect(() => {
     if (pageSlug) {
+      setPrimaryPageSlug(pageSlug);
       fetchPageContents();
     }
   }, [pageSlug]);
@@ -384,6 +386,7 @@ export default function DynamicPage() {
     setFileUrl('');
     setDownloadUrl('');
     setWebsiteUrl('');
+    setPrimaryPageSlug(pageSlug);
     setTargetPages([pageSlug]);
     setEventDate(typeof initialDateStr === 'string' ? initialDateStr : '');
     setEventTime('');
@@ -417,7 +420,9 @@ export default function DynamicPage() {
     setFileUrl(item.fileUrl || '');
     setDownloadUrl(item.downloadUrl || '');
     setWebsiteUrl(item.websiteUrl || item.embedUrl || '');
-    setTargetPages(item.targetPages && item.targetPages.length > 0 ? item.targetPages : [item.pageSlug || pageSlug]);
+    const itemPage = item.pageSlug || pageSlug;
+    setPrimaryPageSlug(itemPage);
+    setTargetPages(item.targetPages && item.targetPages.length > 0 ? item.targetPages : [itemPage]);
     setEventDate(item.eventDate || item.date || '');
     setEventTime(item.eventTime || item.time || '');
     setEventType(item.eventType || 'Worship Service');
@@ -469,7 +474,13 @@ export default function DynamicPage() {
     setDesc((prev) => (prev ? prev + token : embed.url));
   };
 
-  // Toggle page in targetPages list
+  // Shift file directly to a new target page (changes primary page + targetPages)
+  const handleSelectPrimaryPage = (slug) => {
+    setPrimaryPageSlug(slug);
+    setTargetPages([slug]);
+  };
+
+  // Toggle page in targetPages list (for additional cross-posting)
   const toggleTargetPage = (slug) => {
     setTargetPages((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
@@ -492,10 +503,22 @@ export default function DynamicPage() {
     try {
       const cleanTitle = cleanObjectReplacementChars(title.trim());
       const cleanDesc = cleanObjectReplacementChars(desc.trim());
+
+      // Determine destination page and category for full file shift
+      const targetPageObj = (allAvailablePages || []).find(
+        (p) => (p.pageSlug || '').toLowerCase() === (primaryPageSlug || pageSlug || '').toLowerCase()
+      );
+      const destinationPageSlug = targetPageObj?.pageSlug || primaryPageSlug || pageSlug;
+      const destinationCategorySlug = targetPageObj?.categorySlug || categorySlug;
+
+      const finalTargetPages = targetPages.length > 0
+        ? (targetPages.includes(destinationPageSlug) ? targetPages : [destinationPageSlug, ...targetPages])
+        : [destinationPageSlug];
+
       const payload = {
-        categorySlug: categorySlug || '',
-        pageSlug: pageSlug || '',
-        targetPages: targetPages.length > 0 ? targetPages : [pageSlug],
+        categorySlug: destinationCategorySlug,
+        pageSlug: destinationPageSlug,
+        targetPages: finalTargetPages,
         icon: icon || '📖',
         fontFamily: fontFamily || 'Inter',
         contentFontFamily: contentFontFamily || fontFamily || 'Inter',
@@ -520,6 +543,8 @@ export default function DynamicPage() {
         updatedAt: serverTimestamp(),
       };
 
+      const wasShifted = destinationPageSlug !== pageSlug;
+
       if (editingItem?.id) {
         // UPDATE existing document
         await updateDoc(doc(db, 'page_contents', editingItem.id), payload);
@@ -538,6 +563,10 @@ export default function DynamicPage() {
       setIsFormOpen(false);
       setEditingItem(null);
       await fetchPageContents();
+
+      if (wasShifted) {
+        navigate(`/page/${destinationCategorySlug}/${destinationPageSlug}`);
+      }
     } catch (err) {
       console.error('Failed to save page content:', err);
       alert('Failed to save content: ' + err.message);
@@ -665,6 +694,11 @@ export default function DynamicPage() {
     formatSlugToTitle(pageSlug) ||
     'Page'
   );
+
+  const primaryPageObj = (allAvailablePages || []).find(
+    (p) => (p.pageSlug || '').toLowerCase() === (primaryPageSlug || pageSlug || '').toLowerCase()
+  );
+  const currentPrimaryTitle = primaryPageObj?.title || (primaryPageSlug ? formatSlugToTitle(primaryPageSlug) : '') || pageTitle;
 
   const subpages = getSubpages ? getSubpages(categorySlug, pageSlug) : [];
   const breadcrumbChain = getPageBreadcrumbChain ? getPageBreadcrumbChain(categorySlug, pageSlug) : [];
@@ -906,7 +940,14 @@ export default function DynamicPage() {
               <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
                 <Link to={`/category/${categorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
                 <span>/</span>
-                <span className="text-slate-900 font-bold truncate">{pageTitle}</span>
+                <span className="text-slate-900 font-bold truncate flex items-center gap-1.5">
+                  <span>{pageTitle}</span>
+                  {primaryPageSlug && primaryPageSlug !== pageSlug && (
+                    <span className="text-amber-800 font-black text-[11px] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300">
+                      ➜ Shifted to: {currentPrimaryTitle}
+                    </span>
+                  )}
+                </span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
                   <Sparkles className="w-3 h-3 text-[#C59B27]" />
                   Document Editor
@@ -928,7 +969,15 @@ export default function DynamicPage() {
                   className="px-5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4 text-[#F4B942]" />
-                  <span>{formSubmitting ? 'Saving...' : editingItem ? 'Save Changes' : 'Publish'}</span>
+                  <span>
+                    {formSubmitting
+                      ? 'Saving...'
+                      : primaryPageSlug && primaryPageSlug !== pageSlug
+                      ? `Save & Shift to ${currentPrimaryTitle}`
+                      : editingItem
+                      ? 'Save Changes'
+                      : 'Publish'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -955,6 +1004,7 @@ export default function DynamicPage() {
                 onTitleChange={setTitle}
                 onIconChange={setIcon}
                 pageTitle={pageTitle}
+                primaryPageTitle={currentPrimaryTitle}
                 editable={true}
                 onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
                 onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
@@ -1282,38 +1332,90 @@ export default function DynamicPage() {
                 </div>
               )}
 
-              {/* Cross-post Drawer */}
+              {/* Page Destination & Full Shift Drawer */}
               {showMultiPageSelect && (
-                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">Cross-post to other pages:</span>
+                <div className="mx-6 md:mx-12 mt-2 p-5 rounded-2xl bg-white border-2 border-amber-300 shadow-md space-y-3 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-[#C59B27]" />
+                        <span className="text-xs font-black text-[#071B3B] uppercase tracking-wider">
+                          Select Page Tag (Full File Shift)
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">
+                          Full Note Relocation
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Click any page tag below to shift this entire note to that page. Ekkada tag chesthe akkadaki full file shift avthundi!
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setShowMultiPageSelect(false)}
-                      className="text-slate-400 hover:text-slate-700"
+                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
-                    {allAvailablePages.map((p) => {
-                      const isSelected = targetPages.includes(p.pageSlug);
-                      return (
-                        <button
-                          key={`${p.categorySlug}-${p.pageSlug}`}
-                          type="button"
-                          onClick={() => toggleTargetPage(p.pageSlug)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
-                            isSelected
-                              ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
-                              : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
-                          <span>{p.title}</span>
-                        </button>
-                      );
-                    })}
+
+                  {/* Active Shift Indicator Banner */}
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-slate-50 border border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-slate-600 font-medium">Currently Tagged Destination:</span>
+                      <span className="px-3 py-1 rounded-lg bg-[#071B3B] text-[#F4B942] font-black text-xs font-mono shadow-2xs">
+                        {currentPrimaryTitle}
+                      </span>
+                      {primaryPageSlug !== pageSlug && (
+                        <span className="text-[11px] font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1">
+                          <span>↳ Will fully shift from:</span>
+                          <span className="line-through opacity-70">{pageTitle}</span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-semibold">
+                      {targetPages.length} {targetPages.length === 1 ? 'page active' : 'pages active'}
+                    </span>
+                  </div>
+
+                  {/* Pages Selection Buttons Grid */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-0.5">
+                      <span>Click any page below to shift full note there:</span>
+                      <span className="text-[10px] text-amber-800">Direct instant relocation on publish</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto p-1.5 border border-slate-100 rounded-xl bg-slate-50/50">
+                      {allAvailablePages.map((p) => {
+                        const isPrimary = (primaryPageSlug || pageSlug) === p.pageSlug;
+                        const isTarget = targetPages.includes(p.pageSlug);
+
+                        return (
+                          <button
+                            key={`${p.categorySlug}-${p.pageSlug}`}
+                            type="button"
+                            onClick={() => handleSelectPrimaryPage(p.pageSlug)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border shadow-2xs ${
+                              isPrimary
+                                ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] ring-2 ring-[#C59B27]/40 shadow-sm'
+                                : isTarget
+                                ? 'bg-amber-100 text-amber-950 border-amber-300'
+                                : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-slate-50'
+                            }`}
+                            title={`Shift note to ${p.title}`}
+                          >
+                            {isPrimary ? (
+                              <Check className="w-3.5 h-3.5 text-[#F4B942] stroke-[3]" />
+                            ) : (
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                            )}
+                            <span>{p.title}</span>
+                            {p.categoryTitle && (
+                              <span className="text-[9px] font-normal opacity-60">({p.categoryTitle})</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}

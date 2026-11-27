@@ -19,6 +19,7 @@ export function NotionToolbar({
   onTitleChange,
   onIconChange,
   pageTitle = '',
+  primaryPageTitle = '',
   editable = true,
   onToggleMedia,
   onToggleMultiPage,
@@ -140,16 +141,28 @@ export function NotionToolbar({
         <div className="flex items-center gap-1.5">
           <Tag className="w-3.5 h-3.5 text-slate-400" />
           <span className="font-semibold text-slate-500">Page:</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold">
-            {pageTitle || 'General'}
-          </span>
+          {editable ? (
+            <button
+              type="button"
+              onClick={onToggleMultiPage}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 hover:bg-amber-100 text-[#071B3B] font-bold border border-amber-300 transition cursor-pointer shadow-2xs group"
+              title="Click to shift or change destination page"
+            >
+              <span>{primaryPageTitle || pageTitle || 'General'}</span>
+              <ChevronDown className="w-3 h-3 text-[#C59B27] group-hover:translate-y-0.5 transition-transform" />
+            </button>
+          ) : (
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold">
+              {primaryPageTitle || pageTitle || 'General'}
+            </span>
+          )}
           {editable && onToggleMultiPage && (
             <button
               type="button"
               onClick={onToggleMultiPage}
               className="text-[11px] font-semibold text-[#C59B27] hover:underline cursor-pointer ml-1"
             >
-              {targetPagesCount > 1 ? `(${targetPagesCount} pages)` : '+ Cross-post'}
+              {targetPagesCount > 1 ? `(${targetPagesCount} pages tagged)` : '+ Shift / Tag Page'}
             </button>
           )}
         </div>

@@ -102,6 +102,7 @@ export default function ContentDetailPage() {
   const [icon, setIcon] = useState('📖');
   const [fontFamily, setFontFamily] = useState('Inter');
   const [contentFontFamily, setContentFontFamily] = useState('Inter');
+  const [primaryPageSlug, setPrimaryPageSlug] = useState('');
   const [targetPages, setTargetPages] = useState([]);
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
@@ -153,7 +154,9 @@ export default function ContentDetailPage() {
             setFileUrl(data.fileUrl || '');
             setDownloadUrl(data.downloadUrl || '');
             setWebsiteUrl(data.websiteUrl || data.embedUrl || '');
-            setTargetPages(data.targetPages && data.targetPages.length > 0 ? data.targetPages : [data.pageSlug || paramPageSlug]);
+            const initialItemPage = data.pageSlug || paramPageSlug;
+            setPrimaryPageSlug(initialItemPage);
+            setTargetPages(data.targetPages && data.targetPages.length > 0 ? data.targetPages : [initialItemPage]);
 
             // Keep address bar in clean semantic format: sni.org.in/Home/Worship/Sermons/:contentId
             const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
@@ -362,6 +365,12 @@ export default function ContentDetailPage() {
       : null;
   };
 
+  // Shift file directly to a new target page (changes primary page + targetPages)
+  const handleSelectPrimaryPage = (slug) => {
+    setPrimaryPageSlug(slug);
+    setTargetPages([slug]);
+  };
+
   // Toggle page in targetPages list
   const toggleTargetPage = (slug) => {
     setTargetPages((prev) =>
@@ -399,7 +408,22 @@ export default function ContentDetailPage() {
     try {
       const cleanTitle = cleanObjectReplacementChars(title.trim());
       const cleanDesc = cleanObjectReplacementChars(desc.trim());
+
+      // Determine destination page and category for full file shift
+      const targetPageObj = (allAvailablePages || []).find(
+        (p) => (p.pageSlug || '').toLowerCase() === (primaryPageSlug || article?.pageSlug || paramPageSlug || '').toLowerCase()
+      );
+      const destinationPageSlug = targetPageObj?.pageSlug || primaryPageSlug || article?.pageSlug || paramPageSlug;
+      const destinationCategorySlug = targetPageObj?.categorySlug || article?.categorySlug || paramCategorySlug;
+
+      const finalTargetPages = targetPages.length > 0
+        ? (targetPages.includes(destinationPageSlug) ? targetPages : [destinationPageSlug, ...targetPages])
+        : [destinationPageSlug];
+
       const payload = {
+        categorySlug: destinationCategorySlug,
+        pageSlug: destinationPageSlug,
+        targetPages: finalTargetPages,
         title: cleanTitle,
         titleEn: cleanTitle,
         titleTe: cleanTitle,
@@ -409,7 +433,6 @@ export default function ContentDetailPage() {
         icon: icon || '📖',
         fontFamily: fontFamily || 'Inter',
         contentFontFamily: contentFontFamily || fontFamily || 'Inter',
-        targetPages: targetPages.length > 0 ? targetPages : [article.pageSlug || paramPageSlug],
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
         audioUrl: audioUrl.trim() || null,
@@ -420,9 +443,15 @@ export default function ContentDetailPage() {
         updatedAt: serverTimestamp(),
       };
 
+      const wasShifted = destinationPageSlug !== (article?.pageSlug || paramPageSlug);
+
       await updateDoc(doc(db, 'page_contents', contentId), payload);
       setArticle((prev) => ({ ...prev, ...payload }));
       setIsEditing(false);
+
+      if (wasShifted) {
+        navigate(`/page/${destinationCategorySlug}/${destinationPageSlug}`);
+      }
     } catch (err) {
       alert('Failed to update article: ' + err.message);
     } finally {
@@ -658,109 +687,181 @@ export default function ContentDetailPage() {
         </div>
 
         {/* NOTION-STYLE DOCUMENT EDITOR FOR EDIT MODE (Matching User's Screenshot) */}
-        {isAdmin && isEditing && (
-          <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-            {/* 1. Notion Top Navigation & Action Bar */}
-            <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
-              <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
-                <Link to={`/category/${currentCategorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
-                <span>/</span>
-                <span className="text-slate-900 font-bold truncate">{subPageTitle}</span>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
-                  <Sparkles className="w-3 h-3 text-[#C59B27]" />
-                  Document Editor (Edit Mode)
-                </span>
+        {(() => {
+          const primaryPageObj = (allAvailablePages || []).find(
+            (p) => (p.pageSlug || '').toLowerCase() === (primaryPageSlug || article?.pageSlug || paramPageSlug || '').toLowerCase()
+          );
+          const currentPrimaryTitle = primaryPageObj?.title || (primaryPageSlug ? formatSlugToTitle(primaryPageSlug) : '') || subPageTitle;
+
+          return isAdmin && isEditing && (
+            <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+              {/* 1. Notion Top Navigation & Action Bar */}
+              <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
+                <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
+                  <Link to={`/category/${currentCategorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
+                  <span>/</span>
+                  <span className="text-slate-900 font-bold truncate flex items-center gap-1.5">
+                    <span>{subPageTitle}</span>
+                    {primaryPageSlug && primaryPageSlug !== (article?.pageSlug || paramPageSlug) && (
+                      <span className="text-amber-800 font-black text-[11px] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300">
+                        ➜ Shifted to: {currentPrimaryTitle}
+                      </span>
+                    )}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
+                    <Sparkles className="w-3 h-3 text-[#C59B27]" />
+                    Document Editor (Edit Mode)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/60 font-semibold text-xs transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUpdate}
+                    disabled={submitting}
+                    className="px-5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4 text-[#F4B942]" />
+                    <span>
+                      {submitting
+                        ? 'Saving...'
+                        : primaryPageSlug && primaryPageSlug !== (article?.pageSlug || paramPageSlug)
+                        ? `Save & Shift to ${currentPrimaryTitle}`
+                        : 'Save Changes'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/60 font-semibold text-xs transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleUpdate}
-                  disabled={submitting}
-                  className="px-5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4 text-[#F4B942]" />
-                  <span>{submitting ? 'Saving...' : 'Save Changes'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Notion Embed & Link Preview Drawer */}
-            <NotionEmbedDrawer
-              isOpen={showEmbedDrawer}
-              onClose={() => setShowEmbedDrawer(false)}
-              onInsert={handleInsertEmbed}
-            />
-
-            {/* 2. Cover Component (Snippet 2) */}
-            <NotionCover
-              url={imageUrl}
-              onChange={setImageUrl}
-              onRemove={() => setImageUrl('')}
-              editable={true}
-            />
-
-            {/* 3. Toolbar & Document Content (Snippet 2 & 3) */}
-            <div className="mx-auto md:max-w-3xl lg:max-w-4xl pb-16">
-              <NotionToolbar
-                initialData={{ icon, title }}
-                onTitleChange={setTitle}
-                onIconChange={setIcon}
-                pageTitle={subPageTitle}
-                editable={true}
-                onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
-                onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
-                onOpenEmbed={() => setShowEmbedDrawer(true)}
-                targetPagesCount={targetPages.length}
-                hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
-                fontFamily={fontFamily}
-                onFontChange={setFontFamily}
-                contentFontFamily={contentFontFamily}
-                onContentFontChange={setContentFontFamily}
+              {/* Notion Embed & Link Preview Drawer */}
+              <NotionEmbedDrawer
+                isOpen={showEmbedDrawer}
+                onClose={() => setShowEmbedDrawer(false)}
+                onInsert={handleInsertEmbed}
               />
 
-              {/* Cross-post Drawer */}
-              {showMultiPageSelect && (
-                <div className="mx-6 md:mx-12 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">Cross-post to other pages:</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowMultiPageSelect(false)}
-                      className="text-slate-400 hover:text-slate-700"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+              {/* 2. Cover Component (Snippet 2) */}
+              <NotionCover
+                url={imageUrl}
+                onChange={setImageUrl}
+                onRemove={() => setImageUrl('')}
+                editable={true}
+              />
+
+              {/* 3. Toolbar & Document Content (Snippet 2 & 3) */}
+              <div className="mx-auto md:max-w-3xl lg:max-w-4xl pb-16">
+                <NotionToolbar
+                  initialData={{ icon, title }}
+                  onTitleChange={setTitle}
+                  onIconChange={setIcon}
+                  pageTitle={subPageTitle}
+                  primaryPageTitle={currentPrimaryTitle}
+                  editable={true}
+                  onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
+                  onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                  onOpenEmbed={() => setShowEmbedDrawer(true)}
+                  targetPagesCount={targetPages.length}
+                  hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
+                  fontFamily={fontFamily}
+                  onFontChange={setFontFamily}
+                  contentFontFamily={contentFontFamily}
+                  onContentFontChange={setContentFontFamily}
+                />
+
+                {/* Page Destination & Full Shift Drawer */}
+                {showMultiPageSelect && (
+                  <div className="mx-6 md:mx-12 mt-2 p-5 rounded-2xl bg-white border-2 border-amber-300 shadow-md space-y-3 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-[#C59B27]" />
+                          <span className="text-xs font-black text-[#071B3B] uppercase tracking-wider">
+                            Select Page Tag (Full File Shift)
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">
+                            Full Note Relocation
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Click any page tag below to shift this entire note to that page. Ekkada tag chesthe akkadaki full file shift avthundi!
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowMultiPageSelect(false)}
+                        className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Active Shift Indicator Banner */}
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-slate-50 border border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-slate-600 font-medium">Currently Tagged Destination:</span>
+                        <span className="px-3 py-1 rounded-lg bg-[#071B3B] text-[#F4B942] font-black text-xs font-mono shadow-2xs">
+                          {currentPrimaryTitle}
+                        </span>
+                        {primaryPageSlug !== (article?.pageSlug || paramPageSlug) && (
+                          <span className="text-[11px] font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1">
+                            <span>↳ Will fully shift from:</span>
+                            <span className="line-through opacity-70">{subPageTitle}</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-semibold">
+                        {targetPages.length} {targetPages.length === 1 ? 'page active' : 'pages active'}
+                      </span>
+                    </div>
+
+                    {/* Pages Selection Buttons Grid */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-0.5">
+                        <span>Click any page below to shift full note there:</span>
+                        <span className="text-[10px] text-amber-800">Direct instant relocation on save</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto p-1.5 border border-slate-100 rounded-xl bg-slate-50/50">
+                        {allAvailablePages.map((p) => {
+                          const isPrimary = (primaryPageSlug || article?.pageSlug || paramPageSlug) === p.pageSlug;
+                          const isTarget = targetPages.includes(p.pageSlug);
+
+                          return (
+                            <button
+                              key={`${p.categorySlug}-${p.pageSlug}`}
+                              type="button"
+                              onClick={() => handleSelectPrimaryPage(p.pageSlug)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border shadow-2xs ${
+                                isPrimary
+                                  ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] ring-2 ring-[#C59B27]/40 shadow-sm'
+                                  : isTarget
+                                  ? 'bg-amber-100 text-amber-950 border-amber-300'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-slate-50'
+                              }`}
+                              title={`Shift note to ${p.title}`}
+                            >
+                              {isPrimary ? (
+                                <Check className="w-3.5 h-3.5 text-[#F4B942] stroke-[3]" />
+                              ) : (
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                              )}
+                              <span>{p.title}</span>
+                              {p.categoryTitle && (
+                                <span className="text-[9px] font-normal opacity-60">({p.categoryTitle})</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
-                    {allAvailablePages.map((p) => {
-                      const isSelected = targetPages.includes(p.pageSlug);
-                      return (
-                        <button
-                          key={`${p.categorySlug}-${p.pageSlug}`}
-                          type="button"
-                          onClick={() => toggleTargetPage(p.pageSlug)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
-                            isSelected
-                              ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
-                              : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
-                          <span>{p.title}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                )}
 
               {/* Media Attachments Drawer */}
               {showMediaAttachments && (
@@ -862,13 +963,20 @@ export default function ContentDetailPage() {
                     className="px-6 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                   >
                     <Check className="w-4 h-4 text-[#F4B942]" />
-                    <span>{submitting ? 'Saving...' : 'Save Changes'}</span>
+                    <span>
+                      {submitting
+                        ? 'Saving...'
+                        : primaryPageSlug && primaryPageSlug !== (article?.pageSlug || paramPageSlug)
+                        ? `Save & Shift to ${currentPrimaryTitle}`
+                        : 'Save Changes'}
+                    </span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Video Player (if attached) */}
         {article.videoUrl && (
