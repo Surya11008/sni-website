@@ -1726,7 +1726,7 @@ export default function DynamicPage() {
             )}
 
             {/* Article Rich Content Body */}
-            <div className="pt-2">
+            <div className="pt-2 text-[#050b14] font-medium">
               <RichContentRenderer
                 content={getDesc(activeArticle)}
                 isTelugu={isTelugu}

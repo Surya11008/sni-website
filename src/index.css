@@ -62,8 +62,70 @@ iframe, video, embed, object {
 }
 
 .rich-html-content,
+.rich-content-container,
+.notion-editor-wrapper {
+  color: #050b14 !important;
+  font-weight: 550;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.rich-html-content,
 .rich-html-content * {
   font-family: inherit;
+}
+
+.rich-html-content p,
+.rich-content-container p,
+.rich-html-content li,
+.rich-content-container li {
+  color: #050b14 !important;
+  font-weight: 550 !important;
+  line-height: 1.9 !important;
+  font-size: 1.125rem;
+  margin-bottom: 1.15rem;
+  letter-spacing: 0.01em;
+}
+
+/* Override washed-out / faint grey spans from pasted Google Docs / Notion */
+.rich-html-content span:not([style*="color: rgb(2"]):not([style*="color: #e"]):not([style*="color: #d"]):not([style*="color: #c"]):not([style*="color: red"]):not([style*="color: rgb(22"]):not([style*="color: rgb(23"]):not([style*="color: rgb(20"]):not([style*="color: rgb(18"]):not([style*="color: rgb(19"]) {
+  color: #050b14 !important;
+  font-weight: 550;
+}
+
+/* Preserve & enhance Red Scripture verses */
+.rich-html-content [style*="color: rgb(2"],
+.rich-html-content [style*="color: #e"],
+.rich-html-content [style*="color: #d"],
+.rich-html-content [style*="color: #c"],
+.rich-html-content [style*="color: red"],
+.rich-html-content [style*="color: rgb(23"],
+.rich-html-content [style*="color: rgb(22"],
+.rich-html-content [style*="color: rgb(20"] {
+  color: #b91c1c !important;
+  font-weight: 700 !important;
+}
+
+/* Preserve & enhance Yellow / Amber Highlights */
+.rich-html-content mark,
+.rich-content-container mark,
+.rich-html-content [style*="background-color: yellow"],
+.rich-html-content [style*="background-color: #ff"],
+.rich-html-content [style*="background-color: rgb(255, 255"] {
+  background-color: #fef08a !important;
+  font-weight: 700 !important;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Solid Bold headings and strong tags */
+.rich-html-content strong,
+.rich-html-content b,
+.rich-content-container strong,
+.rich-content-container b {
+  font-weight: 800 !important;
+  color: #000000 !important;
 }
 
 /* Fallback protection: Hide / collapse any stray replacement character glyphs */

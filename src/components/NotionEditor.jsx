@@ -136,6 +136,18 @@ export default function NotionEditor({
         #${editorId} blockquote {
           font-family: '${activeFont}', sans-serif !important;
         }
+
+        #${editorId} .bn-editor,
+        #${editorId} .ProseMirror,
+        #${editorId} .bn-block-content,
+        #${editorId} .bn-inline-content,
+        #${editorId} p {
+          color: #050b14 !important;
+          font-weight: 550;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
       `}</style>
       <BlockNoteView
         editor={editor}

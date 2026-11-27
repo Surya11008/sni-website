@@ -48,11 +48,54 @@ export default function RichContentRenderer({
     return (
       <div
         id={rendererId}
-        className={`rich-html-content text-slate-800 text-base sm:text-lg leading-relaxed sm:leading-loose ${className}`}
+        className={`rich-html-content text-[#050b14] font-medium text-base sm:text-lg leading-relaxed sm:leading-loose ${className}`}
         style={fontStyle}
       >
-        {activeFont && (
-          <style>{`
+        <style>{`
+          #${rendererId} {
+            color: #050b14 !important;
+            font-weight: 550;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+          }
+          #${rendererId} p,
+          #${rendererId} li,
+          #${rendererId} td,
+          #${rendererId} blockquote {
+            color: #050b14 !important;
+            font-weight: 550 !important;
+            line-height: 1.9 !important;
+            font-size: 1.125rem !important;
+          }
+          #${rendererId} span:not([style*="color: rgb(2"]):not([style*="color: #e"]):not([style*="color: #d"]):not([style*="color: #c"]):not([style*="color: red"]):not([style*="color: rgb(22"]):not([style*="color: rgb(23"]):not([style*="color: rgb(20"]) {
+            color: #050b14 !important;
+            font-weight: 550;
+          }
+          #${rendererId} [style*="color: rgb(2"],
+          #${rendererId} [style*="color: #e"],
+          #${rendererId} [style*="color: #d"],
+          #${rendererId} [style*="color: #c"],
+          #${rendererId} [style*="color: red"],
+          #${rendererId} [style*="color: rgb(22"],
+          #${rendererId} [style*="color: rgb(23"],
+          #${rendererId} [style*="color: rgb(20"] {
+            color: #b91c1c !important;
+            font-weight: 700 !important;
+          }
+          #${rendererId} mark,
+          #${rendererId} [style*="background-color: yellow"],
+          #${rendererId} [style*="background-color: #ff"],
+          #${rendererId} [style*="background-color: rgb(255, 255"] {
+            background-color: #fef08a !important;
+            font-weight: 700 !important;
+          }
+          #${rendererId} strong,
+          #${rendererId} b {
+            font-weight: 800 !important;
+            color: #000000 !important;
+          }
+          ${activeFont ? `
             #${rendererId},
             #${rendererId} *,
             #${rendererId} p,
@@ -71,8 +114,8 @@ export default function RichContentRenderer({
             #${rendererId} th {
               font-family: '${activeFont}', sans-serif !important;
             }
-          `}</style>
-        )}
+          ` : ''}
+        `}</style>
         <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
       </div>
     );
@@ -298,13 +341,28 @@ export default function RichContentRenderer({
   return (
     <div
       id={rendererId}
-      className={`rich-content-container space-y-5 text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
+      className={`rich-content-container space-y-5 text-[#050b14] font-medium text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
         isTelugu && !activeFont ? 'font-telugu' : ''
       } ${className}`}
       style={fontStyle}
     >
-      {activeFont && (
-        <style>{`
+      <style>{`
+        #${rendererId} {
+          color: #050b14 !important;
+          font-weight: 550;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
+        #${rendererId} p,
+        #${rendererId} li,
+        #${rendererId} td,
+        #${rendererId} blockquote {
+          color: #050b14 !important;
+          font-weight: 550 !important;
+          line-height: 1.9 !important;
+        }
+        ${activeFont ? `
           #${rendererId},
           #${rendererId} *,
           #${rendererId} p,
@@ -320,8 +378,8 @@ export default function RichContentRenderer({
           #${rendererId} blockquote {
             font-family: '${activeFont}', sans-serif !important;
           }
-        `}</style>
-      )}
+        ` : ''}
+      `}</style>
       {blocks.map((block, idx) => {
         switch (block.type) {
           case 'video':
