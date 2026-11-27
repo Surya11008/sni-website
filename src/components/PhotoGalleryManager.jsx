@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   collection,
   onSnapshot,
@@ -31,12 +31,18 @@ import {
   Loader2,
   Check,
   Sparkles,
+  Folder,
+  FolderPlus,
+  FolderOpen,
+  Calendar,
+  Download,
+  Layers,
 } from 'lucide-react';
 
 export default function PhotoGalleryManager({
   targetPage = 'home',
-  sectionTitleEn = 'Photo Gallery & Highlights',
-  sectionTitleTe = 'చిత్రమాలిక & విశేషాలు',
+  sectionTitleEn = 'Featured Photos & Visual Gallery',
+  sectionTitleTe = 'ముఖ్య ఛాయాచిత్రాలు & విశేషాలు',
   className = '',
 }) {
   const { userProfile, currentUser } = useAuth();
@@ -53,6 +59,10 @@ export default function PhotoGalleryManager({
   const [editingPhoto, setEditingPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Album & Filter States
+  const [selectedAlbumId, setSelectedAlbumId] = useState('all');
+  const [viewingAlbum, setViewingAlbum] = useState(null); // Interactive Album Showcase modal
+
   // View Mode: 'slider' or 'grid'
   const [viewMode, setViewMode] = useState('slider');
 
@@ -61,7 +71,10 @@ export default function PhotoGalleryManager({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Form states - Unified Single Language Input
+  // Upload Mode: 'single' (one photo) | 'album' (batch multi-photo event album)
+  const [uploadMode, setUploadMode] = useState('single');
+
+  // Single Photo form states
   const [imageUrl, setImageUrl] = useState('');
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
@@ -73,7 +86,16 @@ export default function PhotoGalleryManager({
   const [pasteNotice, setPasteNotice] = useState('');
   const fileInputRef = useRef(null);
 
-  // Active enlarged photo view
+  // Album Batch Upload form states
+  const [albumTitle, setAlbumTitle] = useState('');
+  const [albumDate, setAlbumDate] = useState('');
+  const [albumDesc, setAlbumDesc] = useState('');
+  const [batchPhotos, setBatchPhotos] = useState([]); // Array of { id, url, name }
+  const [batchUrlsInput, setBatchUrlsInput] = useState('');
+  const [batchUploadProgress, setBatchUploadProgress] = useState({ current: 0, total: 0, active: false });
+  const batchFileInputRef = useRef(null);
+
+  // Active enlarged photo view in Lightbox
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState(null);
 
   // Real-time listener for photos for this targetPage
@@ -91,7 +113,7 @@ export default function PhotoGalleryManager({
           snapshot.forEach((d) => {
             items.push({ id: d.id, ...d.data() });
           });
-          // Sort client-side by order or createdAt
+          // Sort client-side by order or createdAt descending
           items.sort((a, b) => {
             const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
             const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -113,6 +135,40 @@ export default function PhotoGalleryManager({
     }
   }, [targetPage]);
 
+  // Derive unique event albums from photos
+  const albums = useMemo(() => {
+    const map = {};
+    photos.forEach((p) => {
+      if (p.albumTitle) {
+        const id = p.albumId || p.albumTitle;
+        if (!map[id]) {
+          map[id] = {
+            id,
+            title: p.albumTitle,
+            desc: p.albumDesc || '',
+            date: p.albumDate || '',
+            coverPhoto: p.imageUrl,
+            photos: [],
+          };
+        }
+        map[id].photos.push(p);
+      }
+    });
+    return Object.values(map);
+  }, [photos]);
+
+  // Active selected album object
+  const activeAlbum = useMemo(() => {
+    if (selectedAlbumId === 'all') return null;
+    return albums.find((a) => a.id === selectedAlbumId) || null;
+  }, [albums, selectedAlbumId]);
+
+  // Filtered photos based on album selection
+  const displayedPhotos = useMemo(() => {
+    if (selectedAlbumId === 'all') return photos;
+    return photos.filter((p) => (p.albumId || p.albumTitle) === selectedAlbumId);
+  }, [photos, selectedAlbumId]);
+
   // Check slider scroll position
   const checkSliderScroll = () => {
     if (!sliderRef.current) return;
@@ -131,7 +187,8 @@ export default function PhotoGalleryManager({
     setTimeout(checkSliderScroll, 350);
   };
 
-  const handleOpenAdd = () => {
+  // Open Form for Adding New Photo or Album
+  const handleOpenAdd = (mode = 'single', existingAlbum = null) => {
     setEditingPhoto(null);
     setImageUrl('');
     setLinkInput('');
@@ -139,9 +196,25 @@ export default function PhotoGalleryManager({
     setCaption('');
     setLinkUrl('');
     setInputSourceTab('upload');
+    setUploadMode(mode);
+
+    if (existingAlbum) {
+      setAlbumTitle(existingAlbum.title);
+      setAlbumDate(existingAlbum.date || '');
+      setAlbumDesc(existingAlbum.desc || '');
+    } else {
+      setAlbumTitle('');
+      setAlbumDate('');
+      setAlbumDesc('');
+    }
+
+    setBatchPhotos([]);
+    setBatchUrlsInput('');
+    setBatchUploadProgress({ current: 0, total: 0, active: false });
     setIsFormOpen(true);
   };
 
+  // Open Form for Editing Existing Photo
   const handleOpenEdit = (photo, e) => {
     if (e) e.stopPropagation();
     setEditingPhoto(photo);
@@ -151,10 +224,15 @@ export default function PhotoGalleryManager({
     setTitle(photo.title || photo.titleEn || photo.titleTe || '');
     setCaption(photo.caption || photo.captionEn || photo.captionTe || '');
     setLinkUrl(photo.linkUrl || '');
+    setAlbumTitle(photo.albumTitle || '');
+    setAlbumDate(photo.albumDate || '');
+    setAlbumDesc(photo.albumDesc || '');
     setInputSourceTab(photoUrl.startsWith('data:') ? 'upload' : 'link');
+    setUploadMode('single');
     setIsFormOpen(true);
   };
 
+  // Delete individual photo
   const handleDelete = async (photoId, e) => {
     if (e) e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this photo?')) return;
@@ -163,6 +241,30 @@ export default function PhotoGalleryManager({
       if (previewPhotoIndex !== null) setPreviewPhotoIndex(null);
     } catch (err) {
       alert('Failed to delete photo: ' + err.message);
+    }
+  };
+
+  // Delete entire album
+  const handleDeleteAlbum = async (album, e) => {
+    if (e) e.stopPropagation();
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the entire album "${album.title}" and all its ${album.photos.length} photos? This cannot be undone.`
+      )
+    )
+      return;
+
+    try {
+      for (const p of album.photos) {
+        await deleteDoc(doc(db, 'site_photos', p.id));
+      }
+      setSelectedAlbumId('all');
+      if (viewingAlbum?.id === album.id) {
+        setViewingAlbum(null);
+      }
+      alert('Album deleted successfully.');
+    } catch (err) {
+      alert('Failed to delete album: ' + err.message);
     }
   };
 
@@ -200,7 +302,7 @@ export default function PhotoGalleryManager({
     });
   };
 
-  // Upload photo(s) from device: supports single photo or batch upload
+  // Upload single photo from device
   const handleDeviceUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -222,36 +324,75 @@ export default function PhotoGalleryManager({
       return;
     }
 
-    // Batch upload: multiple photos selected
+    // If user selected multiple files in single mode, switch to album mode automatically!
     if (files.length > 1) {
-      if (!window.confirm(`Upload all ${files.length} photos to the gallery at once?`)) return;
+      setUploadMode('album');
       setIsProcessingFile(true);
       try {
+        const newItems = [];
         for (let i = 0; i < files.length; i++) {
           const compressed = await compressImageFile(files[i]);
           const nameWithoutExt = files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ');
-          await addDoc(collection(db, 'site_photos'), {
-            targetPage,
-            imageUrl: compressed,
-            title: nameWithoutExt,
-            titleEn: nameWithoutExt,
-            titleTe: nameWithoutExt,
-            caption: '',
-            captionEn: '',
-            captionTe: '',
-            linkUrl: null,
-            order: photos.length + i,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
+          newItems.push({
+            id: `${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+            url: compressed,
+            name: nameWithoutExt,
           });
         }
-        setIsFormOpen(false);
-        alert(`Successfully added ${files.length} photos!`);
+        setBatchPhotos(newItems);
       } catch (err) {
-        alert('Failed during batch upload: ' + err.message);
+        alert('Failed to process some image files.');
       } finally {
         setIsProcessingFile(false);
       }
+    }
+  };
+
+  // Multi-photo batch selection for Album upload
+  const handleBatchFilesSelected = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsProcessingFile(true);
+    try {
+      const newItems = [];
+      for (let i = 0; i < files.length; i++) {
+        const compressed = await compressImageFile(files[i]);
+        const nameWithoutExt = files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ');
+        newItems.push({
+          id: `${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+          url: compressed,
+          name: nameWithoutExt,
+        });
+      }
+      setBatchPhotos((prev) => [...prev, ...newItems]);
+    } catch (err) {
+      alert('Failed to process some files: ' + err.message);
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
+  // Add URL links to batch photos
+  const handleApplyBatchUrls = () => {
+    if (!batchUrlsInput.trim()) return;
+    const lines = batchUrlsInput.split(/\r?\n|,/).map((u) => u.trim()).filter(Boolean);
+    const validUrls = [];
+    lines.forEach((url, i) => {
+      const normalized = normalizeImageUrl(url);
+      if (normalized) {
+        validUrls.push({
+          id: `${Date.now()}_url_${i}_${Math.random().toString(36).substring(2, 7)}`,
+          url: normalized,
+          name: `Photo ${batchPhotos.length + validUrls.length + 1}`,
+        });
+      }
+    });
+    if (validUrls.length > 0) {
+      setBatchPhotos((prev) => [...prev, ...validUrls]);
+      setBatchUrlsInput('');
+    } else {
+      alert('No valid image URLs found.');
     }
   };
 
@@ -260,12 +401,9 @@ export default function PhotoGalleryManager({
     if (!isFormOpen) return;
 
     const handleWindowPaste = async (e) => {
-      // Don't intercept if user is typing text in title or caption inputs
       const activeTag = document.activeElement?.tagName;
-      if (activeTag === 'TEXTAREA') return;
-      if (document.activeElement?.id === 'gallery-title-input' || document.activeElement?.id === 'gallery-caption-input') return;
+      if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') return;
 
-      // Check if image blob is in clipboard (e.g. Right click -> Copy Image in Google)
       const items = e.clipboardData?.items;
       if (items) {
         for (let i = 0; i < items.length; i++) {
@@ -277,7 +415,18 @@ export default function PhotoGalleryManager({
               setIsProcessingFile(true);
               try {
                 const compressed = await compressImageFile(blob);
-                setImageUrl(compressed);
+                if (uploadMode === 'album') {
+                  setBatchPhotos((prev) => [
+                    ...prev,
+                    {
+                      id: `${Date.now()}_paste_${Math.random().toString(36).substring(2, 7)}`,
+                      url: compressed,
+                      name: `Pasted Photo ${prev.length + 1}`,
+                    },
+                  ]);
+                } else {
+                  setImageUrl(compressed);
+                }
                 setPasteNotice('');
               } catch (err) {
                 alert('Failed to paste copied photo.');
@@ -290,15 +439,25 @@ export default function PhotoGalleryManager({
         }
       }
 
-      // Check if image URL is pasted as text
       const text = e.clipboardData?.getData('text');
       if (text && (text.startsWith('http') || text.includes('google.') || text.startsWith('data:image/'))) {
         const normalized = normalizeImageUrl(text);
         if (normalized) {
           e.preventDefault();
           setPasteNotice('Applying pasted photo URL...');
-          setImageUrl(normalized);
-          setLinkInput(normalized);
+          if (uploadMode === 'album') {
+            setBatchPhotos((prev) => [
+              ...prev,
+              {
+                id: `${Date.now()}_paste_url`,
+                url: normalized,
+                name: `Web Photo ${prev.length + 1}`,
+              },
+            ]);
+          } else {
+            setImageUrl(normalized);
+            setLinkInput(normalized);
+          }
           setTimeout(() => setPasteNotice(''), 1000);
         }
       }
@@ -306,10 +465,66 @@ export default function PhotoGalleryManager({
 
     window.addEventListener('paste', handleWindowPaste);
     return () => window.removeEventListener('paste', handleWindowPaste);
-  }, [isFormOpen]);
+  }, [isFormOpen, uploadMode]);
 
+  // Handle Submit (Single photo or Album Batch)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Mode A: Album Multi-Photo Batch Upload
+    if (uploadMode === 'album') {
+      if (!albumTitle.trim()) {
+        alert('Please enter an Album / Event Title (ఆల్బమ్ లేదా ఈవెంట్ శీర్షిక ఇవ్వండి).');
+        return;
+      }
+      if (batchPhotos.length === 0) {
+        alert('Please select or paste at least one photo for the album (కనీసం ఒక ఫోటో అయినా జోడించండి).');
+        return;
+      }
+
+      setSubmitting(true);
+      setBatchUploadProgress({ current: 0, total: batchPhotos.length, active: true });
+
+      try {
+        const cleanAlbumTitle = albumTitle.trim();
+        const generatedAlbumId = editingPhoto?.albumId || `album_${Date.now()}`;
+
+        for (let i = 0; i < batchPhotos.length; i++) {
+          setBatchUploadProgress({ current: i + 1, total: batchPhotos.length, active: true });
+          const item = batchPhotos[i];
+          await addDoc(collection(db, 'site_photos'), {
+            targetPage,
+            imageUrl: item.url,
+            title: item.name || cleanAlbumTitle,
+            titleEn: item.name || cleanAlbumTitle,
+            titleTe: item.name || cleanAlbumTitle,
+            caption: albumDesc.trim() || null,
+            captionEn: albumDesc.trim() || null,
+            captionTe: albumDesc.trim() || null,
+            albumId: generatedAlbumId,
+            albumTitle: cleanAlbumTitle,
+            albumDate: albumDate || null,
+            albumDesc: albumDesc.trim() || null,
+            order: photos.length + i,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+
+        setIsFormOpen(false);
+        setSelectedAlbumId(generatedAlbumId);
+        setBatchPhotos([]);
+        alert(`Successfully published album "${cleanAlbumTitle}" with ${batchPhotos.length} photos!`);
+      } catch (err) {
+        alert('Failed during album upload: ' + err.message);
+      } finally {
+        setSubmitting(false);
+        setBatchUploadProgress({ current: 0, total: 0, active: false });
+      }
+      return;
+    }
+
+    // Mode B: Single Photo Upload
     if (!imageUrl || !imageUrl.trim()) {
       alert('Please select or paste a photo.');
       return;
@@ -317,7 +532,7 @@ export default function PhotoGalleryManager({
 
     setSubmitting(true);
     try {
-      const cleanTitle = title.trim() || 'Featured Photo';
+      const cleanTitle = title.trim() || (albumTitle ? albumTitle.trim() : 'Featured Photo');
       const cleanCaption = caption.trim();
       const payload = {
         targetPage,
@@ -329,6 +544,10 @@ export default function PhotoGalleryManager({
         captionEn: cleanCaption,
         captionTe: cleanCaption,
         linkUrl: linkUrl.trim() || null,
+        albumTitle: albumTitle.trim() || null,
+        albumId: albumTitle.trim() ? (editingPhoto?.albumId || `album_${Date.now()}`) : null,
+        albumDate: albumDate || null,
+        albumDesc: albumDesc.trim() || null,
         updatedAt: serverTimestamp(),
       };
 
@@ -358,13 +577,13 @@ export default function PhotoGalleryManager({
   const handleLightboxPrev = (e) => {
     if (e) e.stopPropagation();
     if (previewPhotoIndex === null) return;
-    setPreviewPhotoIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+    setPreviewPhotoIndex((prev) => (prev === 0 ? displayedPhotos.length - 1 : prev - 1));
   };
 
   const handleLightboxNext = (e) => {
     if (e) e.stopPropagation();
     if (previewPhotoIndex === null) return;
-    setPreviewPhotoIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+    setPreviewPhotoIndex((prev) => (prev === displayedPhotos.length - 1 ? 0 : prev + 1));
   };
 
   // Keyboard navigation for lightbox
@@ -377,44 +596,59 @@ export default function PhotoGalleryManager({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewPhotoIndex, photos.length]);
+  }, [previewPhotoIndex, displayedPhotos.length]);
+
+  // Download high-resolution photo
+  const handleDownloadPhoto = (photo, e) => {
+    if (e) e.stopPropagation();
+    const link = document.createElement('a');
+    link.href = photo.imageUrl;
+    link.download = `${(photo.title || 'photo').replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (!loading && photos.length === 0 && !isAdmin) {
     return null;
   }
 
   const currentPreviewPhoto =
-    previewPhotoIndex !== null ? photos[previewPhotoIndex] : null;
+    previewPhotoIndex !== null && displayedPhotos[previewPhotoIndex]
+      ? displayedPhotos[previewPhotoIndex]
+      : null;
 
   return (
-    <section className={`py-12 px-3 sm:px-6 md:px-8 lg:px-12 w-full max-w-[1720px] mx-auto ${className}`}>
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-slate-200 gap-4">
+    <section className={`py-10 px-3 sm:px-6 md:px-8 lg:px-12 w-full max-w-[1720px] mx-auto ${className}`}>
+      {/* ============================================================== */}
+      {/* 1. MAIN SECTION HEADER BAR                                     */}
+      {/* ============================================================== */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 pb-4 border-b border-slate-200 gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[#C59B27] text-xs font-bold uppercase tracking-widest mb-1.5">
+          <div className="flex items-center gap-2 text-[#C59B27] text-xs font-bold uppercase tracking-widest mb-1">
             <ImageIcon className="w-4 h-4 text-[#C59B27]" />
             <span>{isTelugu ? 'ఫొటోలు & విశేషాలు' : 'Visual Gallery'}</span>
           </div>
           <h2
-            className={`text-2xl sm:text-3xl font-bold text-[#0F294A] tracking-tight ${
-              isTelugu ? 'font-krishna text-3xl' : 'font-serif'
+            className={`text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#071B3B] tracking-tight ${
+              isTelugu ? 'font-krishna' : 'font-serif'
             }`}
           >
             {isTelugu ? sectionTitleTe : sectionTitleEn}
           </h2>
         </div>
 
-        {/* View Switcher & Admin Add Photo Button */}
-        <div className="flex items-center gap-3">
+        {/* View Switcher & Admin Action Buttons */}
+        <div className="flex items-center gap-2.5 flex-wrap">
           {/* Slider vs Grid Toggle */}
-          {photos.length > 0 && (
-            <div className="inline-flex items-center rounded-full bg-slate-100 p-0.5 border border-slate-200 text-xs">
+          {displayedPhotos.length > 0 && (
+            <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('slider')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
                   viewMode === 'slider'
-                    ? 'bg-[#0F294A] text-[#F4B942] shadow-xs'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Sliding Carousel View"
@@ -425,9 +659,9 @@ export default function PhotoGalleryManager({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold transition cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-[#0F294A] text-[#F4B942] shadow-xs'
+                    ? 'bg-[#071B3B] text-[#F4B942] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Grid View"
@@ -438,26 +672,178 @@ export default function PhotoGalleryManager({
             </div>
           )}
 
-          {/* Admin Add Photo Button */}
+          {/* Admin Multi-Photo Event Album Button */}
           {isAdmin && (
             <button
-              onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
+              onClick={() => handleOpenAdd('album')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] font-black text-xs uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
+              title="Upload an entire event photo album at once"
+            >
+              <FolderPlus className="w-4 h-4 stroke-[2.5]" />
+              <span>{isTelugu ? '+ ఈవెంట్ ఆల్బమ్' : '+ Event Album'}</span>
+            </button>
+          )}
+
+          {/* Admin Add Single Photo Button */}
+          {isAdmin && (
+            <button
+              onClick={() => handleOpenAdd('single')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span>{isTelugu ? '+ ఫొటో జోడించండి' : '+ Add Photo'}</span>
+              <span>{isTelugu ? '+ ఫొటో' : '+ Add Photo'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Admin Add / Edit Form Modal */}
+      {/* ============================================================== */}
+      {/* 2. ALBUM HEADER & ALBUMS SELECTOR                               */}
+      {/* Displays directly underneath "Featured Photos & Visual Gallery" */}
+      {/* ============================================================== */}
+
+      {/* A. DEDICATED ACTIVE ALBUM HEADER BANNER */}
+      {activeAlbum && (
+        <div className="mb-6 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#132A4A] text-white border border-[#C59B27]/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-black text-[10px] uppercase tracking-wider flex items-center gap-1">
+                <FolderOpen className="w-3 h-3" />
+                <span>Event Album</span>
+              </span>
+              {activeAlbum.date && (
+                <span className="text-xs text-amber-200 flex items-center gap-1 font-semibold">
+                  <Calendar className="w-3 h-3 text-[#F4B942]" />
+                  <span>{activeAlbum.date}</span>
+                </span>
+              )}
+              <span className="text-xs text-slate-300 font-semibold bg-white/10 px-2.5 py-0.5 rounded-full">
+                📸 {activeAlbum.photos.length} {activeAlbum.photos.length === 1 ? 'Photo' : 'Photos'}
+              </span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight font-serif truncate">
+              {activeAlbum.title}
+            </h3>
+
+            {activeAlbum.desc && (
+              <p className="text-xs sm:text-sm text-slate-300 line-clamp-2 max-w-3xl leading-relaxed">
+                {activeAlbum.desc}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setViewingAlbum(activeAlbum)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer"
+            >
+              <Maximize2 className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{isTelugu ? 'ఆల్బమ్ తెరవండి' : 'Open Album View'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedAlbumId('all')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>{isTelugu ? 'అన్ని ఫొటోలు' : 'View All Photos'}</span>
+            </button>
+
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 ml-1">
+                <button
+                  type="button"
+                  onClick={() => handleOpenAdd('album', activeAlbum)}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 transition cursor-pointer"
+                  title="Add more photos to this album"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleDeleteAlbum(activeAlbum, e)}
+                  className="p-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 transition cursor-pointer"
+                  title="Delete Album"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* B. HORIZONTAL ALBUMS NAVIGATION TABS */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-3 mb-6 border-b border-slate-100 text-xs">
+        <button
+          type="button"
+          onClick={() => setSelectedAlbumId('all')}
+          className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 ${
+            selectedAlbumId === 'all'
+              ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-slate-50'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>{isTelugu ? `అన్ని ఫొటోలు (${photos.length})` : `All Photos (${photos.length})`}</span>
+        </button>
+
+        {albums.map((album) => {
+          const isSelected = selectedAlbumId === album.id;
+          return (
+            <button
+              key={album.id}
+              type="button"
+              onClick={() => setSelectedAlbumId(isSelected ? 'all' : album.id)}
+              className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs ring-2 ring-[#F4B942]/40'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-slate-50'
+              }`}
+            >
+              <Folder className="w-3.5 h-3.5 text-[#C59B27]" />
+              <span>{album.title}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px] font-extrabold text-slate-700">
+                {album.photos.length}
+              </span>
+            </button>
+          );
+        })}
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => handleOpenAdd('album')}
+            className="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer border border-dashed border-amber-400 bg-amber-50 hover:bg-amber-100 text-[#071B3B] flex items-center gap-1.5 ml-auto"
+          >
+            <FolderPlus className="w-3.5 h-3.5 text-[#C59B27]" />
+            <span>{isTelugu ? '+ ఈవెంట్ ఆల్బమ్' : '+ Create Event Album'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* 3. ADMIN ADD / EDIT FORM MODAL                                  */}
+      {/* ============================================================== */}
       {isFormOpen && (
         <div className="mb-10 p-6 rounded-3xl bg-white border border-[#C59B27]/40 shadow-xl animate-in fade-in duration-200">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-            <h3 className="text-base font-bold text-[#0F294A] flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-[#C59B27]" />
-              <span>{editingPhoto ? 'Edit Photo Details' : 'Add New Photo to Gallery'}</span>
+            <h3 className="text-base font-bold text-[#071B3B] flex items-center gap-2">
+              {uploadMode === 'album' ? (
+                <FolderPlus className="w-5 h-5 text-[#C59B27]" />
+              ) : (
+                <ImageIcon className="w-5 h-5 text-[#C59B27]" />
+              )}
+              <span>
+                {uploadMode === 'album'
+                  ? 'Create / Upload Event Photo Album (మొత్తం ఈవెంట్ ఫొటోలు ఒకేసారి)'
+                  : editingPhoto
+                  ? 'Edit Photo Details'
+                  : 'Add Single Photo to Gallery'}
+              </span>
             </h3>
             <button
               onClick={() => setIsFormOpen(false)}
@@ -468,6 +854,36 @@ export default function PhotoGalleryManager({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            {/* Mode Switcher: Single vs Album */}
+            {!editingPhoto && (
+              <div className="flex items-center gap-2 p-1.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('single')}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                    uploadMode === 'single'
+                      ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Single Photo Upload</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('album')}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                    uploadMode === 'album'
+                      ? 'bg-[#071B3B] text-[#F4B942] shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <FolderPlus className="w-4 h-4 text-[#F4B942]" />
+                  <span>📁 Event Album (Multi-Photo Batch Upload)</span>
+                </button>
+              </div>
+            )}
+
             {/* Quick Paste Notification Badge */}
             {pasteNotice && (
               <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2 animate-in fade-in">
@@ -476,57 +892,74 @@ export default function PhotoGalleryManager({
               </div>
             )}
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block font-bold text-slate-800 text-xs">
-                  Photo (Upload, Copy-Paste, or Paste Any Link) *
-                </label>
-                <span className="text-[11px] text-slate-400">
-                  Accepts Google Images, Drive, Device Upload, or Ctrl+V
-                </span>
-              </div>
+            {/* -------------------------------------------------------- */}
+            {/* IF ALBUM BATCH UPLOAD MODE                               */}
+            {/* -------------------------------------------------------- */}
+            {uploadMode === 'album' ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Event / Album Title (ఈవెంట్ / ఆల్బమ్ శీర్షిక) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={albumTitle}
+                      onChange={(e) => setAlbumTitle(e.target.value)}
+                      placeholder="e.g. 2026 Sacred Passover Celebration / New Song Festival..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white font-semibold"
+                    />
+                  </div>
 
-              {/* Source Tabs */}
-              <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setInputSourceTab('upload')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    inputSourceTab === 'upload'
-                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Upload className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span>Upload from Device / Copy-Paste</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setInputSourceTab('link')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    inputSourceTab === 'link'
-                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <LinkIcon className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span>Paste Any Link / Google Photo</span>
-                </button>
-              </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Event Date (ఈవెంట్ తేదీ - Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={albumDate}
+                      onChange={(e) => setAlbumDate(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                    />
+                  </div>
+                </div>
 
-              {/* TAB 1: DEVICE UPLOAD & DRAG & DROP & CTRL+V */}
-              {inputSourceTab === 'upload' && (
                 <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Album Description / Summary (వివరణ - Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={albumDesc}
+                    onChange={(e) => setAlbumDesc(e.target.value)}
+                    placeholder="Brief description of the event or gathering..."
+                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                  />
+                </div>
+
+                {/* Batch Multi-Photo Selector */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-slate-700">
+                      Select Photos for this Album ({batchPhotos.length} chosen) *
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Select multiple photos, drag & drop, or paste URLs
+                    </span>
+                  </div>
+
                   <input
-                    ref={fileInputRef}
+                    ref={batchFileInputRef}
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={handleDeviceUpload}
+                    onChange={handleBatchFilesSelected}
                     className="hidden"
                   />
+
                   <div
-                    onClick={() => !isProcessingFile && fileInputRef.current?.click()}
+                    onClick={() => !isProcessingFile && batchFileInputRef.current?.click()}
                     onDragOver={(e) => {
                       e.preventDefault();
                       setIsDragging(true);
@@ -537,10 +970,10 @@ export default function PhotoGalleryManager({
                       setIsDragging(false);
                       const files = e.dataTransfer?.files;
                       if (files && files.length > 0) {
-                        handleDeviceUpload({ target: { files } });
+                        handleBatchFilesSelected({ target: { files } });
                       }
                     }}
-                    className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition ${
+                    className={`border-2 border-dashed rounded-3xl p-6 text-center cursor-pointer transition ${
                       isDragging
                         ? 'border-amber-500 bg-amber-100/50 scale-[1.01]'
                         : isProcessingFile
@@ -549,157 +982,335 @@ export default function PhotoGalleryManager({
                     }`}
                   >
                     {isProcessingFile ? (
-                      <div className="flex flex-col items-center justify-center gap-2 py-2 text-slate-600">
-                        <Loader2 className="w-7 h-7 text-[#C59B27] animate-spin" />
-                        <p className="font-bold text-slate-700">Processing & compressing photo...</p>
+                      <div className="flex flex-col items-center justify-center gap-2 py-3 text-slate-600">
+                        <Loader2 className="w-8 h-8 text-[#C59B27] animate-spin" />
+                        <p className="font-bold text-slate-800">Compressing & preparing photos...</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-1.5 py-1 text-slate-600">
-                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center text-[#C59B27] mb-1">
-                          <Upload className="w-5 h-5" />
+                      <div className="flex flex-col items-center justify-center gap-1.5 text-slate-600">
+                        <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-center text-[#C59B27] mb-1">
+                          <Upload className="w-6 h-6" />
                         </div>
-                        <p className="font-bold text-slate-800 text-xs">
-                          Click to choose photo(s) from device or drag & drop here
+                        <p className="font-black text-slate-800 text-sm">
+                          Click to choose multiple photos from device or drag & drop here
                         </p>
-                        <p className="text-[11px] text-slate-500">
-                          Supports single or multiple photos (JPG, PNG, WebP)
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          💡 Tip: You can also copy any photo from Google/web and press <kbd className="px-1.5 py-0.5 bg-slate-200 rounded font-mono text-slate-800 text-[10px]">Ctrl + V</kbd> to paste!
+                        <p className="text-xs text-slate-500">
+                          Supports selecting 5, 10, 20+ photos all at once (JPG, PNG, WebP)
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
-              )}
 
-              {/* TAB 2: LINK / GOOGLE PHOTO */}
-              {inputSourceTab === 'link' && (
-                <div className="space-y-2">
+                {/* Or paste multiple links */}
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <span className="font-bold text-slate-700 block">Or Paste Photo URLs (Google Images / Drive):</span>
                   <div className="flex gap-2">
                     <input
-                      id="photo-gallery-url-input"
                       type="text"
-                      value={linkInput}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setLinkInput(val);
-                        if (val.trim()) {
-                          const normalized = normalizeImageUrl(val);
-                          setImageUrl(normalized);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (linkInput.trim()) {
-                            const normalized = normalizeImageUrl(linkInput);
-                            setImageUrl(normalized);
-                            setLinkInput(normalized);
-                          }
-                        }
-                      }}
-                      placeholder="Paste image link, Google search photo link, or Google Drive URL..."
-                      className="flex-1 p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white font-mono"
+                      value={batchUrlsInput}
+                      onChange={(e) => setBatchUrlsInput(e.target.value)}
+                      placeholder="Paste image link(s) separated by commas or new lines..."
+                      className="flex-1 p-2 rounded-xl border border-slate-300 bg-white text-xs font-mono"
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        if (linkInput.trim()) {
-                          const normalized = normalizeImageUrl(linkInput);
-                          setImageUrl(normalized);
-                          setLinkInput(normalized);
-                        }
-                      }}
-                      className="px-4 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs shrink-0 cursor-pointer"
+                      onClick={handleApplyBatchUrls}
+                      className="px-3 py-1.5 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold text-xs shrink-0 cursor-pointer"
                     >
-                      Apply Link
+                      Add URL
                     </button>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Works seamlessly with Google search images, Google Drive photo links, Unsplash, or any web image URL.
-                  </p>
                 </div>
-              )}
 
-              {/* PHOTO PREVIEW CARD */}
-              {imageUrl && (
-                <div className="mt-3 p-3 rounded-2xl border border-amber-200/80 bg-amber-50/40 flex items-center justify-between gap-4 animate-in fade-in duration-150">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs shrink-0">
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
+                {/* Batch Photo Thumbnails Preview Strip */}
+                {batchPhotos.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-slate-800 text-xs">
+                        Album Photos Preview ({batchPhotos.length}):
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setBatchPhotos([])}
+                        className="text-rose-600 hover:underline text-[11px] font-bold cursor-pointer"
+                      >
+                        Clear All
+                      </button>
                     </div>
-                    <div>
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                        <Check className="w-3 h-3" />
-                        <span>Photo Ready to Save</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs sm:max-w-md">
-                        {imageUrl.startsWith('data:') ? 'Uploaded from device (Optimized JPEG)' : imageUrl}
-                      </p>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 max-h-56 overflow-y-auto p-1.5 bg-slate-50 rounded-2xl border border-slate-200">
+                      {batchPhotos.map((item, idx) => (
+                        <div
+                          key={item.id || idx}
+                          className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group bg-white shadow-2xs"
+                        >
+                          <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setBatchPhotos((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 p-1 rounded-md bg-black/60 hover:bg-rose-600 text-white transition cursor-pointer"
+                            title="Remove photo"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          <span className="absolute bottom-1 left-1 right-1 px-1 py-0.5 rounded bg-black/60 text-[9px] text-white truncate font-medium">
+                            #{idx + 1}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                )}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageUrl('');
-                      setLinkInput('');
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition shrink-0"
-                    title="Remove Photo"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                {/* Batch Upload Progress Indicator */}
+                {batchUploadProgress.active && (
+                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-bold text-amber-900">
+                      <span>Uploading Album Photos...</span>
+                      <span>
+                        {batchUploadProgress.current} / {batchUploadProgress.total} (
+                        {Math.round((batchUploadProgress.current / batchUploadProgress.total) * 100)}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-amber-200 overflow-hidden">
+                      <div
+                        className="h-full bg-[#071B3B] transition-all duration-200"
+                        style={{
+                          width: `${(batchUploadProgress.current / batchUploadProgress.total) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* -------------------------------------------------------- */
+              /* IF SINGLE PHOTO UPLOAD MODE                              */
+              /* -------------------------------------------------------- */
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block font-bold text-slate-800 text-xs">
+                      Photo (Upload, Copy-Paste, or Paste Any Link) *
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Accepts Google Images, Drive, Device Upload, or Ctrl+V
+                    </span>
+                  </div>
+
+                  {/* Source Tabs */}
+                  <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setInputSourceTab('upload')}
+                      className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        inputSourceTab === 'upload'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#C59B27]" />
+                      <span>Upload from Device / Copy-Paste</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInputSourceTab('link')}
+                      className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        inputSourceTab === 'link'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <LinkIcon className="w-3.5 h-3.5 text-[#C59B27]" />
+                      <span>Paste Any Link / Google Photo</span>
+                    </button>
+                  </div>
+
+                  {/* TAB 1: DEVICE UPLOAD & DRAG & DROP & CTRL+V */}
+                  {inputSourceTab === 'upload' && (
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleDeviceUpload}
+                        className="hidden"
+                      />
+                      <div
+                        onClick={() => !isProcessingFile && fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragging(true);
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragging(false);
+                          const files = e.dataTransfer?.files;
+                          if (files && files.length > 0) {
+                            handleDeviceUpload({ target: { files } });
+                          }
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition ${
+                          isDragging
+                            ? 'border-amber-500 bg-amber-100/50 scale-[1.01]'
+                            : isProcessingFile
+                            ? 'border-amber-400 bg-amber-50/50'
+                            : 'border-slate-300 hover:border-[#C59B27] bg-slate-50/70 hover:bg-amber-50/20'
+                        }`}
+                      >
+                        {isProcessingFile ? (
+                          <div className="flex flex-col items-center justify-center gap-2 py-2 text-slate-600">
+                            <Loader2 className="w-7 h-7 text-[#C59B27] animate-spin" />
+                            <p className="font-bold text-slate-700">Processing photo...</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-1.5 py-1 text-slate-600">
+                            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center text-[#C59B27] mb-1">
+                              <Upload className="w-5 h-5" />
+                            </div>
+                            <p className="font-bold text-slate-800 text-xs">
+                              Click to choose photo from device or drag & drop here
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                              Supports single photo or multiple photos (JPG, PNG, WebP)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: LINK / GOOGLE PHOTO */}
+                  {inputSourceTab === 'link' && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          id="photo-gallery-url-input"
+                          type="text"
+                          value={linkInput}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setLinkInput(val);
+                            if (val.trim()) {
+                              const normalized = normalizeImageUrl(val);
+                              setImageUrl(normalized);
+                            }
+                          }}
+                          placeholder="Paste image link, Google search photo link, or Google Drive URL..."
+                          className="flex-1 p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (linkInput.trim()) {
+                              const normalized = normalizeImageUrl(linkInput);
+                              setImageUrl(normalized);
+                              setLinkInput(normalized);
+                            }
+                          }}
+                          className="px-4 py-2 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs shrink-0 cursor-pointer"
+                        >
+                          Apply Link
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PHOTO PREVIEW CARD */}
+                  {imageUrl && (
+                    <div className="mt-3 p-3 rounded-2xl border border-amber-200/80 bg-amber-50/40 flex items-center justify-between gap-4 animate-in fade-in duration-150">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs shrink-0">
+                          <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            <Check className="w-3 h-3" />
+                            <span>Photo Ready to Save</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs sm:max-w-md">
+                            {imageUrl.startsWith('data:') ? 'Uploaded from device' : imageUrl}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageUrl('');
+                          setLinkInput('');
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition shrink-0"
+                        title="Remove Photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Title (Optional / శీర్షిక)
-              </label>
-              <input
-                id="gallery-title-input"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Photo title / శీర్షిక (optional)..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
-              />
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Title (Optional / శీర్షిక)
+                    </label>
+                    <input
+                      id="gallery-title-input"
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Photo title / శీర్షిక (optional)..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                    />
+                  </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Caption / Description (Optional / వివరణ)
-              </label>
-              <textarea
-                id="gallery-caption-input"
-                rows={2}
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Photo caption or description (optional)..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
-              />
-            </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Assign to Album (ఆల్బమ్ - Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={albumTitle}
+                      onChange={(e) => setAlbumTitle(e.target.value)}
+                      placeholder="e.g. 2026 Sacred Passover Assembly"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Optional Redirect Link / URL
-              </label>
-              <input
-                type="text"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="/page/... or https://..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
-              />
-            </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Caption / Description (Optional / వివరణ)
+                  </label>
+                  <textarea
+                    id="gallery-caption-input"
+                    rows={2}
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Photo caption or description (optional)..."
+                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                  />
+                </div>
 
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Optional Redirect Link / URL
+                  </label>
+                  <input
+                    type="text"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    placeholder="/page/... or https://..."
+                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Form Footer Action Buttons */}
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
@@ -711,7 +1322,7 @@ export default function PhotoGalleryManager({
               <button
                 type="submit"
                 disabled={submitting || isProcessingFile}
-                className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                className="px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-black text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
               >
                 {submitting ? (
                   <>
@@ -721,8 +1332,10 @@ export default function PhotoGalleryManager({
                 ) : isProcessingFile ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Processing Photo...</span>
+                    <span>Processing Photos...</span>
                   </>
+                ) : uploadMode === 'album' ? (
+                  <span>Publish Event Album ({batchPhotos.length} Photos)</span>
                 ) : editingPhoto ? (
                   <span>Update Photo</span>
                 ) : (
@@ -734,54 +1347,53 @@ export default function PhotoGalleryManager({
         </div>
       )}
 
-      {/* Photos Empty State */}
-      {photos.length === 0 ? (
+      {/* ============================================================== */}
+      {/* 4. GALLERY SHOWCASE (Slider View or Grid View)                  */}
+      {/* ============================================================== */}
+      {displayedPhotos.length === 0 ? (
         <div className="text-center py-12 px-4 rounded-3xl bg-slate-50 border border-dashed border-slate-200">
           <ImageIcon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
           <p className="text-xs text-slate-500 font-medium">
-            {isAdmin
-              ? 'No photos uploaded yet for this page. Click "+ Add Photo" to showcase photos here.'
+            {selectedAlbumId !== 'all'
+              ? 'No photos in this album yet.'
+              : isAdmin
+              ? 'No photos uploaded yet for this page. Click "+ Event Album" or "+ Add Photo" to showcase photos here.'
               : 'Visual highlights will appear here soon.'}
           </p>
         </div>
       ) : viewMode === 'slider' ? (
-        /* ============================================================== */
-        /* A. SLIDER VIEW (Horizontal Smooth Sliding Carousel)             */
-        /* ============================================================== */
+        /* SLIDER VIEW */
         <div className="relative group/slider">
-          {/* Scroll Left Button */}
           {canScrollLeft && (
             <button
               type="button"
               onClick={() => handleScrollSlider(-1)}
-              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-[#0F294A] flex items-center justify-center shadow-xl border border-slate-200 transition hover:scale-110 active:scale-95 cursor-pointer"
+              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-[#071B3B] flex items-center justify-center shadow-xl border border-slate-200 transition hover:scale-110 active:scale-95 cursor-pointer"
               title="Slide Left"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
           )}
 
-          {/* Scroll Right Button */}
           {canScrollRight && (
             <button
               type="button"
               onClick={() => handleScrollSlider(1)}
-              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-[#0F294A] flex items-center justify-center shadow-xl border border-slate-200 transition hover:scale-110 active:scale-95 cursor-pointer"
+              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 hover:bg-white text-[#071B3B] flex items-center justify-center shadow-xl border border-slate-200 transition hover:scale-110 active:scale-95 cursor-pointer"
               title="Slide Right"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
           )}
 
-          {/* Horizontal Sliding Track */}
           <div
             ref={sliderRef}
             onScroll={checkSliderScroll}
             className="flex items-stretch gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-4 px-1"
           >
-            {photos.map((photo, idx) => {
-              const title = isTelugu ? photo.titleTe || photo.titleEn : photo.titleEn || photo.titleTe;
-              const caption = isTelugu ? photo.captionTe || photo.captionEn : photo.captionEn || photo.captionTe;
+            {displayedPhotos.map((photo, idx) => {
+              const photoTitle = isTelugu ? photo.titleTe || photo.titleEn : photo.titleEn || photo.titleTe;
+              const photoCaption = isTelugu ? photo.captionTe || photo.captionEn : photo.captionEn || photo.captionTe;
 
               return (
                 <div
@@ -789,11 +1401,10 @@ export default function PhotoGalleryManager({
                   onClick={() => setPreviewPhotoIndex(idx)}
                   className="group relative bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between shrink-0 w-[280px] sm:w-[320px] md:w-[360px]"
                 >
-                  {/* Image Container with 16:10 aspect ratio */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                     <img
                       src={photo.imageUrl}
-                      alt={title || 'Photo'}
+                      alt={photoTitle || 'Photo'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       loading="lazy"
                     />
@@ -804,7 +1415,12 @@ export default function PhotoGalleryManager({
                       </span>
                     </div>
 
-                    {/* Admin Edit / Delete Floating Badges */}
+                    {photo.albumTitle && (
+                      <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[#F4B942] text-[10px] font-bold border border-white/20">
+                        📁 {photo.albumTitle}
+                      </span>
+                    )}
+
                     {isAdmin && (
                       <div
                         className="absolute top-3 right-3 flex items-center gap-1.5 z-10"
@@ -828,25 +1444,24 @@ export default function PhotoGalleryManager({
                     )}
                   </div>
 
-                  {/* Caption / Details */}
-                  {(title || caption) && (
+                  {(photoTitle || photoCaption) && (
                     <div className="p-4 sm:p-5">
-                      {title && (
+                      {photoTitle && (
                         <h4
-                          className={`text-sm sm:text-base font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors line-clamp-1 ${
+                          className={`text-sm sm:text-base font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors line-clamp-1 ${
                             isTelugu ? 'font-telugu' : 'font-sans'
                           }`}
                         >
-                          {title}
+                          {photoTitle}
                         </h4>
                       )}
-                      {caption && (
+                      {photoCaption && (
                         <p
                           className={`text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed ${
                             isTelugu ? 'font-telugu' : ''
                           }`}
                         >
-                          {caption}
+                          {photoCaption}
                         </p>
                       )}
                     </div>
@@ -857,13 +1472,11 @@ export default function PhotoGalleryManager({
           </div>
         </div>
       ) : (
-        /* ============================================================== */
-        /* B. GRID VIEW                                                    */
-        /* ============================================================== */
+        /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {photos.map((photo, idx) => {
-            const title = isTelugu ? photo.titleTe || photo.titleEn : photo.titleEn || photo.titleTe;
-            const caption = isTelugu ? photo.captionTe || photo.captionEn : photo.captionEn || photo.captionTe;
+          {displayedPhotos.map((photo, idx) => {
+            const photoTitle = isTelugu ? photo.titleTe || photo.titleEn : photo.titleEn || photo.titleTe;
+            const photoCaption = isTelugu ? photo.captionTe || photo.captionEn : photo.captionEn || photo.captionTe;
 
             return (
               <div
@@ -871,11 +1484,10 @@ export default function PhotoGalleryManager({
                 onClick={() => setPreviewPhotoIndex(idx)}
                 className="group relative bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
               >
-                {/* Image Container with 16:10 aspect ratio */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                   <img
                     src={photo.imageUrl}
-                    alt={title || 'Photo'}
+                    alt={photoTitle || 'Photo'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     loading="lazy"
                   />
@@ -886,7 +1498,12 @@ export default function PhotoGalleryManager({
                     </span>
                   </div>
 
-                  {/* Admin Edit / Delete Floating Badges */}
+                  {photo.albumTitle && (
+                    <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[#F4B942] text-[10px] font-bold border border-white/20">
+                      📁 {photo.albumTitle}
+                    </span>
+                  )}
+
                   {isAdmin && (
                     <div
                       className="absolute top-3 right-3 flex items-center gap-1.5 z-10"
@@ -910,25 +1527,24 @@ export default function PhotoGalleryManager({
                   )}
                 </div>
 
-                {/* Caption / Details */}
-                {(title || caption) && (
+                {(photoTitle || photoCaption) && (
                   <div className="p-4 sm:p-5">
-                    {title && (
+                    {photoTitle && (
                       <h4
-                        className={`text-sm sm:text-base font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors ${
+                        className={`text-sm sm:text-base font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors ${
                           isTelugu ? 'font-telugu' : 'font-sans'
                         }`}
                       >
-                        {title}
+                        {photoTitle}
                       </h4>
                     )}
-                    {caption && (
+                    {photoCaption && (
                       <p
                         className={`text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed ${
                           isTelugu ? 'font-telugu' : ''
                         }`}
                       >
-                        {caption}
+                        {photoCaption}
                       </p>
                     )}
                   </div>
@@ -940,11 +1556,100 @@ export default function PhotoGalleryManager({
       )}
 
       {/* ============================================================== */}
-      {/* 3. LIGHTBOX PREVIEW MODAL WITH SLIDING ARROWS (< and >)         */}
+      {/* 5. INTERACTIVE ALBUM SHOWCASE MODAL ("andaru album open chesi") */}
+      {/* ============================================================== */}
+      {viewingAlbum && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col border border-slate-200">
+            {/* Modal Top Header */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-[#071B3B] via-[#0F294A] to-[#132A4A] text-white flex items-center justify-between gap-4 border-b border-amber-500/30">
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#F4B942] text-[#071B3B] font-black text-[10px] uppercase tracking-wider">
+                    Event Photo Album
+                  </span>
+                  {viewingAlbum.date && (
+                    <span className="text-xs text-amber-200 font-semibold flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-[#F4B942]" />
+                      <span>{viewingAlbum.date}</span>
+                    </span>
+                  )}
+                  <span className="text-xs text-slate-300 bg-white/10 px-2 py-0.5 rounded-full font-semibold">
+                    {viewingAlbum.photos.length} Photos
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-3xl font-black text-white font-serif truncate">
+                  {viewingAlbum.title}
+                </h3>
+                {viewingAlbum.desc && (
+                  <p className="text-xs sm:text-sm text-slate-300 max-w-3xl line-clamp-2">
+                    {viewingAlbum.desc}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const firstIdx = displayedPhotos.findIndex(
+                      (p) => (p.albumId || p.albumTitle) === viewingAlbum.id
+                    );
+                    setPreviewPhotoIndex(firstIdx >= 0 ? firstIdx : 0);
+                  }}
+                  className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] font-black text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Start Slideshow</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingAlbum(null)}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                  title="Close Album"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Photos Grid inside Album */}
+            <div className="p-5 sm:p-6 overflow-y-auto max-h-[70vh] bg-slate-50">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {viewingAlbum.photos.map((photo, pIdx) => (
+                  <div
+                    key={photo.id}
+                    onClick={() => {
+                      const idx = displayedPhotos.findIndex((item) => item.id === photo.id);
+                      setPreviewPhotoIndex(idx >= 0 ? idx : 0);
+                    }}
+                    className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-white border border-slate-200/90 shadow-xs hover:shadow-lg transition cursor-pointer hover:scale-[1.02]"
+                  >
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.title || 'Photo'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 flex flex-col justify-end">
+                      <span className="text-white text-xs font-bold truncate">
+                        {photo.title || `Photo ${pIdx + 1}`}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 6. FULLSCREEN LIGHTBOX PREVIEW MODAL (With Next/Prev & Download)*/}
       {/* ============================================================== */}
       {currentPreviewPhoto && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none"
           onClick={() => setPreviewPhotoIndex(null)}
         >
           {/* Close Button */}
@@ -957,7 +1662,7 @@ export default function PhotoGalleryManager({
           </button>
 
           {/* Lightbox Previous Arrow */}
-          {photos.length > 1 && (
+          {displayedPhotos.length > 1 && (
             <button
               onClick={handleLightboxPrev}
               className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
@@ -968,7 +1673,7 @@ export default function PhotoGalleryManager({
           )}
 
           {/* Lightbox Next Arrow */}
-          {photos.length > 1 && (
+          {displayedPhotos.length > 1 && (
             <button
               onClick={handleLightboxNext}
               className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/20 shadow-xl cursor-pointer hover:scale-110 active:scale-95"
@@ -992,21 +1697,26 @@ export default function PhotoGalleryManager({
               />
             </div>
 
-            {/* Footer Information & Photo Index */}
-            <div className="p-5 sm:p-6 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100">
-              <div>
+            {/* Footer Information & Actions */}
+            <div className="p-4 sm:p-5 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold text-[#C59B27] uppercase">
-                    Photo {previewPhotoIndex + 1} of {photos.length}
+                    Photo {previewPhotoIndex + 1} of {displayedPhotos.length}
                   </span>
+                  {currentPreviewPhoto.albumTitle && (
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      • 📁 {currentPreviewPhoto.albumTitle}
+                    </span>
+                  )}
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-[#0F294A] mt-0.5">
+                <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
                   {isTelugu
                     ? currentPreviewPhoto.titleTe || currentPreviewPhoto.titleEn
                     : currentPreviewPhoto.titleEn || currentPreviewPhoto.titleTe}
                 </h3>
                 {currentPreviewPhoto.caption && (
-                  <p className="text-xs text-slate-600 mt-1 max-w-2xl">
+                  <p className="text-xs text-slate-600 line-clamp-2 max-w-2xl">
                     {isTelugu
                       ? currentPreviewPhoto.captionTe || currentPreviewPhoto.captionEn
                       : currentPreviewPhoto.captionEn || currentPreviewPhoto.captionTe}
@@ -1014,15 +1724,29 @@ export default function PhotoGalleryManager({
                 )}
               </div>
 
-              {currentPreviewPhoto.linkUrl && (
-                <a
-                  href={currentPreviewPhoto.linkUrl}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F294A] text-[#F4B942] text-xs font-bold hover:bg-[#071B3B] transition shrink-0"
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => handleDownloadPhoto(currentPreviewPhoto, e)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                  title="Download High-Resolution Photo"
                 >
-                  <span>Open Link</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              )}
+                  <Download className="w-3.5 h-3.5 text-[#C59B27]" />
+                  <span>Download</span>
+                </button>
+
+                {currentPreviewPhoto.linkUrl && (
+                  <a
+                    href={currentPreviewPhoto.linkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold hover:bg-[#0F294A] transition"
+                  >
+                    <span>Open Link</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
