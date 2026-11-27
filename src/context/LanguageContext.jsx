@@ -191,20 +191,11 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
     try {
-      const explicitPref = localStorage.getItem('sni_portal_language_pref');
-      if (explicitPref === 'en' || explicitPref === 'te') return explicitPref;
-
-      // Clean up legacy automatic 'te' default if present in older visits
-      const legacySaved = localStorage.getItem('sni_portal_language');
-      if (legacySaved === 'te') {
-        localStorage.removeItem('sni_portal_language');
-      } else if (legacySaved === 'en') {
-        return 'en';
-      }
-
-      // Default language is ALWAYS English ('en') on all devices and browsers
+      // Clear any legacy saved language preference so the portal always stays in English
+      localStorage.removeItem('sni_portal_language_pref');
+      localStorage.removeItem('sni_portal_language');
       return 'en';
-    } catch (e) {
+    } catch {
       return 'en';
     }
   });

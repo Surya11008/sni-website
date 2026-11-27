@@ -11,13 +11,12 @@ import {
   ExternalLink,
   Shield,
   Lock,
-  Globe,
   ChevronRight,
 } from 'lucide-react';
 
 export default function Footer() {
   const { currentUser, userProfile } = useAuth();
-  const { t, isTelugu, language, toggleLanguage } = useLanguage();
+  const { t, isTelugu } = useLanguage();
 
   const ecosystemLinks = [
     {

@@ -7,7 +7,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from './PortalIcon';
 import {
-  Globe,
   LogIn,
   LogOut,
   Menu,
@@ -25,7 +24,7 @@ import {
 
 export default function Navbar() {
   const { currentUser, userProfile, updateUserPassword, logout } = useAuth();
-  const { language, toggleLanguage, t, isTelugu } = useLanguage();
+  const { t, isTelugu } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
@@ -416,32 +415,10 @@ export default function Navbar() {
                 </span>
               </a>
             )}
-
-            {/* Language Switcher Pill */}
-            <button
-              onClick={toggleLanguage}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 hover:text-[#F4B942] text-xs font-semibold transition cursor-pointer shadow-xs ml-1"
-              title={language === 'te' ? 'Switch to English' : 'తెలుగులోకి మార్చండి'}
-            >
-              <Globe className="w-3.5 h-3.5 text-[#F4B942]" />
-              <span className={language === 'te' ? 'font-telugu font-bold text-amber-300' : 'font-bold'}>
-                {language === 'te' ? 'తెలుగు' : 'English'}
-              </span>
-            </button>
           </div>
 
           {/* Mobile Menu Actions & Hamburger */}
           <div className="flex xl:hidden items-center gap-2">
-            <button
-              onClick={toggleLanguage}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 text-slate-200 hover:text-white border border-white/15 text-xs font-medium cursor-pointer"
-              title={language === 'te' ? 'Switch to English' : 'తెలుగు'}
-            >
-              <Globe className="w-3.5 h-3.5 text-[#F4B942]" />
-              <span className={language === 'te' ? 'font-telugu font-bold text-amber-300' : 'font-bold'}>
-                {language === 'te' ? 'తె' : 'EN'}
-              </span>
-            </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition focus:outline-none cursor-pointer"
@@ -513,20 +490,6 @@ export default function Navbar() {
                 <span>{t('navSignIn')}</span>
               </a>
             )}
-          </div>
-
-          {/* Mobile Language Switcher Row */}
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-200">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#F4B942]" />
-              <span className="font-semibold">{isTelugu ? 'భాష ఎంపిక' : 'Language'}</span>
-            </div>
-            <button
-              onClick={toggleLanguage}
-              className="px-3 py-1 rounded-lg bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] font-bold text-xs transition cursor-pointer"
-            >
-              {language === 'te' ? 'తెలుగు (Switch to EN)' : 'English (తెలుగులోకి)'}
-            </button>
           </div>
 
           {/* Quick Home Nav */}
