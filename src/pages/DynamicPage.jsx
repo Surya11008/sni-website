@@ -21,7 +21,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
-import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty } from '../components/notion';
+import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
 import {
   ChevronRight,
   Plus,
@@ -40,6 +40,9 @@ import {
   LayoutGrid,
   List,
   AlignJustify,
+  Table,
+  Pin,
+  Search,
   Music,
   Download,
   Check,
@@ -81,7 +84,11 @@ export default function DynamicPage() {
   const [loading, setLoading] = useState(true);
 
   // View Mode: 'grid' | 'list' | 'compact'
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list' | 'table' | 'compact'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all'); // 'all' | 'pinned' | 'video' | 'audio' | 'file' | 'link'
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'title'
+  const [showEmbedDrawer, setShowEmbedDrawer] = useState(false);
 
   // In-Page Article View state (NO popup)
   const [activeArticle, setActiveArticle] = useState(null);
@@ -213,6 +220,43 @@ export default function DynamicPage() {
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
+  // Toggle Pin to Top
+  const handleTogglePin = async (itemId, currentPinned, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const newPinned = !currentPinned;
+      setContents((prev) =>
+        prev.map((item) => (item.id === itemId ? { ...item, isPinned: newPinned } : item))
+      );
+      await updateDoc(doc(db, 'page_contents', itemId), {
+        isPinned: newPinned,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.warn('Failed to toggle pin:', err);
+    }
+  };
+
+  // Handle Embed & Link Preview Insertion from NotionEmbedDrawer
+  const handleInsertEmbed = (embed) => {
+    if (embed.type === 'video') {
+      setVideoUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else if (embed.type === 'audio') {
+      setAudioUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else if (embed.type === 'pdf') {
+      setFileUrl(embed.url);
+      setShowMediaAttachments(true);
+    } else {
+      setWebsiteUrl(embed.url);
+      setShowMediaAttachments(true);
+    }
+    // Also append token into description so it renders inside the body
+    const token = embed.type === 'bookmark' ? `\n\n[bookmark](${embed.url})\n\n` : `\n\n[embed](${embed.url})\n\n`;
+    setDesc((prev) => (prev ? prev + token : embed.url));
+  };
+
   // Toggle page in targetPages list
   const toggleTargetPage = (slug) => {
     setTargetPages((prev) =>
@@ -292,6 +336,45 @@ export default function DynamicPage() {
       alert('Failed to delete: ' + err.message);
     }
   };
+
+  // Filter and Sort Contents
+  const filteredContents = contents.filter((item) => {
+    const itemTitle = (item.title || item.titleEn || item.titleTe || '').toLowerCase();
+    const itemDesc = (item.desc || item.content || '').toLowerCase();
+    const term = searchTerm.trim().toLowerCase();
+
+    const matchesSearch = !term || itemTitle.includes(term) || itemDesc.includes(term);
+    if (!matchesSearch) return false;
+
+    if (filterType === 'pinned') return Boolean(item.isPinned);
+    if (filterType === 'video') return Boolean(item.videoUrl);
+    if (filterType === 'audio') return Boolean(item.audioUrl);
+    if (filterType === 'file') return Boolean(item.fileUrl || item.downloadUrl);
+    if (filterType === 'link') return Boolean(item.websiteUrl || item.embedUrl);
+
+    return true;
+  });
+
+  const displayContents = [...filteredContents].sort((a, b) => {
+    // Pinned always floats to top unless sorting alphabetically
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+
+    if (sortBy === 'oldest') {
+      const tA = a.createdAt?.seconds || 0;
+      const tB = b.createdAt?.seconds || 0;
+      return tA - tB;
+    }
+    if (sortBy === 'title') {
+      const titleA = (a.title || a.titleEn || '').toLowerCase();
+      const titleB = (b.title || b.titleEn || '').toLowerCase();
+      return titleA.localeCompare(titleB);
+    }
+    // Default newest
+    const tA = a.createdAt?.seconds || 0;
+    const tB = b.createdAt?.seconds || 0;
+    return tB - tA;
+  });
 
   const { category, page } = pageInfo;
   const categoryTitle = category ? (isTelugu ? category.titleTe : category.titleEn) : categorySlug;
@@ -415,6 +498,13 @@ export default function DynamicPage() {
               </div>
             </div>
 
+            {/* Notion Embed & Link Preview Drawer */}
+            <NotionEmbedDrawer
+              isOpen={showEmbedDrawer}
+              onClose={() => setShowEmbedDrawer(false)}
+              onInsert={handleInsertEmbed}
+            />
+
             {/* 2. Cover Component (Snippet 2) */}
             <NotionCover
               url={imageUrl}
@@ -433,6 +523,7 @@ export default function DynamicPage() {
                 editable={true}
                 onToggleMedia={() => setShowMediaAttachments(!showMediaAttachments)}
                 onToggleMultiPage={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                onOpenEmbed={() => setShowEmbedDrawer(true)}
                 targetPagesCount={targetPages.length}
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
               />
@@ -843,60 +934,131 @@ export default function DynamicPage() {
         ) : contents.length > 0 ? (
           /* Cards Grid: clicking any card opens the article in-page */
           <div className="space-y-4">
-            {/* Header with Multiple View Options (Only buttons, no extra explanation) */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#C59B27]"></span>
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  {contents.length} {contents.length === 1 ? 'Article' : 'Articles'}
-                </span>
+            {/* Notion-Style Organization Controls: Search, Filter Tabs, Sort, and 4 Views */}
+            <div className="space-y-3 border-b border-slate-200 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Search Bar */}
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={isTelugu ? 'పేజీలో వెతకండి...' : `Search in ${pageTitle}...`}
+                    className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C59B27]/40 transition"
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sort & View Switcher */}
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white focus:outline-none font-semibold cursor-pointer shadow-2xs"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="title">Alphabetical (A - Z)</option>
+                  </select>
+
+                  {/* 4 Notion Views: Grid, List, Table, Compact */}
+                  <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        viewMode === 'grid'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Grid / Gallery View"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        viewMode === 'list'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="List View"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('table')}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        viewMode === 'table'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Notion Database Table View"
+                    >
+                      <Table className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('compact')}
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
+                        viewMode === 'compact'
+                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Compact View"
+                    >
+                      <AlignJustify className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* View Switcher: ONLY options/icons, NO extra explanation */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-lg transition cursor-pointer ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="Grid View"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-lg transition cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="List View"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('compact')}
-                  className={`p-1.5 rounded-lg transition cursor-pointer ${
-                    viewMode === 'compact'
-                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="Compact View"
-                >
-                  <AlignJustify className="w-4 h-4" />
-                </button>
+              {/* Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none text-xs">
+                {[
+                  { key: 'all', label: `All (${contents.length})` },
+                  { key: 'pinned', label: '📌 Pinned' },
+                  { key: 'video', label: '🎥 Videos' },
+                  { key: 'audio', label: '🎵 Audio' },
+                  { key: 'file', label: '📄 Documents' },
+                  { key: 'link', label: '🔗 Links & Embeds' },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setFilterType(tab.key)}
+                    className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition cursor-pointer border text-xs ${
+                      filterType === tab.key
+                        ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-2xs'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+                {displayContents.length !== contents.length && (
+                  <span className="text-[11px] text-slate-400 ml-auto whitespace-nowrap">
+                    Showing {displayContents.length} of {contents.length}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* GRID VIEW */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
-                {contents.map((item) => {
+                {displayContents.map((item) => {
                   const itemTitle = getText(item, 'title');
                   const itemDesc = getDesc(item);
 
@@ -919,9 +1081,16 @@ export default function DynamicPage() {
 
                         <div className="p-6">
                           <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                            <span className="font-semibold text-[#C59B27] uppercase tracking-wider text-[10px]">
-                              {pageTitle}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-[#C59B27] uppercase tracking-wider text-[10px]">
+                                {pageTitle}
+                              </span>
+                              {item.isPinned && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-100 text-[#071B3B] font-extrabold text-[10px]">
+                                  📌 Pinned
+                                </span>
+                              )}
+                            </div>
                             {item.createdAt && (
                               <span className="flex items-center gap-1 text-[11px]">
                                 <Calendar className="w-3 h-3" />
@@ -1002,6 +1171,16 @@ export default function DynamicPage() {
                         {isAdmin && (
                           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                             <button
+                              type="button"
+                              onClick={(e) => handleTogglePin(item.id, item.isPinned, e)}
+                              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                item.isPinned ? 'text-[#C59B27] bg-amber-50' : 'text-slate-400 hover:text-slate-700'
+                              }`}
+                              title={item.isPinned ? 'Unpin' : 'Pin to top'}
+                            >
+                              <Pin className={`w-3.5 h-3.5 ${item.isPinned ? 'fill-current' : ''}`} />
+                            </button>
+                            <button
                               onClick={(e) => handleOpenEditForm(item, e)}
                               className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer"
                               title="Edit this item"
@@ -1027,7 +1206,7 @@ export default function DynamicPage() {
             {/* LIST VIEW */}
             {viewMode === 'list' && (
               <div className="space-y-4">
-                {contents.map((item) => {
+                {displayContents.map((item) => {
                   const itemTitle = getText(item, 'title');
                   const itemDesc = getDesc(item);
 
@@ -1132,10 +1311,148 @@ export default function DynamicPage() {
               </div>
             )}
 
+            {/* NOTION DATABASE TABLE VIEW */}
+            {viewMode === 'table' && (
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px] select-none">
+                      <th className="py-3 px-3 w-10 text-center">Pin</th>
+                      <th className="py-3 px-4 min-w-[260px]">Title & Note</th>
+                      <th className="py-3 px-3 w-44">Media / Embed</th>
+                      <th className="py-3 px-3 w-36">Page</th>
+                      <th className="py-3 px-3 w-28">Created</th>
+                      {isAdmin && <th className="py-3 px-4 w-24 text-right">Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {displayContents.map((item) => {
+                      const itemTitle = getText(item, 'title');
+                      const itemDesc = getDesc(item);
+
+                      return (
+                        <tr
+                          key={item.id}
+                          onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
+                          className="hover:bg-amber-50/30 transition cursor-pointer group"
+                        >
+                          {/* Pin Toggle */}
+                          <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            {isAdmin ? (
+                              <button
+                                type="button"
+                                onClick={(e) => handleTogglePin(item.id, item.isPinned, e)}
+                                className={`p-1 rounded-md transition cursor-pointer ${
+                                  item.isPinned
+                                    ? 'text-[#C59B27] bg-amber-50'
+                                    : 'text-slate-300 hover:text-slate-600'
+                                }`}
+                                title={item.isPinned ? 'Unpin from top' : 'Pin to top'}
+                              >
+                                <Pin className={`w-3.5 h-3.5 ${item.isPinned ? 'fill-current' : ''}`} />
+                              </button>
+                            ) : item.isPinned ? (
+                              <span className="text-[#C59B27]" title="Pinned">📌</span>
+                            ) : (
+                              <span className="text-slate-200">•</span>
+                            )}
+                          </td>
+
+                          {/* Title with icon & subtitle */}
+                          <td className="py-3 px-4 min-w-[260px]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base select-none shrink-0">{item.icon || '📖'}</span>
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate">
+                                  {itemTitle}
+                                </h4>
+                                {itemDesc && (
+                                  <p className="text-[11px] text-slate-400 line-clamp-1">
+                                    {itemDesc.replace(/<[^>]*>/g, '')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Media Pills */}
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {item.videoUrl && (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[10px] font-bold">
+                                  <Play className="w-2.5 h-2.5" /> Video
+                                </span>
+                              )}
+                              {item.audioUrl && (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">
+                                  <Music className="w-2.5 h-2.5" /> Audio
+                                </span>
+                              )}
+                              {item.fileUrl && (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold">
+                                  <FileText className="w-2.5 h-2.5" /> PDF
+                                </span>
+                              )}
+                              {(item.websiteUrl || item.embedUrl) && (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">
+                                  <Globe className="w-2.5 h-2.5" /> Link
+                                </span>
+                              )}
+                              {!item.videoUrl && !item.audioUrl && !item.fileUrl && !item.websiteUrl && !item.embedUrl && (
+                                <span className="text-slate-300 text-[11px]">—</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Page */}
+                          <td className="py-3 px-3">
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-semibold text-[10px] truncate max-w-[120px]">
+                              {item.pageSlug || pageSlug}
+                            </span>
+                          </td>
+
+                          {/* Date */}
+                          <td className="py-3 px-3 text-slate-500 text-[11px] whitespace-nowrap">
+                            {item.createdAt?.toDate
+                              ? item.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                              : 'Recent'}
+                          </td>
+
+                          {/* Admin Actions */}
+                          {isAdmin && (
+                            <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleOpenEditForm(item, e)}
+                                  className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                                  title="Edit"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteContent(item.id, e)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {/* COMPACT VIEW */}
             {viewMode === 'compact' && (
               <div className="space-y-1.5">
-                {contents.map((item) => {
+                {displayContents.map((item) => {
                   const itemTitle = getText(item, 'title');
                   const itemDesc = getDesc(item);
 

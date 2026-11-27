@@ -1,4 +1,5 @@
 import { ExternalLink, Play } from 'lucide-react';
+import { NotionLinkPreview, NotionEmbed, getEmbedInfo } from './notion';
 
 /**
  * RichContentRenderer
@@ -11,17 +12,18 @@ import { ExternalLink, Play } from 'lucide-react';
  * - Links ([text](url))
  * - Images (![alt](url))
  * - Embedded Videos (YouTube / Vimeo / Video links)
- * - Raw HTML from Google Docs & Rich Text Editor
+ * - Notion Web Bookmarks & Live Embeds
+ * - Raw HTML from Google Docs & BlockNote Rich Text Editor
  */
 export default function RichContentRenderer({ content = '', isTelugu = false, className = '' }) {
   if (!content) return null;
 
-  // Check if content is HTML (from Google Docs copy-paste or Rich WYSIWYG Editor)
+  // Check if content is HTML (from BlockNote or Google Docs)
   const isHtml = /<[a-z][\s\S]*>/i.test(content);
   if (isHtml) {
     return (
       <div
-        className={`rich-html-content text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${className}`}
+        className={`rich-html-content text-slate-800 text-base sm:text-lg leading-relaxed sm:leading-loose ${className}`}
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
@@ -133,27 +135,54 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
       return;
     }
 
-    // Video URL on a standalone line: YouTube
-    const ytId = getYouTubeId(line);
-    if (ytId && (line.startsWith('http://') || line.startsWith('https://') || line.startsWith('www.'))) {
+    // Standalone URL on a line: Automatic Notion Embed or Notion Web Bookmark
+    if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentList) { blocks.push(currentList); currentList = null; }
-      blocks.push({
-        type: 'video',
-        provider: 'youtube',
-        embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}`,
-      });
+      
+      const ytId = getYouTubeId(line);
+      if (ytId) {
+        blocks.push({
+          type: 'video',
+          provider: 'youtube',
+          embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}`,
+        });
+        return;
+      }
+
+      const vimeoId = getVimeoId(line);
+      if (vimeoId) {
+        blocks.push({
+          type: 'video',
+          provider: 'vimeo',
+          embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+        });
+        return;
+      }
+
+      const embedInfo = getEmbedInfo(line);
+      if (embedInfo.type === 'audio' || embedInfo.type === 'spotify' || embedInfo.type === 'pdf') {
+        blocks.push({ type: 'embed', url: line, info: embedInfo });
+        return;
+      }
+
+      // Default: Notion Web Bookmark preview card
+      blocks.push({ type: 'bookmark', url: line });
       return;
     }
 
-    // Video URL on a standalone line: Vimeo
-    const vimeoId = getVimeoId(line);
-    if (vimeoId && (line.startsWith('http://') || line.startsWith('https://'))) {
+    // Explicit [embed](url)
+    if (line.toLowerCase().startsWith('[embed](') && line.endsWith(')')) {
       if (currentList) { blocks.push(currentList); currentList = null; }
-      blocks.push({
-        type: 'video',
-        provider: 'vimeo',
-        embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
-      });
+      const url = line.slice(8, -1).trim();
+      blocks.push({ type: 'embed', url });
+      return;
+    }
+
+    // Explicit [bookmark](url)
+    if (line.toLowerCase().startsWith('[bookmark](') && line.endsWith(')')) {
+      if (currentList) { blocks.push(currentList); currentList = null; }
+      const url = line.slice(11, -1).trim();
+      blocks.push({ type: 'bookmark', url });
       return;
     }
 
@@ -242,6 +271,10 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
                 </div>
               </div>
             );
+          case 'bookmark':
+            return <NotionLinkPreview key={idx} url={block.url} />;
+          case 'embed':
+            return <NotionEmbed key={idx} url={block.url} />;
           case 'h1':
             return (
               <h2

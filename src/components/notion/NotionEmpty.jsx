@@ -25,3 +25,5 @@ export function NotionEmpty({ pageTitle = 'Notion', onCreate }) {
     </div>
   );
 }
+
+export default NotionEmpty;

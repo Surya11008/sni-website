@@ -20,6 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
+import { NotionLinkPreview } from '../components/notion';
 import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import {
   Calendar,
@@ -817,9 +818,17 @@ export default function ContentDetailPage() {
             </div>
           )}
 
-          {/* Interactive Website URL Live Embed */}
+          {/* Interactive Website URL / Rich Link Preview & Live Embed */}
           {(article.websiteUrl || article.embedUrl) && (
-            <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-md space-y-0">
+            <div className="space-y-4">
+              <NotionLinkPreview
+                url={article.websiteUrl || article.embedUrl}
+                title={articleTitle}
+                description={articleDesc}
+                imageUrl={article.imageUrl}
+              />
+
+              <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-md space-y-0">
               <div className="p-3.5 sm:p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800 truncate">
                   <Globe className="w-4 h-4 text-blue-600 shrink-0" />
@@ -848,7 +857,8 @@ export default function ContentDetailPage() {
                 />
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           {/* File Attachment Card */}
           {article.fileUrl && (
