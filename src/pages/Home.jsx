@@ -26,9 +26,6 @@ export default function Home() {
 
   const [heroSettings, setHeroSettings] = useState({
     bgImageUrl: 'https://images.unsplash.com/photo-1519491050282-cf00c82424b4?auto=format&fit=crop&w=2000&q=85',
-    badge: 'SUPER NATURAL INTELLIGENCE - OFFICIAL HUB',
-    title: 'Welcome to Super Natural Intelligence',
-    subtitle: 'A centralized sanctuary of fellowship, broadcast archives, and ministerial applications.',
   });
 
   const [isHeroModalOpen, setIsHeroModalOpen] = useState(false);
@@ -43,8 +40,8 @@ export default function Home() {
         const snap = await getDoc(doc(db, 'site_settings', 'home_hero'));
         if (snap.exists() && isMounted) {
           const data = snap.data();
-          setHeroSettings((prev) => ({ ...prev, ...data }));
-          setHeroForm((prev) => ({ ...prev, ...data }));
+          setHeroSettings((prev) => ({ ...prev, bgImageUrl: data.bgImageUrl || prev.bgImageUrl }));
+          setHeroForm((prev) => ({ ...prev, bgImageUrl: data.bgImageUrl || prev.bgImageUrl }));
         }
       } catch (err) {
         console.warn('Could not load hero settings:', err);
@@ -60,8 +57,14 @@ export default function Home() {
     e.preventDefault();
     setSavingHero(true);
     try {
-      await setDoc(doc(db, 'site_settings', 'home_hero'), heroForm);
-      setHeroSettings({ ...heroForm });
+      const payload = {
+        bgImageUrl: heroForm.bgImageUrl || '',
+        badge: '',
+        title: '',
+        subtitle: '',
+      };
+      await setDoc(doc(db, 'site_settings', 'home_hero'), payload);
+      setHeroSettings({ bgImageUrl: heroForm.bgImageUrl || '' });
       setIsHeroModalOpen(false);
     } catch (err) {
       console.error('Failed to save hero settings:', err);
@@ -110,8 +113,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-slate-900 selection:bg-[#C59B27] selection:text-[#0F294A] font-sans">
-      {/* 1. FULL-WIDTH CINEMATIC HERO BANNER (Admin background photo add/change/remove & content edit) */}
-      <section className="relative w-full min-h-[500px] sm:h-[520px] overflow-hidden flex items-center bg-[#0F294A]">
+      {/* 1. FULL-WIDTH CINEMATIC HERO BANNER (Clean photo view without text overlay) */}
+      <section className="relative w-full min-h-[460px] sm:min-h-[520px] lg:h-[580px] overflow-hidden flex items-end bg-[#0F294A]">
         {/* Background Image (if set) */}
         {heroSettings.bgImageUrl ? (
           <div
@@ -124,16 +127,15 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#071B3B] via-[#0F294A] to-[#122847]"></div>
         )}
 
-        {/* Sophisticated Dark Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0F294A]/95 via-[#0F294A]/75 to-[#0F294A]/40"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F294A]/90 via-transparent to-black/30"></div>
+        {/* Subtle Ambient Vignette (Soft top and bottom shadow to keep background photo clear & bright) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F294A]/70 via-transparent to-black/25 pointer-events-none"></div>
 
         {/* Admin Edit Hero Floating Button */}
         {isAdmin && (
           <div className="absolute top-4 right-4 z-20">
             <button
               onClick={() => {
-                setHeroForm({ ...heroSettings });
+                setHeroForm({ bgImageUrl: heroSettings.bgImageUrl });
                 setIsHeroModalOpen(true);
               }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] font-bold text-xs uppercase tracking-wider shadow-lg transition cursor-pointer"
@@ -144,42 +146,17 @@ export default function Home() {
           </div>
         )}
 
-        {/* Hero Content Container */}
-        <div className="relative w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 py-12 md:py-20">
-          <div className="max-w-3xl lg:max-w-4xl text-left text-white space-y-5">
-            {/* Sub-Badge */}
-            {heroSettings.badge && (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-[#C59B27]/50 text-[#C59B27] text-xs font-semibold uppercase tracking-widest shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C59B27] animate-ping"></span>
-                <span>{heroSettings.badge}</span>
-              </div>
-            )}
-
-            {/* Inspirational Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-white leading-[1.12] font-serif">
-              <span className="text-white drop-shadow-sm">{heroSettings.title}</span>
-            </h1>
-
-            {/* Subtitle */}
-            {heroSettings.subtitle && (
-              <p className="text-slate-200 text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl lg:max-w-3xl font-normal">
-                {heroSettings.subtitle}
-              </p>
-            )}
-
-            {/* CTA Buttons */}
-            <div className="pt-3 flex flex-wrap items-center gap-4">
-              <button
-                onClick={() => handleScrollTo('photos-section')}
-                className="inline-flex items-center gap-2 px-7 py-3.5 sm:px-8 sm:py-4 rounded-full border-2 border-white/40 text-white hover:bg-white/10 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer group"
-              >
-                <ImageIcon className="w-4 h-4 text-[#F4B942]" />
-                <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
-                  {isTelugu ? 'ఛాయాచిత్రాలు & విశేషాలు' : 'Photo Gallery'}
-                </span>
-              </button>
-            </div>
-          </div>
+        {/* Hero Bottom Bar / Actions */}
+        <div className="relative w-full max-w-[1720px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-8 sm:pb-10 z-10">
+          <button
+            onClick={() => handleScrollTo('photos-section')}
+            className="inline-flex items-center gap-2.5 px-6 py-3 sm:px-7 sm:py-3.5 rounded-full bg-[#0F294A]/60 hover:bg-[#0F294A]/90 backdrop-blur-md border border-white/40 text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-xl cursor-pointer group"
+          >
+            <ImageIcon className="w-4 h-4 text-[#F4B942] group-hover:scale-110 transition-transform" />
+            <span className={isTelugu ? 'font-telugu tracking-normal normal-case' : ''}>
+              {isTelugu ? 'ఛాయాచిత్రాలు & విశేషాలు' : 'Photo Gallery'}
+            </span>
+          </button>
         </div>
       </section>
 
@@ -192,14 +169,14 @@ export default function Home() {
         />
       </div>
 
-      {/* ADMIN HERO SETTINGS MODAL */}
+      {/* ADMIN HERO SETTINGS MODAL (Pure Photo Manager - Text options removed) */}
       {isHeroModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-[#071B3B] flex items-center gap-2">
                 <Pencil className="w-4 h-4 text-[#C59B27]" />
-                <span>Edit Hero Banner & Background</span>
+                <span>Edit Hero Background Photo</span>
               </h3>
               <button
                 onClick={() => setIsHeroModalOpen(false)}
@@ -254,7 +231,7 @@ export default function Home() {
                 </div>
 
                 {heroForm.bgImageUrl ? (
-                  <div className="mt-2.5 relative h-36 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-xs">
+                  <div className="mt-2.5 relative h-40 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-xs">
                     <img
                       src={heroForm.bgImageUrl}
                       alt="Hero Preview"
@@ -280,41 +257,7 @@ export default function Home() {
                 )}
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Top Badge Text</label>
-                <input
-                  type="text"
-                  value={heroForm.badge || ''}
-                  onChange={(e) => setHeroForm({ ...heroForm, badge: e.target.value })}
-                  placeholder="SUPER NATURAL INTELLIGENCE - OFFICIAL HUB"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500/20"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Headline Title *</label>
-                <input
-                  type="text"
-                  value={heroForm.title || ''}
-                  onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
-                  placeholder="Welcome to Super Natural Intelligence"
-                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-amber-500/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Subtitle Description</label>
-                <textarea
-                  rows={3}
-                  value={heroForm.subtitle || ''}
-                  onChange={(e) => setHeroForm({ ...heroForm, subtitle: e.target.value })}
-                  placeholder="A centralized sanctuary of fellowship, broadcast archives, and ministerial applications."
-                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500/20"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsHeroModalOpen(false)}
