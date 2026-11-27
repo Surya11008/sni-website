@@ -13,6 +13,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  increment,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
@@ -83,6 +84,8 @@ export default function ContentDetailPage() {
   const [showEditMedia, setShowEditMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState([]);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioDuration, setAudioDuration] = useState('');
 
   // Notion Editor states for Edit mode
   const [icon, setIcon] = useState('📖');
@@ -119,7 +122,15 @@ export default function ContentDetailPage() {
         const snap = await getDoc(docRef);
 
         if (snap.exists()) {
-          const data = { id: snap.id, ...snap.data() };
+          const rawData = snap.data();
+          const currentViews = (rawData.viewsCount || 0) + 1;
+          const data = { id: snap.id, ...rawData, viewsCount: currentViews };
+
+          // Increment real view count in Firestore
+          updateDoc(docRef, {
+            viewsCount: increment(1)
+          }).catch((err) => console.warn('Could not increment viewsCount:', err));
+
           if (isMounted) {
             setArticle(data);
             setSourceCollection('page_contents');
@@ -496,7 +507,11 @@ export default function ContentDetailPage() {
             {articleTitle}
           </h1>
           <div className="flex items-center gap-2 text-xs text-slate-300 mt-4 drop-shadow font-medium">
-            <span>{article.viewsCount || '9,000'} views</span>
+            <span>
+              {article.viewsCount
+                ? `${article.viewsCount.toLocaleString()} ${article.viewsCount === 1 ? 'view' : 'views'}`
+                : '1 view'}
+            </span>
             <span>•</span>
             <span>
               {article.createdAt?.toDate
@@ -517,18 +532,47 @@ export default function ContentDetailPage() {
         <div className="flex items-center justify-between pb-4 border-b border-slate-200 text-xs text-slate-600">
           <div className="flex items-center gap-3">
             {article.audioUrl ? (
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('article-audio-player');
-                  if (el) el.paused ? el.play() : el.pause();
-                }}
-                className="inline-flex items-center gap-2 font-bold text-slate-900 hover:text-amber-600 transition cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current text-slate-900" />
-                <span>Listen 47:31</span>
-                <audio id="article-audio-player" src={article.audioUrl} className="hidden" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('article-audio-player');
+                    if (el) {
+                      if (el.paused) {
+                        el.play();
+                        setIsPlayingAudio(true);
+                      } else {
+                        el.pause();
+                        setIsPlayingAudio(false);
+                      }
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 font-bold text-slate-900 hover:text-amber-600 transition cursor-pointer px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200"
+                >
+                  {isPlayingAudio ? (
+                    <span className="w-3.5 h-3.5 flex items-center justify-center font-bold text-slate-900 text-xs">❚❚</span>
+                  ) : (
+                    <Play className="w-3.5 h-3.5 fill-current text-slate-900" />
+                  )}
+                  <span>{isPlayingAudio ? 'Pause' : 'Listen'}{audioDuration ? ` ${audioDuration}` : ''}</span>
+                </button>
+                <audio
+                  id="article-audio-player"
+                  src={article.audioUrl}
+                  className="hidden"
+                  onPlay={() => setIsPlayingAudio(true)}
+                  onPause={() => setIsPlayingAudio(false)}
+                  onEnded={() => setIsPlayingAudio(false)}
+                  onLoadedMetadata={(e) => {
+                    const d = e.target.duration;
+                    if (d && !isNaN(d)) {
+                      const mins = Math.floor(d / 60);
+                      const secs = Math.floor(d % 60);
+                      setAudioDuration(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
+                    }
+                  }}
+                />
+              </div>
             ) : (
               <AudioSpeakerButton text={articleDesc} title={articleTitle} />
             )}
