@@ -21,6 +21,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionLinkPreview } from '../components/notion';
+import WATVSubNav from '../components/WATVSubNav';
 import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import {
   Calendar,
@@ -78,6 +79,7 @@ export default function ContentDetailPage() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [showEditMedia, setShowEditMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [relatedPosts, setRelatedPosts] = useState([]);
 
   const isAdmin =
     userProfile?.role === 'admin' ||
@@ -149,6 +151,31 @@ export default function ContentDetailPage() {
       isMounted = false;
     };
   }, [contentId]);
+
+  // Fetch related posts from same category or page
+  useEffect(() => {
+    async function fetchRelated() {
+      if (!article?.pageSlug && !article?.categorySlug) return;
+      try {
+        const snap = await getDocs(collection(db, 'page_contents'));
+        const items = [];
+        snap.forEach((d) => {
+          if (d.id !== contentId) {
+            const data = d.data();
+            const samePage = data.pageSlug === article.pageSlug;
+            const sameCat = data.categorySlug === article.categorySlug;
+            if (samePage || sameCat) {
+              items.push({ id: d.id, ...data });
+            }
+          }
+        });
+        setRelatedPosts(items.slice(0, 3));
+      } catch (e) {
+        console.warn('Error fetching related posts:', e);
+      }
+    }
+    fetchRelated();
+  }, [article, contentId]);
 
   // Real-time listener for comments on this content
   useEffect(() => {
@@ -397,100 +424,80 @@ export default function ContentDetailPage() {
     : '/';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
-      {/* 2nd Header: Subpage Navigation Bar for this Category (Positioned directly under Main Navbar) */}
-      {subPages.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
-            <Link
-              to={`/category/${currentCategorySlug}`}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
-            >
-              {isTelugu ? 'అన్ని' : 'All'}
-            </Link>
-            {subPages.map((sp) => {
-              const isCurrent = sp.pageSlug === article?.pageSlug;
-              return (
-                <Link
-                  key={sp.pageSlug}
-                  to={`/page/${currentCategorySlug}/${sp.pageSlug}`}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
-                    isCurrent
-                      ? 'bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27]'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {isTelugu ? sp.titleTe : sp.titleEn}
-                </Link>
-              );
-            })}
+    <div className="min-h-screen bg-white font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
+      {/* 1. Subpage Navigation Bar (As seen in Image 1 & 5) */}
+      <WATVSubNav
+        categorySlug={currentCategorySlug}
+        activePageSlug={article?.pageSlug || paramPageSlug}
+      />
+
+      {/* 2. Panoramic Nature/Mountain Hero Banner (As seen in Image 2) */}
+      <div className="relative w-full h-[320px] sm:h-[420px] md:h-[480px] bg-slate-950 overflow-hidden">
+        <img
+          src={article.imageUrl || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=2000&q=85"}
+          alt={articleTitle}
+          className="w-full h-full object-cover object-center brightness-90 filter"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/30 flex flex-col items-center justify-center text-center p-6 sm:p-12">
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#F4B942] mb-3 drop-shadow">
+            {subPageTitle || article.pageSlug || 'Sermons'}
+          </span>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white max-w-4xl leading-tight tracking-tight font-serif drop-shadow-md">
+            {articleTitle}
+          </h1>
+          <div className="flex items-center gap-2 text-xs text-slate-300 mt-4 drop-shadow font-medium">
+            <span>{article.viewsCount || '9,000'} views</span>
+            <span>•</span>
+            <span>
+              {article.createdAt?.toDate
+                ? article.createdAt.toDate().toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : 'Recent'}
+            </span>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Main Page Container (Clean, Open, Dedicated Page Layout - NO POPUP LOOK) */}
-      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 py-8 space-y-8">
-        {/* Breadcrumb & Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-          {/* Breadcrumb Links: Home > Category > Page > Content Title */}
-          <nav className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
-            <Link to="/" className="hover:text-[#0F294A] font-bold text-slate-700 transition">
-              Home
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <Link
-              to={`/category/${currentCategorySlug}`}
-              className="hover:text-[#0F294A] uppercase font-bold text-[#C59B27] transition"
-            >
-              {categoryTitle}
-            </Link>
-            {article.pageSlug && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                <Link
-                  to={`/page/${currentCategorySlug}/${article.pageSlug}`}
-                  className="hover:text-[#0F294A] capitalize font-medium text-slate-700 transition"
-                >
-                  {subPageTitle}
-                </Link>
-              </>
+      {/* 3. Centered Editorial Reading Container (As seen in Image 2) */}
+      <main className="w-full max-w-[800px] mx-auto px-4 sm:px-6 py-8 space-y-8">
+        {/* Audio Bar & Share Tool (Image 2) */}
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200 text-xs text-slate-600">
+          <div className="flex items-center gap-3">
+            {article.audioUrl ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('article-audio-player');
+                  if (el) el.paused ? el.play() : el.pause();
+                }}
+                className="inline-flex items-center gap-2 font-bold text-slate-900 hover:text-amber-600 transition cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5 fill-current text-slate-900" />
+                <span>Listen 47:31</span>
+                <audio id="article-audio-player" src={article.audioUrl} className="hidden" />
+              </button>
+            ) : (
+              <AudioSpeakerButton text={articleDesc} title={articleTitle} />
             )}
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-900 font-bold truncate max-w-xs">{articleTitle}</span>
-          </nav>
+          </div>
 
-          {/* Action Tools */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              to={backUrl}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition shadow-xs"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#C59B27]" />
-              <span>← Back</span>
-            </Link>
-
-            {/* Like Button */}
+          <div className="flex items-center gap-3">
+            {/* Heart Like */}
             <div className="relative">
               <button
                 onClick={handleToggleLike}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                  isLiked
-                    ? 'bg-rose-50 text-rose-600 border-rose-300 shadow-xs'
-                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
-                }`}
-                title={isLiked ? 'Liked' : 'Like'}
+                className="inline-flex items-center gap-1.5 font-bold text-slate-600 hover:text-rose-600 transition cursor-pointer"
               >
-                <Heart
-                  className={`w-3.5 h-3.5 transition-transform ${
-                    isLiked ? 'fill-current text-rose-500 scale-110' : 'text-slate-400'
-                  }`}
-                />
+                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-rose-500' : ''}`} />
                 <span>{likesCount}</span>
               </button>
               {floatingHearts.map((h) => (
                 <span
                   key={h.id}
-                  className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-sm select-none"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-base select-none"
                   style={{
                     '--tw-translate-x': `${h.x}px`,
                     animationDelay: `${h.delay}s`,
@@ -501,24 +508,34 @@ export default function ContentDetailPage() {
               ))}
             </div>
 
-            <AudioSpeakerButton text={articleDesc} title={articleTitle} />
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: articleTitle, url: window.location.href }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Page link copied!');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share</span>
+            </button>
 
             {isAdmin && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2 ml-2">
                 <button
-                  onClick={() => {
-                    setShowEditMedia(Boolean(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl));
-                    setIsEditing(!isEditing);
-                  }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#071B3B] border border-[#C59B27]/40 text-xs font-bold transition cursor-pointer shadow-xs"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="inline-flex items-center gap-1 text-[#C59B27] font-bold hover:underline"
                 >
-                  <Pencil className="w-3.5 h-3.5 text-[#C59B27]" />
+                  <Pencil className="w-3.5 h-3.5" />
                   <span>{isEditing ? 'Cancel Edit' : 'Edit'}</span>
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer border border-transparent hover:border-rose-200"
-                  title="Delete Article"
+                  className="p-1 text-slate-400 hover:text-rose-600 transition"
+                  title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -526,135 +543,43 @@ export default function ContentDetailPage() {
             )}
           </div>
         </div>
-        {/* Admin In-Page Edit Drawer */}
-        {isEditing && (
-          <div className="mb-8 p-6 rounded-3xl bg-white border border-[#C59B27]/50 shadow-2xl animate-in fade-in duration-200">
-            <h3 className="text-base font-bold text-[#0F294A] mb-4 flex items-center gap-2">
-              <Pencil className="w-4 h-4 text-[#C59B27]" />
-              <span>Edit Article Details</span>
-            </h3>
 
-            <form onSubmit={handleUpdate} className="space-y-4 text-xs">
-              {/* Single Unified Title */}
+        {/* Admin Edit Drawer */}
+        {isEditing && (
+          <div className="p-6 rounded-3xl bg-slate-50 border border-[#C59B27]/50 shadow-lg space-y-4">
+            <h3 className="text-sm font-bold text-slate-800">Edit Article</h3>
+            <form onSubmit={handleUpdate} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Title *</label>
+                <label className="block font-bold text-slate-700 mb-1">Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white"
                   required
                 />
               </div>
-
-              {/* Single Unified Rich Content Editor */}
-              <RichTextEditor
-                label="Content (Rich Text Editor)"
-                value={desc}
-                onChange={setDesc}
-                rows={8}
-              />
-
-              {/* Collapsible Media & Attachments Section */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
-                <button
-                  type="button"
-                  onClick={() => setShowEditMedia(!showEditMedia)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="w-4 h-4 text-[#C59B27]" />
-                    <span>Add Cover Image, Video, Audio or Links (Optional)</span>
-                    {(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) && (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
-                        Attached
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showEditMedia ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showEditMedia && (
-                  <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
-                      <input
-                        type="url"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://example.com/image.jpg"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
-                      <input
-                        type="url"
-                        value={videoUrl}
-                        onChange={(e) => setVideoUrl(e.target.value)}
-                        placeholder="https://youtube.com/watch?v=..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
-                      <input
-                        type="url"
-                        value={audioUrl}
-                        onChange={(e) => setAudioUrl(e.target.value)}
-                        placeholder="https://example.com/audio.mp3"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive link)</label>
-                      <input
-                        type="url"
-                        value={fileUrl}
-                        onChange={(e) => setFileUrl(e.target.value)}
-                        placeholder="https://example.com/document.pdf"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL (Instant download link)</label>
-                      <input
-                        type="url"
-                        value={downloadUrl}
-                        onChange={(e) => setDownloadUrl(e.target.value)}
-                        placeholder="https://drive.google.com/uc?export=download&id=..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Website URL (Embed / Interactive Link)</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={websiteUrl}
-                        onChange={(e) => setWebsiteUrl(e.target.value)}
-                        placeholder="https://example.com or https://..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-                  </div>
-                )}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Content</label>
+                <textarea
+                  rows={6}
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs"
+                />
               </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
+                  className="px-4 py-2 rounded-xl text-slate-600 font-bold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider shadow-md"
+                  className="px-5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold"
                 >
                   {submitting ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -663,191 +588,65 @@ export default function ContentDetailPage() {
           </div>
         )}
 
-        {/* The Dedicated Full Page Article View */}
-        <article className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-12 shadow-sm space-y-8 animate-in fade-in duration-150">
-          {/* Header Metadata */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-              {article.pageSlug && (
-                <span className="px-3 py-1 rounded-full bg-amber-50 text-[#C59B27] border border-[#C59B27]/40 font-bold uppercase text-[10px] tracking-wider">
-                  {article.pageSlug}
-                </span>
-              )}
-
-              {article.createdAt && (
-                <span className="flex items-center gap-1 text-slate-500 text-xs font-medium">
-                  <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span>
-                    {article.createdAt?.toDate
-                      ? article.createdAt.toDate().toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : 'Recent'}
-                  </span>
-                </span>
-              )}
-            </div>
-
-            {/* Main Headline */}
-            <h1
-              className={`text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#071B3B] leading-tight tracking-tight ${
-                isTelugu ? 'font-krishna text-3xl sm:text-5xl' : 'font-serif'
-              }`}
-            >
-              {articleTitle}
-            </h1>
-          </div>
-
-          {/* Featured Cover Image */}
-          {article.imageUrl && (
-            <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-md max-h-[540px] bg-slate-100">
-              <img
-                src={article.imageUrl}
-                alt={articleTitle}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          {/* Video Player */}
-          {article.videoUrl && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-black shadow-md">
-              {getYouTubeEmbedUrl(article.videoUrl) ? (
-                <div className="aspect-video w-full">
-                  <iframe
-                    src={getYouTubeEmbedUrl(article.videoUrl)}
-                    title="Video Broadcast"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full border-0"
-                  />
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Play className="w-5 h-5 text-[#F4B942]" />
-                    <span className="text-xs font-semibold">Video Broadcast Available</span>
-                  </div>
-                  <a
-                    href={article.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-1.5 rounded-lg bg-[#F4B942] text-[#071B3B] text-xs font-bold hover:bg-amber-400 transition"
-                  >
-                    Watch Video
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Audio Player */}
-          {article.audioUrl && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#071B3B] to-[#0F294A] text-white border border-[#1A3860] shadow-md space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-[#F4B942] flex items-center justify-center">
-                    <Music className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white">Audio Stream</h4>
-                    <p className="text-[10px] text-slate-300">Listen to attached audio broadcast</p>
-                  </div>
-                </div>
+        {/* Video Player (if attached) */}
+        {article.videoUrl && (
+          <div className="rounded-2xl overflow-hidden border border-slate-200 bg-black shadow-md my-4">
+            {getYouTubeEmbedUrl(article.videoUrl) ? (
+              <div className="aspect-video w-full">
+                <iframe
+                  src={getYouTubeEmbedUrl(article.videoUrl)}
+                  title="Video Broadcast"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
               </div>
-              {getYouTubeEmbedUrl(article.audioUrl) ? (
-                <div className="aspect-video w-full max-h-48 rounded-xl overflow-hidden">
-                  <iframe
-                    src={getYouTubeEmbedUrl(article.audioUrl)}
-                    title="Audio Broadcast"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full border-0"
-                  />
+            ) : (
+              <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Play className="w-5 h-5 text-[#F4B942]" />
+                  <span className="text-xs font-semibold">Video Broadcast Available</span>
                 </div>
-              ) : (
-                <audio
-                  controls
-                  className="w-full h-10 rounded-lg outline-none"
-                  src={article.audioUrl}
-                  preload="metadata"
+                <a
+                  href={article.videoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-1.5 rounded-lg bg-[#F4B942] text-[#071B3B] text-xs font-bold hover:bg-amber-400 transition"
                 >
-                  Your browser does not support the audio element.
-                </audio>
-              )}
-            </div>
-          )}
-
-          {/* Rich Content Body */}
-          <div className="pt-2">
-            <RichContentRenderer
-              content={articleDesc}
-              isTelugu={isTelugu}
-              className="text-base sm:text-lg"
-            />
-          </div>
-
-          {/* Direct Download Button (Prominently displayed) */}
-          {article.downloadUrl && (
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-[#F4B942] flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#F4B942] text-[#071B3B] flex items-center justify-center shrink-0 shadow-md">
-                  <Download className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-sm sm:text-base font-extrabold text-[#071B3B]">
-                    Direct Download Available
-                  </h4>
-                  <p className="text-xs text-slate-600">
-                    Click to download the attached resource instantly
-                  </p>
-                </div>
+                  Watch Video
+                </a>
               </div>
-              <a
-                href={article.downloadUrl}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shrink-0 inline-flex items-center gap-2 shadow-md hover:scale-102 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download Now</span>
-              </a>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {/* Interactive Website URL / Rich Link Preview & Live Embed */}
-          {(article.websiteUrl || article.embedUrl) && (
-            <div className="space-y-4">
-              <NotionLinkPreview
-                url={article.websiteUrl || article.embedUrl}
-                title={articleTitle}
-                description={articleDesc}
-                imageUrl={article.imageUrl}
-              />
+        {/* Interactive Web URL / Rich Link Preview & Live Embed */}
+        {(article.websiteUrl || article.embedUrl) && (
+          <div className="space-y-4 my-4">
+            <NotionLinkPreview
+              url={article.websiteUrl || article.embedUrl}
+              title={articleTitle}
+              description={articleDesc}
+              imageUrl={article.imageUrl}
+            />
 
-              <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-md space-y-0">
-              <div className="p-3.5 sm:p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 truncate">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-md space-y-0">
+              <div className="p-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
+                <div className="flex items-center gap-2 truncate">
                   <Globe className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span className="truncate max-w-xs sm:max-w-md">{article.websiteUrl || article.embedUrl}</span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-                    Live Embed
-                  </span>
+                  <span className="truncate max-w-sm">{article.websiteUrl || article.embedUrl}</span>
                 </div>
                 <a
                   href={article.websiteUrl || article.embedUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[#071B3B] hover:underline shrink-0"
                 >
-                  <span>Open in New Tab</span>
+                  <span>Open</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
-              <div className="w-full h-[560px] sm:h-[720px] md:h-[820px] lg:h-[900px] xl:h-[960px] bg-slate-50 relative">
+              <div className="w-full h-[500px] bg-slate-50 relative">
                 <iframe
                   src={article.websiteUrl || article.embedUrl}
                   title="Embedded Website"
@@ -860,203 +659,176 @@ export default function ContentDetailPage() {
           </div>
         )}
 
-          {/* File Attachment Card */}
-          {article.fileUrl && (
-            <div className="p-5 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center shrink-0">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-[#071B3B]">
-                    Official Study Attachment / PDF
-                  </h4>
-                  <p className="text-[11px] text-slate-500 truncate max-w-sm">
-                    {article.fileUrl}
-                  </p>
-                </div>
-              </div>
-              <a
-                href={article.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold hover:bg-[#0F294A] transition shrink-0 inline-flex items-center gap-1.5 shadow-xs"
-              >
-                <span>Download Resource</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          )}
-
-          {/* Bottom Bar: Back Navigation, Heart Like, and Social Share */}
-          <div className="pt-8 border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap">
-            <Link
-              to={backUrl}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4 text-[#C59B27]" />
-              <span>← Back to Page</span>
-            </Link>
-
+        {/* File Attachment / Direct Download */}
+        {(article.fileUrl || article.downloadUrl) && (
+          <div className="p-4 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 flex items-center justify-between gap-4 my-4">
             <div className="flex items-center gap-3">
-              {/* Heart Symbol / Like Button: ONLY count, floating hearts animation */}
-              <div className="relative">
-                <button
-                  onClick={handleToggleLike}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs transition cursor-pointer shadow-xs border ${
-                    isLiked
-                      ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 scale-105'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-rose-300'
-                  }`}
-                  title={isLiked ? 'Liked' : 'Like'}
+              <div className="w-9 h-9 rounded-xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-[#071B3B]">
+                  Official Study Document / Attachment
+                </h4>
+                <p className="text-[10px] text-slate-500 truncate max-w-xs">
+                  {article.fileUrl || article.downloadUrl}
+                </p>
+              </div>
+            </div>
+            <a
+              href={article.downloadUrl || article.fileUrl}
+              download
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold hover:bg-[#0F294A] transition shrink-0 inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
+            </a>
+          </div>
+        )}
+
+        {/* 4. Reading Article Body (Images 2 & 3) */}
+        <article className="pt-2 text-slate-800 font-serif leading-relaxed sm:leading-loose text-base sm:text-lg">
+          <RichContentRenderer
+            content={articleDesc}
+            isTelugu={isTelugu}
+            className="text-base sm:text-lg"
+          />
+        </article>
+
+        {/* 5. Social Share & Centered Back Navigation (Image 3) */}
+        <div className="pt-10 border-t border-slate-200 flex flex-col items-center gap-6">
+          {/* Social icons: Facebook, X, Telegram, WhatsApp, Copy Link */}
+          <div className="flex items-center gap-3 text-slate-500">
+            <button
+              type="button"
+              onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 hover:text-blue-600 flex items-center justify-center text-xs font-bold transition"
+              title="Facebook"
+            >
+              f
+            </button>
+            <button
+              type="button"
+              onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(articleTitle)}`, '_blank')}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 hover:text-black flex items-center justify-center text-xs font-bold transition"
+              title="X"
+            >
+              𝕏
+            </button>
+            <button
+              type="button"
+              onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(articleTitle)}`, '_blank')}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 hover:text-sky-500 flex items-center justify-center text-xs transition"
+              title="Telegram"
+            >
+              ✈️
+            </button>
+            <button
+              type="button"
+              onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(articleTitle + ' ' + window.location.href)}`, '_blank')}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 hover:text-emerald-600 flex items-center justify-center text-xs transition"
+              title="WhatsApp"
+            >
+              💬
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+              }}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 hover:text-amber-600 flex items-center justify-center text-xs transition"
+              title="Copy link"
+            >
+              🔗
+            </button>
+          </div>
+
+          {/* Centered Back Button (Image 3) */}
+          <Link
+            to={backUrl}
+            className="inline-flex items-center gap-2 px-8 py-2 rounded-full border border-slate-300 hover:border-slate-800 text-slate-800 font-bold text-xs uppercase tracking-wider transition bg-white shadow-2xs hover:bg-slate-50"
+          >
+            <span>≡ Back</span>
+          </Link>
+        </div>
+
+        {/* 6. Related Posts (3-column cards - As seen in Image 3) */}
+        {relatedPosts.length > 0 && (
+          <div className="pt-10 border-t border-slate-200 mt-10 space-y-6">
+            <h3 className="text-xl sm:text-2xl font-bold font-serif text-[#071B3B]">
+              Related posts
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {relatedPosts.map((post) => (
+                <article
+                  key={post.id}
+                  onClick={() => navigate(`/Home/${currentCategorySlug}/${post.pageSlug || article.pageSlug || 'sermons'}/${post.id}`)}
+                  className="group cursor-pointer space-y-2.5 text-left"
                 >
-                  <Heart
-                    className={`w-4 h-4 transition-transform ${
-                      isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
-                    }`}
-                  />
-                  <span>{likesCount}</span>
-                </button>
-                {floatingHearts.map((h) => (
-                  <span
-                    key={h.id}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 animate-float-heart text-rose-500 text-base select-none"
-                    style={{
-                      '--tw-translate-x': `${h.x}px`,
-                      animationDelay: `${h.delay}s`,
-                    }}
-                  >
-                    ❤️
-                  </span>
-                ))}
-              </div>
-
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: articleTitle,
-                      url: window.location.href,
-                    }).catch(() => {});
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert('Page link copied to clipboard!');
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition cursor-pointer"
-              >
-                <Share2 className="w-4 h-4 text-[#C59B27]" />
-                <span>Share</span>
-              </button>
-            </div>
-            </div>
-          </article>
-
-          {/* ======================================================== */}
-          {/* COMMENTS SECTION                                         */}
-          {/* ======================================================== */}
-          <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 mt-8">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] flex items-center justify-center">
-                  <MessageSquare className="w-5 h-5 text-[#C59B27]" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-[#071B3B]">
-                    Comments ({comments.length})
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Share your thoughts, reflections, or questions on this content.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* New Comment Input Box */}
-            <form onSubmit={handlePostComment} className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-bold text-xs uppercase shrink-0 mt-1 shadow-xs">
-                  {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0).toUpperCase() || 'U')}
-                </div>
-                <div className="flex-1 space-y-2">
-                  <textarea
-                    rows={3}
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Write your comment or reflection here..."
-                    className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-[#C59B27] transition"
-                    required
-                  />
-                  <div className="flex items-center justify-end pt-1">
-                    <button
-                      type="submit"
-                      disabled={submittingComment || !commentText.trim()}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-40"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{submittingComment ? 'Submitting...' : 'Post Comment'}</span>
-                    </button>
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                    <img
+                      src={post.imageUrl || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80"}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-              </div>
+                  <h4 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-amber-600 transition-colors line-clamp-2 leading-snug font-serif">
+                    {post.title || post.titleEn}
+                  </h4>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-sans">
+                    {post.desc ? post.desc.replace(/<[^>]*>/g, '') : ''}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 7. Comments Section */}
+        <section className="bg-slate-50/80 rounded-3xl border border-slate-200/90 p-6 sm:p-8 space-y-5 mt-10">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-[#C59B27]" />
+            <h3 className="text-sm font-bold text-slate-800">Comments ({comments.length})</h3>
+          </div>
+
+          <form onSubmit={handlePostComment} className="space-y-2.5">
+            <textarea
+              rows={3}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write your reflection or comment..."
+              className="w-full p-3 rounded-2xl border border-slate-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C59B27]/40"
+              required
+            />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={submittingComment || !commentText.trim()}
+                className="px-5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold uppercase disabled:opacity-50"
+              >
+                {submittingComment ? 'Posting...' : 'Post Comment'}
+              </button>
             </div>
           </form>
 
-          {/* Comments List */}
-          <div className="space-y-3 pt-3">
-            {comments.length === 0 ? (
-              <div className="text-center py-8 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 text-slate-400">
-                <MessageCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs font-medium">
-                  No comments yet. Be the first to share your reflection!
-                </p>
-              </div>
-            ) : (
-              comments.map((c) => {
-                const isAuthorOrAdmin = isAdmin || (currentUser && c.authorEmail === currentUser.email);
-                return (
-                  <div
-                    key={c.id}
-                    className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 hover:border-slate-200 transition space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#C59B27]/20 text-[#071B3B] font-bold text-xs flex items-center justify-center">
-                          {c.authorName ? c.authorName.charAt(0).toUpperCase() : 'U'}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900">{c.authorName}</span>
-                            {c.authorRole && c.authorRole !== 'member' && (
-                              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] font-bold uppercase tracking-wider">
-                                {c.authorRole}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-slate-400">
-                            {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString() : 'Recent'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {isAuthorOrAdmin && (
-                        <button
-                          onClick={() => handleDeleteComment(c.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                          title="Delete comment"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-10 whitespace-pre-wrap">
-                      {c.text}
-                    </p>
+          {comments.length > 0 && (
+            <div className="space-y-2.5 pt-2">
+              {comments.map((c) => (
+                <div key={c.id} className="p-3.5 bg-white rounded-xl border border-slate-100 space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-800">{c.authorName}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : 'Recent'}
+                    </span>
                   </div>
-                );
-              })
-            )}
-          </div>
+                  <p className="text-xs text-slate-600 whitespace-pre-wrap">{c.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>

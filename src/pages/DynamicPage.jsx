@@ -22,6 +22,8 @@ import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
+import WATVSubNav from '../components/WATVSubNav';
+import OnlineWorshipSection from '../components/OnlineWorshipSection';
 import {
   ChevronRight,
   Plus,
@@ -84,7 +86,7 @@ export default function DynamicPage() {
   const [loading, setLoading] = useState(true);
 
   // View Mode: 'grid' | 'list' | 'compact'
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list' | 'table' | 'compact'
+  const [viewMode, setViewMode] = useState('list'); // 'grid' | 'list' | 'table' | 'compact'
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all'); // 'all' | 'pinned' | 'video' | 'audio' | 'file' | 'link'
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'title'
@@ -392,35 +394,8 @@ export default function DynamicPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#C59B27] selection:text-[#0F294A]">
-      {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
-      {category?.pages && category.pages.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
-            <Link
-              to={`/category/${categorySlug}`}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition shrink-0"
-            >
-              {isTelugu ? 'అన్ని' : 'All'}
-            </Link>
-            {category.pages.map((sp) => {
-              const isCurrent = sp.pageSlug === pageSlug;
-              return (
-                <Link
-                  key={sp.pageSlug}
-                  to={`/page/${categorySlug}/${sp.pageSlug}`}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition shrink-0 ${
-                    isCurrent
-                      ? 'bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27]'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {isTelugu ? sp.titleTe : sp.titleEn}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* 1. WATV Authentic Subpage Navigation Bar (As seen in Image 1 & 5) */}
+      <WATVSubNav categorySlug={categorySlug} activePageSlug={pageSlug} />
 
       {/* 2. Main Content Area */}
       <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 pt-3 sm:pt-4 pb-12 space-y-4">
@@ -440,13 +415,18 @@ export default function DynamicPage() {
               <span className="text-slate-900 font-bold">{pageTitle}</span>
             </nav>
 
-            <h1
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F294A] leading-tight ${
-                isTelugu ? 'font-krishna' : 'font-serif'
-              }`}
-            >
-              {pageTitle}
-            </h1>
+            <div className="space-y-1">
+              <h1
+                className={`text-3xl sm:text-5xl font-black tracking-tight text-[#071B3B] leading-tight ${
+                  isTelugu ? 'font-krishna' : 'font-serif'
+                }`}
+              >
+                {pageTitle}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
+                {page?.descEn || "This is to help you meditate day and night on God's words that revive your soul."}
+              </p>
+            </div>
           </div>
 
           {/* Quick Action Buttons for Admin */}
@@ -1204,107 +1184,140 @@ export default function DynamicPage() {
             )}
 
             {/* LIST VIEW */}
+            {/* HERO FEATURED STORY (Image 1: Sermon of the Month) */}
+            {viewMode === 'list' && displayContents.length > 0 && !searchTerm && filterType === 'all' && (
+              <div
+                onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${displayContents[0].id}`)}
+                className="rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg transition cursor-pointer grid grid-cols-1 md:grid-cols-2 gap-6 p-4 sm:p-6 group mb-6"
+              >
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-slate-100">
+                  <img
+                    src={displayContents[0].imageUrl || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1200&q=80"}
+                    alt={getText(displayContents[0], 'title')}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="flex flex-col justify-between py-2 space-y-3">
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">
+                      {displayContents[0].isPinned ? '📌 Pinned Message' : 'Sermon of the Month'}
+                    </span>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold font-serif text-[#071B3B] group-hover:text-amber-600 transition-colors leading-snug">
+                      {getText(displayContents[0], 'title')}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 line-clamp-3 leading-relaxed">
+                      {getDesc(displayContents[0]).replace(/<[^>]*>/g, '')}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 group-hover:text-amber-600 group-hover:underline">
+                      <span>Read more</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WATV EDITORIAL LIST VIEW (Matching Image 1) */}
             {viewMode === 'list' && (
-              <div className="space-y-4">
-                {displayContents.map((item) => {
+              <div className="divide-y divide-slate-200 bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                {displayContents.map((item, idx) => {
                   const itemTitle = getText(item, 'title');
-                  const itemDesc = getDesc(item);
+                  const itemDesc = getDesc(item).replace(/<[^>]*>/g, '');
 
                   return (
                     <article
                       key={item.id}
                       onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
-                      className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 group cursor-pointer hover:border-amber-400"
+                      className="p-5 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-5 hover:bg-slate-50/80 transition cursor-pointer group"
                     >
-                      {item.imageUrl && (
-                        <div className="w-full sm:w-48 sm:h-32 aspect-video sm:aspect-auto rounded-xl overflow-hidden shrink-0 bg-slate-100">
-                          <img
-                            src={item.imageUrl}
-                            alt={itemTitle}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        </div>
-                      )}
+                      {/* Left Thumbnail (Image 1) */}
+                      <div className="w-full sm:w-56 md:w-64 aspect-video sm:aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100">
+                        <img
+                          src={item.imageUrl || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80"}
+                          alt={itemTitle}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
 
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                          <span className="font-bold text-[#C59B27] uppercase text-[10px]">
-                            {pageTitle}
-                          </span>
-                          {item.createdAt && (
-                            <span className="flex items-center gap-1 text-[11px]">
-                              <Calendar className="w-3 h-3" />
-                              <span>
-                                {item.createdAt?.toDate
-                                  ? item.createdAt.toDate().toLocaleDateString()
-                                  : 'Recent'}
+                      {/* Right Text (Image 1) */}
+                      <div className="flex-1 min-w-0 space-y-2 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            {item.isPinned && (
+                              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-[#071B3B] font-extrabold text-[10px]">
+                                📌 Pinned
                               </span>
+                            )}
+                            <span className="text-[11px] font-semibold text-slate-400">
+                              {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'Recent'}
                             </span>
-                          )}
-                          {((item.likesCount > 0) || (item.likedBy && item.likedBy.length > 0)) && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
-                              <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
-                              <span>{item.likesCount || item.likedBy?.length}</span>
-                            </span>
-                          )}
+                          </div>
+
+                          <h3 className="text-base sm:text-xl font-bold font-serif text-[#071B3B] group-hover:text-amber-600 transition-colors leading-snug">
+                            {itemTitle}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mt-1">
+                            {itemDesc}
+                          </p>
                         </div>
 
-                        <h3 className="text-base sm:text-lg font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors truncate flex items-center gap-1.5">
-                          {item.icon && <span className="text-lg select-none shrink-0">{item.icon}</span>}
-                          <span>{itemTitle}</span>
-                        </h3>
+                        {/* Badges & Actions */}
+                        <div className="flex items-center justify-between pt-2 text-xs">
+                          <div className="flex items-center gap-2 text-[11px]">
+                            {item.videoUrl && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold">
+                                <Play className="w-2.5 h-2.5" /> Video
+                              </span>
+                            )}
+                            {item.audioUrl && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-bold">
+                                <Music className="w-2.5 h-2.5" /> Audio
+                              </span>
+                            )}
+                            {item.fileUrl && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold">
+                                <FileText className="w-2.5 h-2.5" /> PDF
+                              </span>
+                            )}
+                            {(item.websiteUrl || item.embedUrl) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold">
+                                <Globe className="w-2.5 h-2.5" /> Link
+                              </span>
+                            )}
+                          </div>
 
-                        <p className="text-slate-600 text-xs sm:text-sm line-clamp-2">
-                          {itemDesc}
-                        </p>
-
-                        <div className="flex items-center gap-2 pt-1 flex-wrap">
-                          <AudioSpeakerButton buttonStyle="icon" text={itemDesc} title={itemTitle} />
-                          {item.videoUrl && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-semibold text-[10px]">
-                              <Play className="w-2.5 h-2.5" />
-                              <span>Video</span>
-                            </span>
-                          )}
-                          {item.audioUrl && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-semibold text-[10px]">
-                              <Music className="w-2.5 h-2.5" />
-                              <span>Audio</span>
-                            </span>
-                          )}
-                          {item.downloadUrl && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold text-[10px]">
-                              <Download className="w-2.5 h-2.5" />
-                              <span>Download</span>
-                            </span>
-                          )}
-                          {(item.websiteUrl || item.embedUrl) && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
-                              <Globe className="w-2.5 h-2.5" />
-                              <span>Website</span>
-                            </span>
+                          {isAdmin && (
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={(e) => handleTogglePin(item.id, item.isPinned, e)}
+                                className="p-1 text-slate-400 hover:text-amber-600 rounded"
+                                title="Pin"
+                              >
+                                <Pin className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenEditForm(item, e)}
+                                className="p-1 text-slate-400 hover:text-amber-600 rounded"
+                                title="Edit"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteContent(item.id, e)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
-
-                      {isAdmin && (
-                        <div className="flex sm:flex-col items-center gap-1 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => handleOpenEditForm(item, e)}
-                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition cursor-pointer"
-                            title="Edit"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteContent(item.id, e)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
                     </article>
                   );
                 })}

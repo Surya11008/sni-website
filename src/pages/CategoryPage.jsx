@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
+import WATVSubNav from '../components/WATVSubNav';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import {
@@ -131,25 +132,8 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
-      {/* 2nd Header: Subpage Navigation Bar for this Category (Directly under Main Navbar) */}
-      {currentCategory.pages?.length > 0 && (
-        <div className="bg-[#0A2244] border-b border-[#1A3860] sticky top-[64px] z-40 shadow-md">
-          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
-            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C59B27] text-[#071B3B] shadow-sm font-black ring-1 ring-[#C59B27] shrink-0">
-              {isTelugu ? 'అన్ని' : 'All'}
-            </span>
-            {currentCategory.pages.map((sp) => (
-              <Link
-                key={sp.pageSlug}
-                to={`/page/${categorySlug}/${sp.pageSlug}`}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition whitespace-nowrap shrink-0"
-              >
-                {isTelugu ? sp.titleTe : sp.titleEn}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* 1. WATV Subpage Navigation Bar (Image 5) */}
+      <WATVSubNav categorySlug={categorySlug} activePageSlug="all" />
 
       {/* Main Sub-Pages Content Feeds (Last 3 Added Contents with "All ->" button) */}
       <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 pt-3 sm:pt-4 pb-8 space-y-6">
@@ -169,13 +153,18 @@ export default function CategoryPage() {
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-[#C59B27] flex items-center justify-center shrink-0">
                 <PortalIcon name={currentCategory.iconName || 'BookOpen'} className="w-5 h-5" />
               </div>
-              <h1
-                className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F294A] tracking-tight ${
-                  isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
-                }`}
-              >
-                {categoryTitle}
-              </h1>
+              <div className="space-y-1">
+                <h1
+                  className={`text-3xl sm:text-5xl font-black text-[#071B3B] tracking-tight ${
+                    isTelugu ? 'font-krishna text-3xl sm:text-4xl' : 'font-serif'
+                  }`}
+                >
+                  {categoryTitle}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 italic max-w-xl">
+                  "{currentCategory.descriptionEn || 'The family that serves God.'}"
+                </p>
+              </div>
             </div>
           </div>
 
