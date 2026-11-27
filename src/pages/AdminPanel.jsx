@@ -56,6 +56,7 @@ import {
   Table,
   Filter,
   Folder,
+  GripVertical,
 } from 'lucide-react';
 
 import { cleanObjectReplacementChars } from '../utils/fontManager';
@@ -154,6 +155,7 @@ export default function AdminPanel() {
   const [isAddSubPageModalOpen, setIsAddSubPageModalOpen] = useState(false);
   const [editingPageModal, setEditingPageModal] = useState(null); // page object or null
   const [pageEditForm, setPageEditForm] = useState({
+    categorySlug: 'home',
     titleEn: '',
     titleTe: '',
     descEn: '',
@@ -161,6 +163,11 @@ export default function AdminPanel() {
     iconName: 'FileText',
     parentPageSlug: '',
   });
+
+  // Drag and Drop Page Root organization states
+  const [draggedPage, setDraggedPage] = useState(null);
+  const [dragOverCategory, setDragOverCategory] = useState(null);
+  const [dragOverPageSlug, setDragOverPageSlug] = useState(null);
 
   const handleOpenAddSubPageModal = (catSlug = 'home', parentSlug = '') => {
     setNewPage({
@@ -1245,6 +1252,7 @@ export default function AdminPanel() {
       categoryTitle: cat?.titleEn || page.categorySlug,
     });
     setPageEditForm({
+      categorySlug: cat?.categorySlug || page.categorySlug || 'home',
       titleEn: page.titleEn || page.title || '',
       titleTe: page.titleTe || '',
       descEn: page.descEn || page.desc || '',
@@ -1263,9 +1271,11 @@ export default function AdminPanel() {
     }
     setLoading(true);
     try {
+      const targetCategorySlug = pageEditForm.categorySlug || editingPageModal.categorySlug || 'home';
+      const cleanSlug = (editingPageModal.pageSlug || '').toLowerCase();
       const payload = {
-        categorySlug: editingPageModal.categorySlug,
-        pageSlug: editingPageModal.pageSlug,
+        categorySlug: targetCategorySlug,
+        pageSlug: cleanSlug,
         parentPageSlug: (pageEditForm.parentPageSlug || '').trim() || null,
         title: pageEditForm.titleEn.trim(),
         titleEn: pageEditForm.titleEn.trim(),
@@ -1275,11 +1285,18 @@ export default function AdminPanel() {
         descTe: pageEditForm.descEn.trim(),
         externalUrl: pageEditForm.externalUrl.trim() || null,
         iconName: pageEditForm.iconName.trim() || 'FileText',
+        isDeleted: false,
         updatedAt: serverTimestamp(),
       };
 
+      const existingDoc = customPagesList.find(
+        (cp) => (cp.pageSlug || '').toLowerCase() === cleanSlug
+      );
+
       if (editingPageModal.id) {
         await updateDoc(doc(db, 'portal_pages', editingPageModal.id), payload);
+      } else if (existingDoc?.id) {
+        await updateDoc(doc(db, 'portal_pages', existingDoc.id), payload);
       } else {
         payload.createdAt = serverTimestamp();
         await addDoc(collection(db, 'portal_pages'), payload);
@@ -1296,15 +1313,90 @@ export default function AdminPanel() {
     }
   };
 
-  const handleDeletePage = async (pageId) => {
-    if (!window.confirm('Delete this page from navigation?')) return;
+  const handleDeletePage = async (page, cat) => {
+    const pageTitle = page?.titleEn || page?.title || page?.pageSlug || 'this page';
+    if (!window.confirm(`Are you sure you want to delete "${pageTitle}" from navigation?`)) return;
+    setLoading(true);
     try {
-      await deleteDoc(doc(db, 'portal_pages', pageId));
-      showFeedback('success', 'Page deleted from navigation.');
+      const cleanSlug = (page.pageSlug || '').toLowerCase();
+      const existingDoc = customPagesList.find(
+        (cp) => (cp.pageSlug || '').toLowerCase() === cleanSlug
+      );
+
+      const isDefaultSystemPage = DEFAULT_PORTAL_STRUCTURE.some((c) =>
+        c.pages.some((p) => p.pageSlug.toLowerCase() === cleanSlug)
+      );
+
+      if (existingDoc?.id && !isDefaultSystemPage) {
+        await deleteDoc(doc(db, 'portal_pages', existingDoc.id));
+      } else if (existingDoc?.id) {
+        await updateDoc(doc(db, 'portal_pages', existingDoc.id), {
+          isDeleted: true,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, 'portal_pages'), {
+          pageSlug: cleanSlug,
+          categorySlug: cat?.categorySlug || page.categorySlug || 'home',
+          title: pageTitle,
+          isDeleted: true,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      showFeedback('success', `Page "${pageTitle}" deleted from navigation.`);
       setIsAddSubPageModalOpen(false);
+      setEditingPageModal(null);
       await fetchPages();
     } catch (err) {
       showFeedback('error', 'Failed to delete page: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Drag and drop: Move page root category or parent page
+  const handleMovePage = async (dragged, targetCategorySlug, targetParentPageSlug) => {
+    if (!dragged || !dragged.pageSlug) return;
+    if (dragged.pageSlug === targetParentPageSlug) return;
+    setLoading(true);
+    try {
+      const cleanSlug = dragged.pageSlug.toLowerCase();
+      const existingDoc = customPagesList.find(
+        (cp) => (cp.pageSlug || '').toLowerCase() === cleanSlug
+      );
+
+      const payload = {
+        categorySlug: targetCategorySlug,
+        parentPageSlug: targetParentPageSlug || null,
+        pageSlug: cleanSlug,
+        title: dragged.titleEn || dragged.title || cleanSlug,
+        titleEn: dragged.titleEn || dragged.title || cleanSlug,
+        titleTe: dragged.titleTe || '',
+        desc: dragged.descEn || dragged.desc || '',
+        descEn: dragged.descEn || dragged.desc || '',
+        descTe: dragged.descTe || '',
+        iconName: dragged.iconName || 'FileText',
+        isDeleted: false,
+        updatedAt: serverTimestamp(),
+      };
+
+      if (existingDoc?.id) {
+        await updateDoc(doc(db, 'portal_pages', existingDoc.id), payload);
+      } else {
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db, 'portal_pages'), payload);
+      }
+
+      const moveMsg = targetParentPageSlug
+        ? `nested under "${targetParentPageSlug}"`
+        : `moved to root of "${targetCategorySlug}" category`;
+      showFeedback('success', `Page "${dragged.titleEn || dragged.title}" ${moveMsg}!`);
+      await fetchPages();
+    } catch (err) {
+      showFeedback('error', 'Failed to move page: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2323,6 +2415,54 @@ export default function AdminPanel() {
                               {/* Category Subpages Grid */}
                               {!isCollapsed && (
                                 <div className="p-3 bg-white">
+                                  {/* Drag-and-Drop Dropzone: Move dragged page into this Category as Root Page */}
+                                  {draggedPage && draggedPage.currentCategorySlug !== cat.categorySlug && (
+                                    <div
+                                      onDragOver={(e) => {
+                                        e.preventDefault();
+                                        setDragOverCategory(cat.categorySlug);
+                                      }}
+                                      onDragLeave={() => setDragOverCategory(null)}
+                                      onDrop={(e) => {
+                                        e.preventDefault();
+                                        handleMovePage(draggedPage, cat.categorySlug, null);
+                                        setDragOverCategory(null);
+                                        setDraggedPage(null);
+                                      }}
+                                      className={`mb-3 p-3 rounded-xl border-2 border-dashed text-center text-xs font-bold transition flex items-center justify-center gap-2 ${
+                                        dragOverCategory === cat.categorySlug
+                                          ? 'border-amber-500 bg-amber-100 text-amber-950 scale-[1.01] shadow-md ring-2 ring-amber-300'
+                                          : 'border-amber-300/80 bg-amber-50/70 text-amber-900 hover:bg-amber-100/50'
+                                      }`}
+                                    >
+                                      <span>↳ Drop here to move &ldquo;{draggedPage.titleEn || draggedPage.title}&rdquo; to {cat.titleEn} category (Root Page)</span>
+                                    </div>
+                                  )}
+
+                                  {/* Drag-and-Drop Dropzone: Convert Subpage into Top-Level Root Page within this Category */}
+                                  {draggedPage && draggedPage.parentPageSlug && draggedPage.currentCategorySlug === cat.categorySlug && (
+                                    <div
+                                      onDragOver={(e) => {
+                                        e.preventDefault();
+                                        setDragOverCategory(`root-${cat.categorySlug}`);
+                                      }}
+                                      onDragLeave={() => setDragOverCategory(null)}
+                                      onDrop={(e) => {
+                                        e.preventDefault();
+                                        handleMovePage(draggedPage, cat.categorySlug, null);
+                                        setDragOverCategory(null);
+                                        setDraggedPage(null);
+                                      }}
+                                      className={`mb-3 p-3 rounded-xl border-2 border-dashed text-center text-xs font-bold transition flex items-center justify-center gap-2 ${
+                                        dragOverCategory === `root-${cat.categorySlug}`
+                                          ? 'border-indigo-500 bg-indigo-100 text-indigo-950 scale-[1.01] shadow-md ring-2 ring-indigo-300'
+                                          : 'border-indigo-300/80 bg-indigo-50/70 text-indigo-900 hover:bg-indigo-100/50'
+                                      }`}
+                                    >
+                                      <span>↳ Drop here to make &ldquo;{draggedPage.titleEn || draggedPage.title}&rdquo; a Root Page (remove parent)</span>
+                                    </div>
+                                  )}
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                                     {catPages.map((p) => {
                                       // Count articles in this page
@@ -2332,16 +2472,63 @@ export default function AdminPanel() {
                                           (Array.isArray(c.targetPages) && c.targetPages.includes(p.pageSlug))
                                       ).length;
 
+                                      const isBeingDraggedOver = dragOverPageSlug === p.pageSlug;
+
                                       return (
                                         <div
                                           key={p.pageSlug}
-                                          className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 group ${
-                                            p.parentPageSlug
+                                          draggable={true}
+                                          onDragStart={(e) => {
+                                            e.dataTransfer.setData('text/plain', p.pageSlug);
+                                            setDraggedPage({ ...p, currentCategorySlug: cat.categorySlug });
+                                          }}
+                                          onDragEnd={() => {
+                                            setDraggedPage(null);
+                                            setDragOverCategory(null);
+                                            setDragOverPageSlug(null);
+                                          }}
+                                          onDragOver={(e) => {
+                                            if (draggedPage && draggedPage.pageSlug !== p.pageSlug) {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setDragOverPageSlug(p.pageSlug);
+                                            }
+                                          }}
+                                          onDragLeave={() => {
+                                            if (dragOverPageSlug === p.pageSlug) setDragOverPageSlug(null);
+                                          }}
+                                          onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (draggedPage && draggedPage.pageSlug !== p.pageSlug) {
+                                              handleMovePage(draggedPage, cat.categorySlug, p.pageSlug);
+                                            }
+                                            setDragOverPageSlug(null);
+                                            setDraggedPage(null);
+                                          }}
+                                          className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 group relative cursor-grab active:cursor-grabbing ${
+                                            isBeingDraggedOver
+                                              ? 'border-2 border-dashed border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-300'
+                                              : p.parentPageSlug
                                               ? 'border-amber-200/80 bg-amber-50/30 hover:bg-white hover:border-[#C59B27]'
                                               : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C59B27]/60 hover:shadow-sm'
                                           }`}
                                         >
+                                          {/* Drag Handle Indicator */}
+                                          <div
+                                            className="text-slate-300 group-hover:text-amber-500 cursor-grab shrink-0 mt-0.5 select-none"
+                                            title="Click & drag with mouse to move page root or nest under another page"
+                                          >
+                                            <GripVertical className="w-4 h-4" />
+                                          </div>
+
                                           <div className="min-w-0 flex-1">
+                                            {isBeingDraggedOver && (
+                                              <div className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md mb-1.5 inline-block">
+                                                ↳ Drop here to nest under &ldquo;{p.titleEn || p.title}&rdquo;
+                                              </div>
+                                            )}
+
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                                                 Page
@@ -2427,15 +2614,15 @@ export default function AdminPanel() {
                                             </div>
                                           </div>
 
-                                          {p.isCustom && (
-                                            <button
-                                              onClick={() => handleDeletePage(p.id)}
-                                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                                              title="Delete Custom Page"
-                                            >
-                                              <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                          )}
+                                          {/* Delete Page Option for ALL pages (including system pages) */}
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeletePage(p, cat)}
+                                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer shrink-0"
+                                            title={`Delete "${p.titleEn || p.title}" from navigation`}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
                                         </div>
                                       );
                                     })}
@@ -2524,16 +2711,14 @@ export default function AdminPanel() {
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
-                                {p.isCustom && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeletePage(p.id)}
-                                    className="p-1 text-slate-400 hover:text-rose-600"
-                                    title="Delete Page"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePage(p, { categorySlug: p.categorySlug })}
+                                  className="p-1 text-slate-400 hover:text-rose-600"
+                                  title="Delete Page"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -2608,16 +2793,14 @@ export default function AdminPanel() {
                                     >
                                       <Pencil className="w-3.5 h-3.5" />
                                     </button>
-                                    {p.isCustom && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeletePage(p.id)}
-                                        className="p-1 text-slate-400 hover:text-rose-600"
-                                        title="Delete Page"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeletePage(p, { categorySlug: p.categorySlug })}
+                                      className="p-1 text-slate-400 hover:text-rose-600"
+                                      title="Delete Page"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                   </div>
                                 </td>
                               </tr>
@@ -2658,6 +2841,25 @@ export default function AdminPanel() {
                   </div>
 
                   <form onSubmit={handleSavePageEdit} className="space-y-3 text-xs">
+                    {/* Category Selection */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Category / Section</span>
+                        <span className="text-[10px] font-normal text-slate-400">Move page to another category</span>
+                      </label>
+                      <select
+                        value={pageEditForm.categorySlug || editingPageModal.categorySlug}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, categorySlug: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                      >
+                        {fullPortalStructure.map((c) => (
+                          <option key={c.categorySlug} value={c.categorySlug}>
+                            {c.titleEn} (/{c.categorySlug})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* Parent Page Selection (Optional) */}
                     <div>
                       <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
@@ -2671,7 +2873,7 @@ export default function AdminPanel() {
                       >
                         <option value="">None (Top-Level Category Page)</option>
                         {fullPortalStructure
-                          .find((c) => c.categorySlug === editingPageModal.categorySlug)
+                          .find((c) => c.categorySlug === (pageEditForm.categorySlug || editingPageModal.categorySlug))
                           ?.pages?.filter((p) => p.pageSlug !== editingPageModal.pageSlug)
                           ?.map((p) => (
                             <option key={p.pageSlug} value={p.pageSlug}>

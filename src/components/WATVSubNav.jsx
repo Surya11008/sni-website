@@ -1,16 +1,19 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePortal } from '../context/PortalContext';
+import AddSubpageModal from './common/AddSubpageModal';
 
 /**
  * WATVSubNav
- * Authentic horizontal sub-navigation bar as seen on watv.org (Image 1 & Image 5).
+ * Authentic horizontal sub-navigation bar as seen on watv.org.
  * Features:
  * - All | Subpage 1 | Subpage 2 | Subpage 3 ...
  * - Active item indicator with subtle underline and bold text
  * - Clean, elegant typography with smooth horizontal scrolling
+ * - In-place + Add Page and + Add Subpage modals without navigating to admin panel
  */
 export default function WATVSubNav({
   categorySlug = '',
@@ -20,6 +23,11 @@ export default function WATVSubNav({
   const { isTelugu } = useLanguage();
   const { isPagePermitted, userProfile, currentUser } = useAuth();
   const { portalStructure } = usePortal();
+  const navigate = useNavigate();
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalParentSlug, setModalParentSlug] = useState('');
+  const [modalParentTitle, setModalParentTitle] = useState('');
 
   const isAdmin =
     userProfile?.role === 'admin' ||
@@ -77,6 +85,10 @@ export default function WATVSubNav({
       )
     : [];
 
+  const showSubpagesRow =
+    tier2Subpages.length > 0 ||
+    (activePageSlug && activePageSlug !== 'all' && isAdmin);
+
   return (
     <div className={`bg-white border-b border-slate-200/90 sticky top-[64px] z-30 shadow-2xs ${className}`}>
       {/* Primary Category Subnav Bar */}
@@ -116,31 +128,36 @@ export default function WATVSubNav({
             );
           })}
 
-          {/* Quick Add Subpage button for Admin */}
+          {/* In-place Quick Add Page button for Admin */}
           {isAdmin && (
-            <Link
-              to={`/admin?tab=pages&category=${categorySlug}&new=true`}
-              className="px-2.5 py-1 whitespace-nowrap text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-md border border-amber-200 transition flex items-center gap-1 shrink-0 ml-1 shadow-2xs"
-              title={`Add new subpage under this category`}
+            <button
+              type="button"
+              onClick={() => {
+                setModalParentSlug('');
+                setModalParentTitle('');
+                setIsAddModalOpen(true);
+              }}
+              className="px-2.5 py-1 whitespace-nowrap text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-md border border-amber-200 transition flex items-center gap-1 shrink-0 ml-1 shadow-2xs cursor-pointer"
+              title={`Add new page under ${category.titleEn || categorySlug}`}
             >
               <Plus className="w-3.5 h-3.5 stroke-[3] text-amber-600" />
               <span>+ Add Page</span>
-            </Link>
+            </button>
           )}
         </nav>
       </div>
 
-      {/* Secondary Tier: Direct Subpages Bar when visiting a page with subpages */}
-      {tier2Subpages.length > 0 && (
+      {/* Secondary Tier: Direct Subpages Bar right under headers */}
+      {showSubpagesRow && (
         <div className="bg-slate-50/90 border-t border-slate-100 py-1.5 px-4 sm:px-8">
           <div className="w-full max-w-[1400px] mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[12px]">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1 shrink-0">
               Subpages:
             </span>
             <Link
-              to={`/page/${categorySlug}/${tier2ParentSlug}`}
+              to={`/page/${categorySlug}/${tier2ParentSlug || activePageSlug}`}
               className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition ${
-                activePageSlug === tier2ParentSlug
+                activePageSlug === (tier2ParentSlug || activePageSlug)
                   ? 'bg-amber-100 text-amber-950 font-extrabold shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
@@ -164,9 +181,42 @@ export default function WATVSubNav({
                 </Link>
               );
             })}
+
+            {/* Quick + Add Subpage button directly beside subpages list */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  const targetParent = tier2ParentSlug || activePageSlug;
+                  const pObj = allowedPages.find((p) => p.pageSlug === targetParent);
+                  setModalParentSlug(targetParent);
+                  setModalParentTitle(pObj?.title || pObj?.titleEn || targetParent);
+                  setIsAddModalOpen(true);
+                }}
+                className="px-2 py-0.5 whitespace-nowrap text-[11px] font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-md border border-amber-300 transition flex items-center gap-1 shrink-0 ml-1.5 cursor-pointer shadow-2xs"
+                title={`Add new subpage under ${tier2ParentSlug || activePageSlug}`}
+              >
+                <Plus className="w-3 h-3 stroke-[3] text-amber-700" />
+                <span>+ Add Subpage</span>
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      {/* In-place Add Page / Add Subpage Modal */}
+      <AddSubpageModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        categorySlug={categorySlug}
+        categoryTitle={category.titleEn || categorySlug}
+        parentPageSlug={modalParentSlug}
+        parentPageTitle={modalParentTitle}
+        onSuccess={(created) => {
+          setIsAddModalOpen(false);
+          navigate(`/page/${categorySlug}/${created.pageSlug}`);
+        }}
+      />
     </div>
   );
 }

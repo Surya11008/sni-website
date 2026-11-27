@@ -453,11 +453,34 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
   }
 
   for (const customPage of customPagesFromFirestore) {
+    const cleanPageSlug = (customPage.pageSlug || '').toLowerCase();
+    if (!cleanPageSlug) continue;
+
+    // 1. If marked as deleted by admin, remove from all categories
+    if (customPage.isDeleted) {
+      for (const cat of structure) {
+        cat.pages = (cat.pages || []).filter(
+          (p) => (p.pageSlug || '').toLowerCase() !== cleanPageSlug
+        );
+      }
+      continue;
+    }
+
     const catSlug = (
       customPage.categorySlug && customPage.categorySlug !== 'custom'
         ? customPage.categorySlug
         : customPage.customCategorySlug || 'more'
     ).toLowerCase();
+
+    // 2. If page root or category changed, remove it from any other category in the structure
+    for (const otherCat of structure) {
+      if (otherCat.categorySlug.toLowerCase() !== catSlug) {
+        otherCat.pages = (otherCat.pages || []).filter(
+          (p) => (p.pageSlug || '').toLowerCase() !== cleanPageSlug
+        );
+      }
+    }
+
     let cat = structure.find((c) => c.categorySlug === catSlug);
 
     if (!cat) {
@@ -476,7 +499,6 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
     }
 
     const pageTitle = customPage.title || customPage.titleEn || formatSlugToTitle(customPage.pageSlug);
-    const cleanPageSlug = (customPage.pageSlug || '').toLowerCase();
     const existingPageIdx = cat.pages.findIndex((p) => (p.pageSlug || '').toLowerCase() === cleanPageSlug);
     const pageObj = {
       id: customPage.id,
