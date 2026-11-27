@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { PortalProvider } from './context/PortalContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -61,7 +62,8 @@ export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <BrowserRouter>
+        <PortalProvider>
+          <BrowserRouter>
           <div className="min-h-screen flex flex-col bg-white font-sans text-slate-900 antialiased selection:bg-[#C59B27] selection:text-[#0F294A]">
             <Navbar />
             <main className="flex-1">
@@ -207,6 +209,7 @@ export default function App() {
             <Footer />
           </div>
         </BrowserRouter>
+        </PortalProvider>
       </AuthProvider>
     </LanguageProvider>
   );

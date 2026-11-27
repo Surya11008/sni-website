@@ -4,7 +4,8 @@ import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
+import { usePortal } from '../context/PortalContext';
+import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import PortalIcon from './PortalIcon';
 import {
   LogIn,
@@ -27,7 +28,7 @@ export default function Navbar() {
   const { t, isTelugu } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
+  const { portalStructure } = usePortal();
   const [mobileExpandedCat, setMobileExpandedCat] = useState(null);
 
   // User Dropdown & Change Password Modal states
@@ -43,30 +44,6 @@ export default function Navbar() {
   const location = useLocation();
   const dropdownRef = useRef(null);
   const userMenuRef = useRef(null);
-
-  // Subscribe to custom pages from Firestore `portal_pages`
-  useEffect(() => {
-    try {
-      const unsub = onSnapshot(
-        collection(db, 'portal_pages'),
-        (snapshot) => {
-          const customPages = [];
-          snapshot.forEach((doc) => {
-            customPages.push({ id: doc.id, ...doc.data() });
-          });
-          setPortalStructure(mergePortalStructure(customPages));
-        },
-        (error) => {
-          console.warn('Using default portal structure, Firestore offline/inaccessible:', error);
-          setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
-        }
-      );
-      return () => unsub();
-    } catch (err) {
-      console.warn('Error setting up portal_pages listener:', err);
-      setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
-    }
-  }, []);
 
   // Close dropdown when route changes or user clicks outside
   useEffect(() => {

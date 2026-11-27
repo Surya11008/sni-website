@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
+import { usePortal } from '../context/PortalContext';
 
 /**
  * WATVSubNav
@@ -16,8 +16,9 @@ export default function WATVSubNav({
   className = '',
 }) {
   const { isTelugu } = useLanguage();
+  const { portalStructure } = usePortal();
 
-  const category = DEFAULT_PORTAL_STRUCTURE.find(
+  const category = (portalStructure || []).find(
     (c) => c.categorySlug === categorySlug
   );
 
@@ -46,7 +47,7 @@ export default function WATVSubNav({
           {/* Subpages Links */}
           {category.pages.map((sp) => {
             const isActive = activePageSlug === sp.pageSlug;
-            const title = isTelugu ? sp.titleTe : sp.titleEn;
+            const title = sp.title || (isTelugu ? sp.titleTe : sp.titleEn);
 
             return (
               <Link

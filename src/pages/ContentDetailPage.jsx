@@ -18,12 +18,13 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePortal } from '../context/PortalContext';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionLinkPreview, NotionEmbedDrawer } from '../components/notion';
 import WATVSubNav from '../components/WATVSubNav';
-import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
+import { formatSlugToTitle } from '../config/portalStructure';
 import {
   Calendar,
   ArrowLeft,
@@ -92,17 +93,8 @@ export default function ContentDetailPage() {
   const [targetPages, setTargetPages] = useState([]);
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
+  const { portalStructure, allAvailablePages } = usePortal();
   const [showEmbedDrawer, setShowEmbedDrawer] = useState(false);
-
-  // Flattened available pages
-  const allAvailablePages = DEFAULT_PORTAL_STRUCTURE.flatMap((cat) =>
-    cat.pages.map((p) => ({
-      pageSlug: p.pageSlug,
-      title: p.titleEn,
-      categorySlug: cat.categorySlug,
-      categoryTitle: cat.titleEn,
-    }))
-  );
 
   const isAdmin =
     userProfile?.role === 'admin' ||
@@ -461,22 +453,24 @@ export default function ContentDetailPage() {
   const articleTitle = getText(article, 'title');
   const articleDesc = getDesc(article);
   const currentCategorySlug = article?.categorySlug || paramCategorySlug || 'worship';
-  const currentCategory = DEFAULT_PORTAL_STRUCTURE.find(
+  const currentCategory = (portalStructure || []).find(
     (c) => c.categorySlug === currentCategorySlug
   ) || {
     categorySlug: currentCategorySlug,
-    titleEn: currentCategorySlug.toUpperCase(),
-    titleTe: currentCategorySlug,
+    titleEn: formatSlugToTitle(currentCategorySlug),
+    titleTe: formatSlugToTitle(currentCategorySlug),
     pages: [],
   };
   const categoryTitle = isTelugu ? currentCategory.titleTe : currentCategory.titleEn;
   const subPages = currentCategory.pages || [];
-  const currentSubpage = subPages.find((p) => p.pageSlug === article?.pageSlug) || {
-    pageSlug: article?.pageSlug || paramPageSlug || 'sermons',
-    titleEn: (article?.pageSlug || paramPageSlug || 'sermons').toUpperCase(),
-    titleTe: article?.pageSlug || paramPageSlug || 'sermons',
+  const articlePageSlug = article?.pageSlug || paramPageSlug || 'sermons';
+  const currentSubpage = subPages.find((p) => p.pageSlug === articlePageSlug) || {
+    pageSlug: articlePageSlug,
+    title: formatSlugToTitle(articlePageSlug),
+    titleEn: formatSlugToTitle(articlePageSlug),
+    titleTe: formatSlugToTitle(articlePageSlug),
   };
-  const subPageTitle = isTelugu ? currentSubpage.titleTe : currentSubpage.titleEn;
+  const subPageTitle = currentSubpage.title || (isTelugu ? currentSubpage.titleTe : currentSubpage.titleEn) || formatSlugToTitle(articlePageSlug);
 
   const backUrl = article.pageSlug
     ? `/page/${currentCategorySlug}/${article.pageSlug}`

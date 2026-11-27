@@ -428,6 +428,20 @@ export const DEFAULT_PORTAL_STRUCTURE = [
 ];
 
 /**
+ * Convert a URL slug (e.g. 'new-song-festival') into a clean, human-readable Title format (e.g. 'New Song Festival')
+ */
+export function formatSlugToTitle(slug) {
+  if (!slug) return '';
+  return slug
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/**
  * Merge default portal structure with any custom pages added to Firestore `portal_pages`
  */
 export function mergePortalStructure(customPagesFromFirestore = []) {
@@ -439,15 +453,16 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
   }
 
   for (const customPage of customPagesFromFirestore) {
-    const catSlug = (customPage.categorySlug || 'more').toLowerCase();
+    const catSlug = (customPage.customCategorySlug || customPage.categorySlug || 'more').toLowerCase();
     let cat = structure.find((c) => c.categorySlug === catSlug);
 
     if (!cat) {
       // If admin created a brand new custom category
+      const catTitle = customPage.customCategoryTitle || customPage.categoryTitleEn || formatSlugToTitle(catSlug);
       cat = {
         categorySlug: catSlug,
-        titleEn: customPage.categoryTitleEn || catSlug.toUpperCase(),
-        titleTe: customPage.categoryTitleTe || customPage.categoryTitleEn || catSlug,
+        titleEn: catTitle,
+        titleTe: customPage.customCategoryTitleTe || customPage.categoryTitleTe || catTitle,
         descriptionEn: customPage.categoryDescEn || '',
         descriptionTe: customPage.categoryDescTe || '',
         iconName: customPage.iconName || 'Folder',
@@ -456,21 +471,26 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
       structure.push(cat);
     }
 
+    const pageTitle = customPage.title || customPage.titleEn || formatSlugToTitle(customPage.pageSlug);
     const existingPageIdx = cat.pages.findIndex((p) => p.pageSlug === customPage.pageSlug);
+    const pageObj = {
+      id: customPage.id,
+      pageSlug: customPage.pageSlug,
+      title: pageTitle,
+      titleEn: customPage.titleEn || pageTitle,
+      titleTe: customPage.titleTe || customPage.title || pageTitle,
+      desc: customPage.desc || customPage.descEn || '',
+      descEn: customPage.descEn || customPage.desc || '',
+      descTe: customPage.descTe || customPage.desc || '',
+      iconName: customPage.iconName || 'FileText',
+      externalUrl: customPage.externalUrl || null,
+      isCustom: true,
+    };
+
     if (existingPageIdx >= 0) {
-      cat.pages[existingPageIdx] = { ...cat.pages[existingPageIdx], ...customPage };
+      cat.pages[existingPageIdx] = { ...cat.pages[existingPageIdx], ...pageObj };
     } else {
-      cat.pages.push({
-        id: customPage.id,
-        pageSlug: customPage.pageSlug,
-        titleEn: customPage.titleEn,
-        titleTe: customPage.titleTe,
-        descEn: customPage.descEn || '',
-        descTe: customPage.descTe || '',
-        iconName: customPage.iconName || 'FileText',
-        externalUrl: customPage.externalUrl || null,
-        isCustom: true,
-      });
+      cat.pages.push(pageObj);
     }
   }
 
@@ -481,13 +501,38 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
  * Lookup Category and Page definition by categorySlug and pageSlug
  */
 export function findPageInfo(portalStructure, categorySlug, pageSlug) {
-  const cat = portalStructure.find(
-    (c) => c.categorySlug.toLowerCase() === (categorySlug || '').toLowerCase()
-  );
-  if (!cat) return { category: null, page: null };
+  if (!portalStructure || !Array.isArray(portalStructure)) {
+    return { category: null, page: null };
+  }
 
-  const page = cat.pages.find(
-    (p) => p.pageSlug.toLowerCase() === (pageSlug || '').toLowerCase()
+  const cleanCatSlug = (categorySlug || '').toLowerCase();
+  const cleanPageSlug = (pageSlug || '').toLowerCase();
+
+  // 1. Check exact category match
+  const cat = portalStructure.find(
+    (c) => c.categorySlug.toLowerCase() === cleanCatSlug
   );
-  return { category: cat, page: page || null };
+
+  if (cat && cat.pages) {
+    const page = cat.pages.find(
+      (p) => p.pageSlug.toLowerCase() === cleanPageSlug
+    );
+    if (page) {
+      return { category: cat, page };
+    }
+  }
+
+  // 2. Fallback: Search across all categories in portalStructure
+  for (const c of portalStructure) {
+    if (c.pages) {
+      const p = c.pages.find(
+        (sp) => sp.pageSlug.toLowerCase() === cleanPageSlug
+      );
+      if (p) {
+        return { category: c, page: p };
+      }
+    }
+  }
+
+  return { category: cat || null, page: null };
 }

@@ -15,7 +15,8 @@ import {
 import { db, auth } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE, findPageInfo } from '../config/portalStructure';
+import { usePortal } from '../context/PortalContext';
+import { formatSlugToTitle } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
 import RichTextEditor from '../components/RichTextEditor';
 import RichContentRenderer from '../components/RichContentRenderer';
@@ -79,6 +80,7 @@ export default function DynamicPage() {
   const { categorySlug, pageSlug } = useParams();
   const { currentUser, userProfile } = useAuth();
   const { isTelugu, getText, getDesc } = useLanguage();
+  const { portalStructure, allAvailablePages, getPageInfo } = usePortal();
   const navigate = useNavigate();
 
   const [pageInfo, setPageInfo] = useState({ category: null, page: null });
@@ -120,26 +122,16 @@ export default function DynamicPage() {
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
 
-  // Flattened list of all portal subpages for multi-page assignment
-  const allAvailablePages = DEFAULT_PORTAL_STRUCTURE.flatMap((cat) =>
-    cat.pages.map((p) => ({
-      pageSlug: p.pageSlug,
-      title: p.titleEn,
-      categorySlug: cat.categorySlug,
-      categoryTitle: cat.titleEn,
-    }))
-  );
-
   const isAdmin = userProfile?.role === 'admin';
 
-  // Load category and page definitions
+  // Load category and page definitions from real-time portalStructure
   useEffect(() => {
-    const info = findPageInfo(DEFAULT_PORTAL_STRUCTURE, categorySlug, pageSlug);
+    const info = getPageInfo(categorySlug, pageSlug);
     setPageInfo(info);
     setActiveArticle(null);
     setIsFormOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [categorySlug, pageSlug]);
+  }, [categorySlug, pageSlug, portalStructure]);
 
   // Load page contents from Firestore `page_contents` (checking both pageSlug & targetPages)
   const fetchPageContents = async () => {
@@ -379,8 +371,15 @@ export default function DynamicPage() {
   });
 
   const { category, page } = pageInfo;
-  const categoryTitle = category ? (isTelugu ? category.titleTe : category.titleEn) : categorySlug;
-  const pageTitle = page ? (isTelugu ? page.titleTe : page.titleEn) : pageSlug;
+  const categoryTitle = category ? (isTelugu ? category.titleTe : category.titleEn) : (categorySlug ? formatSlugToTitle(categorySlug) : '');
+  const pageTitle = (
+    page?.title ||
+    (page ? (isTelugu ? page.titleTe : page.titleEn) : '') ||
+    page?.titleEn ||
+    page?.titleTe ||
+    formatSlugToTitle(pageSlug) ||
+    'Page'
+  );
 
   // Helper to extract YouTube video ID for responsive embed
   const getYouTubeEmbedUrl = (url) => {

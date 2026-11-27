@@ -4,7 +4,8 @@ import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestor
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PORTAL_STRUCTURE, mergePortalStructure } from '../config/portalStructure';
+import { usePortal } from '../context/PortalContext';
+import { DEFAULT_PORTAL_STRUCTURE } from '../config/portalStructure';
 import PortalIcon from '../components/PortalIcon';
 import WATVSubNav from '../components/WATVSubNav';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
@@ -34,7 +35,7 @@ export default function CategoryPage() {
   const { isTelugu, getText, getDesc } = useLanguage();
   const navigate = useNavigate();
 
-  const [portalStructure, setPortalStructure] = useState(DEFAULT_PORTAL_STRUCTURE);
+  const { portalStructure } = usePortal();
   const [categoryContents, setCategoryContents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
@@ -51,30 +52,6 @@ export default function CategoryPage() {
       navigate('/', { replace: true });
     }
   }, [categorySlug, navigate]);
-
-  // Load custom portal pages from Firestore
-  useEffect(() => {
-    try {
-      const unsub = onSnapshot(
-        collection(db, 'portal_pages'),
-        (snapshot) => {
-          const customPages = [];
-          snapshot.forEach((doc) => {
-            customPages.push({ id: doc.id, ...doc.data() });
-          });
-          setPortalStructure(mergePortalStructure(customPages));
-        },
-        (error) => {
-          console.warn('Using default portal structure:', error);
-          setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
-        }
-      );
-      return () => unsub();
-    } catch (err) {
-      console.warn('Error setting up portal_pages listener:', err);
-      setPortalStructure(DEFAULT_PORTAL_STRUCTURE);
-    }
-  }, []);
 
   // Fetch all contents for this category (matching categorySlug or targetPages)
   useEffect(() => {
