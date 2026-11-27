@@ -47,7 +47,27 @@ import {
   ChevronDown,
   Paperclip,
   Layers,
+  Image as ImageIcon,
+  Smile,
+  Tag,
+  Sparkles,
 } from 'lucide-react';
+
+// Curated Notion preset spiritual cover wallpapers
+const NOTION_PRESET_COVERS = [
+  { name: 'Sacred Sunrise', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80' },
+  { name: 'Mountain Dawn', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80' },
+  { name: 'Holy Bible', url: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=80' },
+  { name: 'Golden Forest Rays', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80' },
+  { name: 'Cathedral Stained Glass', url: 'https://images.unsplash.com/photo-1548625361-19597a732a39?w=1600&q=80' },
+  { name: 'Calming Ocean Sunset', url: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=1600&q=80' },
+];
+
+const NOTION_EMOJIS = [
+  '📖', '✝️', '🕊️', '⛪', '📜', '🎵', '🙏', '🌟',
+  '💡', '🛡️', '🌿', '🕯️', '🍞', '👑', '🎺', '❤️',
+  '🌈', '⚓', '🔔', '✨', '🔥', '🌾', '☀️'
+];
 
 export default function DynamicPage() {
   const { categorySlug, pageSlug } = useParams();
@@ -80,6 +100,11 @@ export default function DynamicPage() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [targetPages, setTargetPages] = useState([]);
+
+  // Notion Page states
+  const [icon, setIcon] = useState('📖');
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   // Collapsible sections for clean, simple writing experience
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
@@ -149,6 +174,7 @@ export default function DynamicPage() {
     setEditingItem(null);
     setTitle('');
     setDesc('');
+    setIcon('📖');
     setImageUrl('');
     setVideoUrl('');
     setAudioUrl('');
@@ -158,6 +184,8 @@ export default function DynamicPage() {
     setTargetPages([pageSlug]);
     setShowMediaAttachments(false);
     setShowMultiPageSelect(false);
+    setShowCoverPicker(false);
+    setShowIconPicker(false);
     setIsFormOpen(true);
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
@@ -168,6 +196,7 @@ export default function DynamicPage() {
     setEditingItem(item);
     setTitle(item.title || item.titleEn || item.titleTe || '');
     setDesc(item.desc || item.content || item.descEn || item.descTe || '');
+    setIcon(item.icon || '📖');
     setImageUrl(item.imageUrl || '');
     setVideoUrl(item.videoUrl || '');
     setAudioUrl(item.audioUrl || '');
@@ -175,8 +204,10 @@ export default function DynamicPage() {
     setDownloadUrl(item.downloadUrl || '');
     setWebsiteUrl(item.websiteUrl || item.embedUrl || '');
     setTargetPages(item.targetPages && item.targetPages.length > 0 ? item.targetPages : [item.pageSlug || pageSlug]);
-    setShowMediaAttachments(Boolean(item.imageUrl || item.videoUrl || item.audioUrl || item.fileUrl || item.downloadUrl || item.websiteUrl || item.embedUrl));
+    setShowMediaAttachments(Boolean(item.videoUrl || item.audioUrl || item.fileUrl || item.downloadUrl || item.websiteUrl || item.embedUrl));
     setShowMultiPageSelect(false);
+    setShowCoverPicker(false);
+    setShowIconPicker(false);
     setIsFormOpen(true);
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
@@ -190,7 +221,7 @@ export default function DynamicPage() {
 
   // Handle Save (Add or Update)
   const handleSaveContent = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!title.trim()) {
       alert('Please provide a title for the content.');
       return;
@@ -202,6 +233,7 @@ export default function DynamicPage() {
         categorySlug: categorySlug || '',
         pageSlug: pageSlug || '',
         targetPages: targetPages.length > 0 ? targetPages : [pageSlug],
+        icon: icon || '📖',
         title: title.trim(),
         titleEn: title.trim(),
         titleTe: title.trim(),
@@ -347,92 +379,291 @@ export default function DynamicPage() {
           )}
         </div>
 
-        {/* IN-PAGE ADD / EDIT FORM (No Popup!) */}
+        {/* NOTION-STYLE NEW / EDIT CONTENT PAGE */}
         {isFormOpen && (
-          <div className="mb-12 bg-white rounded-3xl border-2 border-[#F4B942]/50 p-6 sm:p-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#071B3B] text-[#F4B942] flex items-center justify-center font-bold shadow-xs">
-                  {editingItem ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#071B3B]">
-                    {editingItem ? `Edit: ${getText(editingItem, 'title')}` : `New Content in "${pageTitle}"`}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Write cleanly and easily. Full Telugu and English formatting supported natively.
-                  </p>
-                </div>
+          <div className="mb-14 max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* 1. Notion Top Action Bar */}
+            <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
+              <div className="flex items-center gap-2 text-slate-500 font-medium truncate">
+                <Link to={`/category/${categorySlug}`} className="hover:text-slate-800 transition">{categoryTitle}</Link>
+                <span>/</span>
+                <span className="text-slate-900 font-bold truncate">{pageTitle}</span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
+                  <Sparkles className="w-3 h-3 text-[#C59B27]" />
+                  Notion Page
+                </span>
               </div>
-              <button
-                type="button"
-                onClick={() => { setIsFormOpen(false); setEditingItem(null); }}
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-                title="Cancel"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => { setIsFormOpen(false); setEditingItem(null); }}
+                  className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/60 font-semibold text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveContent}
+                  disabled={formSubmitting}
+                  className="px-5 py-1.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4 text-[#F4B942]" />
+                  <span>{formSubmitting ? 'Saving...' : editingItem ? 'Save Changes' : 'Publish'}</span>
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveContent} className="space-y-5">
-              {/* Single Unified Title */}
+            {/* 2. Notion Cover Image Banner */}
+            {imageUrl ? (
+              <div className="relative h-56 sm:h-64 w-full group overflow-hidden bg-slate-100">
+                <img
+                  src={imageUrl}
+                  alt="Page Cover"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverPicker(!showCoverPicker)}
+                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Change cover</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl('')}
+                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-red-600 text-white text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-6 px-6 sm:px-10 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCoverPicker(!showCoverPicker)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Add cover</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowIconPicker(!showIconPicker)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <Smile className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Add icon</span>
+                </button>
+              </div>
+            )}
+
+            {/* Cover Picker Popover */}
+            {showCoverPicker && (
+              <div className="mx-6 sm:mx-10 mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-800">Choose Notion Cover Image</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverPicker(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
+                  {NOTION_PRESET_COVERS.map((cov) => (
+                    <button
+                      key={cov.name}
+                      type="button"
+                      onClick={() => {
+                        setImageUrl(cov.url);
+                        setShowCoverPicker(false);
+                      }}
+                      className="group relative h-20 rounded-xl overflow-hidden border border-slate-200 hover:border-[#C59B27] transition cursor-pointer"
+                    >
+                      <img src={cov.url} alt={cov.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                      <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 flex items-end p-2">
+                        <span className="text-[10px] font-bold text-white truncate drop-shadow">{cov.name}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Or paste custom image URL:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="flex-1 p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCoverPicker(false)}
+                      className="px-4 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] text-xs font-bold cursor-pointer transition hover:bg-[#0F294A]"
+                    >
+                      Set Cover
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Notion Icon Floating Badge */}
+            <div className={`px-6 sm:px-10 relative z-20 ${imageUrl ? '-mt-10 sm:-mt-12' : 'mt-2'}`}>
+              <div className="relative inline-block">
+                <button
+                  type="button"
+                  onClick={() => setShowIconPicker(!showIconPicker)}
+                  className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xl border-4 border-white flex items-center justify-center text-3xl sm:text-4xl cursor-pointer hover:scale-105 transition select-none"
+                  title="Click to Change Page Icon"
+                >
+                  <span>{icon}</span>
+                </button>
+
+                {/* Emoji Picker Popover */}
+                {showIconPicker && (
+                  <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-30 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-700">Choose Notion Icon</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowIconPicker(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-6 gap-2">
+                      {NOTION_EMOJIS.map((em, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setIcon(em);
+                            setShowIconPicker(false);
+                          }}
+                          className={`w-9 h-9 rounded-xl hover:bg-amber-50 flex items-center justify-center text-xl transition cursor-pointer ${
+                            icon === em ? 'bg-amber-100 ring-2 ring-[#C59B27]' : ''
+                          }`}
+                        >
+                          {em}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 4. Notion Page Body: Title, Properties & Content */}
+            <form onSubmit={handleSaveContent} className="px-6 sm:px-10 pt-3 pb-8 space-y-5">
+              {/* Seamless Notion Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Title *
-                </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter article title..."
-                  className="w-full p-3 rounded-2xl border border-slate-300 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-amber-500/20 transition shadow-2xs"
+                  placeholder="Untitled"
+                  className="w-full text-3xl sm:text-4xl lg:text-5xl font-black text-[#071B3B] bg-transparent border-none outline-none focus:ring-0 placeholder:text-slate-300 py-1 leading-tight"
                   required
+                  autoFocus
                 />
               </div>
 
-              {/* Single Unified Rich Content Editor */}
-              <RichTextEditor
-                label="Content"
-                value={desc}
-                onChange={setDesc}
-                placeholder="Start typing your article here... (Telugu, English, lists, scriptures and links supported)"
-                rows={10}
-              />
+              {/* Notion Properties Grid */}
+              <div className="py-2.5 border-y border-slate-100 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-semibold text-slate-500">Page:</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold">
+                    {pageTitle}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMultiPageSelect(!showMultiPageSelect)}
+                    className="text-[11px] font-semibold text-[#C59B27] hover:underline cursor-pointer ml-1"
+                  >
+                    {targetPages.length > 1 ? `(${targetPages.length} pages)` : '+ Cross-post'}
+                  </button>
+                </div>
 
-              {/* Collapsible Media & Attachments Section */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
-                <button
-                  type="button"
-                  onClick={() => setShowMediaAttachments(!showMediaAttachments)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="w-4 h-4 text-[#C59B27]" />
-                    <span>Add Cover Image, Video, Audio or Links (Optional)</span>
-                    {(imageUrl || videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) && (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#071B3B] text-[10px] font-extrabold border border-amber-300">
-                        Attached
-                      </span>
-                    )}
+                <div className="flex items-center gap-1.5">
+                  <Paperclip className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-semibold text-slate-500">Media:</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMediaAttachments(!showMediaAttachments)}
+                    className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-[#071B3B] font-bold text-[11px] transition cursor-pointer flex items-center gap-1"
+                  >
+                    {(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl) ? 'Attached (View)' : '+ Attach Media'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 ml-auto text-[11px] text-slate-400">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Today</span>
+                </div>
+              </div>
+
+              {/* Collapsible Cross-post Drawer */}
+              {showMultiPageSelect && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Cross-post to other pages:</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMultiPageSelect(false)}
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showMediaAttachments ? 'rotate-180' : ''}`} />
-                </button>
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+                    {allAvailablePages.map((p) => {
+                      const isSelected = targetPages.includes(p.pageSlug);
+                      return (
+                        <button
+                          key={`${p.categorySlug}-${p.pageSlug}`}
+                          type="button"
+                          onClick={() => toggleTargetPage(p.pageSlug)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
+                            isSelected
+                              ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
+                          <span>{p.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-                {showMediaAttachments && (
-                  <div className="p-4 border-t border-slate-200/80 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs animate-in fade-in duration-150">
+              {/* Collapsible Media Attachments Drawer */}
+              {showMediaAttachments && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in duration-150 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Attachments & External Links:</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaAttachments(false)}
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Image Cover URL (optional)</label>
-                      <input
-                        type="url"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://images.unsplash.com/..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube or Direct Link)</label>
+                      <label className="block font-bold text-slate-700 mb-1">Video URL (YouTube)</label>
                       <input
                         type="url"
                         value={videoUrl}
@@ -441,9 +672,8 @@ export default function DynamicPage() {
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
                       />
                     </div>
-
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Audio URL (YouTube or Direct Link)</label>
+                      <label className="block font-bold text-slate-700 mb-1">Audio URL (Audio Link)</label>
                       <input
                         type="url"
                         value={audioUrl}
@@ -452,20 +682,18 @@ export default function DynamicPage() {
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
                       />
                     </div>
-
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Document / File URL (PDF, Drive)</label>
+                      <label className="block font-bold text-slate-700 mb-1">Document / PDF Link</label>
                       <input
                         type="url"
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
-                        placeholder="https://drive.google.com/... or /docs/..."
+                        placeholder="https://drive.google.com/..."
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
                       />
                     </div>
-
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Direct Download URL</label>
+                      <label className="block font-bold text-slate-700 mb-1">Download Link</label>
                       <input
                         type="url"
                         value={downloadUrl}
@@ -474,78 +702,42 @@ export default function DynamicPage() {
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
                       />
                     </div>
-
                     <div>
                       <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
                         <Globe className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Website URL (Embed / Interactive Link)</span>
+                        <span>Website URL Embed</span>
                       </label>
                       <input
                         type="url"
                         value={websiteUrl}
                         onChange={(e) => setWebsiteUrl(e.target.value)}
-                        placeholder="https://example.com or https://..."
+                        placeholder="https://example.com"
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
                       />
                     </div>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* 5. Seamless Notion Rich Text Canvas */}
+              <div className="pt-2">
+                <RichTextEditor
+                  label="Document Content"
+                  value={desc}
+                  onChange={setDesc}
+                  placeholder="Type '/' for Notion blocks or start typing your message..."
+                  rows={12}
+                />
               </div>
 
-              {/* Collapsible Publish to Other Pages Section */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden transition">
-                <button
-                  type="button"
-                  onClick={() => setShowMultiPageSelect(!showMultiPageSelect)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:bg-slate-100/70 transition cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-indigo-600" />
-                    <span>Publish to other pages also (Optional)</span>
-                    <span className="text-[11px] text-slate-400 font-normal">
-                      (Active: <strong className="text-slate-700">{pageTitle}</strong>)
-                    </span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showMultiPageSelect ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showMultiPageSelect && (
-                  <div className="p-4 border-t border-slate-200/80 bg-white space-y-2 animate-in fade-in duration-150">
-                    <p className="text-[11px] text-slate-500">
-                      Click any pages where this article should also be displayed:
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
-                      {allAvailablePages.map((p) => {
-                        const isSelected = targetPages.includes(p.pageSlug);
-                        return (
-                          <button
-                            key={`${p.categorySlug}-${p.pageSlug}`}
-                            type="button"
-                            onClick={() => toggleTargetPage(p.pageSlug)}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
-                              isSelected
-                                ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-xs'
-                                : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
-                            }`}
-                          >
-                            {isSelected && <Check className="w-3 h-3 text-[#F4B942]" />}
-                            <span>{p.title}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              {/* 6. Bottom Notion Action Bar */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => { setIsFormOpen(false); setEditingItem(null); }}
                   className="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer transition"
                 >
-                  Cancel
+                  Discard
                 </button>
                 <button
                   type="submit"
@@ -630,11 +822,14 @@ export default function DynamicPage() {
               </div>
 
               <h1
-                className={`text-2xl sm:text-4xl font-extrabold text-[#071B3B] leading-tight tracking-tight ${
+                className={`text-2xl sm:text-4xl font-extrabold text-[#071B3B] leading-tight tracking-tight flex items-center gap-3 ${
                   isTelugu ? 'font-krishna text-3xl sm:text-5xl' : 'font-serif'
                 }`}
               >
-                {getText(activeArticle, 'title')}
+                {activeArticle.icon && (
+                  <span className="text-3xl sm:text-5xl select-none shrink-0">{activeArticle.icon}</span>
+                )}
+                <span>{getText(activeArticle, 'title')}</span>
               </h1>
             </div>
 
@@ -916,11 +1111,12 @@ export default function DynamicPage() {
                           </div>
 
                           <h3
-                            className={`text-lg font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors leading-snug mb-2 ${
+                            className={`text-lg font-bold text-[#0F294A] group-hover:text-[#C59B27] transition-colors leading-snug mb-2 flex items-center gap-1.5 ${
                               isTelugu ? 'font-telugu' : 'font-serif'
                             }`}
                           >
-                            {itemTitle}
+                            {item.icon && <span className="text-xl select-none shrink-0">{item.icon}</span>}
+                            <span>{itemTitle}</span>
                           </h3>
 
                           <p
@@ -1050,8 +1246,9 @@ export default function DynamicPage() {
                           )}
                         </div>
 
-                        <h3 className="text-base sm:text-lg font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors truncate">
-                          {itemTitle}
+                        <h3 className="text-base sm:text-lg font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors truncate flex items-center gap-1.5">
+                          {item.icon && <span className="text-lg select-none shrink-0">{item.icon}</span>}
+                          <span>{itemTitle}</span>
                         </h3>
 
                         <p className="text-slate-600 text-xs sm:text-sm line-clamp-2">
