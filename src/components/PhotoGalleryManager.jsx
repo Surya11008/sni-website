@@ -13,6 +13,7 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { normalizeImageUrl } from './notion/NotionCover';
 import {
   Image as ImageIcon,
   Plus,
@@ -26,6 +27,10 @@ import {
   Upload,
   LayoutGrid,
   SlidersHorizontal,
+  Link as LinkIcon,
+  Loader2,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 
 export default function PhotoGalleryManager({
@@ -61,6 +66,12 @@ export default function PhotoGalleryManager({
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+  const [inputSourceTab, setInputSourceTab] = useState('upload'); // 'upload' | 'link'
+  const [linkInput, setLinkInput] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [pasteNotice, setPasteNotice] = useState('');
+  const fileInputRef = useRef(null);
 
   // Active enlarged photo view
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState(null);
@@ -123,19 +134,24 @@ export default function PhotoGalleryManager({
   const handleOpenAdd = () => {
     setEditingPhoto(null);
     setImageUrl('');
+    setLinkInput('');
     setTitle('');
     setCaption('');
     setLinkUrl('');
+    setInputSourceTab('upload');
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (photo, e) => {
     if (e) e.stopPropagation();
     setEditingPhoto(photo);
-    setImageUrl(photo.imageUrl || '');
+    const photoUrl = photo.imageUrl || '';
+    setImageUrl(photoUrl);
+    setLinkInput(photoUrl.startsWith('data:') ? '' : photoUrl);
     setTitle(photo.title || photo.titleEn || photo.titleTe || '');
     setCaption(photo.caption || photo.captionEn || photo.captionTe || '');
     setLinkUrl(photo.linkUrl || '');
+    setInputSourceTab(photoUrl.startsWith('data:') ? 'upload' : 'link');
     setIsFormOpen(true);
   };
 
@@ -150,43 +166,152 @@ export default function PhotoGalleryManager({
     }
   };
 
-  // Upload photo from device
-  const handleDeviceUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1920;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
+  // High-res canvas image compressor (fast & lightweight)
+  const compressImageFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1920;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = reject;
+        img.src = event.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Upload photo(s) from device: supports single photo or batch upload
+  const handleDeviceUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (files.length === 1) {
+      setIsProcessingFile(true);
+      try {
+        const compressed = await compressImageFile(files[0]);
+        setImageUrl(compressed);
+        if (!title.trim()) {
+          const nameWithoutExt = files[0].name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ');
+          setTitle(nameWithoutExt);
+        }
+      } catch (err) {
+        alert('Failed to process image file.');
+      } finally {
+        setIsProcessingFile(false);
+      }
+      return;
+    }
+
+    // Batch upload: multiple photos selected
+    if (files.length > 1) {
+      if (!window.confirm(`Upload all ${files.length} photos to the gallery at once?`)) return;
+      setIsProcessingFile(true);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const compressed = await compressImageFile(files[i]);
+          const nameWithoutExt = files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ');
+          await addDoc(collection(db, 'site_photos'), {
+            targetPage,
+            imageUrl: compressed,
+            title: nameWithoutExt,
+            titleEn: nameWithoutExt,
+            titleTe: nameWithoutExt,
+            caption: '',
+            captionEn: '',
+            captionTe: '',
+            linkUrl: null,
+            order: photos.length + i,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+        setIsFormOpen(false);
+        alert(`Successfully added ${files.length} photos!`);
+      } catch (err) {
+        alert('Failed during batch upload: ' + err.message);
+      } finally {
+        setIsProcessingFile(false);
+      }
+    }
+  };
+
+  // Clipboard Paste (Ctrl + V) listener when the photo form is open
+  useEffect(() => {
+    if (!isFormOpen) return;
+
+    const handleWindowPaste = async (e) => {
+      // Don't intercept if user is typing text in title or caption inputs
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'TEXTAREA') return;
+      if (document.activeElement?.id === 'gallery-title-input' || document.activeElement?.id === 'gallery-caption-input') return;
+
+      // Check if image blob is in clipboard (e.g. Right click -> Copy Image in Google)
+      const items = e.clipboardData?.items;
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            if (blob) {
+              e.preventDefault();
+              setPasteNotice('Pasting copied photo from clipboard...');
+              setIsProcessingFile(true);
+              try {
+                const compressed = await compressImageFile(blob);
+                setImageUrl(compressed);
+                setPasteNotice('');
+              } catch (err) {
+                alert('Failed to paste copied photo.');
+              } finally {
+                setIsProcessingFile(false);
+              }
+              return;
+            }
           }
         }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL('image/jpeg', 0.85);
-        setImageUrl(compressed);
-      };
-      img.src = event.target.result;
+      }
+
+      // Check if image URL is pasted as text
+      const text = e.clipboardData?.getData('text');
+      if (text && (text.startsWith('http') || text.includes('google.') || text.startsWith('data:image/'))) {
+        const normalized = normalizeImageUrl(text);
+        if (normalized) {
+          e.preventDefault();
+          setPasteNotice('Applying pasted photo URL...');
+          setImageUrl(normalized);
+          setLinkInput(normalized);
+          setTimeout(() => setPasteNotice(''), 1000);
+        }
+      }
     };
-    reader.readAsDataURL(file);
-  };
+
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [isFormOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!imageUrl.trim()) {
-      alert('Please enter a valid image URL or upload a photo.');
+    if (!imageUrl || !imageUrl.trim()) {
+      alert('Please select or paste a photo.');
       return;
     }
 
@@ -216,6 +341,11 @@ export default function PhotoGalleryManager({
 
       setIsFormOpen(false);
       setEditingPhoto(null);
+      setImageUrl('');
+      setLinkInput('');
+      setTitle('');
+      setCaption('');
+      setLinkUrl('');
     } catch (err) {
       console.error('Failed to save photo:', err);
       alert('Failed to save photo: ' + err.message);
@@ -338,81 +468,235 @@ export default function PhotoGalleryManager({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            {/* Quick Paste Notification Badge */}
+            {pasteNotice && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2 animate-in fade-in">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C59B27]" />
+                <span className="font-semibold">{pasteNotice}</span>
+              </div>
+            )}
+
             <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Photo (Upload from Device or Paste URL) *
-              </label>
-              
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block font-bold text-slate-800 text-xs">
+                  Photo (Upload, Copy-Paste, or Paste Any Link) *
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  Accepts Google Images, Drive, Device Upload, or Ctrl+V
+                </span>
+              </div>
+
+              {/* Source Tabs */}
+              <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setInputSourceTab('upload')}
+                  className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    inputSourceTab === 'upload'
+                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
                   <Upload className="w-3.5 h-3.5 text-[#C59B27]" />
-                  <span>Choose Photo from Device</span>
+                  <span>Upload from Device / Copy-Paste</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInputSourceTab('link')}
+                  className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    inputSourceTab === 'link'
+                      ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <LinkIcon className="w-3.5 h-3.5 text-[#C59B27]" />
+                  <span>Paste Any Link / Google Photo</span>
+                </button>
+              </div>
+
+              {/* TAB 1: DEVICE UPLOAD & DRAG & DROP & CTRL+V */}
+              {inputSourceTab === 'upload' && (
+                <div>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleDeviceUpload}
                     className="hidden"
                   />
-                </label>
-                <span className="text-slate-400 text-[11px]">or enter URL below:</span>
-              </div>
+                  <div
+                    onClick={() => !isProcessingFile && fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      const files = e.dataTransfer?.files;
+                      if (files && files.length > 0) {
+                        handleDeviceUpload({ target: { files } });
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition ${
+                      isDragging
+                        ? 'border-amber-500 bg-amber-100/50 scale-[1.01]'
+                        : isProcessingFile
+                        ? 'border-amber-400 bg-amber-50/50'
+                        : 'border-slate-300 hover:border-[#C59B27] bg-slate-50/70 hover:bg-amber-50/20'
+                    }`}
+                  >
+                    {isProcessingFile ? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-2 text-slate-600">
+                        <Loader2 className="w-7 h-7 text-[#C59B27] animate-spin" />
+                        <p className="font-bold text-slate-700">Processing & compressing photo...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-1.5 py-1 text-slate-600">
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center text-[#C59B27] mb-1">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <p className="font-bold text-slate-800 text-xs">
+                          Click to choose photo(s) from device or drag & drop here
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Supports single or multiple photos (JPG, PNG, WebP)
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          💡 Tip: You can also copy any photo from Google/web and press <kbd className="px-1.5 py-0.5 bg-slate-200 rounded font-mono text-slate-800 text-[10px]">Ctrl + V</kbd> to paste!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              <input
-                type="url"
-                required
-                value={imageUrl && !imageUrl.startsWith('data:') ? imageUrl : ''}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://images.unsplash.com/... or direct image link"
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
-              />
+              {/* TAB 2: LINK / GOOGLE PHOTO */}
+              {inputSourceTab === 'link' && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      id="photo-gallery-url-input"
+                      type="text"
+                      value={linkInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setLinkInput(val);
+                        if (val.trim()) {
+                          const normalized = normalizeImageUrl(val);
+                          setImageUrl(normalized);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (linkInput.trim()) {
+                            const normalized = normalizeImageUrl(linkInput);
+                            setImageUrl(normalized);
+                            setLinkInput(normalized);
+                          }
+                        }
+                      }}
+                      placeholder="Paste image link, Google search photo link, or Google Drive URL..."
+                      className="flex-1 p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (linkInput.trim()) {
+                          const normalized = normalizeImageUrl(linkInput);
+                          setImageUrl(normalized);
+                          setLinkInput(normalized);
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs shrink-0 cursor-pointer"
+                    >
+                      Apply Link
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Works seamlessly with Google search images, Google Drive photo links, Unsplash, or any web image URL.
+                  </p>
+                </div>
+              )}
 
+              {/* PHOTO PREVIEW CARD */}
               {imageUrl && (
-                <div className="mt-2.5 relative w-40 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="mt-3 p-3 rounded-2xl border border-amber-200/80 bg-amber-50/40 flex items-center justify-between gap-4 animate-in fade-in duration-150">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs shrink-0">
+                      <img
+                        src={imageUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        <Check className="w-3 h-3" />
+                        <span>Photo Ready to Save</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs sm:max-w-md">
+                        {imageUrl.startsWith('data:') ? 'Uploaded from device (Optimized JPEG)' : imageUrl}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageUrl('');
+                      setLinkInput('');
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition shrink-0"
+                    title="Remove Photo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
 
             <div>
               <label className="block font-bold text-slate-700 mb-1">
-                Title / శీర్షిక
+                Title (Optional / శీర్షిక)
               </label>
               <input
+                id="gallery-title-input"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Photo title / శీర్షిక..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                placeholder="Photo title / శీర్షిక (optional)..."
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
               />
             </div>
 
             <div>
               <label className="block font-bold text-slate-700 mb-1">
-                Caption / Description (వివరణ)
+                Caption / Description (Optional / వివరణ)
               </label>
               <textarea
+                id="gallery-caption-input"
                 rows={2}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                placeholder="Photo caption or description..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                placeholder="Photo caption or description (optional)..."
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
               />
             </div>
 
             <div>
               <label className="block font-bold text-slate-700 mb-1">
-                Optional Link / URL
+                Optional Redirect Link / URL
               </label>
               <input
                 type="text"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
                 placeholder="/page/... or https://..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs"
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-xs bg-white"
               />
             </div>
 
@@ -426,10 +710,24 @@ export default function PhotoGalleryManager({
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-50 cursor-pointer"
+                disabled={submitting || isProcessingFile}
+                className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
               >
-                {submitting ? 'Saving...' : editingPhoto ? 'Update Photo' : 'Save Photo'}
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : isProcessingFile ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Processing Photo...</span>
+                  </>
+                ) : editingPhoto ? (
+                  <span>Update Photo</span>
+                ) : (
+                  <span>Save Photo</span>
+                )}
               </button>
             </div>
           </form>
