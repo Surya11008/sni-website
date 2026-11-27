@@ -2018,10 +2018,10 @@ export default function AdminPanel() {
 
                   {/* Single Unified Rich Content Editor */}
                   <RichTextEditor
-                    label="Article Content (Google Docs Styled Editor)"
+                    label="Article Content"
                     value={newContent.desc}
                     onChange={(val) => setNewContent({ ...newContent, desc: val })}
-                    placeholder="Write article content here. Formatting, tables, font styles, colors, and lists are preserved natively..."
+                    placeholder="Write article content here... (Telugu, English, formatting, quotes, and links supported)"
                     rows={8}
                   />
 

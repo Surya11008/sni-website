@@ -38,7 +38,7 @@ iframe, video, embed, object {
   border: 0;
 }
 
-/* Rich HTML Content styling for Google Docs pasted tables, headings, blockquotes */
+/* Rich HTML Content styling for rich text, tables, headings, and blockquotes */
 .rich-html-content table {
   width: 100%;
   border-collapse: collapse;
