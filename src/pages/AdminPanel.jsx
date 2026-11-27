@@ -51,6 +51,11 @@ import {
   Sparkles,
   Layers,
   Paperclip,
+  LayoutGrid,
+  List,
+  Table,
+  Filter,
+  Folder,
 } from 'lucide-react';
 
 const OFFICIAL_ROLES = [
@@ -125,6 +130,7 @@ export default function AdminPanel() {
     categorySlug: 'home',
     customCategoryTitle: '',
     title: '',
+    titleTe: '',
     pageSlug: '',
     desc: '',
     externalUrl: '',
@@ -136,6 +142,74 @@ export default function AdminPanel() {
     () => mergePortalStructure(customPagesList),
     [customPagesList]
   );
+
+  // Complete Portal Navigation Organization states
+  const [pageSearchTerm, setPageSearchTerm] = useState('');
+  const [pageCategoryFilter, setPageCategoryFilter] = useState('all');
+  const [pageViewMode, setPageViewMode] = useState('grouped'); // 'grouped' | 'cards' | 'table'
+  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [editingPageModal, setEditingPageModal] = useState(null); // page object or null
+  const [pageEditForm, setPageEditForm] = useState({
+    titleEn: '',
+    titleTe: '',
+    descEn: '',
+    externalUrl: '',
+    iconName: 'FileText',
+  });
+
+  // Total pages count across all categories
+  const totalPagesCount = useMemo(() => {
+    return fullPortalStructure.reduce((acc, cat) => acc + (cat.pages?.length || 0), 0);
+  }, [fullPortalStructure]);
+
+  // Filtered categories and pages for the Complete Page Architecture View
+  const filteredPortalCategories = useMemo(() => {
+    const search = pageSearchTerm.trim().toLowerCase();
+
+    return fullPortalStructure.map((cat) => {
+      // Category filter check
+      if (pageCategoryFilter !== 'all') {
+        if (pageCategoryFilter === 'custom') {
+          const hasCustom = cat.pages?.some((p) => p.isCustom);
+          if (!hasCustom) return null;
+        } else if (cat.categorySlug !== pageCategoryFilter) {
+          return null;
+        }
+      }
+
+      // Filter pages by search
+      const matchingPages = (cat.pages || []).filter((p) => {
+        if (pageCategoryFilter === 'custom' && !p.isCustom) return false;
+        if (!search) return true;
+        const matchTitle = (p.titleEn || p.title || '').toLowerCase().includes(search);
+        const matchTitleTe = (p.titleTe || '').toLowerCase().includes(search);
+        const matchSlug = (p.pageSlug || '').toLowerCase().includes(search);
+        const matchCat = (cat.titleEn || cat.categorySlug || '').toLowerCase().includes(search);
+        return matchTitle || matchTitleTe || matchSlug || matchCat;
+      });
+
+      if (matchingPages.length === 0 && search && !(cat.titleEn || '').toLowerCase().includes(search)) {
+        return null;
+      }
+
+      return {
+        ...cat,
+        pages: matchingPages,
+      };
+    }).filter(Boolean);
+  }, [fullPortalStructure, pageSearchTerm, pageCategoryFilter]);
+
+  // Flattened list of all filtered pages for grid / table view
+  const allFilteredPages = useMemo(() => {
+    return filteredPortalCategories.flatMap((cat) =>
+      cat.pages.map((p) => ({
+        ...p,
+        categorySlug: cat.categorySlug,
+        categoryTitleEn: cat.titleEn,
+        categoryTitleTe: cat.titleTe,
+      }))
+    );
+  }, [filteredPortalCategories]);
 
   // Search & Accordion expansion state for role permissions modal
   const [rolePermSearch, setRolePermSearch] = useState('');
@@ -1023,6 +1097,7 @@ export default function AdminPanel() {
     setLoading(true);
     try {
       const cleanTitle = newPage.title.trim();
+      const cleanTitleTe = (newPage.titleTe || '').trim() || cleanTitle;
       const generatedSlug =
         newPage.pageSlug.trim() ||
         cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -1032,7 +1107,7 @@ export default function AdminPanel() {
         pageSlug: generatedSlug,
         title: cleanTitle,
         titleEn: cleanTitle,
-        titleTe: cleanTitle,
+        titleTe: cleanTitleTe,
         desc: newPage.desc.trim(),
         descEn: newPage.desc.trim(),
         descTe: newPage.desc.trim(),
@@ -1055,6 +1130,7 @@ export default function AdminPanel() {
         categorySlug: 'home',
         customCategoryTitle: '',
         title: '',
+        titleTe: '',
         pageSlug: '',
         desc: '',
         externalUrl: '',
@@ -1063,6 +1139,61 @@ export default function AdminPanel() {
       await fetchPages();
     } catch (err) {
       showFeedback('error', 'Failed to add page: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenEditPage = (page, cat) => {
+    setEditingPageModal({
+      ...page,
+      categorySlug: cat?.categorySlug || page.categorySlug || 'home',
+      categoryTitle: cat?.titleEn || page.categorySlug,
+    });
+    setPageEditForm({
+      titleEn: page.titleEn || page.title || '',
+      titleTe: page.titleTe || '',
+      descEn: page.descEn || page.desc || '',
+      externalUrl: page.externalUrl || '',
+      iconName: page.iconName || 'FileText',
+    });
+  };
+
+  const handleSavePageEdit = async (e) => {
+    e.preventDefault();
+    if (!editingPageModal) return;
+    if (!pageEditForm.titleEn.trim()) {
+      alert('Please enter a page title.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = {
+        categorySlug: editingPageModal.categorySlug,
+        pageSlug: editingPageModal.pageSlug,
+        title: pageEditForm.titleEn.trim(),
+        titleEn: pageEditForm.titleEn.trim(),
+        titleTe: pageEditForm.titleTe.trim() || pageEditForm.titleEn.trim(),
+        desc: pageEditForm.descEn.trim(),
+        descEn: pageEditForm.descEn.trim(),
+        descTe: pageEditForm.descEn.trim(),
+        externalUrl: pageEditForm.externalUrl.trim() || null,
+        iconName: pageEditForm.iconName.trim() || 'FileText',
+        updatedAt: serverTimestamp(),
+      };
+
+      if (editingPageModal.id) {
+        await updateDoc(doc(db, 'portal_pages', editingPageModal.id), payload);
+      } else {
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db, 'portal_pages'), payload);
+      }
+
+      showFeedback('success', `Page "${pageEditForm.titleEn}" updated successfully!`);
+      setEditingPageModal(null);
+      await fetchPages();
+    } catch (err) {
+      showFeedback('error', 'Failed to update page: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -1730,170 +1861,692 @@ export default function AdminPanel() {
         )}
 
         {/* ======================================================== */}
-        {/* TAB 2: CATEGORIES & PAGES (Custom Sub-Pages Builder)     */}
+        {/* TAB 2: COMPLETE PORTAL PAGES & NAVIGATION ARCHITECTURE   */}
         {/* ======================================================== */}
         {activeTab === 'pages' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Create Sub-Page Form */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
-              <h2 className="text-base font-bold text-[#0F294A] mb-1 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-[#C59B27]" />
-                <span>Add New Sub-Page to Menu</span>
-              </h2>
-              <p className="text-xs text-slate-500 mb-5">
-                Create a new sub-page under any of the 8 main categories. It instantly becomes accessible at /page/:categorySlug/:pageSlug.
-              </p>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Create Sub-Page Form */}
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm self-start">
+                <h2 className="text-base font-bold text-[#0F294A] mb-1 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-[#C59B27]" />
+                  <span>Add New Sub-Page to Menu</span>
+                </h2>
+                <p className="text-xs text-slate-500 mb-5">
+                  Create a new sub-page under any category. It instantly appears across navigation menus, subnav bars, and at <code className="bg-slate-100 px-1 py-0.5 rounded text-[#071B3B]">/page/:category/:slug</code>.
+                </p>
 
-              <form onSubmit={handleAddPage} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Select Target Category *
-                  </label>
-                  <select
-                    value={newPage.categorySlug}
-                    onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
-                  >
-                    <option value="home">Home</option>
-                    <option value="worship">Worship</option>
-                    <option value="bible-truth">Truth</option>
-                    <option value="family">Family</option>
-                    <option value="grow">Grow</option>
-                    <option value="go-come">Go & Come</option>
-                    <option value="program">Program</option>
-                    <option value="more">More</option>
-                    <option value="custom">+ Create Brand New Category</option>
-                  </select>
-                </div>
-
-                {newPage.categorySlug === 'custom' && (
-                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40">
+                <form onSubmit={handleAddPage} className="space-y-4 text-xs">
+                  <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      New Category Name *
+                      Select Target Category *
+                    </label>
+                    <select
+                      value={newPage.categorySlug}
+                      onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                    >
+                      <option value="home">Home (ముఖ్య పేజీ)</option>
+                      <option value="worship">Worship (ఆరాధన)</option>
+                      <option value="bible-truth">Bible & Truth (సత్యం & బైబిల్)</option>
+                      <option value="family">Family & Faith (కుటుంబం & విశ్వాసం)</option>
+                      <option value="grow">Grow (ఆత్మీయ ఎదుగుదల)</option>
+                      <option value="go-come">Go & Come (ప్రపంచ సువార్త)</option>
+                      <option value="program">Program (కార్యక్రమాలు)</option>
+                      <option value="more">More (మరిన్ని విభాగాలు)</option>
+                      <option value="custom">+ Create Brand New Category</option>
+                    </select>
+                  </div>
+
+                  {newPage.categorySlug === 'custom' && (
+                    <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 space-y-2">
+                      <label className="block font-bold text-slate-700">
+                        New Category Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newPage.customCategoryTitle}
+                        onChange={(e) =>
+                          setNewPage({ ...newPage, customCategoryTitle: e.target.value })
+                        }
+                        placeholder="e.g. Fellowship / సహవాసం"
+                        className="w-full p-2 rounded-xl border border-slate-300 bg-white"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Page Title (English) *
                     </label>
                     <input
                       type="text"
                       required
-                      value={newPage.customCategoryTitle}
-                      onChange={(e) =>
-                        setNewPage({ ...newPage, customCategoryTitle: e.target.value })
-                      }
-                      placeholder="e.g. Fellowship"
-                      className="w-full p-2 rounded-xl border border-slate-300 bg-white"
+                      value={newPage.title}
+                      onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                      placeholder="e.g. New Song Festival"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
                     />
                   </div>
-                )}
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Page Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newPage.title}
-                    onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-                    placeholder="e.g. Doctrine Studies"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Page URL Slug (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newPage.pageSlug}
-                    onChange={(e) => setNewPage({ ...newPage, pageSlug: e.target.value })}
-                    placeholder="e.g. doctrine-studies"
-                    className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    External Link URL (optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={newPage.externalUrl}
-                    onChange={(e) => setNewPage({ ...newPage, externalUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider text-xs shadow-md transition disabled:opacity-50"
-                >
-                  {loading ? 'Adding Page...' : '+ Publish Page to Menu'}
-                </button>
-              </form>
-            </div>
-
-            {/* Custom Pages List */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                  <h3 className="text-base font-bold text-[#0F294A]">
-                    Custom Created Navigation Pages ({customPagesList.length})
-                  </h3>
-                  <button
-                    onClick={fetchPages}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {customPagesList.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs">
-                    No custom pages created yet. The default structure is in effect.
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Page Title (Telugu / తెలుగు శీర్షిక)
+                    </label>
+                    <input
+                      type="text"
+                      value={newPage.titleTe}
+                      onChange={(e) => setNewPage({ ...newPage, titleTe: e.target.value })}
+                      placeholder="e.g. నూతన పాటల పండుగ"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {customPagesList.map((p) => (
-                      <div
-                        key={p.id}
-                        className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-3 group hover:border-[#C59B27]/60 transition"
-                      >
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-[#0F294A]">
-                            {p.categorySlug}
-                          </span>
-                          <h4 className="text-xs font-bold text-slate-900 mt-1 truncate">
-                            {p.titleEn}
-                          </h4>
-                          {p.titleTe && (
-                            <p className="text-[11px] font-telugu text-slate-600 truncate">
-                              {p.titleTe}
-                            </p>
-                          )}
-                          <Link
-                            to={`/page/${p.categorySlug}/${p.pageSlug}`}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-[#C59B27] hover:underline mt-2"
-                          >
-                            <span>Open Page</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </div>
 
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Page URL Slug (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newPage.pageSlug}
+                      onChange={(e) => setNewPage({ ...newPage, pageSlug: e.target.value })}
+                      placeholder="e.g. new-song-festival"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      URL: /page/{newPage.categorySlug}/{newPage.pageSlug || newPage.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'slug'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Description / వివరణ (optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={newPage.desc}
+                      onChange={(e) => setNewPage({ ...newPage, desc: e.target.value })}
+                      placeholder="Brief description of this section..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      External Link URL (optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={newPage.externalUrl}
+                      onChange={(e) => setNewPage({ ...newPage, externalUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-2.5 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold uppercase tracking-wider text-xs shadow-md transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{loading ? 'Adding Page...' : 'Publish Page to Menu'}</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* Complete Portal Pages Architecture Section */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
+                  {/* Top Bar with Title, Total Count, and Refresh */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-bold text-[#0F294A]">
+                          All Portal Navigation Pages
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-[#0F294A] text-xs font-extrabold">
+                          {totalPagesCount} Pages
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Manage, organize, edit and inspect all official system pages and custom navigation subpages.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      {/* View mode toggle */}
+                      <div className="flex items-center p-1 bg-slate-100 rounded-xl">
                         <button
-                          onClick={() => handleDeletePage(p.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                          title="Delete Page"
+                          type="button"
+                          onClick={() => setPageViewMode('grouped')}
+                          className={`p-1.5 rounded-lg transition ${
+                            pageViewMode === 'grouped' ? 'bg-white shadow-xs text-[#071B3B]' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="Grouped by Category"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <FolderTree className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPageViewMode('cards')}
+                          className={`p-1.5 rounded-lg transition ${
+                            pageViewMode === 'cards' ? 'bg-white shadow-xs text-[#071B3B]' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="Grid Cards"
+                        >
+                          <LayoutGrid className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPageViewMode('table')}
+                          className={`p-1.5 rounded-lg transition ${
+                            pageViewMode === 'table' ? 'bg-white shadow-xs text-[#071B3B]' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="Compact Table"
+                        >
+                          <Table className="w-4 h-4" />
                         </button>
                       </div>
-                    ))}
+
+                      <button
+                        onClick={fetchPages}
+                        className="p-2 rounded-xl text-slate-500 hover:text-[#0F294A] hover:bg-slate-100 border border-slate-200 transition"
+                        title="Reload Pages"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                )}
+
+                  {/* Search Bar */}
+                  <div className="relative mb-3">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={pageSearchTerm}
+                      onChange={(e) => setPageSearchTerm(e.target.value)}
+                      placeholder="Search any page by title, Telugu name, slug, or category..."
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 bg-slate-50/50"
+                    />
+                    {pageSearchTerm && (
+                      <button
+                        onClick={() => setPageSearchTerm('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-none text-xs border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setPageCategoryFilter('all')}
+                      className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer ${
+                        pageCategoryFilter === 'all'
+                          ? 'bg-[#071B3B] text-[#F4B942] shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      All ({totalPagesCount})
+                    </button>
+                    {fullPortalStructure.map((cat) => {
+                      const count = cat.pages?.length || 0;
+                      const isActive = pageCategoryFilter === cat.categorySlug;
+                      return (
+                        <button
+                          key={cat.categorySlug}
+                          type="button"
+                          onClick={() => setPageCategoryFilter(cat.categorySlug)}
+                          className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+                            isActive
+                              ? 'bg-[#071B3B] text-[#F4B942] shadow-xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          <span>{cat.titleEn}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-amber-400 text-slate-900 font-bold' : 'bg-slate-200 text-slate-600'}`}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => setPageCategoryFilter('custom')}
+                      className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+                        pageCategoryFilter === 'custom'
+                          ? 'bg-[#071B3B] text-[#F4B942] shadow-xs'
+                          : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                      }`}
+                    >
+                      <span>Custom Pages</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-900 font-bold">
+                        {customPagesList.length}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* 1. VIEW MODE: GROUPED BY CATEGORY (Accordion) */}
+                  {pageViewMode === 'grouped' && (
+                    <div className="space-y-4">
+                      {filteredPortalCategories.length === 0 ? (
+                        <div className="text-center py-12 text-slate-400 text-xs">
+                          No pages matched your search query.
+                        </div>
+                      ) : (
+                        filteredPortalCategories.map((cat) => {
+                          const isCollapsed = Boolean(collapsedCategories[cat.categorySlug]);
+                          const catPages = cat.pages || [];
+
+                          return (
+                            <div
+                              key={cat.categorySlug}
+                              className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs"
+                            >
+                              {/* Category Accordion Header */}
+                              <div
+                                onClick={() =>
+                                  setCollapsedCategories((prev) => ({
+                                    ...prev,
+                                    [cat.categorySlug]: !prev[cat.categorySlug],
+                                  }))
+                                }
+                                className="px-4 py-3 bg-slate-50 hover:bg-slate-100/80 transition flex items-center justify-between cursor-pointer border-b border-slate-200/80"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 rounded-lg bg-[#0F294A] text-[#F4B942] flex items-center justify-center font-bold text-xs shadow-xs">
+                                    {cat.titleEn.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="text-xs font-bold text-[#0F294A]">
+                                        {cat.titleEn}
+                                      </h4>
+                                      {cat.titleTe && (
+                                        <span className="text-[11px] font-telugu text-slate-500">
+                                          ({cat.titleTe})
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-semibold font-mono">
+                                        /{cat.categorySlug}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Link
+                                    to={`/category/${cat.categorySlug}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-[11px] font-bold text-[#C59B27] hover:underline flex items-center gap-1 mr-1"
+                                    title="Open Category Overview"
+                                  >
+                                    <span>Category Page</span>
+                                    <ExternalLink className="w-3 h-3" />
+                                  </Link>
+                                  <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                                    {catPages.length} {catPages.length === 1 ? 'Page' : 'Pages'}
+                                  </span>
+                                  {isCollapsed ? (
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                  ) : (
+                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Category Subpages Grid */}
+                              {!isCollapsed && (
+                                <div className="p-3 bg-white">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                    {catPages.map((p) => {
+                                      // Count articles in this page
+                                      const articleCount = contentsList.filter(
+                                        (c) =>
+                                          c.pageSlug === p.pageSlug ||
+                                          (Array.isArray(c.targetPages) && c.targetPages.includes(p.pageSlug))
+                                      ).length;
+
+                                      return (
+                                        <div
+                                          key={p.pageSlug}
+                                          className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C59B27]/60 hover:shadow-sm transition flex items-start justify-between gap-3 group"
+                                        >
+                                          <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                              <span
+                                                className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                                  p.isCustom
+                                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                    : 'bg-slate-200 text-slate-700'
+                                                }`}
+                                              >
+                                                {p.isCustom ? '⭐ Custom' : '🏛️ System'}
+                                              </span>
+                                              <span className="text-[10px] font-mono text-slate-400">
+                                                /page/{cat.categorySlug}/{p.pageSlug}
+                                              </span>
+                                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-white text-slate-600 border border-slate-200">
+                                                {articleCount} {articleCount === 1 ? 'Article' : 'Articles'}
+                                              </span>
+                                            </div>
+
+                                            <h5 className="text-xs font-bold text-slate-900 mt-1 truncate">
+                                              {p.titleEn || p.title}
+                                            </h5>
+                                            {p.titleTe && (
+                                              <p className="text-[11px] font-telugu text-slate-500 truncate">
+                                                {p.titleTe}
+                                              </p>
+                                            )}
+
+                                            <div className="flex items-center gap-3 mt-2">
+                                              <Link
+                                                to={`/page/${cat.categorySlug}/${p.pageSlug}`}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F294A] hover:text-[#C59B27] hover:underline"
+                                              >
+                                                <span>Open Page</span>
+                                                <ExternalLink className="w-3 h-3 text-[#C59B27]" />
+                                              </Link>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleOpenEditPage(p, cat)}
+                                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer"
+                                              >
+                                                <Pencil className="w-3 h-3" />
+                                                <span>Edit</span>
+                                              </button>
+                                            </div>
+                                          </div>
+
+                                          {p.isCustom && (
+                                            <button
+                                              onClick={() => handleDeletePage(p.id)}
+                                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                              title="Delete Custom Page"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+
+                  {/* 2. VIEW MODE: GRID CARDS */}
+                  {pageViewMode === 'cards' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {allFilteredPages.map((p) => {
+                        const articleCount = contentsList.filter(
+                          (c) =>
+                            c.pageSlug === p.pageSlug ||
+                            (Array.isArray(c.targetPages) && c.targetPages.includes(p.pageSlug))
+                        ).length;
+
+                        return (
+                          <div
+                            key={`${p.categorySlug}-${p.pageSlug}`}
+                            className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 hover:border-[#C59B27] hover:bg-white transition flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1 mb-1.5">
+                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-[#0F294A]">
+                                  {p.categoryTitleEn || p.categorySlug}
+                                </span>
+                                <span
+                                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                    p.isCustom ? 'bg-amber-200 text-amber-900' : 'bg-slate-200 text-slate-600'
+                                  }`}
+                                >
+                                  {p.isCustom ? 'Custom' : 'System'}
+                                </span>
+                              </div>
+                              <h5 className="text-xs font-bold text-slate-900 truncate">
+                                {p.titleEn || p.title}
+                              </h5>
+                              {p.titleTe && (
+                                <p className="text-[11px] font-telugu text-slate-500 truncate">
+                                  {p.titleTe}
+                                </p>
+                              )}
+                              <p className="text-[10px] font-mono text-slate-400 mt-1 truncate">
+                                /page/{p.categorySlug}/{p.pageSlug}
+                              </p>
+                              <div className="mt-1.5">
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200 font-semibold">
+                                  {articleCount} {articleCount === 1 ? 'Article' : 'Articles'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
+                              <Link
+                                to={`/page/${p.categorySlug}/${p.pageSlug}`}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#C59B27] hover:underline"
+                              >
+                                <span>Open</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </Link>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditPage(p, { categorySlug: p.categorySlug, titleEn: p.categoryTitleEn })}
+                                  className="p-1 text-slate-400 hover:text-slate-800"
+                                  title="Edit Page"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                {p.isCustom && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeletePage(p.id)}
+                                    className="p-1 text-slate-400 hover:text-rose-600"
+                                    title="Delete Page"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* 3. VIEW MODE: COMPACT TABLE */}
+                  {pageViewMode === 'table' && (
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
+                          <tr>
+                            <th className="py-2.5 px-3">Category</th>
+                            <th className="py-2.5 px-3">Page Title</th>
+                            <th className="py-2.5 px-3">URL Slug</th>
+                            <th className="py-2.5 px-3">Type</th>
+                            <th className="py-2.5 px-3">Articles</th>
+                            <th className="py-2.5 px-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {allFilteredPages.map((p) => {
+                            const articleCount = contentsList.filter(
+                              (c) =>
+                                c.pageSlug === p.pageSlug ||
+                                (Array.isArray(c.targetPages) && c.targetPages.includes(p.pageSlug))
+                            ).length;
+
+                            return (
+                              <tr key={`${p.categorySlug}-${p.pageSlug}`} className="hover:bg-slate-50 transition">
+                                <td className="py-2.5 px-3 font-semibold text-slate-700">
+                                  {p.categoryTitleEn || p.categorySlug}
+                                </td>
+                                <td className="py-2.5 px-3 font-bold text-slate-900">
+                                  <span>{p.titleEn || p.title}</span>
+                                  {p.titleTe && <span className="block text-[11px] font-telugu text-slate-500">{p.titleTe}</span>}
+                                </td>
+                                <td className="py-2.5 px-3 font-mono text-slate-500 text-[11px]">
+                                  /page/{p.categorySlug}/{p.pageSlug}
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${p.isCustom ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`}>
+                                    {p.isCustom ? 'Custom' : 'System'}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-slate-600 font-semibold">
+                                  {articleCount}
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <Link
+                                      to={`/page/${p.categorySlug}/${p.pageSlug}`}
+                                      className="p-1 text-slate-400 hover:text-[#C59B27]"
+                                      title="Open Page"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                    </Link>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenEditPage(p, { categorySlug: p.categorySlug, titleEn: p.categoryTitleEn })}
+                                      className="p-1 text-slate-400 hover:text-slate-800"
+                                      title="Edit Page"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    {p.isCustom && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeletePage(p.id)}
+                                        className="p-1 text-slate-400 hover:text-rose-600"
+                                        title="Delete Page"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* EDIT PAGE DETAILS MODAL */}
+            {editingPageModal && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-[#0F294A] flex items-center justify-center font-bold">
+                        <Pencil className="w-4 h-4 text-[#C59B27]" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">
+                          Edit Page Details
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          /page/{editingPageModal.categorySlug}/{editingPageModal.pageSlug}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setEditingPageModal(null)}
+                      className="p-1 text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSavePageEdit} className="space-y-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Page Title (English) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={pageEditForm.titleEn}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, titleEn: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Page Title (Telugu / తెలుగు శీర్షిక)
+                      </label>
+                      <input
+                        type="text"
+                        value={pageEditForm.titleTe}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, titleTe: e.target.value })}
+                        placeholder="తెలుగు శీర్షిక..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-telugu"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Description / వివరణ
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={pageEditForm.descEn}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, descEn: e.target.value })}
+                        placeholder="Page description / subtitle..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        External Link URL (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={pageEditForm.externalUrl}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, externalUrl: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPageModal(null)}
+                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm"
+                      >
+                        {loading ? 'Saving...' : 'Save & Update Page'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
