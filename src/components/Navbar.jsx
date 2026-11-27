@@ -188,21 +188,28 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-[#071B3B] border-b border-[#132A4A] shadow-[0_4px_25px_rgba(0,0,0,0.3)] font-sans">
       {/* Main Sleek & Compact Navbar Bar */}
-      <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12">
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-4">
+      <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 2xl:px-12">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 2xl:gap-4">
           {/* Brand Emblem & Title on the Far Left */}
-          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <img
                 src="/logo.png"
-                alt="SNI Logo"
-                className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-sm"
+                alt="SNI - S Natural Intelligence"
+                className="w-10 h-10 sm:w-11 sm:h-11 object-contain drop-shadow-sm"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/Images/sni-logo.png';
+                }}
               />
             </div>
 
             <div className="flex flex-col justify-center">
-              <span className="text-xl sm:text-2xl font-black tracking-wider text-[#F4B942] leading-none font-sans">
+              <span className="text-xl sm:text-2xl font-black tracking-[0.08em] text-[#F4B942] leading-none font-sans">
                 SNI
+              </span>
+              <span className="text-[8.5px] sm:text-[10px] font-medium tracking-[0.14em] text-[#E2E8F0] uppercase leading-none mt-1 whitespace-nowrap">
+                S NATURAL INTELLIGENCE
               </span>
             </div>
           </Link>
@@ -213,7 +220,7 @@ export default function Navbar() {
           {/* Main Categories Menu sitting closer together on the right side */}
           <nav
             ref={dropdownRef}
-            className="hidden xl:flex items-center gap-1 relative"
+            className="hidden xl:flex items-center gap-0.5 2xl:gap-1 relative shrink-0"
             onMouseLeave={() => setActiveDropdown(null)}
           >
             {visibleCategories.map((cat) => {
@@ -236,7 +243,7 @@ export default function Navbar() {
                     to={cat.categorySlug === 'home' ? '/' : `/category/${cat.categorySlug}`}
                     onClick={() => setActiveDropdown(null)}
                     onMouseEnter={() => setActiveDropdown(cat.categorySlug)}
-                    className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1 px-1.5 2xl:px-2 py-1.5 rounded-lg text-[11px] 2xl:text-xs font-bold uppercase tracking-wide 2xl:tracking-wider whitespace-nowrap transition-colors cursor-pointer ${
                       isOpen || isCategoryActive
                         ? 'text-[#F4B942] bg-white/15 border-b-2 border-[#F4B942]'
                         : 'text-slate-200 hover:text-[#F4B942] hover:bg-white/5'
@@ -329,7 +336,7 @@ export default function Navbar() {
           </nav>
 
           {/* Right Section: Admin, Member/Login */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-1.5 2xl:gap-2 shrink-0 whitespace-nowrap">
             {currentUser ? (
               <div className="flex items-center gap-2 pl-2 border-l border-white/10">
                 {/* Admin Button */}

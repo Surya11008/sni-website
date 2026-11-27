@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "./star-galaxy/index.css";
 
 @layer base {
   body {

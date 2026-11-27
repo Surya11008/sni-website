@@ -117,14 +117,10 @@ function MainApp() {
   // If user is not logged in, render the Login / Create ID & Password page first!
   if (!currentUser) {
     return (
-      <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-[#071b3b] via-[#0d2959] to-[#124b91] flex flex-col justify-between overflow-x-hidden">
-        <SniTopHeader />
-        <div className="flex-1 flex flex-col justify-center overflow-y-auto w-full my-auto py-2 sm:py-6">
+      <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-[#071b3b] via-[#0d2959] to-[#124b91] flex flex-col justify-center overflow-x-hidden">
+        <div className="flex-1 flex flex-col justify-center overflow-y-auto w-full my-auto py-4 sm:py-8">
           <AuthPage />
         </div>
-        <footer className="py-3 sm:py-4 text-center text-xs text-slate-400 bg-black/30 border-t border-white/10 shrink-0">
-          © 2026 <span className="text-[#f5c75e] font-bold">S Natural Intelligence (SNI)</span>. All Rights Reserved.
-        </footer>
       </div>
     );
   }
