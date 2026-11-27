@@ -388,14 +388,36 @@ export default function AdminPanel() {
     }
   }, [currentUser, userProfile]);
 
-  // Fetch Custom Roles
+  // Fetch Custom Roles & Merge with Official Roles
   const fetchRoles = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, 'roles'));
-      const items = [...OFFICIAL_ROLES];
+      // Clone official roles as starting baseline
+      const items = OFFICIAL_ROLES.map((r) => ({ ...r, allowedCategories: ['*'] }));
+
       snap.forEach((d) => {
-        if (!items.find((r) => r.id === d.id)) {
-          items.push({ id: d.id, ...d.data() });
+        const data = d.data();
+        const docId = d.id;
+        // Match case-insensitively with official roles
+        const existingIdx = items.findIndex(
+          (r) => r.id.toLowerCase() === docId.toLowerCase()
+        );
+        if (existingIdx >= 0) {
+          items[existingIdx] = {
+            ...items[existingIdx],
+            ...data,
+            id: items[existingIdx].id, // preserve canonical uppercase id like MEM
+          };
+        } else {
+          // If custom role created by admin
+          const customIdx = items.findIndex(
+            (r) => r.id.toLowerCase() === docId.toLowerCase()
+          );
+          if (customIdx >= 0) {
+            items[customIdx] = { ...items[customIdx], ...data };
+          } else {
+            items.push({ id: docId, ...data });
+          }
         }
       });
       setRolesList(items);
@@ -853,11 +875,14 @@ export default function AdminPanel() {
 
   const handleOpenEditRole = (role) => {
     setEditingRoleId(role.id);
+    const existingAllowed = Array.isArray(role.allowedCategories)
+      ? role.allowedCategories
+      : ['*'];
     setNewRole({
       id: role.id,
       name: role.nameEn || role.name || role.id,
       description: role.description || '',
-      allowedCategories: role.allowedCategories || ['*'],
+      allowedCategories: existingAllowed,
     });
     setRolePermSearch('');
     const map = {};
@@ -893,27 +918,37 @@ export default function AdminPanel() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/(^_|_$)/g, '');
-    const roleId = (editingRoleId || newRole.id || autoSlug || ('role_' + Date.now())).trim().toLowerCase();
+    const canonicalRoleId = (editingRoleId || newRole.id || autoSlug || ('role_' + Date.now())).trim();
 
     try {
+      const allowed = Array.isArray(newRole.allowedCategories) ? newRole.allowedCategories : ['*'];
       const payload = {
-        id: roleId,
+        id: canonicalRoleId,
         name: cleanName,
         nameEn: cleanName,
         description: newRole.description.trim(),
-        allowedCategories: newRole.allowedCategories,
+        allowedCategories: allowed,
         updatedAt: serverTimestamp(),
       };
 
-      await setDoc(doc(db, 'roles', roleId), payload, { merge: true });
-      showFeedback('success', `Role "${cleanName}" saved successfully!`);
+      // Save to canonical ID (e.g. 'MEM')
+      await setDoc(doc(db, 'roles', canonicalRoleId), payload, { merge: true });
+      // Also save to lowercase and uppercase variants to prevent any case mismatch across auth/session
+      if (canonicalRoleId.toLowerCase() !== canonicalRoleId) {
+        await setDoc(doc(db, 'roles', canonicalRoleId.toLowerCase()), payload, { merge: true });
+      }
+      if (canonicalRoleId.toUpperCase() !== canonicalRoleId) {
+        await setDoc(doc(db, 'roles', canonicalRoleId.toUpperCase()), payload, { merge: true });
+      }
+
+      showFeedback('success', `Role "${cleanName}" permissions saved successfully!`);
       setIsAddRoleOpen(false);
       setEditingRoleId(null);
       setNewRole({
         id: '',
         name: '',
         description: '',
-        allowedCategories: ['home', 'worship', 'bible-truth'],
+        allowedCategories: ['*'],
       });
       await fetchRoles();
     } catch (err) {
@@ -925,6 +960,19 @@ export default function AdminPanel() {
   // ROLE PERMISSIONS & SUB-PAGE SELECTION HELPERS
   // ----------------------------------------------------
   const isMasterAllSelected = newRole.allowedCategories?.includes('*');
+
+  // Helper to expand all portal categories and page slugs into an explicit list
+  const getAllPortalIdentifiers = () => {
+    const list = [];
+    fullPortalStructure.forEach((c) => {
+      list.push(c.categorySlug);
+      (c.pages || []).forEach((p) => {
+        list.push(p.pageSlug);
+        list.push(`${c.categorySlug}/${p.pageSlug}`);
+      });
+    });
+    return Array.from(new Set(list));
+  };
 
   // Check if a category is considered fully selected
   const isCategoryFullySelected = (cat) => {
@@ -979,18 +1027,28 @@ export default function AdminPanel() {
     const allCatIdentifiers = new Set([catSlug, ...pageSlugs, ...comboSlugs]);
 
     setNewRole((prev) => {
-      let current = (prev.allowedCategories || []).filter((x) => x !== '*');
-      if (checked) {
-        return {
-          ...prev,
-          allowedCategories: Array.from(new Set([...current, catSlug, ...pageSlugs, ...comboSlugs])),
-        };
-      } else {
-        return {
-          ...prev,
-          allowedCategories: current.filter((x) => !allCatIdentifiers.has(x)),
-        };
+      let current = (prev.allowedCategories || []);
+      // If master all '*' was active, expand into all portal slugs first!
+      if (current.includes('*')) {
+        current = getAllPortalIdentifiers();
       }
+
+      if (checked) {
+        current = Array.from(new Set([...current, catSlug, ...pageSlugs, ...comboSlugs]));
+      } else {
+        current = current.filter((x) => !allCatIdentifiers.has(x) && x !== '*');
+      }
+
+      // Check if all categories are now selected; if so, condense back to ['*']
+      const allSelected = fullPortalStructure.every((c) => current.includes(c.categorySlug));
+      if (allSelected) {
+        return { ...prev, allowedCategories: ['*'] };
+      }
+
+      return {
+        ...prev,
+        allowedCategories: Array.from(new Set(current)),
+      };
     });
   };
 
@@ -1001,9 +1059,13 @@ export default function AdminPanel() {
     const comboSlug = `${catSlug}/${pageSlug}`;
 
     setNewRole((prev) => {
-      let current = (prev.allowedCategories || []).filter((x) => x !== '*');
+      let current = (prev.allowedCategories || []);
+      // If master all '*' was active, expand into all portal slugs first!
+      if (current.includes('*')) {
+        current = getAllPortalIdentifiers();
+      }
 
-      // If category-level slug was present and we uncheck one subpage, expand other pages
+      // If category-level slug was present and we uncheck one subpage, remove catSlug and keep remaining pages
       if (!checked && current.includes(catSlug)) {
         current = current.filter((x) => x !== catSlug);
         const otherPages = (cat.pages || []).filter((p) => p.pageSlug !== pageSlug);
@@ -1016,14 +1078,20 @@ export default function AdminPanel() {
       if (checked) {
         current = Array.from(new Set([...current, pageSlug, comboSlug]));
         // If all pages of this category are now checked, also add category slug
-        const allSelected = (cat.pages || []).every(
+        const allCatPagesSelected = (cat.pages || []).every(
           (p) => current.includes(p.pageSlug) || current.includes(`${catSlug}/${p.pageSlug}`)
         );
-        if (allSelected) {
+        if (allCatPagesSelected) {
           current.push(catSlug);
         }
       } else {
-        current = current.filter((x) => x !== pageSlug && x !== comboSlug && x !== catSlug);
+        current = current.filter((x) => x !== pageSlug && x !== comboSlug && x !== catSlug && x !== '*');
+      }
+
+      // Check if all categories are now selected; if so, condense to ['*']
+      const allSelected = fullPortalStructure.every((c) => current.includes(c.categorySlug));
+      if (allSelected) {
+        return { ...prev, allowedCategories: ['*'] };
       }
 
       return {

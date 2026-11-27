@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePortal } from '../context/PortalContext';
 
@@ -16,13 +17,18 @@ export default function WATVSubNav({
   className = '',
 }) {
   const { isTelugu } = useLanguage();
+  const { isPagePermitted } = useAuth();
   const { portalStructure } = usePortal();
 
   const category = (portalStructure || []).find(
     (c) => c.categorySlug === categorySlug
   );
 
-  if (!category || !category.pages || category.pages.length === 0) {
+  const allowedPages = (category?.pages || []).filter((sp) =>
+    isPagePermitted(categorySlug, sp.pageSlug)
+  );
+
+  if (!category || allowedPages.length === 0) {
     return null;
   }
 
@@ -45,7 +51,7 @@ export default function WATVSubNav({
           </Link>
 
           {/* Subpages Links */}
-          {category.pages.map((sp) => {
+          {allowedPages.map((sp) => {
             const isActive = activePageSlug === sp.pageSlug;
             const title = sp.title || (isTelugu ? sp.titleTe : sp.titleEn);
 

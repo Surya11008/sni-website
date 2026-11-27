@@ -13,6 +13,8 @@ import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import {
   Calendar,
   ArrowRight,
+  ArrowLeft,
+  Lock,
   ChevronRight,
   ExternalLink,
   Plus,
@@ -31,7 +33,7 @@ import {
 
 export default function CategoryPage() {
   const { categorySlug } = useParams();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, isCategoryPermitted, isPagePermitted } = useAuth();
   const { isTelugu, getText, getDesc } = useLanguage();
   const navigate = useNavigate();
 
@@ -107,6 +109,39 @@ export default function CategoryPage() {
 
   const categoryTitle = isTelugu ? currentCategory.titleTe : currentCategory.titleEn;
 
+  const visibleSubPages = (currentCategory.pages || []).filter((sp) =>
+    isPagePermitted(categorySlug, sp.pageSlug)
+  );
+
+  if (!loading && !isAdmin && !isCategoryPermitted(categorySlug, currentCategory.pages)) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800">
+            {isTelugu ? 'యాక్సెస్ పరిమితం చేయబడింది' : 'Access Restricted'}
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            {isTelugu
+              ? 'ఈ వర్గాన్ని వీక్షించడానికి మీ పాత్రకు అనుమతి లేదు. దయచేసి నిర్వాహకుడిని సంప్రదించండి.'
+              : 'You do not have permission to access this category under your assigned role. Please contact the administrator if you require access.'}
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0F294A] text-white font-semibold text-sm hover:bg-[#1a3d68] transition shadow"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{isTelugu ? 'హోమ్‌కి తిరిగి వెళ్ళండి' : 'Return to Home'}</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 selection:bg-[#C59B27] selection:text-[#0F294A]">
       {/* 1. WATV Subpage Navigation Bar (Image 5) */}
@@ -160,9 +195,9 @@ export default function CategoryPage() {
             <Loader2 className="w-10 h-10 animate-spin text-[#C59B27] mb-3" />
             <p className="text-xs font-semibold uppercase tracking-wider">Loading category sections...</p>
           </div>
-        ) : currentCategory.pages?.length === 0 ? (
+        ) : visibleSubPages.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 text-slate-500 space-y-3">
-            <p className="text-sm font-semibold">No sub-pages configured for this category yet.</p>
+            <p className="text-sm font-semibold">No permitted sub-pages found in this category.</p>
             {isAdmin && (
               <Link
                 to="/admin"
@@ -173,7 +208,7 @@ export default function CategoryPage() {
             )}
           </div>
         ) : (
-          currentCategory.pages.map((subPage) => {
+          visibleSubPages.map((subPage) => {
             const subTitle = isTelugu ? subPage.titleTe : subPage.titleEn;
             const subPageContents = categoryContents
               .filter(

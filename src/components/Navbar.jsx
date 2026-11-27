@@ -24,7 +24,15 @@ import {
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, userProfile, updateUserPassword, logout } = useAuth();
+  const {
+    currentUser,
+    userProfile,
+    updateUserPassword,
+    logout,
+    rolePermissions,
+    isCategoryPermitted,
+    isPagePermitted,
+  } = useAuth();
   const { t, isTelugu } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -108,56 +116,7 @@ export default function Navbar() {
     }
   };
 
-  const isAdmin = userProfile?.role === 'admin';
-
-  // Role permissions filtering
-  const [rolePermissions, setRolePermissions] = useState(['*']);
-
-  useEffect(() => {
-    const isUserAdmin =
-      userProfile?.role === 'admin' ||
-      currentUser?.email === 'surya11008@sni.org.in' ||
-      currentUser?.email === 'admin@sni.org.in' ||
-      currentUser?.email?.startsWith('surya');
-
-    if (isUserAdmin) {
-      setRolePermissions(['*']);
-      return;
-    }
-
-    if (userProfile?.role) {
-      getDoc(doc(db, 'roles', userProfile.role))
-        .then((snap) => {
-          if (snap.exists() && snap.data().allowedCategories) {
-            setRolePermissions(snap.data().allowedCategories);
-          } else {
-            setRolePermissions(['*']);
-          }
-        })
-        .catch(() => setRolePermissions(['*']));
-    } else {
-      setRolePermissions(['*']);
-    }
-  }, [userProfile?.role, currentUser?.email]);
-
-  const isCategoryPermitted = (cat) => {
-    if (!rolePermissions || rolePermissions.includes('*')) return true;
-    if (rolePermissions.includes(cat.categorySlug)) return true;
-    return cat.pages?.some(
-      (p) =>
-        rolePermissions.includes(p.pageSlug) ||
-        rolePermissions.includes(`${cat.categorySlug}/${p.pageSlug}`)
-    );
-  };
-
-  const isPagePermitted = (catSlug, page) => {
-    if (!rolePermissions || rolePermissions.includes('*')) return true;
-    if (rolePermissions.includes(catSlug)) return true;
-    return (
-      rolePermissions.includes(page.pageSlug) ||
-      rolePermissions.includes(`${catSlug}/${page.pageSlug}`)
-    );
-  };
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'ADMIN';
 
   const visibleCategories = portalStructure.filter(isCategoryPermitted);
 

@@ -34,6 +34,8 @@ function getInitialSession() {
         const id = u.userId || u.uid;
         const email = u.email || `${id}@sni.org.in`;
         const isAdmin = String(id).toLowerCase() === 'surya11008' || u.role === 'admin';
+        const rawRole = u.role || 'MEM';
+        const role = isAdmin ? 'admin' : (rawRole.toLowerCase() === 'member' ? 'MEM' : rawRole);
         return {
           user: {
             uid: id,
@@ -44,7 +46,7 @@ function getInitialSession() {
             uid: id,
             email: email,
             displayName: u.fullName || u.displayName || id,
-            role: isAdmin ? 'admin' : (u.role || 'member'),
+            role: role,
             status: u.status || 'approved',
           },
         };
@@ -87,6 +89,8 @@ export const AuthProvider = ({ children }) => {
             sessionStorage.removeItem('sni_admin_active');
           }
 
+          const rawRole = u.role || 'MEM';
+          const userRole = isAdmin ? 'admin' : (rawRole.toLowerCase() === 'member' ? 'MEM' : rawRole);
           const unifiedUser = {
             uid: id,
             email: email,
@@ -97,10 +101,31 @@ export const AuthProvider = ({ children }) => {
             uid: id,
             email: email,
             displayName: u.fullName || u.displayName || id,
-            role: isAdmin ? 'admin' : 'member',
+            role: userRole,
             status: u.status || 'approved',
           });
           setLoading(false);
+
+          // Real-time listener on user doc in Firestore to capture live role / status updates
+          const unsubUserDoc = onSnapshot(
+            doc(db, 'users', id),
+            (snap) => {
+              if (snap.exists()) {
+                const data = snap.data();
+                const updatedRawRole = data.role || userRole;
+                const updatedRole = isAdmin
+                  ? 'admin'
+                  : (updatedRawRole.toLowerCase() === 'member' ? 'MEM' : updatedRawRole);
+                setUserProfile((prev) => ({
+                  ...prev,
+                  ...data,
+                  role: updatedRole,
+                  status: data.status || prev?.status || 'approved',
+                }));
+              }
+            },
+            (err) => console.warn('User doc listener error:', err)
+          );
 
           // If Firebase Auth currentUser is someone else (e.g. residual admin), sign out Firebase Auth!
           if (auth.currentUser && !auth.currentUser.email?.toLowerCase().startsWith(String(id).toLowerCase())) {
@@ -208,9 +233,14 @@ export const AuthProvider = ({ children }) => {
                   user.email === 'admin@sni.org.in' ||
                   String(user.uid || '').toLowerCase() === 'surya11008';
 
+                const rawRole = data.role || 'MEM';
+                const userRole = isAdmin
+                  ? 'admin'
+                  : (rawRole.toLowerCase() === 'member' ? 'MEM' : rawRole);
+
                 setUserProfile({
                   ...data,
-                  role: isAdmin ? 'admin' : (data.role === 'admin' ? 'admin' : 'member'),
+                  role: userRole,
                   status: isAdmin ? 'approved' : data.status || 'pending',
                 });
               } else {
@@ -224,7 +254,7 @@ export const AuthProvider = ({ children }) => {
                   uid: user.uid,
                   email: user.email || '',
                   displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                  role: isAdmin ? 'admin' : 'member',
+                  role: isAdmin ? 'admin' : 'MEM',
                   status: isAdmin ? 'approved' : 'pending',
                   createdAt: new Date().toISOString(),
                 };
@@ -239,7 +269,7 @@ export const AuthProvider = ({ children }) => {
                 uid: user.uid,
                 email: user.email || '',
                 displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                role: 'member',
+                role: 'MEM',
               });
               setLoading(false);
             }
@@ -401,6 +431,88 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ----------------------------------------------------
+  // Real-Time Ministerial Role Permissions Engine
+  // ----------------------------------------------------
+  const [rolePermissions, setRolePermissions] = useState(['*']);
+
+  useEffect(() => {
+    const isAdmin =
+      userProfile?.role === 'admin' ||
+      userProfile?.role === 'ADMIN' ||
+      currentUser?.email === 'surya11008@sni.org.in' ||
+      currentUser?.email === 'admin@sni.org.in' ||
+      currentUser?.email?.startsWith('surya');
+
+    if (isAdmin) {
+      setRolePermissions(['*']);
+      return;
+    }
+
+    let roleKey = userProfile?.role || 'MEM';
+    if (roleKey.toLowerCase() === 'member') roleKey = 'MEM';
+
+    // Set up real-time listener on the role doc in Firestore
+    const unsubRole = onSnapshot(
+      doc(db, 'roles', roleKey),
+      async (snap) => {
+        if (snap.exists() && Array.isArray(snap.data().allowedCategories)) {
+          setRolePermissions(snap.data().allowedCategories);
+        } else {
+          // Fallback to lowercase/uppercase/MEM
+          try {
+            const lowerSnap = await getDoc(doc(db, 'roles', roleKey.toLowerCase()));
+            if (lowerSnap.exists() && Array.isArray(lowerSnap.data().allowedCategories)) {
+              setRolePermissions(lowerSnap.data().allowedCategories);
+            } else {
+              const upperSnap = await getDoc(doc(db, 'roles', roleKey.toUpperCase()));
+              if (upperSnap.exists() && Array.isArray(upperSnap.data().allowedCategories)) {
+                setRolePermissions(upperSnap.data().allowedCategories);
+              } else {
+                setRolePermissions(['*']);
+              }
+            }
+          } catch {
+            setRolePermissions(['*']);
+          }
+        }
+      },
+      () => {
+        setRolePermissions(['*']);
+      }
+    );
+
+    return () => unsubRole();
+  }, [userProfile?.role, currentUser?.email]);
+
+  const isCategoryPermitted = (catInput, catPages = []) => {
+    if (!rolePermissions || rolePermissions.includes('*')) return true;
+    const catSlug = typeof catInput === 'object' ? catInput?.categorySlug : catInput;
+    const pages = Array.isArray(catPages) && catPages.length > 0 ? catPages : (typeof catInput === 'object' ? catInput?.pages || [] : []);
+    if (rolePermissions.includes(catSlug)) return true;
+    if (Array.isArray(pages) && pages.length > 0) {
+      return pages.some((p) => {
+        const pSlug = typeof p === 'object' ? p?.pageSlug : p;
+        return (
+          rolePermissions.includes(pSlug) ||
+          rolePermissions.includes(`${catSlug}/${pSlug}`)
+        );
+      });
+    }
+    return false;
+  };
+
+  const isPagePermitted = (catInput, pageInput) => {
+    if (!rolePermissions || rolePermissions.includes('*')) return true;
+    const catSlug = typeof catInput === 'object' ? catInput?.categorySlug : catInput;
+    const pageSlug = typeof pageInput === 'object' ? pageInput?.pageSlug : pageInput;
+    if (rolePermissions.includes(catSlug)) return true;
+    return (
+      rolePermissions.includes(pageSlug) ||
+      rolePermissions.includes(`${catSlug}/${pageSlug}`)
+    );
+  };
+
   const value = {
     currentUser,
     userProfile,
@@ -410,6 +522,9 @@ export const AuthProvider = ({ children }) => {
     signup,
     updateUserPassword,
     logout,
+    rolePermissions,
+    isCategoryPermitted,
+    isPagePermitted,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
