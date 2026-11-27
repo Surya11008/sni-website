@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   serverTimestamp,
@@ -53,6 +54,7 @@ import {
   Globe,
   ChevronDown,
   Paperclip,
+  Tag,
 } from 'lucide-react';
 
 export default function ContentDetailPage() {
