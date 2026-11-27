@@ -24,6 +24,7 @@ import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
 import AllEmojisPicker from '../components/common/AllEmojisPicker';
+import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManager';
 import WATVSubNav from '../components/WATVSubNav';
 import OnlineWorshipSection from '../components/OnlineWorshipSection';
 import CalendarScheduleHub, {
@@ -141,6 +142,7 @@ export default function DynamicPage() {
   // Collapsible sections for clean, simple writing experience
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
+  const [fontFamily, setFontFamily] = useState('Inter');
 
   // Calendar tracking & scheduling states
   const isCalendarPage = ['new-updates', 'events', 'schedule'].includes(pageSlug);
@@ -336,6 +338,10 @@ export default function DynamicPage() {
       });
 
       setContents(items);
+      // Preload Google Fonts for all items
+      items.forEach((item) => {
+        if (item.fontFamily) loadGoogleFont(item.fontFamily);
+      });
     } catch (err) {
       console.warn('Error fetching contents:', err);
       setContents([]);
@@ -357,6 +363,7 @@ export default function DynamicPage() {
     setTitle('');
     setDesc('');
     setIcon(pageSlug === 'schedule' ? '🗓️' : pageSlug === 'events' ? '✨' : '📖');
+    setFontFamily('Inter');
     setImageUrl('');
     setVideoUrl('');
     setAudioUrl('');
@@ -383,9 +390,11 @@ export default function DynamicPage() {
     if (e) e.stopPropagation();
     if (!isAdmin) return;
     setEditingItem(item);
-    setTitle(item.title || item.titleEn || item.titleTe || '');
-    setDesc(item.desc || item.content || item.descEn || item.descTe || '');
+    setTitle(cleanObjectReplacementChars(item.title || item.titleEn || item.titleTe || ''));
+    setDesc(cleanObjectReplacementChars(item.desc || item.content || item.descEn || item.descTe || ''));
     setIcon(item.icon || '📖');
+    setFontFamily(item.fontFamily || 'Inter');
+    if (item.fontFamily) loadGoogleFont(item.fontFamily);
     setImageUrl(item.imageUrl || '');
     setVideoUrl(item.videoUrl || '');
     setAudioUrl(item.audioUrl || '');
@@ -465,17 +474,20 @@ export default function DynamicPage() {
 
     setFormSubmitting(true);
     try {
+      const cleanTitle = cleanObjectReplacementChars(title.trim());
+      const cleanDesc = cleanObjectReplacementChars(desc.trim());
       const payload = {
         categorySlug: categorySlug || '',
         pageSlug: pageSlug || '',
         targetPages: targetPages.length > 0 ? targetPages : [pageSlug],
         icon: icon || '📖',
-        title: title.trim(),
-        titleEn: title.trim(),
-        titleTe: title.trim(),
-        desc: desc.trim(),
-        descEn: desc.trim(),
-        descTe: desc.trim(),
+        fontFamily: fontFamily || 'Inter',
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        desc: cleanDesc,
+        descEn: cleanDesc,
+        descTe: cleanDesc,
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
         audioUrl: audioUrl.trim() || null,
@@ -763,6 +775,8 @@ export default function DynamicPage() {
                 hasSchedule={Boolean(eventDate || eventTime)}
                 targetPagesCount={targetPages.length}
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
+                fontFamily={fontFamily}
+                onFontChange={setFontFamily}
               />
 
               {/* Schedule & Calendar Details Drawer */}
@@ -1191,6 +1205,7 @@ export default function DynamicPage() {
                   initialContent={desc}
                   onChange={setDesc}
                   editable={true}
+                  fontFamily={fontFamily}
                 />
               </div>
 
@@ -1290,6 +1305,7 @@ export default function DynamicPage() {
                 className={`text-2xl sm:text-4xl font-extrabold text-[#071B3B] leading-tight tracking-tight flex items-center gap-3 ${
                   isTelugu ? 'font-krishna text-3xl sm:text-5xl' : 'font-serif'
                 }`}
+                style={activeArticle.fontFamily ? { fontFamily: `'${activeArticle.fontFamily}', sans-serif` } : undefined}
               >
                 {activeArticle.icon && (
                   <span className="text-3xl sm:text-5xl select-none shrink-0">{activeArticle.icon}</span>
@@ -1421,6 +1437,7 @@ export default function DynamicPage() {
               <RichContentRenderer
                 content={getDesc(activeArticle)}
                 isTelugu={isTelugu}
+                fontFamily={activeArticle.fontFamily}
                 className="text-base sm:text-lg"
               />
             </div>

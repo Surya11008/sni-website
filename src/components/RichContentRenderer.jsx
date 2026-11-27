@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
 import { NotionLinkPreview, NotionEmbed, getEmbedInfo } from './notion';
+import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManager';
 
 /**
  * RichContentRenderer
@@ -15,16 +17,29 @@ import { NotionLinkPreview, NotionEmbed, getEmbedInfo } from './notion';
  * - Notion Web Bookmarks & Live Embeds
  * - Raw HTML from Google Docs & BlockNote Rich Text Editor
  */
-export default function RichContentRenderer({ content = '', isTelugu = false, className = '' }) {
+export default function RichContentRenderer({ content = '', isTelugu = false, className = '', fontFamily = '' }) {
+  useEffect(() => {
+    if (fontFamily) {
+      loadGoogleFont(fontFamily);
+    }
+  }, [fontFamily]);
+
   if (!content) return null;
 
+  // Clean [OBJ] (U+FFFC / U+FFFD) replacement characters completely
+  const sanitizedContent = cleanObjectReplacementChars(content);
+  if (!sanitizedContent) return null;
+
+  const fontStyle = fontFamily ? { fontFamily: `'${fontFamily}', sans-serif` } : undefined;
+
   // Check if content is HTML (from BlockNote or Google Docs)
-  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+  const isHtml = /<[a-z][\s\S]*>/i.test(sanitizedContent);
   if (isHtml) {
     return (
       <div
         className={`rich-html-content text-slate-800 text-base sm:text-lg leading-relaxed sm:leading-loose ${className}`}
-        dangerouslySetInnerHTML={{ __html: content }}
+        style={fontStyle}
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
     );
   }
@@ -251,6 +266,7 @@ export default function RichContentRenderer({ content = '', isTelugu = false, cl
       className={`space-y-5 text-slate-800 text-base sm:text-lg lg:text-xl leading-relaxed sm:leading-loose ${
         isTelugu ? 'font-telugu' : ''
       } ${className}`}
+      style={fontStyle}
     >
       {blocks.map((block, idx) => {
         switch (block.type) {

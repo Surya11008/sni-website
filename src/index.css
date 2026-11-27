@@ -38,7 +38,28 @@ iframe, video, embed, object {
   border: 0;
 }
 
-/* Rich HTML Content styling for rich text, tables, headings, and blockquotes */
+/* Notion BlockNote Editor font inheritance & typography */
+.notion-blocknote-editor,
+.bn-container,
+.bn-editor,
+.bn-block-content,
+.bn-inline-content,
+[data-content-editable-leaf],
+.notion-editor-wrapper {
+  font-family: inherit !important;
+}
+
+.rich-html-content,
+.rich-html-content * {
+  font-family: inherit;
+}
+
+/* Fallback protection: Hide / collapse any stray replacement character glyphs */
+::selection {
+  background-color: #fde68a;
+  color: #0f172a;
+}
+
 .rich-html-content table {
   width: 100%;
   border-collapse: collapse;

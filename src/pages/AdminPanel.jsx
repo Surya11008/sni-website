@@ -58,6 +58,8 @@ import {
   Folder,
 } from 'lucide-react';
 
+import { cleanObjectReplacementChars } from '../utils/fontManager';
+
 const OFFICIAL_ROLES = [
   { id: 'MEM', name: 'Member (MEM) — Default', nameEn: 'Member (MEM)' },
   { id: 'EVA', name: 'Evangelist (EVA)', nameEn: 'Evangelist (EVA)' },
@@ -1225,8 +1227,8 @@ export default function AdminPanel() {
 
     setLoading(true);
     try {
-      const cleanTitle = newContent.title.trim();
-      const cleanDesc = newContent.desc.trim();
+      const cleanTitle = cleanObjectReplacementChars(newContent.title.trim());
+      const cleanDesc = cleanObjectReplacementChars(newContent.desc.trim());
       const payload = {
         categorySlug: newContent.categorySlug,
         pageSlug: newContent.pageSlug,

@@ -25,6 +25,7 @@ import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionLinkPreview, NotionEmbedDrawer } from '../components/notion';
 import WATVSubNav from '../components/WATVSubNav';
 import { formatSlugToTitle } from '../config/portalStructure';
+import { cleanObjectReplacementChars, loadGoogleFont } from '../utils/fontManager';
 import {
   Calendar,
   ArrowLeft,
@@ -99,6 +100,7 @@ export default function ContentDetailPage() {
 
   // Notion Editor states for Edit mode
   const [icon, setIcon] = useState('📖');
+  const [fontFamily, setFontFamily] = useState('Inter');
   const [targetPages, setTargetPages] = useState([]);
   const [showMediaAttachments, setShowMediaAttachments] = useState(false);
   const [showMultiPageSelect, setShowMultiPageSelect] = useState(false);
@@ -137,9 +139,11 @@ export default function ContentDetailPage() {
           if (isMounted) {
             setArticle(data);
             setSourceCollection('page_contents');
-            setTitle(data.title || data.titleEn || data.titleTe || '');
-            setDesc(data.desc || data.content || data.descEn || data.descTe || '');
+            setTitle(cleanObjectReplacementChars(data.title || data.titleEn || data.titleTe || ''));
+            setDesc(cleanObjectReplacementChars(data.desc || data.content || data.descEn || data.descTe || ''));
             setIcon(data.icon || '📖');
+            setFontFamily(data.fontFamily || 'Inter');
+            if (data.fontFamily) loadGoogleFont(data.fontFamily);
             setImageUrl(data.imageUrl || '');
             setVideoUrl(data.videoUrl || '');
             setAudioUrl(data.audioUrl || '');
@@ -390,14 +394,17 @@ export default function ContentDetailPage() {
 
     setSubmitting(true);
     try {
+      const cleanTitle = cleanObjectReplacementChars(title.trim());
+      const cleanDesc = cleanObjectReplacementChars(desc.trim());
       const payload = {
-        title: title.trim(),
-        titleEn: title.trim(),
-        titleTe: title.trim(),
-        desc: desc.trim(),
-        descEn: desc.trim(),
-        descTe: desc.trim(),
+        title: cleanTitle,
+        titleEn: cleanTitle,
+        titleTe: cleanTitle,
+        desc: cleanDesc,
+        descEn: cleanDesc,
+        descTe: cleanDesc,
         icon: icon || '📖',
+        fontFamily: fontFamily || 'Inter',
         targetPages: targetPages.length > 0 ? targetPages : [article.pageSlug || paramPageSlug],
         imageUrl: imageUrl.trim() || null,
         videoUrl: videoUrl.trim() || null,
@@ -508,7 +515,10 @@ export default function ContentDetailPage() {
           <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#F4B942] mb-3 drop-shadow">
             {subPageTitle || article.pageSlug || 'Sermons'}
           </span>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white max-w-4xl leading-tight tracking-tight font-serif drop-shadow-md">
+          <h1
+            className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white max-w-4xl leading-tight tracking-tight drop-shadow-md"
+            style={article.fontFamily ? { fontFamily: `'${article.fontFamily}', sans-serif` } : undefined}
+          >
             {articleTitle}
           </h1>
           <div className="flex items-center gap-2 text-xs text-slate-300 mt-4 drop-shadow font-medium">
@@ -706,6 +716,8 @@ export default function ContentDetailPage() {
                 onOpenEmbed={() => setShowEmbedDrawer(true)}
                 targetPagesCount={targetPages.length}
                 hasMedia={Boolean(videoUrl || audioUrl || fileUrl || downloadUrl || websiteUrl)}
+                fontFamily={fontFamily}
+                onFontChange={setFontFamily}
               />
 
               {/* Cross-post Drawer */}
@@ -821,6 +833,7 @@ export default function ContentDetailPage() {
                   initialContent={desc}
                   onChange={setDesc}
                   editable={true}
+                  fontFamily={fontFamily}
                 />
               </div>
 
@@ -951,10 +964,11 @@ export default function ContentDetailPage() {
         )}
 
         {/* 4. Reading Article Body (Images 2 & 3) */}
-        <article className="pt-2 text-slate-800 font-serif leading-relaxed sm:leading-loose text-base sm:text-lg">
+        <article className="pt-2 text-slate-800 leading-relaxed sm:leading-loose text-base sm:text-lg">
           <RichContentRenderer
             content={articleDesc}
             isTelugu={isTelugu}
+            fontFamily={article?.fontFamily}
             className="text-base sm:text-lg"
           />
         </article>

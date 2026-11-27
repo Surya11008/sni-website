@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { Smile, X, Tag, Paperclip, Calendar, Sparkles, Link as LinkIcon } from 'lucide-react';
+import {
+  Smile,
+  X,
+  Tag,
+  Paperclip,
+  Calendar,
+  Sparkles,
+  Link as LinkIcon,
+  Type,
+  ChevronDown,
+} from 'lucide-react';
 import AllEmojisPicker from '../common/AllEmojisPicker';
-
-const NOTION_EMOJIS = [
-  '📖', '✝️', '🕊️', '⛪', '📜', '🎵', '🙏', '🌟',
-  '💡', '🛡️', '🌿', '🕯️', '🍞', '👑', '🎺', '❤️',
-  '🌈', '⚓', '🔔', '✨', '🔥', '🌾', '🕊', '☀️'
-];
+import FontPickerModal from '../common/FontPickerModal';
+import { cleanObjectReplacementChars, loadGoogleFont } from '../../utils/fontManager';
 
 export function NotionToolbar({
   initialData = {},
@@ -21,21 +27,30 @@ export function NotionToolbar({
   hasSchedule = false,
   targetPagesCount = 1,
   hasMedia = false,
+  fontFamily = 'Inter',
+  onFontChange,
 }) {
   const [icon, setIcon] = useState(initialData.icon || '📖');
-  const [title, setTitle] = useState(initialData.title || initialData.titleEn || '');
+  const [title, setTitle] = useState(cleanObjectReplacementChars(initialData.title || initialData.titleEn || ''));
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showFontPicker, setShowFontPicker] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (initialData.icon) setIcon(initialData.icon);
     if (initialData.title || initialData.titleEn) {
-      setTitle(initialData.title || initialData.titleEn);
+      setTitle(cleanObjectReplacementChars(initialData.title || initialData.titleEn));
     }
   }, [initialData]);
 
+  useEffect(() => {
+    if (fontFamily) {
+      loadGoogleFont(fontFamily);
+    }
+  }, [fontFamily]);
+
   const handleTitleChange = (e) => {
-    const val = e.target.value;
+    const val = cleanObjectReplacementChars(e.target.value);
     setTitle(val);
     if (onTitleChange) onTitleChange(val);
   };
@@ -44,6 +59,10 @@ export function NotionToolbar({
     setIcon(em);
     setShowIconPicker(false);
     if (onIconChange) onIconChange(em);
+  };
+
+  const handleSelectFont = (fName) => {
+    if (onFontChange) onFontChange(fName);
   };
 
   return (
@@ -78,7 +97,7 @@ export function NotionToolbar({
         )}
       </div>
 
-      {/* Borderless Large Notion Title */}
+      {/* Borderless Large Notion Title with selected Font */}
       <div>
         {editable ? (
           <input
@@ -87,10 +106,14 @@ export function NotionToolbar({
             value={title}
             onChange={handleTitleChange}
             placeholder="Untitled"
+            style={{ fontFamily: `'${fontFamily}', sans-serif` }}
             className="w-full text-3xl sm:text-4xl md:text-5xl font-black text-[#071B3B] bg-transparent border-none outline-none focus:ring-0 placeholder:text-slate-300 py-1 leading-tight"
           />
         ) : (
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#071B3B] leading-tight py-1">
+          <h1
+            style={{ fontFamily: `'${fontFamily}', sans-serif` }}
+            className="text-3xl sm:text-4xl md:text-5xl font-black text-[#071B3B] leading-tight py-1"
+          >
             {title || 'Untitled'}
           </h1>
         )}
@@ -98,6 +121,7 @@ export function NotionToolbar({
 
       {/* Properties Strip */}
       <div className="py-2.5 border-y border-slate-100 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+        {/* Page Tag */}
         <div className="flex items-center gap-1.5">
           <Tag className="w-3.5 h-3.5 text-slate-400" />
           <span className="font-semibold text-slate-500">Page:</span>
@@ -115,6 +139,31 @@ export function NotionToolbar({
           )}
         </div>
 
+        {/* Font Selector & Google Fonts Option */}
+        <div className="flex items-center gap-1.5">
+          <Type className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="font-semibold text-slate-500">Font:</span>
+          {editable ? (
+            <button
+              type="button"
+              onClick={() => setShowFontPicker(true)}
+              className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-indigo-50 hover:border-indigo-300 text-[#071B3B] font-bold text-[11px] transition cursor-pointer flex items-center gap-1.5 border border-slate-200"
+              title="Change note font or add from Google Fonts"
+            >
+              <span style={{ fontFamily: `'${fontFamily}', sans-serif` }}>{fontFamily}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+          ) : (
+            <span
+              className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[#071B3B] font-bold text-[11px]"
+              style={{ fontFamily: `'${fontFamily}', sans-serif` }}
+            >
+              {fontFamily}
+            </span>
+          )}
+        </div>
+
+        {/* Schedule */}
         {editable && onToggleSchedule && (
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
@@ -133,6 +182,7 @@ export function NotionToolbar({
           </div>
         )}
 
+        {/* Media Attachments */}
         {editable && onToggleMedia && (
           <div className="flex items-center gap-1.5">
             <Paperclip className="w-3.5 h-3.5 text-slate-400" />
@@ -147,6 +197,7 @@ export function NotionToolbar({
           </div>
         )}
 
+        {/* Embed / Link Preview */}
         {editable && onOpenEmbed && (
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[#C59B27]" />
@@ -166,6 +217,16 @@ export function NotionToolbar({
           <span>Today</span>
         </div>
       </div>
+
+      {/* Font Picker Modal */}
+      {showFontPicker && editable && (
+        <FontPickerModal
+          selectedFont={fontFamily}
+          onSelectFont={handleSelectFont}
+          onClose={() => setShowFontPicker(false)}
+          title="Select Note Font & Google Fonts"
+        />
+      )}
     </div>
   );
 }
