@@ -156,7 +156,13 @@ export default function DynamicPage() {
   const [showCalendarScheduler, setShowCalendarScheduler] = useState(false);
   const [copiedScheduleId, setCopiedScheduleId] = useState(null);
 
-  const isAdmin = userProfile?.role === 'admin';
+  const isAdmin =
+    (userProfile?.role === 'admin' || userProfile?.role === 'ADMIN') &&
+    (String(currentUser?.uid || userProfile?.uid || '').toLowerCase() === 'surya11008' ||
+      currentUser?.email === 'surya11008@sni.org.in' ||
+      currentUser?.email === 'admin@sni.org.in' ||
+      userProfile?.email === 'surya11008@sni.org.in' ||
+      userProfile?.email === 'admin@sni.org.in');
 
   // Load category and page definitions from real-time portalStructure
   useEffect(() => {
@@ -215,6 +221,7 @@ export default function DynamicPage() {
 
   // Open Form for Adding New Content (Supports pre-filling date from Calendar)
   const handleOpenAddForm = (initialDateStr = null) => {
+    if (!isAdmin) return;
     setEditingItem(null);
     setTitle('');
     setDesc('');
@@ -243,6 +250,7 @@ export default function DynamicPage() {
   // Open Form for Editing Existing Content
   const handleOpenEditForm = (item, e) => {
     if (e) e.stopPropagation();
+    if (!isAdmin) return;
     setEditingItem(item);
     setTitle(item.title || item.titleEn || item.titleTe || '');
     setDesc(item.desc || item.content || item.descEn || item.descTe || '');
@@ -315,6 +323,10 @@ export default function DynamicPage() {
   // Handle Save (Add or Update)
   const handleSaveContent = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if (!isAdmin) {
+      alert('Only Administrators are authorized to publish or modify content.');
+      return;
+    }
     if (!title.trim()) {
       alert('Please provide a title for the content.');
       return;
@@ -396,6 +408,10 @@ export default function DynamicPage() {
   // Handle deleting content by Admin
   const handleDeleteContent = async (contentId, e) => {
     if (e) e.stopPropagation();
+    if (!isAdmin) {
+      alert('Only Administrators are authorized to delete content.');
+      return;
+    }
     if (!window.confirm('Are you sure you want to delete this content item? This action cannot be undone.')) return;
     try {
       await deleteDoc(doc(db, 'page_contents', contentId));
@@ -552,7 +568,7 @@ export default function DynamicPage() {
         </div>
 
         {/* NOTION-STYLE DOCUMENT EDITOR (Matches Notion Architecture) */}
-        {isFormOpen && (
+        {isAdmin && isFormOpen && (
           <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
             {/* 1. Notion Top Navigation & Action Bar */}
             <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">
@@ -2068,7 +2084,7 @@ export default function DynamicPage() {
                 onToggleViewMode={setViewMode}
               />
             )}
-            <NotionEmpty pageTitle={pageTitle} onCreate={handleOpenAddForm} />
+            <NotionEmpty pageTitle={pageTitle} onCreate={isAdmin ? handleOpenAddForm : null} />
           </div>
         )}
       </main>

@@ -76,21 +76,36 @@ export const AuthProvider = ({ children }) => {
         if (u && (u.userId || u.uid)) {
           const id = u.userId || u.uid;
           const email = u.email || `${id}@sni.org.in`;
-          const isAdmin = String(id).toLowerCase() === 'surya11008' || u.role === 'admin';
+          const isAdmin =
+            String(id).toLowerCase() === 'surya11008' ||
+            email === 'surya11008@sni.org.in' ||
+            email === 'admin@sni.org.in';
+
+          // Strictly enforce admin clean-up if not an admin
+          if (!isAdmin) {
+            localStorage.removeItem('sni_admin_active');
+            sessionStorage.removeItem('sni_admin_active');
+          }
+
           const unifiedUser = {
             uid: id,
             email: email,
             displayName: u.fullName || u.displayName || id,
           };
-          setCurrentUser((prev) => prev || unifiedUser);
-          setUserProfile((prev) => prev || {
+          setCurrentUser(unifiedUser);
+          setUserProfile({
             uid: id,
             email: email,
             displayName: u.fullName || u.displayName || id,
-            role: isAdmin ? 'admin' : (u.role || 'member'),
+            role: isAdmin ? 'admin' : 'member',
             status: u.status || 'approved',
           });
           setLoading(false);
+
+          // If Firebase Auth currentUser is someone else (e.g. residual admin), sign out Firebase Auth!
+          if (auth.currentUser && !auth.currentUser.email?.toLowerCase().startsWith(String(id).toLowerCase())) {
+            signOut(auth).catch(() => {});
+          }
         }
       } catch (err) {
         console.warn('Failed to parse unified session:', err);
@@ -148,6 +163,34 @@ export const AuthProvider = ({ children }) => {
     let unsubscribeFirestore = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      // Check if there is an active non-admin session stored in localStorage
+      const activeMemberRaw =
+        localStorage.getItem('sni_user_session') ||
+        localStorage.getItem('sni_current_user') ||
+        localStorage.getItem('sni_unified_session');
+
+      if (activeMemberRaw) {
+        try {
+          const activeMember = JSON.parse(activeMemberRaw);
+          const activeId = String(activeMember?.userId || activeMember?.uid || '').trim().toLowerCase();
+          const isMemberAdmin =
+            activeId === 'surya11008' ||
+            activeMember?.email === 'surya11008@sni.org.in' ||
+            activeMember?.email === 'admin@sni.org.in';
+
+          // If the logged-in session is a regular member (NOT admin):
+          if (!isMemberAdmin) {
+            // Sign out stale Firebase Auth admin session if present so it doesn't linger
+            if (user && (user.email === 'surya11008@sni.org.in' || user.email === 'admin@sni.org.in' || user.email?.startsWith('surya'))) {
+              signOut(auth).catch(() => {});
+            }
+            return; // Prevent Firebase Auth from overwriting the regular member session!
+          }
+        } catch (e) {
+          console.warn('Error reading active member session in onAuthStateChanged:', e);
+        }
+      }
+
       if (user) {
         setCurrentUser(user);
         try {
@@ -159,15 +202,15 @@ export const AuthProvider = ({ children }) => {
             async (snapshot) => {
               if (snapshot.exists()) {
                 const data = snapshot.data();
-                // Ensure known admins are always marked approved
+                // Ensure only genuine known admins are marked admin
                 const isAdmin =
                   user.email === 'surya11008@sni.org.in' ||
                   user.email === 'admin@sni.org.in' ||
-                  user.email?.startsWith('surya') ||
-                  data.role === 'admin';
+                  String(user.uid || '').toLowerCase() === 'surya11008';
 
                 setUserProfile({
                   ...data,
+                  role: isAdmin ? 'admin' : (data.role === 'admin' ? 'admin' : 'member'),
                   status: isAdmin ? 'approved' : data.status || 'pending',
                 });
               } else {
@@ -175,7 +218,7 @@ export const AuthProvider = ({ children }) => {
                 const isAdmin =
                   user.email === 'surya11008@sni.org.in' ||
                   user.email === 'admin@sni.org.in' ||
-                  user.email?.startsWith('surya');
+                  String(user.uid || '').toLowerCase() === 'surya11008';
 
                 const defaultProfile = {
                   uid: user.uid,

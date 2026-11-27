@@ -97,10 +97,12 @@ export default function ContentDetailPage() {
   const [showEmbedDrawer, setShowEmbedDrawer] = useState(false);
 
   const isAdmin =
-    userProfile?.role === 'admin' ||
-    currentUser?.email === 'surya11008@sni.org.in' ||
-    currentUser?.email === 'admin@sni.org.in' ||
-    currentUser?.email?.startsWith('surya');
+    (userProfile?.role === 'admin' || userProfile?.role === 'ADMIN') &&
+    (String(currentUser?.uid || userProfile?.uid || '').toLowerCase() === 'surya11008' ||
+      currentUser?.email === 'surya11008@sni.org.in' ||
+      currentUser?.email === 'admin@sni.org.in' ||
+      userProfile?.email === 'surya11008@sni.org.in' ||
+      userProfile?.email === 'admin@sni.org.in');
 
   // Fetch article by ID
   useEffect(() => {
@@ -633,7 +635,7 @@ export default function ContentDetailPage() {
         </div>
 
         {/* NOTION-STYLE DOCUMENT EDITOR FOR EDIT MODE (Matching User's Screenshot) */}
-        {isEditing && (
+        {isAdmin && isEditing && (
           <div className="mb-14 bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
             {/* 1. Notion Top Navigation & Action Bar */}
             <div className="px-5 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between gap-3 text-xs select-none">

@@ -70,11 +70,12 @@ export default function Home() {
   const { isTelugu } = useLanguage();
 
   const isAdmin =
-    currentUser?.email === 'surya11008@sni.org.in' ||
-    currentUser?.email === 'admin@sni.org.in' ||
-    currentUser?.email?.startsWith('surya') ||
-    userProfile?.role === 'admin' ||
-    localStorage.getItem('sni_admin_active') === 'true';
+    (userProfile?.role === 'admin' || userProfile?.role === 'ADMIN') &&
+    (String(currentUser?.uid || userProfile?.uid || '').toLowerCase() === 'surya11008' ||
+      currentUser?.email === 'surya11008@sni.org.in' ||
+      currentUser?.email === 'admin@sni.org.in' ||
+      userProfile?.email === 'surya11008@sni.org.in' ||
+      userProfile?.email === 'admin@sni.org.in');
 
   // Load from local storage cache immediately (0ms delay) so no fallback photo ever flashes
   const [heroSettings, setHeroSettings] = useState(() => {

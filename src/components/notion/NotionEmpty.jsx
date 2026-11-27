@@ -11,17 +11,21 @@ export function NotionEmpty({ pageTitle = 'Notes', onCreate }) {
           Welcome to {pageTitle}
         </h2>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          No notes or articles in this section yet. Click below to start writing your sacred message or note.
+          {onCreate
+            ? 'No notes or articles in this section yet. Click below to start writing your sacred message or note.'
+            : 'No notes or articles in this section yet. Please check back later for updates.'}
         </p>
       </div>
-      <button
-        type="button"
-        onClick={onCreate}
-        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer hover:scale-105 active:scale-95 duration-150"
-      >
-        <PlusCircle className="h-4 w-4 text-[#F4B942]" />
-        <span>Create a note</span>
-      </button>
+      {onCreate && (
+        <button
+          type="button"
+          onClick={onCreate}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#071B3B] hover:bg-[#0F294A] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer hover:scale-105 active:scale-95 duration-150"
+        >
+          <PlusCircle className="h-4 w-4 text-[#F4B942]" />
+          <span>Create a note</span>
+        </button>
+      )}
     </div>
   );
 }
