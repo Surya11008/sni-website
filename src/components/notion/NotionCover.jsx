@@ -63,7 +63,7 @@ export function NotionCover({ url, onChange, onRemove, editable = true }) {
       {showPicker && (
         <div className="mx-6 md:mx-12 mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-xl animate-in fade-in zoom-in-95 duration-150 relative z-30">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-800">Select Notion Cover Image</span>
+            <span className="text-xs font-bold text-slate-800">Select Cover Image</span>
             <button
               type="button"
               onClick={() => setShowPicker(false)}

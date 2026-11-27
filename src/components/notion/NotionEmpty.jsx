@@ -1,6 +1,6 @@
 import { PlusCircle } from 'lucide-react';
 
-export function NotionEmpty({ pageTitle = 'Notion', onCreate }) {
+export function NotionEmpty({ pageTitle = 'Notes', onCreate }) {
   return (
     <div className="flex h-full min-h-[380px] flex-col items-center justify-center space-y-4 py-16 px-4 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs">
       <div className="w-28 h-28 rounded-3xl bg-amber-50/80 border-2 border-amber-200/60 flex items-center justify-center text-5xl shadow-sm animate-in zoom-in-95 duration-200">
@@ -8,7 +8,7 @@ export function NotionEmpty({ pageTitle = 'Notion', onCreate }) {
       </div>
       <div className="space-y-1">
         <h2 className="text-xl font-extrabold text-slate-800">
-          Welcome to {pageTitle}&apos;s Notion
+          Welcome to {pageTitle}
         </h2>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
           No notes or articles in this section yet. Click below to start writing your sacred message or note.

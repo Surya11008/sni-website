@@ -115,7 +115,7 @@ const SLASH_BLOCKS = [
   {
     id: 'callout',
     label: 'Callout Box',
-    desc: 'Notion callout with icon and colored background',
+    desc: 'Callout with icon and colored background',
     icon: '💡',
     cmd: (editor) => editor.insertCallout(),
   },
@@ -185,7 +185,7 @@ export default function RichTextEditor({
   value = '',
   onChange,
   label = 'Content',
-  placeholder = "Type '/' for Notion blocks or start writing...",
+  placeholder = "Type '/' for commands or start writing...",
   rows = 12,
   isNotionStyle = true,
 }) {
@@ -647,10 +647,10 @@ export default function RichTextEditor({
             <span className="font-bold text-slate-800 text-xs sm:text-sm">{label}</span>
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/80">
               <Sparkles className="w-3 h-3 text-[#C59B27]" />
-              Notion Writing Canvas
+              Writing Canvas
             </span>
             <span className="hidden md:inline text-[11px] text-slate-400">
-              (Type <code className="bg-slate-200/70 px-1 py-0.5 rounded font-mono text-slate-700">/</code> for blocks)
+              (Type <code className="bg-slate-200/70 px-1 py-0.5 rounded font-mono text-slate-700">/</code> for commands)
             </span>
           </div>
 
@@ -697,7 +697,7 @@ export default function RichTextEditor({
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition cursor-pointer"
-              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Notion Mode'}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Mode'}
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
@@ -775,7 +775,7 @@ export default function RichTextEditor({
                     }}
                     className="w-full text-left px-3 py-1.5 hover:bg-amber-50/60 text-xs font-medium text-amber-800 border-t border-slate-100"
                   >
-                    💡 Notion Callout Box
+                    💡 Callout Box
                   </button>
                   <button
                     type="button"
@@ -993,7 +993,7 @@ export default function RichTextEditor({
               type="button"
               onClick={insertCallout}
               className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-amber-50 text-amber-900 font-medium transition cursor-pointer text-xs"
-              title="Insert Notion Callout Box"
+              title="Insert Callout Box"
             >
               <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
               <span>Callout</span>
@@ -1183,7 +1183,7 @@ export default function RichTextEditor({
             type="button"
             onClick={insertCallout}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-yellow-300 transition"
-            title="Notion Callout"
+            title="Callout"
           >
             <Lightbulb className="w-3.5 h-3.5" />
           </button>
@@ -1199,7 +1199,7 @@ export default function RichTextEditor({
           style={{ left: `${slashMenu.x}px`, top: `${slashMenu.y}px` }}
         >
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center justify-between border-b border-slate-100">
-            <span>Basic Notion Blocks</span>
+            <span>Basic Blocks</span>
             <span className="font-mono text-slate-400">Esc to close</span>
           </div>
 

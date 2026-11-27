@@ -453,7 +453,7 @@ export default function DynamicPage() {
                 <span className="text-slate-900 font-bold truncate">{pageTitle}</span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
                   <Sparkles className="w-3 h-3 text-[#C59B27]" />
-                  Notion Document
+                  Document Editor
                 </span>
               </div>
 
@@ -983,7 +983,7 @@ export default function DynamicPage() {
                           ? 'bg-white text-[#071B3B] shadow-xs font-bold'
                           : 'text-slate-500 hover:text-slate-800'
                       }`}
-                      title="Notion Database Table View"
+                      title="Database Table View"
                     >
                       <Table className="w-4 h-4" />
                     </button>

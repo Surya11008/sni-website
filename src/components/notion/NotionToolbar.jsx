@@ -66,7 +66,7 @@ export function NotionToolbar({
         {showIconPicker && editable && (
           <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-40 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700">Choose Notion Icon</span>
+              <span className="text-xs font-bold text-slate-700">Choose Icon</span>
               <button
                 type="button"
                 onClick={() => setShowIconPicker(false)}

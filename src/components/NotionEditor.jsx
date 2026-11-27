@@ -8,7 +8,7 @@ export default function NotionEditor({
   initialContent = '',
   onChange,
   editable = true,
-  placeholder = "Type '/' for Notion blocks or start typing...",
+  placeholder = "Type '/' for commands or start typing...",
 }) {
   const [initialBlocks, setInitialBlocks] = useState(undefined);
   const [ready, setReady] = useState(false);

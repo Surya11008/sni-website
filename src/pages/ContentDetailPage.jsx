@@ -643,7 +643,7 @@ export default function ContentDetailPage() {
                 <span className="text-slate-900 font-bold truncate">{subPageTitle}</span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80 ml-1">
                   <Sparkles className="w-3 h-3 text-[#C59B27]" />
-                  Notion Document (Edit Mode)
+                  Document Editor (Edit Mode)
                 </span>
               </div>
 
