@@ -476,10 +476,12 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
     }
 
     const pageTitle = customPage.title || customPage.titleEn || formatSlugToTitle(customPage.pageSlug);
-    const existingPageIdx = cat.pages.findIndex((p) => p.pageSlug === customPage.pageSlug);
+    const cleanPageSlug = (customPage.pageSlug || '').toLowerCase();
+    const existingPageIdx = cat.pages.findIndex((p) => (p.pageSlug || '').toLowerCase() === cleanPageSlug);
     const pageObj = {
       id: customPage.id,
-      pageSlug: customPage.pageSlug,
+      pageSlug: cleanPageSlug,
+      parentPageSlug: customPage.parentPageSlug || null,
       title: pageTitle,
       titleEn: customPage.titleEn || pageTitle,
       titleTe: customPage.titleTe || customPage.title || pageTitle,
@@ -487,8 +489,10 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
       descEn: customPage.descEn || customPage.desc || '',
       descTe: customPage.descTe || customPage.desc || '',
       iconName: customPage.iconName || 'FileText',
+      iconEmoji: customPage.iconEmoji || customPage.icon || null,
       externalUrl: customPage.externalUrl || null,
       isCustom: true,
+      createdAt: customPage.createdAt || null,
     };
 
     if (existingPageIdx >= 0) {
@@ -499,6 +503,53 @@ export function mergePortalStructure(customPagesFromFirestore = []) {
   }
 
   return structure;
+}
+
+/**
+ * Get all direct subpages under a specific parent page in a category
+ */
+export function getSubpages(portalStructure, categorySlug, pageSlug) {
+  if (!portalStructure || !Array.isArray(portalStructure)) return [];
+  const cleanCatSlug = (categorySlug || '').toLowerCase();
+  const cleanPageSlug = (pageSlug || '').toLowerCase();
+
+  const cat = portalStructure.find(
+    (c) => c.categorySlug.toLowerCase() === cleanCatSlug
+  );
+  if (!cat || !cat.pages) return [];
+
+  return cat.pages.filter(
+    (p) => (p.parentPageSlug || '').toLowerCase() === cleanPageSlug
+  );
+}
+
+/**
+ * Build the full breadcrumb chain of pages from the top root page down to the current page
+ * Returns array of page objects: [rootPage, subpage1, ..., currentPage]
+ */
+export function getPageBreadcrumbChain(portalStructure, categorySlug, pageSlug) {
+  if (!portalStructure || !Array.isArray(portalStructure) || !pageSlug) return [];
+  const cleanCatSlug = (categorySlug || '').toLowerCase();
+  const cleanPageSlug = (pageSlug || '').toLowerCase();
+
+  const cat = portalStructure.find(
+    (c) => c.categorySlug.toLowerCase() === cleanCatSlug
+  );
+  if (!cat || !cat.pages) return [];
+
+  const chain = [];
+  let currentSlug = cleanPageSlug;
+  const visited = new Set();
+
+  while (currentSlug && !visited.has(currentSlug)) {
+    visited.add(currentSlug);
+    const page = cat.pages.find((p) => (p.pageSlug || '').toLowerCase() === currentSlug);
+    if (!page) break;
+    chain.unshift(page);
+    currentSlug = (page.parentPageSlug || '').toLowerCase();
+  }
+
+  return chain;
 }
 
 /**

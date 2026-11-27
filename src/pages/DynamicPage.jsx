@@ -35,6 +35,7 @@ import CalendarScheduleHub, {
   EVENT_TYPES,
   RECURRENCE_OPTIONS,
 } from '../components/CalendarScheduleHub';
+import AddSubpageModal from '../components/common/AddSubpageModal';
 import {
   ChevronRight,
   ChevronLeft,
@@ -80,6 +81,7 @@ import {
   CheckCheck,
   Bell,
   ArrowRight,
+  FolderTree,
 } from 'lucide-react';
 
 // Curated Notion preset spiritual cover wallpapers
@@ -102,12 +104,19 @@ export default function DynamicPage() {
   const { categorySlug, pageSlug } = useParams();
   const { currentUser, userProfile, isPagePermitted } = useAuth();
   const { isTelugu, getText, getDesc } = useLanguage();
-  const { portalStructure, allAvailablePages, getPageInfo } = usePortal();
+  const {
+    portalStructure,
+    allAvailablePages,
+    getPageInfo,
+    getSubpages,
+    getPageBreadcrumbChain,
+  } = usePortal();
   const navigate = useNavigate();
 
   const [pageInfo, setPageInfo] = useState({ category: null, page: null });
   const [contents, setContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAddSubpageModalOpen, setIsAddSubpageModalOpen] = useState(false);
 
   // View Mode: 'grid' | 'list' | 'compact'
   const [viewMode, setViewMode] = useState('list'); // 'grid' | 'list' | 'table' | 'compact'
@@ -657,6 +666,9 @@ export default function DynamicPage() {
     'Page'
   );
 
+  const subpages = getSubpages ? getSubpages(categorySlug, pageSlug) : [];
+  const breadcrumbChain = getPageBreadcrumbChain ? getPageBreadcrumbChain(categorySlug, pageSlug) : [];
+
   // Helper to extract YouTube video ID for responsive embed
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -706,8 +718,8 @@ export default function DynamicPage() {
         {/* Clean, Lightweight Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
           <div>
-            {/* Breadcrumb Navigation */}
-            <nav className="flex items-center gap-2 text-xs text-slate-500 mb-0.5 flex-wrap">
+            {/* Breadcrumb Navigation - Multi-Level Nested Breadcrumbs */}
+            <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-0.5 flex-wrap">
               <Link to="/" className="hover:text-[#0F294A] transition flex items-center gap-1 font-bold text-slate-600">
                 <span>Home</span>
               </Link>
@@ -715,8 +727,32 @@ export default function DynamicPage() {
               <Link to={`/category/${categorySlug}`} className="text-[#C59B27] font-bold uppercase hover:underline">
                 {categoryTitle}
               </Link>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-slate-900 font-bold">{pageTitle}</span>
+              {breadcrumbChain.length > 0 ? (
+                breadcrumbChain.map((crumb, idx) => {
+                  const isLast = idx === breadcrumbChain.length - 1;
+                  const crumbTitle = crumb.title || (isTelugu ? crumb.titleTe : crumb.titleEn) || crumb.titleEn;
+                  return (
+                    <span key={crumb.pageSlug || idx} className="inline-flex items-center gap-1.5">
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      {isLast ? (
+                        <span className="text-slate-900 font-bold">{crumbTitle}</span>
+                      ) : (
+                        <Link
+                          to={`/Home/${categorySlug}/${crumb.pageSlug}`}
+                          className="text-slate-600 hover:text-[#071B3B] font-semibold hover:underline"
+                        >
+                          {crumbTitle}
+                        </Link>
+                      )}
+                    </span>
+                  );
+                })
+              ) : (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-900 font-bold">{pageTitle}</span>
+                </>
+              )}
             </nav>
 
             <div className="space-y-1">
@@ -736,14 +772,15 @@ export default function DynamicPage() {
           {/* Quick Action Buttons for Admin */}
           {isAdmin && (
             <div className="shrink-0 flex items-center gap-2">
-              <Link
-                to={`/admin?tab=pages&category=${categorySlug}&new=true`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm"
-                title={`Add new page under ${categoryTitle}`}
+              <button
+                type="button"
+                onClick={() => setIsAddSubpageModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
+                title={`Add new subpage under ${pageTitle}`}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ Add Page</span>
-              </Link>
+                <span>+ Add Subpage</span>
+              </button>
               <button
                 onClick={handleOpenAddForm}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
@@ -754,6 +791,112 @@ export default function DynamicPage() {
             </div>
           )}
         </div>
+
+        {/* SUBPAGES SECTION (Allows unlimited nesting: Category > Page > Subpage > Subpage...) */}
+        {(subpages.length > 0 || isAdmin) && (
+          <div className="pt-2 pb-3 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderTree className="w-4 h-4 text-[#C59B27]" />
+                <h3 className="text-xs sm:text-sm font-black text-[#071B3B] uppercase tracking-wider">
+                  Subpages ({subpages.length})
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddSubpageModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>+ Add Subpage</span>
+                </button>
+              )}
+            </div>
+
+            {subpages.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {subpages.map((sp) => {
+                  const spTitle = sp.title || (isTelugu ? sp.titleTe : sp.titleEn) || sp.titleEn;
+                  const spDesc = sp.descEn || sp.desc || '';
+                  const childSubpages = getSubpages ? getSubpages(categorySlug, sp.pageSlug) : [];
+
+                  return (
+                    <div
+                      key={sp.pageSlug}
+                      onClick={() => navigate(`/Home/${categorySlug}/${sp.pageSlug}`)}
+                      className="group bg-white rounded-2xl border border-slate-200/90 hover:border-amber-400 hover:shadow-md p-4 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 relative overflow-hidden"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#C59B27] group-hover:bg-[#071B3B] group-hover:text-[#F4B942] flex items-center justify-center transition-colors">
+                            {sp.iconEmoji ? (
+                              <span className="text-lg">{sp.iconEmoji}</span>
+                            ) : (
+                              <PortalIcon name={sp.iconName || 'FileText'} className="w-4 h-4" />
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#C59B27] flex items-center gap-0.5">
+                            <span>Open</span>
+                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-[#071B3B] group-hover:text-[#C59B27] transition-colors line-clamp-1">
+                            {spTitle}
+                          </h4>
+                          {spDesc && (
+                            <p className="text-xs text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">
+                              {spDesc}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-semibold text-slate-400">
+                        <span className="text-slate-500 font-mono">/{sp.pageSlug}</span>
+                        {childSubpages.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 font-bold">
+                            {childSubpages.length} subpages
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* + Add Subpage Card for Admin */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddSubpageModalOpen(true)}
+                    className="group rounded-2xl border-2 border-dashed border-slate-200 hover:border-amber-400 p-4 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 bg-slate-50/50 hover:bg-amber-50/30 min-h-[110px]"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 group-hover:border-amber-400 text-slate-400 group-hover:text-[#C59B27] flex items-center justify-center transition-colors shadow-2xs">
+                      <Plus className="w-4 h-4 stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600 group-hover:text-[#071B3B]">
+                      + Add New Subpage
+                    </span>
+                  </button>
+                )}
+              </div>
+            ) : isAdmin ? (
+              <div className="p-3.5 rounded-2xl bg-amber-50/40 border border-amber-200/60 flex items-center justify-between gap-3 text-xs">
+                <span className="text-slate-600 font-medium">
+                  No subpages created yet under <b>{pageTitle}</b>. You can create unlimited nested subpages here!
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsAddSubpageModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold shrink-0 hover:bg-[#0F294A] transition cursor-pointer"
+                >
+                  + Add First Subpage
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* NOTION-STYLE DOCUMENT EDITOR (Matches Notion Architecture) */}
         {isAdmin && isFormOpen && (
@@ -2525,6 +2668,19 @@ export default function DynamicPage() {
             <NotionEmpty pageTitle={pageTitle} onCreate={isAdmin ? handleOpenAddForm : null} />
           </div>
         )}
+
+        {/* Add Subpage Modal */}
+        <AddSubpageModal
+          isOpen={isAddSubpageModalOpen}
+          onClose={() => setIsAddSubpageModalOpen(false)}
+          categorySlug={categorySlug}
+          categoryTitle={categoryTitle}
+          parentPageSlug={pageSlug}
+          parentPageTitle={pageTitle}
+          onSuccess={(created) => {
+            navigate(`/Home/${categorySlug}/${created.pageSlug}`);
+          }}
+        />
       </main>
     </div>
   );

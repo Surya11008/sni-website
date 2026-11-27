@@ -131,6 +131,7 @@ export default function AdminPanel() {
   const [newPage, setNewPage] = useState({
     categorySlug: 'home',
     customCategoryTitle: '',
+    parentPageSlug: '',
     title: '',
     titleTe: '',
     pageSlug: '',
@@ -158,12 +159,14 @@ export default function AdminPanel() {
     descEn: '',
     externalUrl: '',
     iconName: 'FileText',
+    parentPageSlug: '',
   });
 
-  const handleOpenAddSubPageModal = (catSlug = 'home') => {
+  const handleOpenAddSubPageModal = (catSlug = 'home', parentSlug = '') => {
     setNewPage({
       categorySlug: catSlug || 'home',
       customCategoryTitle: '',
+      parentPageSlug: parentSlug || '',
       title: '',
       titleTe: '',
       pageSlug: '',
@@ -1190,6 +1193,7 @@ export default function AdminPanel() {
       const payload = {
         categorySlug: newPage.categorySlug,
         pageSlug: generatedSlug,
+        parentPageSlug: (newPage.parentPageSlug || '').trim() || null,
         title: cleanTitle,
         titleEn: cleanTitle,
         titleTe: cleanTitleTe,
@@ -1215,6 +1219,7 @@ export default function AdminPanel() {
       setNewPage({
         categorySlug: targetCat,
         customCategoryTitle: '',
+        parentPageSlug: '',
         title: '',
         titleTe: '',
         pageSlug: '',
@@ -1245,6 +1250,7 @@ export default function AdminPanel() {
       descEn: page.descEn || page.desc || '',
       externalUrl: page.externalUrl || '',
       iconName: page.iconName || 'FileText',
+      parentPageSlug: page.parentPageSlug || '',
     });
   };
 
@@ -1260,6 +1266,7 @@ export default function AdminPanel() {
       const payload = {
         categorySlug: editingPageModal.categorySlug,
         pageSlug: editingPageModal.pageSlug,
+        parentPageSlug: (pageEditForm.parentPageSlug || '').trim() || null,
         title: pageEditForm.titleEn.trim(),
         titleEn: pageEditForm.titleEn.trim(),
         titleTe: pageEditForm.titleTe.trim() || pageEditForm.titleEn.trim(),
@@ -1974,7 +1981,7 @@ export default function AdminPanel() {
                     </label>
                     <select
                       value={newPage.categorySlug}
-                      onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
+                      onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value, parentPageSlug: '' })}
                       className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
                     >
                       <option value="home">Home</option>
@@ -1988,6 +1995,35 @@ export default function AdminPanel() {
                       <option value="custom">+ Create Brand New Category</option>
                     </select>
                   </div>
+
+                  {/* Parent Page Selection (for unlimited nested subpages) */}
+                  {newPage.categorySlug !== 'custom' && (
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Parent Page (Optional)</span>
+                        <span className="text-[10px] font-normal text-slate-400">Leave empty for category page</span>
+                      </label>
+                      <select
+                        value={newPage.parentPageSlug}
+                        onChange={(e) => setNewPage({ ...newPage, parentPageSlug: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                      >
+                        <option value="">None (Top-Level Category Page)</option>
+                        {fullPortalStructure
+                          .find((c) => c.categorySlug === newPage.categorySlug)
+                          ?.pages?.map((p) => (
+                            <option key={p.pageSlug} value={p.pageSlug}>
+                              {p.parentPageSlug ? `  ↳ ${p.titleEn || p.title}` : (p.titleEn || p.title)}
+                            </option>
+                          ))}
+                      </select>
+                      {newPage.parentPageSlug && (
+                        <p className="text-[10px] text-amber-700 font-semibold mt-1">
+                          ↳ Will be created as a subpage under: <strong>{newPage.parentPageSlug}</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {newPage.categorySlug === 'custom' && (
                     <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 space-y-2">
@@ -2299,13 +2335,23 @@ export default function AdminPanel() {
                                       return (
                                         <div
                                           key={p.pageSlug}
-                                          className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C59B27]/60 hover:shadow-sm transition flex items-start justify-between gap-3 group"
+                                          className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 group ${
+                                            p.parentPageSlug
+                                              ? 'border-amber-200/80 bg-amber-50/30 hover:bg-white hover:border-[#C59B27]'
+                                              : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C59B27]/60 hover:shadow-sm'
+                                          }`}
                                         >
                                           <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                                                 Page
                                               </span>
+                                              {p.parentPageSlug && (
+                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5">
+                                                  <span>↳ Parent:</span>
+                                                  <span className="font-mono">{p.parentPageSlug}</span>
+                                                </span>
+                                              )}
                                               <span className="text-[10px] font-mono text-slate-400">
                                                 /page/{cat.categorySlug}/{p.pageSlug}
                                               </span>
@@ -2318,7 +2364,35 @@ export default function AdminPanel() {
                                               {p.titleEn || p.title}
                                             </h5>
 
-                                            <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                            {/* Child subpages list if any exist under this page */}
+                                            {(() => {
+                                              const childPages = catPages.filter(
+                                                (cp) => (cp.parentPageSlug || '').toLowerCase() === p.pageSlug.toLowerCase()
+                                              );
+                                              if (childPages.length === 0) return null;
+                                              return (
+                                                <div className="mt-2 pt-1.5 border-t border-slate-200/70">
+                                                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                                    <FolderTree className="w-3 h-3 text-amber-600" />
+                                                    <span>Subpages ({childPages.length}):</span>
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-1.5">
+                                                    {childPages.map((cp) => (
+                                                      <Link
+                                                        key={cp.pageSlug}
+                                                        to={`/page/${cat.categorySlug}/${cp.pageSlug}`}
+                                                        className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 flex items-center gap-1 transition"
+                                                      >
+                                                        <span>{cp.titleEn || cp.title}</span>
+                                                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                                                      </Link>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })()}
+
+                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
                                               <Link
                                                 to={`/page/${cat.categorySlug}/${p.pageSlug}`}
                                                 className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F294A] hover:text-[#C59B27] hover:underline"
@@ -2335,12 +2409,12 @@ export default function AdminPanel() {
                                               </Link>
                                               <button
                                                 type="button"
-                                                onClick={() => handleOpenAddSubPageModal(cat.categorySlug)}
-                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 transition cursor-pointer"
-                                                title={`Add new page under ${cat.titleEn}`}
+                                                onClick={() => handleOpenAddSubPageModal(cat.categorySlug, p.pageSlug)}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-200 transition cursor-pointer"
+                                                title={`Create a nested subpage under ${p.titleEn || p.title}`}
                                               >
-                                                <Plus className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                                                <span>+ Add Page</span>
+                                                <FolderTree className="w-3 h-3 text-indigo-600" />
+                                                <span>+ Subpage</span>
                                               </button>
                                               <button
                                                 type="button"
@@ -2435,12 +2509,12 @@ export default function AdminPanel() {
                               <div className="flex items-center gap-1.5">
                                 <button
                                   type="button"
-                                  onClick={() => handleOpenAddSubPageModal(p.categorySlug)}
-                                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 cursor-pointer"
-                                  title={`Add new page under ${p.categoryTitleEn || p.categorySlug}`}
+                                  onClick={() => handleOpenAddSubPageModal(p.categorySlug, p.pageSlug)}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded border border-indigo-200 cursor-pointer"
+                                  title={`Add subpage under ${p.titleEn || p.title}`}
                                 >
-                                  <Plus className="w-2.5 h-2.5 stroke-[3]" />
-                                  <span>+ Page</span>
+                                  <FolderTree className="w-2.5 h-2.5" />
+                                  <span>+ Subpage</span>
                                 </button>
                                 <button
                                   type="button"
@@ -2513,11 +2587,11 @@ export default function AdminPanel() {
                                   <div className="flex items-center justify-end gap-1.5">
                                     <button
                                       type="button"
-                                      onClick={() => handleOpenAddSubPageModal(p.categorySlug)}
-                                      className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded transition"
-                                      title={`Add new page under ${p.categoryTitleEn || p.categorySlug}`}
+                                      onClick={() => handleOpenAddSubPageModal(p.categorySlug, p.pageSlug)}
+                                      className="p-1 text-slate-400 hover:text-indigo-700 hover:bg-indigo-50 rounded transition"
+                                      title={`Add subpage under ${p.titleEn || p.title}`}
                                     >
-                                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                      <FolderTree className="w-3.5 h-3.5" />
                                     </button>
                                     <Link
                                       to={`/page/${p.categorySlug}/${p.pageSlug}`}
@@ -2584,6 +2658,29 @@ export default function AdminPanel() {
                   </div>
 
                   <form onSubmit={handleSavePageEdit} className="space-y-3 text-xs">
+                    {/* Parent Page Selection (Optional) */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Parent Page (Optional)</span>
+                        <span className="text-[10px] font-normal text-slate-400">Select parent to nest under</span>
+                      </label>
+                      <select
+                        value={pageEditForm.parentPageSlug || ''}
+                        onChange={(e) => setPageEditForm({ ...pageEditForm, parentPageSlug: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                      >
+                        <option value="">None (Top-Level Category Page)</option>
+                        {fullPortalStructure
+                          .find((c) => c.categorySlug === editingPageModal.categorySlug)
+                          ?.pages?.filter((p) => p.pageSlug !== editingPageModal.pageSlug)
+                          ?.map((p) => (
+                            <option key={p.pageSlug} value={p.pageSlug}>
+                              {p.parentPageSlug ? `  ↳ ${p.titleEn || p.title}` : (p.titleEn || p.title)}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
                         Page Title *
@@ -2677,7 +2774,7 @@ export default function AdminPanel() {
                       </label>
                       <select
                         value={newPage.categorySlug}
-                        onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
+                        onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value, parentPageSlug: '' })}
                         className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
                       >
                         <option value="home">Home</option>
@@ -2691,6 +2788,35 @@ export default function AdminPanel() {
                         <option value="custom">+ Create Brand New Category</option>
                       </select>
                     </div>
+
+                    {/* Parent Page Selection (for unlimited nested subpages) */}
+                    {newPage.categorySlug !== 'custom' && (
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                          <span>Parent Page (Optional)</span>
+                          <span className="text-[10px] font-normal text-slate-400">Leave empty for category page</span>
+                        </label>
+                        <select
+                          value={newPage.parentPageSlug}
+                          onChange={(e) => setNewPage({ ...newPage, parentPageSlug: e.target.value })}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                        >
+                          <option value="">None (Top-Level Category Page)</option>
+                          {fullPortalStructure
+                            .find((c) => c.categorySlug === newPage.categorySlug)
+                            ?.pages?.map((p) => (
+                              <option key={p.pageSlug} value={p.pageSlug}>
+                                {p.parentPageSlug ? `  ↳ ${p.titleEn || p.title}` : (p.titleEn || p.title)}
+                              </option>
+                            ))}
+                        </select>
+                        {newPage.parentPageSlug && (
+                          <p className="text-[10px] text-amber-700 font-semibold mt-1">
+                            ↳ Will be created as a subpage under: <strong>{newPage.parentPageSlug}</strong>
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {newPage.categorySlug === 'custom' && (
                       <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 space-y-2">

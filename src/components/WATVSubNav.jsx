@@ -42,8 +42,44 @@ export default function WATVSubNav({
 
   const isAllActive = !activePageSlug || activePageSlug === 'all';
 
+  // Find the currently active page object
+  const currentPage = allowedPages.find(
+    (p) => (p.pageSlug || '').toLowerCase() === (activePageSlug || '').toLowerCase()
+  );
+
+  // Compute root ancestor slug so parent tab remains highlighted when visiting a subpage
+  const findRootSlug = (pSlug) => {
+    const p = (category?.pages || []).find(
+      (x) => (x.pageSlug || '').toLowerCase() === (pSlug || '').toLowerCase()
+    );
+    if (p?.parentPageSlug) return findRootSlug(p.parentPageSlug);
+    return p?.pageSlug || pSlug;
+  };
+  const activeRootSlug = currentPage?.parentPageSlug
+    ? findRootSlug(currentPage.parentPageSlug)
+    : activePageSlug;
+
+  // Root pages (pages without parentPageSlug) for primary category bar
+  const rootPages = allowedPages.filter((sp) => !sp.parentPageSlug);
+
+  // Determine if a secondary tier should be shown for subpages
+  const tier2ParentSlug = currentPage?.parentPageSlug
+    ? currentPage.parentPageSlug
+    : (allowedPages.some(
+        (p) => (p.parentPageSlug || '').toLowerCase() === (activePageSlug || '').toLowerCase()
+      )
+        ? activePageSlug
+        : null);
+
+  const tier2Subpages = tier2ParentSlug
+    ? allowedPages.filter(
+        (sp) => (sp.parentPageSlug || '').toLowerCase() === tier2ParentSlug.toLowerCase()
+      )
+    : [];
+
   return (
     <div className={`bg-white border-b border-slate-200/90 sticky top-[64px] z-30 shadow-2xs ${className}`}>
+      {/* Primary Category Subnav Bar */}
       <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-8">
         <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-2.5 scrollbar-none text-xs sm:text-[13px]">
           {/* "All" Link */}
@@ -58,9 +94,11 @@ export default function WATVSubNav({
             {isTelugu ? 'అన్ని' : 'All'}
           </Link>
 
-          {/* Subpages Links */}
-          {allowedPages.map((sp) => {
-            const isActive = activePageSlug === sp.pageSlug;
+          {/* Root Pages Links */}
+          {rootPages.map((sp) => {
+            const isActive =
+              activePageSlug === sp.pageSlug ||
+              (activeRootSlug && activeRootSlug === sp.pageSlug);
             const title = sp.title || (isTelugu ? sp.titleTe : sp.titleEn);
 
             return (
@@ -91,6 +129,44 @@ export default function WATVSubNav({
           )}
         </nav>
       </div>
+
+      {/* Secondary Tier: Direct Subpages Bar when visiting a page with subpages */}
+      {tier2Subpages.length > 0 && (
+        <div className="bg-slate-50/90 border-t border-slate-100 py-1.5 px-4 sm:px-8">
+          <div className="w-full max-w-[1400px] mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[12px]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1 shrink-0">
+              Subpages:
+            </span>
+            <Link
+              to={`/page/${categorySlug}/${tier2ParentSlug}`}
+              className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition ${
+                activePageSlug === tier2ParentSlug
+                  ? 'bg-amber-100 text-amber-950 font-extrabold shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              Overview
+            </Link>
+            {tier2Subpages.map((sp) => {
+              const isActive = activePageSlug === sp.pageSlug;
+              const title = sp.title || (isTelugu ? sp.titleTe : sp.titleEn);
+              return (
+                <Link
+                  key={sp.pageSlug}
+                  to={`/page/${categorySlug}/${sp.pageSlug}`}
+                  className={`px-2.5 py-1 rounded-md whitespace-nowrap font-medium transition ${
+                    isActive
+                      ? 'bg-amber-100 text-amber-950 font-bold shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  {title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,8 @@ import {
   mergePortalStructure,
   findPageInfo,
   formatSlugToTitle,
+  getSubpages as getSubpagesFromStructure,
+  getPageBreadcrumbChain as getPageBreadcrumbChainFromStructure,
 } from '../config/portalStructure';
 
 const PortalContext = createContext(null);
@@ -47,6 +49,16 @@ export function PortalProvider({ children }) {
     return findPageInfo(portalStructure, categorySlug, pageSlug);
   };
 
+  // Helper to get all direct subpages under any page
+  const getSubpages = (categorySlug, pageSlug) => {
+    return getSubpagesFromStructure(portalStructure, categorySlug, pageSlug);
+  };
+
+  // Helper to get full breadcrumb chain from root page to current subpage
+  const getPageBreadcrumbChain = (categorySlug, pageSlug) => {
+    return getPageBreadcrumbChainFromStructure(portalStructure, categorySlug, pageSlug);
+  };
+
   // Helper to get formatted or typed page title
   const getPageTitle = (categorySlug, pageSlug, isTelugu = false) => {
     const { page } = findPageInfo(portalStructure, categorySlug, pageSlug);
@@ -56,13 +68,17 @@ export function PortalProvider({ children }) {
     return formatSlugToTitle(pageSlug);
   };
 
-  // Flattened list of all available pages across all categories
+  // Flattened list of all available pages and subpages across all categories
   const allAvailablePages = portalStructure.flatMap((cat) =>
     (cat.pages || []).map((p) => ({
       pageSlug: p.pageSlug,
+      parentPageSlug: p.parentPageSlug || null,
       title: p.title || p.titleEn || formatSlugToTitle(p.pageSlug),
       categorySlug: cat.categorySlug,
       categoryTitle: cat.titleEn,
+      iconName: p.iconName || 'FileText',
+      iconEmoji: p.iconEmoji || null,
+      isCustom: Boolean(p.isCustom),
     }))
   );
 
@@ -74,6 +90,8 @@ export function PortalProvider({ children }) {
         loading,
         getPageInfo,
         getPageTitle,
+        getSubpages,
+        getPageBreadcrumbChain,
         allAvailablePages,
       }}
     >
