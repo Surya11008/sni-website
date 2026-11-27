@@ -127,7 +127,6 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100/80 via-indigo-50/70 to-purple-100/80 text-slate-900 flex flex-col selection:bg-amber-300">
-      <SniTopHeader />
       <div className="flex-1 flex justify-center">
         {/* Universal Responsive Container: compact mobile frame on phone, expansive modern portal on PC */}
         <div className="w-full max-w-md sm:max-w-2xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl bg-white/95 min-h-screen flex flex-col shadow-2xl relative md:border-x-2 border-indigo-200 transition-all">
