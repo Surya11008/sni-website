@@ -36,11 +36,36 @@ export const EVENT_TYPES = [
 ];
 
 export const RECURRENCE_OPTIONS = [
-  { id: 'none', label: 'One-Time Event (ఒకేసారి)' },
-  { id: 'weekly_sabbath', label: 'Every Sabbath (ప్రతి విశ్రాంతి దినం)' },
-  { id: 'weekly_tuesday', label: 'Every Tuesday (ప్రతి మంగళవారం)' },
-  { id: 'monthly', label: 'Monthly (ప్రతి నెలా)' },
-  { id: 'annual', label: 'Annual Sacred Feast (వార్షిక పండుగ)' },
+  // 1. One-Time
+  { id: 'none', label: 'One-Time Event', group: 'One-Time' },
+
+  // 2. Week Days
+  { id: 'daily', label: 'Daily (Every Day)', group: 'Week Days' },
+  { id: 'weekdays', label: 'Weekdays (Monday - Friday)', group: 'Week Days' },
+  { id: 'weekends', label: 'Weekends (Saturday & Sunday)', group: 'Week Days' },
+  { id: 'weekly_sunday', label: 'Every Sunday', group: 'Week Days' },
+  { id: 'weekly_monday', label: 'Every Monday', group: 'Week Days' },
+  { id: 'weekly_tuesday', label: 'Every Tuesday', group: 'Week Days' },
+  { id: 'weekly_wednesday', label: 'Every Wednesday', group: 'Week Days' },
+  { id: 'weekly_thursday', label: 'Every Thursday', group: 'Week Days' },
+  { id: 'weekly_friday', label: 'Every Friday', group: 'Week Days' },
+  { id: 'weekly_sabbath', label: 'Every Sabbath (Saturday)', group: 'Week Days' },
+  { id: 'biweekly', label: 'Every 2 Weeks (Bi-weekly)', group: 'Week Days' },
+
+  // 3. Which day on Month (Monthly)
+  { id: 'monthly_date', label: 'Monthly (On this Date)', group: 'Monthly' },
+  { id: 'monthly_first_sunday', label: 'Monthly (1st Sunday of the Month)', group: 'Monthly' },
+  { id: 'monthly_first_sabbath', label: 'Monthly (1st Sabbath / Saturday)', group: 'Monthly' },
+  { id: 'monthly_second_sabbath', label: 'Monthly (2nd Sabbath / Saturday)', group: 'Monthly' },
+  { id: 'monthly_third_sabbath', label: 'Monthly (3rd Sabbath / Saturday)', group: 'Monthly' },
+  { id: 'monthly_last_sabbath', label: 'Monthly (Last Sabbath / Saturday)', group: 'Monthly' },
+  { id: 'monthly_last_day', label: 'Monthly (Last Day of the Month)', group: 'Monthly' },
+
+  // 4. In Year (Annual / Yearly)
+  { id: 'annual_date', label: 'Annually / Yearly (Every Year on this Date)', group: 'In Year' },
+  { id: 'annual_feast', label: 'Annual Sacred Feast (Sacred Calendar)', group: 'In Year' },
+  { id: 'annual_spring_feasts', label: 'Annual Spring Feasts (Passover / Unleavened Bread)', group: 'In Year' },
+  { id: 'annual_autumn_feasts', label: 'Annual Autumn Feasts (Trumpets / Atonement / Tabernacles)', group: 'In Year' },
 ];
 
 // Helper to extract 'YYYY-MM-DD' from item

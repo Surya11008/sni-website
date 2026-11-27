@@ -23,6 +23,7 @@ import RichContentRenderer from '../components/RichContentRenderer';
 import PhotoGalleryManager from '../components/PhotoGalleryManager';
 import AudioSpeakerButton from '../components/AudioSpeakerButton';
 import { NotionCover, NotionToolbar, NotionEditor, NotionEmpty, NotionLinkPreview, NotionEmbed, NotionEmbedDrawer } from '../components/notion';
+import AllEmojisPicker from '../components/common/AllEmojisPicker';
 import WATVSubNav from '../components/WATVSubNav';
 import OnlineWorshipSection from '../components/OnlineWorshipSection';
 import CalendarScheduleHub, {
@@ -155,6 +156,130 @@ export default function DynamicPage() {
   const [recurrence, setRecurrence] = useState('none');
   const [showCalendarScheduler, setShowCalendarScheduler] = useState(false);
   const [copiedScheduleId, setCopiedScheduleId] = useState(null);
+
+  // Custom Event Types with localStorage persistence
+  const [customEventTypes, setCustomEventTypes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sni_custom_event_types');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isAddingNewEventType, setIsAddingNewEventType] = useState(false);
+  const [newEventTypeName, setNewEventTypeName] = useState('');
+  const [newEventTypeEmoji, setNewEventTypeEmoji] = useState('⭐');
+  const [showEventTypeEmojiPicker, setShowEventTypeEmojiPicker] = useState(false);
+
+  // Custom Recurrence options with localStorage persistence
+  const [customRecurrences, setCustomRecurrences] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sni_custom_recurrences');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isAddingCustomRecurrence, setIsAddingCustomRecurrence] = useState(false);
+  const [newCustomRecurrenceText, setNewCustomRecurrenceText] = useState('');
+
+  // Custom Venues with localStorage persistence
+  const [customVenues, setCustomVenues] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sni_custom_venues');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isAddingCustomVenue, setIsAddingCustomVenue] = useState(false);
+  const [newCustomVenueText, setNewCustomVenueText] = useState('');
+
+  // Custom Time field
+  const [isAddingCustomTime, setIsAddingCustomTime] = useState(false);
+  const [newCustomTimeText, setNewCustomTimeText] = useState('');
+
+  const STANDARD_TIMES = [
+    '10:00 AM - 12:30 PM',
+    '06:00 PM - 08:30 PM',
+    '05:00 AM - 06:30 AM',
+    '02:00 PM - 04:30 PM',
+    '07:30 PM - 09:30 PM',
+    'All Day',
+  ];
+
+  const STANDARD_VENUES = [
+    'Main Fellowship Hall',
+    'Upper Room Sanctuary',
+    'Prayer Hall',
+    'Youth Center',
+    'Online Zoom / Live Stream',
+  ];
+
+  const handleAddNewEventType = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newEventTypeName.trim()) return;
+    const name = newEventTypeName.trim();
+    const newType = {
+      id: name,
+      labelEn: name,
+      icon: newEventTypeEmoji || '⭐',
+      color: 'bg-amber-50 text-amber-800 border-amber-200',
+      dot: 'bg-amber-600',
+    };
+    const updated = [...customEventTypes.filter((t) => t.id !== name), newType];
+    setCustomEventTypes(updated);
+    try {
+      localStorage.setItem('sni_custom_event_types', JSON.stringify(updated));
+    } catch {}
+    setEventType(name);
+    setNewEventTypeName('');
+    setIsAddingNewEventType(false);
+    setShowEventTypeEmojiPicker(false);
+  };
+
+  const handleAddCustomRecurrence = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newCustomRecurrenceText.trim()) return;
+    const text = newCustomRecurrenceText.trim();
+    const updated = Array.from(new Set([...customRecurrences, text]));
+    setCustomRecurrences(updated);
+    try {
+      localStorage.setItem('sni_custom_recurrences', JSON.stringify(updated));
+    } catch {}
+    setRecurrence(text);
+    setNewCustomRecurrenceText('');
+    setIsAddingCustomRecurrence(false);
+  };
+
+  const handleAddCustomVenue = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newCustomVenueText.trim()) return;
+    const text = newCustomVenueText.trim();
+    const updated = Array.from(new Set([...customVenues, text]));
+    setCustomVenues(updated);
+    try {
+      localStorage.setItem('sni_custom_venues', JSON.stringify(updated));
+    } catch {}
+    setEventLocation(text);
+    setNewCustomVenueText('');
+    setIsAddingCustomVenue(false);
+  };
+
+  const handleAddCustomTime = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newCustomTimeText.trim()) return;
+    setEventTime(newCustomTimeText.trim());
+    setNewCustomTimeText('');
+    setIsAddingCustomTime(false);
+  };
+
+  const getRecurrenceDisplay = (rec) => {
+    if (!rec || rec === 'none') return '';
+    const found = RECURRENCE_OPTIONS.find((r) => r.id === rec);
+    if (found) return found.label;
+    return rec.replace('weekly_', '').replace(/_/g, ' ');
+  };
 
   const isAdmin =
     (userProfile?.role === 'admin' || userProfile?.role === 'ADMIN') &&
@@ -640,7 +765,7 @@ export default function DynamicPage() {
                   <div className="flex items-center justify-between border-b border-amber-200/60 pb-2.5">
                     <div className="flex items-center gap-2 font-black text-slate-800">
                       <CalendarDays className="w-4 h-4 text-[#C59B27]" />
-                      <span className="text-sm">📅 Schedule & Calendar Details (తేదీ & సమయ పట్టిక)</span>
+                      <span className="text-sm font-bold">📅 Schedule & Calendar Details</span>
                     </div>
                     <span className="text-[11px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
                       Calendar Integration
@@ -648,10 +773,11 @@ export default function DynamicPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* 1. Event / Schedule Date */}
                     <div>
                       <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>Event / Schedule Date (తేదీ)</span>
+                        <span>Event / Schedule Date</span>
                       </label>
                       <input
                         type="date"
@@ -661,68 +787,286 @@ export default function DynamicPage() {
                       />
                     </div>
 
+                    {/* 2. Time / Hours with presets & custom add */}
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>Time / Hours (సమయం)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={eventTime}
-                        onChange={(e) => setEventTime(e.target.value)}
-                        placeholder="e.g. 10:00 AM - 12:30 PM"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
-                      />
-                    </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-[#C59B27]" />
+                          <span>Time / Hours</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingCustomTime(!isAddingCustomTime)}
+                          className="text-[11px] font-bold text-amber-800 hover:text-amber-900 transition cursor-pointer"
+                        >
+                          {isAddingCustomTime ? 'Cancel' : '+ Add Time'}
+                        </button>
+                      </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>Category / Event Type</span>
-                      </label>
-                      <select
-                        value={eventType}
-                        onChange={(e) => setEventType(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
-                      >
-                        {EVENT_TYPES.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.icon} {t.labelEn} ({t.labelTe})
-                          </option>
+                      {isAddingCustomTime ? (
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <input
+                            type="text"
+                            value={newCustomTimeText}
+                            onChange={(e) => setNewCustomTimeText(e.target.value)}
+                            placeholder="e.g. 07:00 PM - 09:00 PM"
+                            className="flex-1 p-2 rounded-xl border border-amber-300 bg-amber-50/50 text-xs font-semibold focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomTime}
+                            className="px-2.5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold text-xs cursor-pointer"
+                          >
+                            Set
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={eventTime}
+                          onChange={(e) => setEventTime(e.target.value)}
+                          placeholder="e.g. 10:00 AM - 12:30 PM"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                        />
+                      )}
+
+                      {/* Quick Time Presets */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {STANDARD_TIMES.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setEventTime(t)}
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer border ${
+                              eventTime === t
+                                ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B]'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {t}
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>Venue / Location (స్థలం)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={eventLocation}
-                        onChange={(e) => setEventLocation(e.target.value)}
-                        placeholder="e.g. Main Fellowship Hall, Upper Room"
-                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
-                      />
+                    {/* 3. Category / Event Type with Add New & All Emojis */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-[#C59B27]" />
+                          <span>Category / Event Type</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingNewEventType(!isAddingNewEventType)}
+                          className="text-[11px] font-bold text-amber-800 hover:text-amber-900 transition cursor-pointer"
+                        >
+                          {isAddingNewEventType ? 'Cancel' : '+ Add New Type'}
+                        </button>
+                      </div>
+
+                      {isAddingNewEventType ? (
+                        <div className="p-2.5 rounded-xl border border-amber-300 bg-amber-50/70 space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setShowEventTypeEmojiPicker(!showEventTypeEmojiPicker)}
+                              className="w-8 h-8 rounded-lg bg-white border border-amber-300 flex items-center justify-center text-lg hover:scale-105 transition cursor-pointer shrink-0"
+                              title="Select Emoji / Icon"
+                            >
+                              {newEventTypeEmoji}
+                            </button>
+                            <input
+                              type="text"
+                              value={newEventTypeName}
+                              onChange={(e) => setNewEventTypeName(e.target.value)}
+                              placeholder="Type name (e.g. Fasting Prayer)"
+                              className="flex-1 p-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddNewEventType}
+                              className="px-2.5 py-1.5 rounded-lg bg-[#071B3B] text-[#F4B942] font-bold text-xs cursor-pointer"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          {showEventTypeEmojiPicker && (
+                            <div className="absolute right-0 top-full mt-2 z-50">
+                              <AllEmojisPicker
+                                selectedEmoji={newEventTypeEmoji}
+                                onSelectEmoji={(em) => setNewEventTypeEmoji(em)}
+                                onClose={() => setShowEventTypeEmojiPicker(false)}
+                                title="Pick Event Type Emoji"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <select
+                          value={eventType}
+                          onChange={(e) => {
+                            if (e.target.value === '__NEW__') {
+                              setIsAddingNewEventType(true);
+                            } else {
+                              setEventType(e.target.value);
+                            }
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                        >
+                          {[...EVENT_TYPES, ...customEventTypes].map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.icon} {t.labelEn}
+                            </option>
+                          ))}
+                          <option value="__NEW__">+ Add New Event Type...</option>
+                        </select>
+                      )}
                     </div>
 
+                    {/* 4. Venue / Location with Suggestions & Add New */}
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                        <Repeat className="w-3.5 h-3.5 text-[#C59B27]" />
-                        <span>Recurrence (పునరావృతం)</span>
-                      </label>
-                      <select
-                        value={recurrence}
-                        onChange={(e) => setRecurrence(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
-                      >
-                        {RECURRENCE_OPTIONS.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.label}
-                          </option>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#C59B27]" />
+                          <span>Venue / Location</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingCustomVenue(!isAddingCustomVenue)}
+                          className="text-[11px] font-bold text-amber-800 hover:text-amber-900 transition cursor-pointer"
+                        >
+                          {isAddingCustomVenue ? 'Cancel' : '+ Add Venue'}
+                        </button>
+                      </div>
+
+                      {isAddingCustomVenue ? (
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <input
+                            type="text"
+                            value={newCustomVenueText}
+                            onChange={(e) => setNewCustomVenueText(e.target.value)}
+                            placeholder="e.g. Garden Pavilion, Bethel Hall"
+                            className="flex-1 p-2 rounded-xl border border-amber-300 bg-amber-50/50 text-xs font-semibold focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomVenue}
+                            className="px-2.5 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold text-xs cursor-pointer"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={eventLocation}
+                          onChange={(e) => setEventLocation(e.target.value)}
+                          placeholder="e.g. Main Fellowship Hall, Upper Room"
+                          className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                        />
+                      )}
+
+                      {/* Quick Venue Pills */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {[...STANDARD_VENUES, ...customVenues].slice(0, 4).map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setEventLocation(v)}
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer border ${
+                              eventLocation === v
+                                ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B]'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {v}
+                          </button>
                         ))}
-                      </select>
+                      </div>
+                    </div>
+
+                    {/* 5. Recurrence with Week Days, Monthly (which day), In Year, and Add Custom */}
+                    <div className="sm:col-span-2 lg:col-span-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                          <Repeat className="w-3.5 h-3.5 text-[#C59B27]" />
+                          <span>Recurrence</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingCustomRecurrence(!isAddingCustomRecurrence)}
+                          className="text-[11px] font-bold text-amber-800 hover:text-amber-900 transition cursor-pointer"
+                        >
+                          {isAddingCustomRecurrence ? 'Cancel' : '+ Add Custom Recurrence'}
+                        </button>
+                      </div>
+
+                      {isAddingCustomRecurrence ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={newCustomRecurrenceText}
+                            onChange={(e) => setNewCustomRecurrenceText(e.target.value)}
+                            placeholder="e.g. Every 1st and 3rd Sabbath at 10 AM, Quarterly"
+                            className="flex-1 p-2 rounded-xl border border-amber-300 bg-amber-50/50 text-xs font-semibold focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomRecurrence}
+                            className="px-3 py-2 rounded-xl bg-[#071B3B] text-[#F4B942] font-bold text-xs cursor-pointer"
+                          >
+                            Set Recurrence
+                          </button>
+                        </div>
+                      ) : (
+                        <select
+                          value={recurrence}
+                          onChange={(e) => {
+                            if (e.target.value === '__NEW__') {
+                              setIsAddingCustomRecurrence(true);
+                            } else {
+                              setRecurrence(e.target.value);
+                            }
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:ring-2 focus:ring-amber-500/20 focus:outline-none"
+                        >
+                          <optgroup label="One-Time Event">
+                            <option value="none">One-Time Event</option>
+                          </optgroup>
+                          <optgroup label="Week Days">
+                            {RECURRENCE_OPTIONS.filter((r) => r.group === 'Week Days').map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Which Day on Month (Monthly)">
+                            {RECURRENCE_OPTIONS.filter((r) => r.group === 'Monthly').map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="In Year (Yearly)">
+                            {RECURRENCE_OPTIONS.filter((r) => r.group === 'In Year').map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          {customRecurrences.length > 0 && (
+                            <optgroup label="Custom Added Recurrences">
+                              {customRecurrences.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          <option value="__NEW__">+ Add Custom Recurrence...</option>
+                        </select>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -963,7 +1307,7 @@ export default function DynamicPage() {
                     )}
                     {activeArticle.recurrence && activeArticle.recurrence !== 'none' && (
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
-                        Repeat: {activeArticle.recurrence.replace('weekly_', '').toUpperCase()}
+                        Repeat: {getRecurrenceDisplay(activeArticle.recurrence)}
                       </span>
                     )}
                   </div>
@@ -1973,7 +2317,7 @@ export default function DynamicPage() {
                               </div>
                               {item.recurrence && item.recurrence !== 'none' && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white border border-amber-200 text-amber-900 shrink-0">
-                                  Repeat: {item.recurrence.replace('weekly_', '').toUpperCase()}
+                                  Repeat: {getRecurrenceDisplay(item.recurrence)}
                                 </span>
                               )}
                             </div>

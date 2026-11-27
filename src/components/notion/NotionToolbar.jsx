@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Smile, X, Tag, Paperclip, Calendar, Sparkles, Link as LinkIcon } from 'lucide-react';
+import AllEmojisPicker from '../common/AllEmojisPicker';
 
 const NOTION_EMOJIS = [
   '📖', '✝️', '🕊️', '⛪', '📜', '🎵', '🙏', '🌟',
@@ -64,33 +65,15 @@ export function NotionToolbar({
           </div>
         )}
 
-        {/* Emoji Picker Popover */}
+        {/* All Emojis Picker Popover */}
         {showIconPicker && editable && (
-          <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-40 animate-in fade-in zoom-in-95 duration-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700">Choose Icon</span>
-              <button
-                type="button"
-                onClick={() => setShowIconPicker(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="grid grid-cols-6 gap-2">
-              {NOTION_EMOJIS.map((em, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSelectIcon(em)}
-                  className={`w-9 h-9 rounded-xl hover:bg-amber-50 flex items-center justify-center text-xl transition cursor-pointer ${
-                    icon === em ? 'bg-amber-100 ring-2 ring-[#C59B27]' : ''
-                  }`}
-                >
-                  {em}
-                </button>
-              ))}
-            </div>
+          <div className="absolute left-0 top-full mt-2 z-50">
+            <AllEmojisPicker
+              selectedEmoji={icon}
+              onSelectEmoji={handleSelectIcon}
+              onClose={() => setShowIconPicker(false)}
+              title="Select Page Icon / Emoji"
+            />
           </div>
         )}
       </div>
