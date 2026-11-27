@@ -1220,7 +1220,7 @@
                     </div>
 
                     <button type="submit" class="btn-submit btn-join-special" id="joinSubmitBtn">
-                        <span>✨ Continue to Verification →</span>
+                        <span>✨ Submit Application for Approval →</span>
                     </button>
 
                     <div class="auth-switch-prompt">
@@ -1229,100 +1229,19 @@
                     
                 </form>
 
-                <!-- 3. PHONE NUMBER REQUIRED STEP (MATCHES USER MOCKUP EXACTLY) -->
-                <div id="phoneStepView" class="phone-step-view">
-                    <h2 class="phone-heading">Phone number required</h2>
-                    <p class="phone-subheading">Add your phone number to continue. We'll send a one-time code to verify it.</p>
-
-                    <!-- Country Selector -->
-                    <div class="country-select-wrap">
-                        <button type="button" class="country-select-btn" id="countrySelectBtn">
-                            <span id="countrySelectedText">India (+91)</span>
-                            <span style="font-size: 14px; color: #64748b;">▼</span>
-                        </button>
-                        <div class="country-dropdown-menu" id="countryDropdownMenu"></div>
-                    </div>
-
-                    <!-- Phone Number Floating Input -->
-                    <div class="phone-floating-input-wrap">
-                        <label class="phone-floating-label">Phone number</label>
-                        <div class="phone-input-box">
-                            <span class="phone-dial-code" id="phoneDialCodePrefix">+91</span>
-                            <input type="tel" id="phoneNativeInput" class="phone-native-input" placeholder="Enter mobile number" inputmode="numeric" pattern="[0-9]*" autocomplete="tel">
-                        </div>
-                    </div>
-
-                    <!-- Send Code Via -->
-                    <div class="send-via-section">
-                        <label class="send-via-label">Send code via</label>
-                        <div class="channel-pill-group">
-                            <button type="button" class="channel-pill-btn active" id="channelWhatsappBtn">
-                                <svg style="width: 16px; height: 16px; fill: #25D366;" viewBox="0 0 24 24">
-                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                                </svg>
-                                <span>WhatsApp</span>
-                            </button>
-                            <button type="button" class="channel-pill-btn" id="channelSmsBtn">
-                                <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                                </svg>
-                                <span>Text Message</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Black Continue Button -->
-                    <button type="button" class="btn-continue-black" id="phoneContinueBtn">
-                        <span>Continue</span>
-                    </button>
-
-                    <div style="text-align: center; margin-top: 18px;">
-                        <a id="backToJoinFormLink" style="color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;">← Back to account details</a>
-                    </div>
-                </div>
-
-                <!-- 4. OTP VERIFICATION STEP -->
-                <div id="otpStepView" class="otp-step-view">
-                    <div style="text-align: center; margin-bottom: 18px;">
-                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px;">
-                            💬
-                        </div>
-                        <h2 class="phone-heading">Enter verification code</h2>
-                        <p class="phone-subheading" id="otpSubtitle">Enter the 6-digit code sent to your phone.</p>
-                    </div>
-
-                    <div id="otpWhatsappHelper" style="text-align: center; margin-bottom: 16px; display: none;">
-                        <a id="otpWhatsappLink" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 20px; font-size: 12.5px; font-weight: 700; text-decoration: none;">
-                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
-                            <span>Open WhatsApp code preview →</span>
-                        </a>
-                    </div>
-
-                    <input type="text" id="otpNativeInput" class="otp-input-large" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="• • • • • •" autocomplete="one-time-code">
-
-                    <button type="button" class="btn-continue-black" id="otpVerifyBtn">
-                        <span>Verify &amp; Submit to Admin</span>
-                    </button>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 12.5px; padding: 0 4px;">
-                        <a id="resendOtpBtn" style="color: #0f172a; font-weight: 700; cursor: pointer; text-decoration: underline;">Resend code</a>
-                        <a id="changePhoneBtn" style="color: #64748b; font-weight: 600; cursor: pointer;">Change phone number</a>
-                    </div>
-                </div>
-
                 <!-- 5. SUCCESS STEP (WAITING FOR ADMIN APPROVAL) -->
                 <div id="successStepView" class="success-step-view">
                     <div style="text-align: center; padding: 12px 0;">
                         <div style="width: 60px; height: 60px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);">
                             ✓
                         </div>
-                        <h2 class="phone-heading">Phone Number Verified!</h2>
+                        <h2 class="phone-heading">Registration Submitted!</h2>
                         <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 16px; margin: 18px 0; text-align: left; font-size: 13.5px; color: #78350f; line-height: 1.55;">
                             <p style="font-weight: 800; color: #451a03; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                                 <span>⏳</span> Waiting for Admin Approval
                             </p>
                             <p id="successMessageText">
-                                Your phone number has been verified! Your application has been submitted to Admin (info@sni.org.in).
+                                Your registration request has been submitted to Admin (info@sni.org.in).
                             </p>
                             <p style="margin-top: 6px; color: #92400e; font-size: 12.5px;">
                                 Please wait until the Admin approves your account before signing in.
@@ -1849,59 +1768,24 @@
                     joinedAt: new Date().toISOString()
                 };
 
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨ Continue to Verification →</span>';
+                submitBtn.innerHTML = '<span>Submitting Application...</span>';
 
-                // Transition to Step 2: Phone number required (Mockup screen)
-                showStep('phone');
-            } catch(err) {
-                console.warn(err);
-                pendingRegDetails = { fullName, userId, pass, joinedAt: new Date().toISOString() };
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨ Continue to Verification →</span>';
-                showStep('phone');
-            }
-        });
-
-        // Step 2: Continue button on Phone screen
-        const phoneContinueBtn = document.getElementById('phoneContinueBtn');
-        phoneContinueBtn.addEventListener('click', async () => {
-            clearAlert();
-            const phoneDigits = phoneNativeInput.value.replace(/[^0-9]/g, '').trim();
-            if (!phoneDigits || phoneDigits.length < 8) {
-                showAlert('Please enter a valid mobile number (at least 8-10 digits).');
-                return;
-            }
-
-            const fullPhone = `${selectedCountry.code}${phoneDigits}`;
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
-            phoneContinueBtn.disabled = true;
-            phoneContinueBtn.innerHTML = '<span>Sending code...</span>';
-
-            const userId = pendingRegDetails.userId;
-            const fullName = pendingRegDetails.fullName;
-            const pass = pendingRegDetails.pass;
-
-            try {
-                // Save unverified user in RTDB
+                const isAdm = userId === 'surya11008';
+                const targetStatus = isAdm ? 'approved' : 'pending';
                 const newUser = {
                     userId: userId,
                     fullName: fullName,
-                    contact: fullPhone,
-                    phone: fullPhone,
+                    contact: userId,
+                    phone: '',
                     email: '',
                     password: pass,
-                    role: 'MEM',
-                    status: 'unverified',
-                    contactVerified: false,
+                    plainPassword: pass,
+                    role: isAdm ? 'ADMIN' : 'MEM',
+                    status: targetStatus,
+                    contactVerified: true,
                     phoneVerified: false,
                     emailVerified: false,
-                    isVerified: false,
-                    verificationOtp: otp,
-                    otpExpiresAt: expiresAt,
-                    verificationChannel: selectedChannel,
+                    isVerified: true,
                     joinedAt: pendingRegDetails.joinedAt,
                     adminEmail: 'info@sni.org.in'
                 };
@@ -1912,87 +1796,6 @@
                     body: JSON.stringify(newUser)
                 });
 
-                activeOtpData = {
-                    userId,
-                    phone: fullPhone,
-                    otp,
-                    channel: selectedChannel,
-                    expiresAt
-                };
-
-                // Setup OTP view
-                document.getElementById('otpSubtitle').innerHTML = `Enter the 6-digit code sent via <strong>${selectedChannel === 'whatsapp' ? 'WhatsApp' : 'Text Message'}</strong> to <strong>${fullPhone}</strong>.`;
-
-                const whatsappHelper = document.getElementById('otpWhatsappHelper');
-                const whatsappLink = document.getElementById('otpWhatsappLink');
-                if (selectedChannel === 'whatsapp') {
-                    whatsappHelper.style.display = 'block';
-                    whatsappLink.href = `https://api.whatsapp.com/send?phone=${fullPhone.replace('+', '')}&text=${encodeURIComponent('SNI Verification Code: ' + otp + ' for ' + userId)}`;
-                } else {
-                    whatsappHelper.style.display = 'none';
-                }
-
-                phoneContinueBtn.disabled = false;
-                phoneContinueBtn.innerHTML = '<span>Continue</span>';
-
-                showStep('otp');
-            } catch (err) {
-                console.error(err);
-                showAlert('Network error sending code. Please try again.');
-                phoneContinueBtn.disabled = false;
-                phoneContinueBtn.innerHTML = '<span>Continue</span>';
-            }
-        });
-
-        // Step 3: Verify OTP code
-        const otpVerifyBtn = document.getElementById('otpVerifyBtn');
-        const otpNativeInput = document.getElementById('otpNativeInput');
-
-        otpVerifyBtn.addEventListener('click', async () => {
-            clearAlert();
-            const enteredCode = otpNativeInput.value.replace(/[^0-9]/g, '').trim();
-            if (enteredCode.length < 6) {
-                showAlert('Please enter the complete 6-digit verification code.');
-                return;
-            }
-
-            const userId = activeOtpData?.userId || pendingRegDetails?.userId;
-            otpVerifyBtn.disabled = true;
-            otpVerifyBtn.innerHTML = '<span>Verifying...</span>';
-
-            try {
-                // Fetch saved user data from RTDB to check OTP
-                const rtdbRes = await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`);
-                let userData = null;
-                if (rtdbRes.ok) {
-                    userData = await rtdbRes.json();
-                }
-
-                const expectedOtp = String(userData?.verificationOtp || activeOtpData?.otp || '').trim();
-
-                if (!expectedOtp || enteredCode !== expectedOtp) {
-                    showAlert('❌ Incorrect verification code. Please check and try again.');
-                    otpVerifyBtn.disabled = false;
-                    otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
-                    return;
-                }
-
-                const updatePayload = {
-                    status: 'pending',
-                    phoneVerified: true,
-                    contactVerified: true,
-                    isVerified: true,
-                    verifiedAt: new Date().toISOString()
-                };
-
-                // Patch RTDB
-                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatePayload)
-                });
-
-                // Dual sync to Firestore users collection
                 try {
                     await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/users/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
                         method: 'PATCH',
@@ -2002,19 +1805,19 @@
                                 id: { stringValue: userId },
                                 userId: { stringValue: userId },
                                 username: { stringValue: userId },
-                                fullName: { stringValue: pendingRegDetails.fullName },
-                                name: { stringValue: pendingRegDetails.fullName },
-                                contact: { stringValue: activeOtpData.phone },
-                                phone: { stringValue: activeOtpData.phone },
+                                fullName: { stringValue: fullName },
+                                name: { stringValue: fullName },
+                                contact: { stringValue: userId },
+                                phone: { stringValue: '' },
                                 email: { stringValue: '' },
-                                password: { stringValue: pendingRegDetails.pass },
-                                plainPassword: { stringValue: pendingRegDetails.pass },
-                                role: { stringValue: 'MEM' },
-                                status: { stringValue: 'pending' },
+                                password: { stringValue: pass },
+                                plainPassword: { stringValue: pass },
+                                role: { stringValue: isAdm ? 'ADMIN' : 'MEM' },
+                                status: { stringValue: targetStatus },
                                 contactVerified: { booleanValue: true },
-                                phoneVerified: { booleanValue: true },
+                                phoneVerified: { booleanValue: false },
+                                emailVerified: { booleanValue: false },
                                 isVerified: { booleanValue: true },
-                                verifiedAt: { stringValue: updatePayload.verifiedAt },
                                 registeredAt: { stringValue: pendingRegDetails.joinedAt },
                                 createdAt: { stringValue: pendingRegDetails.joinedAt },
                                 adminEmail: { stringValue: 'info@sni.org.in' }
@@ -2023,83 +1826,58 @@
                     });
                 } catch(e) {}
 
-                // ONLY NOW forward to Firestore pending_registrations collection for Admin review
-                try {
-                    await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            fields: {
-                                id: { stringValue: userId },
-                                userId: { stringValue: userId },
-                                username: { stringValue: userId },
-                                name: { stringValue: pendingRegDetails.fullName },
-                                fullName: { stringValue: pendingRegDetails.fullName },
-                                contact: { stringValue: activeOtpData.phone },
-                                phone: { stringValue: activeOtpData.phone },
-                                email: { stringValue: '' },
-                                password: { stringValue: pendingRegDetails.pass },
-                                plainPassword: { stringValue: pendingRegDetails.pass },
-                                role: { stringValue: 'MEM' },
-                                status: { stringValue: 'pending' },
-                                contactVerified: { booleanValue: true },
-                                phoneVerified: { booleanValue: true },
-                                isVerified: { booleanValue: true },
-                                verifiedAt: { stringValue: updatePayload.verifiedAt },
-                                registeredAt: { stringValue: pendingRegDetails.joinedAt },
-                                createdAt: { stringValue: pendingRegDetails.joinedAt },
-                                adminEmail: { stringValue: 'info@sni.org.in' }
-                            }
-                        })
-                    });
-                } catch(e) {}
+                if (!isAdm) {
+                    try {
+                        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(userId)}?key=${FIREBASE_API_KEY}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fields: {
+                                    id: { stringValue: userId },
+                                    userId: { stringValue: userId },
+                                    username: { stringValue: userId },
+                                    name: { stringValue: fullName },
+                                    fullName: { stringValue: fullName },
+                                    contact: { stringValue: userId },
+                                    phone: { stringValue: '' },
+                                    email: { stringValue: '' },
+                                    password: { stringValue: pass },
+                                    plainPassword: { stringValue: pass },
+                                    role: { stringValue: 'MEM' },
+                                    status: { stringValue: 'pending' },
+                                    contactVerified: { booleanValue: true },
+                                    phoneVerified: { booleanValue: false },
+                                    isVerified: { booleanValue: true },
+                                    registeredAt: { stringValue: pendingRegDetails.joinedAt },
+                                    createdAt: { stringValue: pendingRegDetails.joinedAt },
+                                    adminEmail: { stringValue: 'info@sni.org.in' }
+                                }
+                            })
+                        });
+                    } catch(e) {}
+                }
 
-                otpVerifyBtn.disabled = false;
-                otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Submit Application for Approval →</span>';
 
-                document.getElementById('successMessageText').innerHTML = `Your phone number (<strong>${activeOtpData.phone}</strong>) has been verified and your registration request for SNI ID (<strong>${userId}</strong>) has been submitted to Admin (<strong>info@sni.org.in</strong>).`;
+                document.getElementById('successMessageText').innerHTML = `Your registration request for SNI ID (<strong>${userId}</strong>) has been submitted to Admin (<strong>info@sni.org.in</strong>).`;
 
                 showStep('success');
             } catch(err) {
-                console.error(err);
-                showAlert('Error verifying OTP. Please try again.');
-                otpVerifyBtn.disabled = false;
-                otpVerifyBtn.innerHTML = '<span>Verify &amp; Submit to Admin</span>';
+                console.warn(err);
+                showAlert('Error submitting registration. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>✨ Submit Application for Approval →</span>';
             }
         });
 
-        // Resend OTP
-        document.getElementById('resendOtpBtn').addEventListener('click', async () => {
-            const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-            const userId = activeOtpData.userId;
-
-            try {
-                await fetch(`${RTDB_BASE}/users/${encodeURIComponent(userId)}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ verificationOtp: newOtp, otpExpiresAt: expiresAt })
-                });
-                activeOtpData.otp = newOtp;
-                if (selectedChannel === 'whatsapp') {
-                    document.getElementById('otpWhatsappLink').href = `https://api.whatsapp.com/send?phone=${activeOtpData.phone.replace('+', '')}&text=${encodeURIComponent('SNI Verification Code: ' + newOtp + ' for ' + userId)}`;
-                }
-                showAlert(`Fresh verification code generated!`, 'success');
-            } catch(e) {
-                showAlert('Failed to resend code.');
-            }
-        });
-
-        // Navigation links
-        document.getElementById('backToJoinFormLink').addEventListener('click', () => showStep('joinDetails'));
-        document.getElementById('changePhoneBtn').addEventListener('click', () => showStep('phone'));
         document.getElementById('successBackToLoginBtn').addEventListener('click', () => {
             showStep('signin');
-            if (activeOtpData?.userId) {
-                document.getElementById('signInUserId').value = activeOtpData.userId;
+            if (pendingRegDetails?.userId) {
+                document.getElementById('signInUserId').value = pendingRegDetails.userId;
                 document.getElementById('signInPass').focus();
             }
-            showAlert('⏳ Waiting for Admin Approval: Your phone number is verified. Please wait for Administrator approval before signing in.', 'info');
+            showAlert('⏳ Waiting for Admin Approval: Your application has been submitted to Admin (info@sni.org.in). Please wait for Administrator approval before signing in.', 'info');
         });
 
         // INITIAL URL CHECK

@@ -1243,7 +1243,9 @@ export default function AdminPanel() {
     const isContactVerified = u.isVerified === true || u.phoneVerified === true || u.contactVerified === true || u.emailVerified === true;
     const hasValidContact = (u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) ||
                             (u.phone && String(u.phone).trim().length >= 8) ||
-                            (u.contact && String(u.contact).trim().length >= 8);
+                            (u.contact && String(u.contact).trim().length >= 2) ||
+                            (u.userId && String(u.userId).trim().length >= 2) ||
+                            (u.id && String(u.id).trim().length >= 2);
     return hasValidContact && isContactVerified && (u.status === 'pending' || u.status === 'waiting' || u.status === 'awaiting_approval');
   };
 

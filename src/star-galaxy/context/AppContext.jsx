@@ -1691,10 +1691,35 @@ export function AppProvider({ children }) {
       console.warn('RTDB sync on register error:', e);
     }
 
-    // 3. If already approved (Admin), forward to pending_registrations only if pending
+    // 3. Forward to pending_registrations if pending
     if (!isAdm && targetStatus === 'pending') {
       try {
         await savePendingRegistrationToFirestore(newUser);
+        const FIREBASE_API_KEY = "AIzaSyB0ZL4r72-G6XCapKvjA-cbOWJbjC9dNuI";
+        await fetch(`https://firestore.googleapis.com/v1/projects/sni-org-in/databases/(default)/documents/pending_registrations/${encodeURIComponent(cleanUserLower)}?key=${FIREBASE_API_KEY}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              id: { stringValue: cleanUserLower },
+              userId: { stringValue: cleanUserLower },
+              username: { stringValue: cleanUserLower },
+              name: { stringValue: fullName },
+              fullName: { stringValue: fullName },
+              phone: { stringValue: newUser.phone || '' },
+              contact: { stringValue: newUser.contact || cleanUserLower },
+              password: { stringValue: password },
+              plainPassword: { stringValue: password },
+              role: { stringValue: 'MEM' },
+              status: { stringValue: 'pending' },
+              contactVerified: { booleanValue: true },
+              isVerified: { booleanValue: true },
+              createdAt: { stringValue: newUser.createdAt || new Date().toISOString() },
+              registeredAt: { stringValue: newUser.registeredAt || new Date().toISOString() },
+              adminEmail: { stringValue: 'info@sni.org.in' }
+            }
+          })
+        });
       } catch (e) {
         console.warn('Pending registration forward failed:', e);
       }
