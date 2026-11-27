@@ -1497,7 +1497,7 @@ export default function DynamicPage() {
             )}
 
             {/* LIST VIEW */}
-            {/* HERO FEATURED STORY (Image 1: Sermon of the Month) */}
+            {/* HERO FEATURED STORY */}
             {viewMode === 'list' && displayContents.length > 0 && !searchTerm && filterType === 'all' && (
               <div
                 onClick={() => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${displayContents[0].id}`)}
@@ -1512,9 +1512,11 @@ export default function DynamicPage() {
                 </div>
                 <div className="flex flex-col justify-between py-2 space-y-3">
                   <div className="space-y-2">
-                    <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">
-                      {displayContents[0].isPinned ? '📌 Pinned Message' : 'Sermon of the Month'}
-                    </span>
+                    {displayContents[0].isPinned && (
+                      <span className="text-xs font-bold text-[#C59B27] uppercase tracking-wider inline-flex items-center gap-1">
+                        📌 Pinned Message
+                      </span>
+                    )}
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold font-serif text-[#071B3B] group-hover:text-amber-600 transition-colors leading-snug">
                       {getText(displayContents[0], 'title')}
                     </h2>
