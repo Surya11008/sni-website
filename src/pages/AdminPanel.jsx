@@ -150,6 +150,7 @@ export default function AdminPanel() {
   const [pageCategoryFilter, setPageCategoryFilter] = useState('all');
   const [pageViewMode, setPageViewMode] = useState('grouped'); // 'grouped' | 'cards' | 'table'
   const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [isAddSubPageModalOpen, setIsAddSubPageModalOpen] = useState(false);
   const [editingPageModal, setEditingPageModal] = useState(null); // page object or null
   const [pageEditForm, setPageEditForm] = useState({
     titleEn: '',
@@ -158,6 +159,20 @@ export default function AdminPanel() {
     externalUrl: '',
     iconName: 'FileText',
   });
+
+  const handleOpenAddSubPageModal = (catSlug = 'home') => {
+    setNewPage({
+      categorySlug: catSlug || 'home',
+      customCategoryTitle: '',
+      title: '',
+      titleTe: '',
+      pageSlug: '',
+      desc: '',
+      externalUrl: '',
+      iconName: 'FileText',
+    });
+    setIsAddSubPageModalOpen(true);
+  };
 
   // Total pages count across all categories
   const totalPagesCount = useMemo(() => {
@@ -1207,6 +1222,7 @@ export default function AdminPanel() {
         externalUrl: '',
         iconName: 'FileText',
       });
+      setIsAddSubPageModalOpen(false);
       await fetchPages();
       setPageCategoryFilter(targetCat);
       setCollapsedCategories((prev) => ({ ...prev, [targetCat]: false }));
@@ -1264,6 +1280,7 @@ export default function AdminPanel() {
 
       showFeedback('success', `Page "${pageEditForm.titleEn}" updated successfully!`);
       setEditingPageModal(null);
+      setIsAddSubPageModalOpen(false);
       await fetchPages();
     } catch (err) {
       showFeedback('error', 'Failed to update page: ' + err.message);
@@ -1277,6 +1294,7 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, 'portal_pages', pageId));
       showFeedback('success', 'Page deleted from navigation.');
+      setIsAddSubPageModalOpen(false);
       await fetchPages();
     } catch (err) {
       showFeedback('error', 'Failed to delete page: ' + err.message);
@@ -1991,7 +2009,7 @@ export default function AdminPanel() {
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      Page Title (English) *
+                      Page Title *
                     </label>
                     <input
                       type="text"
@@ -2000,19 +2018,6 @@ export default function AdminPanel() {
                       onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
                       placeholder="e.g. New Song Festival"
                       className="w-full p-2.5 rounded-xl border border-slate-300 text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">
-                      Page Title (Telugu)
-                    </label>
-                    <input
-                      type="text"
-                      value={newPage.titleTe}
-                      onChange={(e) => setNewPage({ ...newPage, titleTe: e.target.value })}
-                      placeholder="e.g. Telugu Title (optional)"
-                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-telugu"
                     />
                   </div>
 
@@ -2140,7 +2145,7 @@ export default function AdminPanel() {
                       type="text"
                       value={pageSearchTerm}
                       onChange={(e) => setPageSearchTerm(e.target.value)}
-                      placeholder="Search any page by title, Telugu name, slug, or category..."
+                      placeholder="Search any page by title, slug, or category..."
                       className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 bg-slate-50/50"
                     />
                     {pageSearchTerm && (
@@ -2247,6 +2252,18 @@ export default function AdminPanel() {
                                 </div>
 
                                 <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAddSubPageModal(cat.categorySlug);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-[11px] font-bold shadow-xs transition cursor-pointer"
+                                    title={`Add new page under ${cat.titleEn}`}
+                                  >
+                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                    <span>+ Add Page</span>
+                                  </button>
                                   <Link
                                     to={`/category/${cat.categorySlug}`}
                                     onClick={(e) => e.stopPropagation()}
@@ -2286,14 +2303,8 @@ export default function AdminPanel() {
                                         >
                                           <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                              <span
-                                                className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                                                  p.isCustom
-                                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                                    : 'bg-slate-200 text-slate-700'
-                                                }`}
-                                              >
-                                                {p.isCustom ? '⭐ Active Page' : '🏛️ System Page'}
+                                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                                Page
                                               </span>
                                               <span className="text-[10px] font-mono text-slate-400">
                                                 /page/{cat.categorySlug}/{p.pageSlug}
@@ -2306,11 +2317,6 @@ export default function AdminPanel() {
                                             <h5 className="text-xs font-bold text-slate-900 mt-1 truncate">
                                               {p.titleEn || p.title}
                                             </h5>
-                                            {p.titleTe && (
-                                              <p className="text-[11px] font-telugu text-slate-500 truncate">
-                                                {p.titleTe}
-                                              </p>
-                                            )}
 
                                             <div className="flex items-center gap-3 mt-2 flex-wrap">
                                               <Link
@@ -2327,6 +2333,15 @@ export default function AdminPanel() {
                                                 <Plus className="w-3 h-3 text-[#C59B27]" />
                                                 <span>+ Write Note</span>
                                               </Link>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleOpenAddSubPageModal(cat.categorySlug)}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 transition cursor-pointer"
+                                                title={`Add new page under ${cat.titleEn}`}
+                                              >
+                                                <Plus className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                                                <span>+ Add Page</span>
+                                              </button>
                                               <button
                                                 type="button"
                                                 onClick={() => handleOpenEditPage(p, cat)}
@@ -2350,6 +2365,18 @@ export default function AdminPanel() {
                                         </div>
                                       );
                                     })}
+
+                                    {/* Quick Card to Add New Page inside this category */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenAddSubPageModal(cat.categorySlug)}
+                                      className="p-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-[#F4B942] bg-slate-50/60 hover:bg-amber-50/40 transition flex items-center justify-center gap-2 text-xs font-bold text-slate-600 hover:text-[#0F294A] cursor-pointer min-h-[85px] group"
+                                    >
+                                      <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Plus className="w-4 h-4 stroke-[3]" />
+                                      </div>
+                                      <span>+ Add New Sub-Page in {cat.titleEn}</span>
+                                    </button>
                                   </div>
                                 </div>
                               )}
@@ -2380,22 +2407,13 @@ export default function AdminPanel() {
                                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-[#0F294A]">
                                   {p.categoryTitleEn || p.categorySlug}
                                 </span>
-                                <span
-                                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                    p.isCustom ? 'bg-amber-200 text-amber-900' : 'bg-slate-200 text-slate-600'
-                                  }`}
-                                >
-                                  {p.isCustom ? 'Custom' : 'System'}
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                  Page
                                 </span>
                               </div>
                               <h5 className="text-xs font-bold text-slate-900 truncate">
                                 {p.titleEn || p.title}
                               </h5>
-                              {p.titleTe && (
-                                <p className="text-[11px] font-telugu text-slate-500 truncate">
-                                  {p.titleTe}
-                                </p>
-                              )}
                               <p className="text-[10px] font-mono text-slate-400 mt-1 truncate">
                                 /page/{p.categorySlug}/{p.pageSlug}
                               </p>
@@ -2414,7 +2432,16 @@ export default function AdminPanel() {
                                 <span>Open</span>
                                 <ExternalLink className="w-3 h-3" />
                               </Link>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenAddSubPageModal(p.categorySlug)}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 cursor-pointer"
+                                  title={`Add new page under ${p.categoryTitleEn || p.categorySlug}`}
+                                >
+                                  <Plus className="w-2.5 h-2.5 stroke-[3]" />
+                                  <span>+ Page</span>
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEditPage(p, { categorySlug: p.categorySlug, titleEn: p.categoryTitleEn })}
@@ -2470,14 +2497,13 @@ export default function AdminPanel() {
                                 </td>
                                 <td className="py-2.5 px-3 font-bold text-slate-900">
                                   <span>{p.titleEn || p.title}</span>
-                                  {p.titleTe && <span className="block text-[11px] font-telugu text-slate-500">{p.titleTe}</span>}
                                 </td>
                                 <td className="py-2.5 px-3 font-mono text-slate-500 text-[11px]">
                                   /page/{p.categorySlug}/{p.pageSlug}
                                 </td>
                                 <td className="py-2.5 px-3">
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${p.isCustom ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`}>
-                                    {p.isCustom ? 'Custom' : 'System'}
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                    Page
                                   </span>
                                 </td>
                                 <td className="py-2.5 px-3 text-slate-600 font-semibold">
@@ -2485,6 +2511,14 @@ export default function AdminPanel() {
                                 </td>
                                 <td className="py-2.5 px-3 text-right">
                                   <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenAddSubPageModal(p.categorySlug)}
+                                      className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded transition"
+                                      title={`Add new page under ${p.categoryTitleEn || p.categorySlug}`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    </button>
                                     <Link
                                       to={`/page/${p.categorySlug}/${p.pageSlug}`}
                                       className="p-1 text-slate-400 hover:text-[#C59B27]"
@@ -2552,7 +2586,7 @@ export default function AdminPanel() {
                   <form onSubmit={handleSavePageEdit} className="space-y-3 text-xs">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        Page Title (English) *
+                        Page Title *
                       </label>
                       <input
                         type="text"
@@ -2560,19 +2594,6 @@ export default function AdminPanel() {
                         value={pageEditForm.titleEn}
                         onChange={(e) => setPageEditForm({ ...pageEditForm, titleEn: e.target.value })}
                         className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">
-                        Page Title (Telugu)
-                      </label>
-                      <input
-                        type="text"
-                        value={pageEditForm.titleTe}
-                        onChange={(e) => setPageEditForm({ ...pageEditForm, titleTe: e.target.value })}
-                        placeholder="Telugu Title..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white font-telugu"
                       />
                     </div>
 
@@ -2616,6 +2637,150 @@ export default function AdminPanel() {
                         className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm"
                       >
                         {loading ? 'Saving...' : 'Save & Update Page'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ADD NEW NAVIGATION PAGE MODAL */}
+            {isAddSubPageModalOpen && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-[#0F294A] flex items-center justify-center font-bold">
+                        <Plus className="w-4 h-4 text-[#C59B27] stroke-[3]" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">
+                          Add New Sub-Page to Menu
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          /page/{newPage.categorySlug}/{newPage.pageSlug || 'new-slug'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsAddSubPageModalOpen(false)}
+                      className="p-1 text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleAddPage} className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Target Category *
+                      </label>
+                      <select
+                        value={newPage.categorySlug}
+                        onChange={(e) => setNewPage({ ...newPage, categorySlug: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs"
+                      >
+                        <option value="home">Home</option>
+                        <option value="worship">Worship</option>
+                        <option value="bible-truth">Bible & Truth</option>
+                        <option value="family">Family & Faith</option>
+                        <option value="grow">Grow</option>
+                        <option value="go-come">Go & Come</option>
+                        <option value="program">Program</option>
+                        <option value="more">More</option>
+                        <option value="custom">+ Create Brand New Category</option>
+                      </select>
+                    </div>
+
+                    {newPage.categorySlug === 'custom' && (
+                      <div className="p-3 rounded-2xl bg-amber-50/70 border border-[#C59B27]/40 space-y-2">
+                        <label className="block font-bold text-slate-700">
+                          New Category Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newPage.customCategoryTitle}
+                          onChange={(e) =>
+                            setNewPage({ ...newPage, customCategoryTitle: e.target.value })
+                          }
+                          placeholder="e.g. Fellowship"
+                          className="w-full p-2 rounded-xl border border-slate-300 bg-white"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Page Title *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newPage.title}
+                        onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                        placeholder="e.g. Youth Fellowship, Testimonies..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Page URL Slug (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={newPage.pageSlug}
+                        onChange={(e) => setNewPage({ ...newPage, pageSlug: e.target.value })}
+                        placeholder="e.g. youth-fellowship"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs bg-white"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        URL: /page/{newPage.categorySlug}/{newPage.pageSlug || newPage.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'slug'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Description (optional)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={newPage.desc}
+                        onChange={(e) => setNewPage({ ...newPage, desc: e.target.value })}
+                        placeholder="Brief description of this section..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        External Link URL (optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={newPage.externalUrl}
+                        onChange={(e) => setNewPage({ ...newPage, externalUrl: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddSubPageModalOpen(false)}
+                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-5 py-2 rounded-xl bg-[#0F294A] hover:bg-[#071B3B] text-[#F4B942] font-bold text-xs uppercase tracking-wider transition shadow-sm flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>{loading ? 'Adding Page...' : 'Publish Page to Menu'}</span>
                       </button>
                     </div>
                   </form>
@@ -3443,11 +3608,6 @@ export default function AdminPanel() {
                                               <PortalIcon name={p.iconName} className="w-3 h-3 text-slate-400 shrink-0" />
                                               <span className="truncate">{p.titleEn}</span>
                                             </div>
-                                            {p.titleTe && (
-                                              <div className="text-[10px] text-slate-500 font-telugu truncate">
-                                                {p.titleTe}
-                                              </div>
-                                            )}
                                             <div className="text-[9px] text-slate-400 font-mono truncate">
                                               {p.pageSlug}
                                             </div>

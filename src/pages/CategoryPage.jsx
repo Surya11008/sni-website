@@ -181,13 +181,22 @@ export default function CategoryPage() {
           </div>
 
           {isAdmin && (
-            <Link
-              to={currentCategory.pages?.length > 0 ? `/page/${categorySlug}/${currentCategory.pages[0].pageSlug}?new=true` : `/admin`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-amber-400 text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm shrink-0"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>+ Write Note in this Category</span>
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
+              <Link
+                to={`/admin?tab=pages&category=${categorySlug}&new=true`}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Add Sub-Page</span>
+              </Link>
+              <Link
+                to={currentCategory.pages?.length > 0 ? `/page/${categorySlug}/${currentCategory.pages[0].pageSlug}?new=true` : `/admin`}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#F4B942] hover:bg-amber-400 text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Write Note in this Category</span>
+              </Link>
+            </div>
           )}
         </div>
         {loading ? (

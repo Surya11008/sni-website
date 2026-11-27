@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePortal } from '../context/PortalContext';
@@ -17,8 +18,15 @@ export default function WATVSubNav({
   className = '',
 }) {
   const { isTelugu } = useLanguage();
-  const { isPagePermitted } = useAuth();
+  const { isPagePermitted, userProfile, currentUser } = useAuth();
   const { portalStructure } = usePortal();
+
+  const isAdmin =
+    userProfile?.role === 'admin' ||
+    userProfile?.role === 'ADMIN' ||
+    currentUser?.email === 'surya11008@sni.org.in' ||
+    currentUser?.email === 'admin@sni.org.in' ||
+    currentUser?.email?.startsWith('surya');
 
   const category = (portalStructure || []).find(
     (c) => c.categorySlug === categorySlug
@@ -69,6 +77,18 @@ export default function WATVSubNav({
               </Link>
             );
           })}
+
+          {/* Quick Add Subpage button for Admin */}
+          {isAdmin && (
+            <Link
+              to={`/admin?tab=pages&category=${categorySlug}&new=true`}
+              className="px-2.5 py-1 whitespace-nowrap text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-md border border-amber-200 transition flex items-center gap-1 shrink-0 ml-1 shadow-2xs"
+              title={`Add new subpage under this category`}
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3] text-amber-600" />
+              <span>+ Add Page</span>
+            </Link>
+          )}
         </nav>
       </div>
     </div>

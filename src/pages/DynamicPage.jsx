@@ -728,7 +728,15 @@ export default function DynamicPage() {
 
           {/* Quick Action Buttons for Admin */}
           {isAdmin && (
-            <div className="shrink-0 flex items-center gap-3">
+            <div className="shrink-0 flex items-center gap-2">
+              <Link
+                to={`/admin?tab=pages&category=${categorySlug}&new=true`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-[#F4B942] text-xs font-bold uppercase tracking-wider transition shadow-sm"
+                title={`Add new page under ${categoryTitle}`}
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Add Page</span>
+              </Link>
               <button
                 onClick={handleOpenAddForm}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
