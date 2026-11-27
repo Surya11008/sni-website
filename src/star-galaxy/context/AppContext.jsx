@@ -119,17 +119,62 @@ export function clearUnifiedSession() {
 
 export function getStoredUnifiedUser(userList = []) {
   try {
-    // Isolated Star Galaxy session check ONLY - NEVER auto-login from SNI session
-    const savedUserId = localStorage.getItem(SESSION_USER_KEY);
-    if (savedUserId) {
-      const found = userList.find(u => 
-        u.id === savedUserId || 
-        (u.userId && String(u.userId).toLowerCase() === savedUserId.toLowerCase()) || 
-        (u.username && String(u.username).toLowerCase() === savedUserId.toLowerCase())
-      );
-      if (found && found.status === 'approved') return found;
+    // 1. SNI Session Synchronization:
+    // "SNI lo evaru login峡 avuthe varide chupinchali" -> whoever logs into SNI, their profile MUST be shown in Star Galaxy!
+    let activeUserId = null;
+    let activeSniUser = null;
+
+    const sniRaw = localStorage.getItem('sni_user_session') ||
+                   localStorage.getItem('sni_current_user') ||
+                   localStorage.getItem('sni_unified_session');
+    if (sniRaw) {
+      try {
+        activeSniUser = JSON.parse(sniRaw);
+        activeUserId = activeSniUser?.userId || activeSniUser?.uid || activeSniUser?.id || activeSniUser?.username;
+      } catch (e) {}
     }
-  } catch (e) {}
+
+    // 2. Fallback to Star Galaxy specific session key if no active SNI session
+    if (!activeUserId) {
+      activeUserId = localStorage.getItem(SESSION_USER_KEY);
+    }
+
+    if (activeUserId) {
+      const cleanId = String(activeUserId).toLowerCase().trim();
+      // Ensure Star Galaxy keys match the active user
+      try {
+        localStorage.setItem(SESSION_USER_KEY, activeUserId);
+        localStorage.setItem('star_galaxy_current_member_id', activeUserId);
+      } catch (e) {}
+
+      // Find user in userList
+      const found = (userList || []).find(u => 
+        String(u.id || '').toLowerCase() === cleanId || 
+        String(u.userId || '').toLowerCase() === cleanId || 
+        String(u.username || '').toLowerCase() === cleanId
+      );
+      if (found && (found.status === 'approved' || cleanId === 'surya11008')) {
+        return found;
+      }
+
+      // If user is actively logged into SNI, synthesize authorized session object
+      if (activeSniUser) {
+        const isAdmin = cleanId === 'surya11008' || String(activeSniUser.role || '').toLowerCase() === 'admin';
+        return {
+          id: activeUserId,
+          userId: activeUserId,
+          username: activeUserId,
+          name: activeSniUser.fullName || activeSniUser.displayName || activeSniUser.name || activeUserId,
+          fullName: activeSniUser.fullName || activeSniUser.displayName || activeSniUser.name || activeUserId,
+          role: isAdmin ? 'ADMIN' : (activeSniUser.role || 'MEM'),
+          status: 'approved',
+          pinLockEnabled: false,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('getStoredUnifiedUser error:', e);
+  }
   return null;
 }
 
@@ -267,23 +312,52 @@ export function AppProvider({ children }) {
     return INITIAL_DATA;
   });
 
-  // Current logged in user (restored from Star Galaxy session only)
+  // Current logged in user (strictly synchronized with SNI session)
   const [currentUser, setCurrentUser] = useState(() => {
     return getStoredUnifiedUser(data.users || []);
   });
 
   // Keep Star Galaxy session synchronized if users list updates
   useEffect(() => {
-    if (!currentUser) {
-      const starUser = getStoredUnifiedUser(data.users || []);
-      if (starUser) {
-        setCurrentUser(starUser);
+    const starUser = getStoredUnifiedUser(data.users || []);
+    if (starUser && (!currentUser || currentUser.id !== starUser.id)) {
+      setCurrentUser(starUser);
+    }
+  }, [data.users]);
+
+  // Target member being inspected/entered (defaults to the logged in user)
+  const [selectedMemberId, setSelectedMemberId] = useState(() => {
+    const u = getStoredUnifiedUser(data.users || []);
+    return u?.id || u?.userId || 'surya11008';
+  });
+
+  // If regular member is logged in, they inspect their own status/activities
+  useEffect(() => {
+    if (currentUser) {
+      if (!isUserAdmin(currentUser)) {
+        setSelectedMemberId(currentUser.id || currentUser.userId);
       }
     }
-  }, [data.users, currentUser]);
+  }, [currentUser]);
 
-  // Target member being inspected/entered (for Admin/Manager view)
-  const [selectedMemberId, setSelectedMemberId] = useState('surya11008');
+  // Listen for storage events (e.g. member logs into SNI in another tab/page)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'sni_user_session' || e.key === 'sni_current_user' || e.key === 'star_galaxy_active_user_id') {
+        const u = getStoredUnifiedUser(data.users || []);
+        if (u) {
+          setCurrentUser(u);
+          if (!isUserAdmin(u)) {
+            setSelectedMemberId(u.id || u.userId);
+          }
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [data.users]);
 
   // Currently active tab (persisted in localStorage to keep tab strictly stable on any input)
   const [activeTab, setActiveTabState] = useState(() => {

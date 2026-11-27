@@ -1052,12 +1052,19 @@ if (installButton) {
             localStorage.setItem('sni_current_user', JSON.stringify(user));
             localStorage.setItem('sni_unified_session', JSON.stringify(user));
             localStorage.setItem('live_counter_current_user', JSON.stringify(user));
+            localStorage.setItem('star_galaxy_active_user_id', user.userId);
             localStorage.setItem('wlh_current_user', JSON.stringify({ userId: user.userId, name: user.fullName || user.userId, role: user.role || 'user' }));
             sessionStorage.setItem('l_support_session_active', 'true');
             if (isAdmin) {
                 localStorage.setItem('sni_admin_active', 'true');
                 sessionStorage.setItem('sni_admin_active', 'true');
                 localStorage.setItem('word_search_admin_auth', 'true');
+                localStorage.setItem('star_galaxy_pin_unlocked', 'true');
+                sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+            } else {
+                localStorage.removeItem('sni_admin_active');
+                sessionStorage.removeItem('sni_admin_active');
+                localStorage.removeItem('word_search_admin_auth');
             }
         } catch(e) {}
     }

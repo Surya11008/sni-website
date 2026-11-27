@@ -1294,11 +1294,25 @@
                 sessionStorage.setItem('l_support_session_active', 'true');
                 localStorage.setItem('word_search_current_user', JSON.stringify(user));
 
+                // STAR GALAXY UNIFIED SESSION SYNC:
+                // Whoever logs into SNI, their profile/login must be active in Star Galaxy!
+                const uid = user.userId || user.uid || user.id;
+                if (uid) {
+                    localStorage.setItem('star_galaxy_active_user_id', uid);
+                    localStorage.setItem('star_galaxy_current_member_id', uid);
+                    sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+                }
+
                 const isAdmin = user.role === 'admin' || isCardAdmin(user.userId, user.password);
                 if (isAdmin) {
                     localStorage.setItem('sni_admin_active', 'true');
                     sessionStorage.setItem('sni_admin_active', 'true');
                     localStorage.setItem('word_search_admin_auth', 'true');
+                } else {
+                    // Regular member login: remove any residual admin credentials on this device
+                    localStorage.removeItem('sni_admin_active');
+                    sessionStorage.removeItem('sni_admin_active');
+                    localStorage.removeItem('word_search_admin_auth');
                 }
 
                 // Cross-Subdomain SSO Cookie on .sni.org.in
@@ -1321,6 +1335,10 @@
                 localStorage.removeItem('sni_admin_active');
                 sessionStorage.removeItem('sni_admin_active');
                 localStorage.removeItem('word_search_admin_auth');
+                localStorage.removeItem('star_galaxy_active_user_id');
+                localStorage.removeItem('star_galaxy_current_member_id');
+                localStorage.removeItem('star_galaxy_pin_unlocked');
+                sessionStorage.removeItem('star_galaxy_pin_unlocked');
 
                 try {
                     document.cookie = `sni_unified_user=; Domain=.sni.org.in; Path=/; Max-Age=0; SameSite=Lax; Secure`;

@@ -1061,6 +1061,10 @@ if (installButton) {
                 localStorage.setItem('word_search_admin_auth', 'true');
                 localStorage.setItem('star_galaxy_pin_unlocked', 'true');
                 sessionStorage.setItem('star_galaxy_pin_unlocked', 'true');
+            } else {
+                localStorage.removeItem('sni_admin_active');
+                sessionStorage.removeItem('sni_admin_active');
+                localStorage.removeItem('word_search_admin_auth');
             }
         } catch(e) {}
     }
