@@ -148,6 +148,7 @@ export default function DynamicPage() {
 
   // Calendar tracking & scheduling states
   const isCalendarPage = ['new-updates', 'events', 'schedule'].includes(pageSlug);
+  const [showAdminCalendar, setShowAdminCalendar] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [calendarDateRange, setCalendarDateRange] = useState('all');
   const [calendarEventType, setCalendarEventType] = useState('all');
@@ -1624,25 +1625,45 @@ export default function DynamicPage() {
         ) : contents.length > 0 ? (
           /* Cards Grid: clicking any card opens the article in-page */
           <div className="space-y-4">
-            {/* Calendar & Schedule Tracking Hub for New Updates, Events & Schedule */}
-            {isCalendarPage && (
-              <CalendarScheduleHub
-                pageSlug={pageSlug}
-                pageTitle={pageTitle}
-                contents={contents}
-                selectedDate={selectedCalendarDate}
-                onSelectDate={setSelectedCalendarDate}
-                dateRangePreset={calendarDateRange}
-                onChangeDatePreset={setCalendarDateRange}
-                selectedEventType={calendarEventType}
-                onChangeEventType={setCalendarEventType}
-                onOpenAddSchedule={(dStr) => handleOpenAddForm(dStr)}
-                onOpenArticle={(item) => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
-                isAdmin={isAdmin}
-                isTelugu={isTelugu}
-                viewMode={viewMode}
-                onToggleViewMode={setViewMode}
-              />
+            {/* Calendar & Schedule Tracking Hub - Admin Only */}
+            {isAdmin && isCalendarPage && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminCalendar(!showAdminCalendar)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                      showAdminCalendar
+                        ? 'bg-amber-100 text-amber-900 border-amber-300'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs'
+                    }`}
+                    title="Toggle Admin Calendar & Tracking"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5 text-[#C59B27]" />
+                    <span>{showAdminCalendar ? 'Hide Admin Calendar' : 'Admin: Show Calendar & Schedule Tracker'}</span>
+                  </button>
+                </div>
+
+                {showAdminCalendar && (
+                  <CalendarScheduleHub
+                    pageSlug={pageSlug}
+                    pageTitle={pageTitle}
+                    contents={contents}
+                    selectedDate={selectedCalendarDate}
+                    onSelectDate={setSelectedCalendarDate}
+                    dateRangePreset={calendarDateRange}
+                    onChangeDatePreset={setCalendarDateRange}
+                    selectedEventType={calendarEventType}
+                    onChangeEventType={setCalendarEventType}
+                    onOpenAddSchedule={(dStr) => handleOpenAddForm(dStr)}
+                    onOpenArticle={(item) => navigate(`/Home/${categorySlug || 'worship'}/${pageSlug || 'sermons'}/${item.id}`)}
+                    isAdmin={isAdmin}
+                    isTelugu={isTelugu}
+                    viewMode={viewMode}
+                    onToggleViewMode={setViewMode}
+                  />
+                )}
+              </div>
             )}
 
             {/* Notion-Style Organization Controls: Search, Filter Tabs, Sort, and 5 Views */}
@@ -1682,20 +1703,22 @@ export default function DynamicPage() {
                     <option value="title">Alphabetical (A - Z)</option>
                   </select>
 
-                  {/* 5 Views: Calendar, Grid, List, Table, Compact */}
+                  {/* Views: Calendar (Admin only), Grid, List, Table, Compact */}
                   <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('calendar')}
-                      className={`p-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                        viewMode === 'calendar'
-                          ? 'bg-white text-[#071B3B] shadow-xs font-bold'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                      title="Calendar & Timeline View"
-                    >
-                      <CalendarDays className="w-4 h-4" />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('calendar')}
+                        className={`p-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                          viewMode === 'calendar'
+                            ? 'bg-white text-[#071B3B] shadow-xs font-bold'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                        title="Calendar & Timeline View (Admin)"
+                      >
+                        <CalendarDays className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
@@ -2292,8 +2315,8 @@ export default function DynamicPage() {
               </div>
             )}
 
-            {/* CALENDAR & TIMELINE AGENDA VIEW */}
-            {viewMode === 'calendar' && (
+            {/* CALENDAR & TIMELINE AGENDA VIEW (ADMIN ONLY) */}
+            {isAdmin && viewMode === 'calendar' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <div className="flex items-center gap-2">
@@ -2480,7 +2503,7 @@ export default function DynamicPage() {
         ) : (
           /* Notion Empty State (Snippet 1) with Calendar integration */
           <div className="space-y-6">
-            {isCalendarPage && (
+            {isAdmin && isCalendarPage && showAdminCalendar && (
               <CalendarScheduleHub
                 pageSlug={pageSlug}
                 pageTitle={pageTitle}
