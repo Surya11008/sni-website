@@ -748,73 +748,6 @@ export default function DynamicPage() {
 
       {/* 2. Main Content Area */}
       <main className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 lg:px-12 pt-3 sm:pt-4 pb-12 space-y-4">
-        {/* Clean, Lightweight Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
-          <div>
-            {/* Breadcrumb Navigation - Multi-Level Nested Breadcrumbs */}
-            <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-0.5 flex-wrap">
-              <Link to="/" className="hover:text-[#0F294A] transition flex items-center gap-1 font-bold text-slate-600">
-                <span>Home</span>
-              </Link>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <Link to={`/category/${categorySlug}`} className="text-[#C59B27] font-bold uppercase hover:underline">
-                {categoryTitle}
-              </Link>
-              {breadcrumbChain.length > 0 ? (
-                breadcrumbChain.map((crumb, idx) => {
-                  const isLast = idx === breadcrumbChain.length - 1;
-                  const crumbTitle = crumb.title || (isTelugu ? crumb.titleTe : crumb.titleEn) || crumb.titleEn;
-                  return (
-                    <span key={crumb.pageSlug || idx} className="inline-flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                      {isLast ? (
-                        <span className="text-slate-900 font-bold">{crumbTitle}</span>
-                      ) : (
-                        <Link
-                          to={`/Home/${categorySlug}/${crumb.pageSlug}`}
-                          className="text-slate-600 hover:text-[#071B3B] font-semibold hover:underline"
-                        >
-                          {crumbTitle}
-                        </Link>
-                      )}
-                    </span>
-                  );
-                })
-              ) : (
-                <>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-900 font-bold">{pageTitle}</span>
-                </>
-              )}
-            </nav>
-
-            <div className="space-y-1">
-              <h1
-                className={`text-3xl sm:text-5xl font-black tracking-tight text-[#071B3B] leading-tight ${
-                  isTelugu ? 'font-krishna' : 'font-serif'
-                }`}
-              >
-                {pageTitle}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
-                {page?.descEn || "This is to help you meditate day and night on God's words that revive your soul."}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Action Buttons for Admin */}
-          {isAdmin && (
-            <div className="shrink-0 flex items-center gap-2">
-              <button
-                onClick={handleOpenAddForm}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ Add Content</span>
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* NOTION-STYLE DOCUMENT EDITOR (Matches Notion Architecture) */}
         {isAdmin && isFormOpen && (
@@ -1790,26 +1723,39 @@ export default function DynamicPage() {
               </div>
             )}
 
-            {/* Notion-Style Organization Controls: Search, Filter Tabs, Sort, and 5 Views */}
-            <div className="space-y-3 border-b border-slate-200 pb-3">
+            {/* Notion-Style Organization Controls: Search, Add Content, Sort, and 5 Views */}
+            <div className="border-b border-slate-200 pb-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                {/* Search Bar */}
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={isTelugu ? 'పేజీలో వెతకండి...' : `Search in ${pageTitle}...`}
-                    className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C59B27]/40 transition"
-                  />
-                  {searchTerm && (
+                {/* Search Bar + Add Content */}
+                <div className="flex items-center gap-2.5 flex-1 max-w-lg">
+                  <div className="relative flex-1">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder={isTelugu ? 'పేజీలో వెతకండి...' : `Search in ${pageTitle}...`}
+                      className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C59B27]/40 transition"
+                    />
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700"
+                      onClick={handleOpenAddForm}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#F4B942] hover:bg-[#e0a42e] text-[#071B3B] text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0"
                     >
-                      <X className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>+ Add Content</span>
                     </button>
                   )}
                 </div>
@@ -1893,36 +1839,6 @@ export default function DynamicPage() {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none text-xs">
-                {[
-                  { key: 'all', label: `All (${contents.length})` },
-                  { key: 'pinned', label: '📌 Pinned' },
-                  { key: 'video', label: '🎥 Videos' },
-                  { key: 'audio', label: '🎵 Audio' },
-                  { key: 'file', label: '📄 Documents' },
-                  { key: 'link', label: '🔗 Links & Embeds' },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setFilterType(tab.key)}
-                    className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition cursor-pointer border text-xs ${
-                      filterType === tab.key
-                        ? 'bg-[#071B3B] text-[#F4B942] border-[#071B3B] shadow-2xs'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-                {displayContents.length !== contents.length && (
-                  <span className="text-[11px] text-slate-400 ml-auto whitespace-nowrap">
-                    Showing {displayContents.length} of {contents.length}
-                  </span>
-                )}
               </div>
             </div>
 
