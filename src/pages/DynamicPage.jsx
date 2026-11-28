@@ -83,14 +83,71 @@ import {
   FolderTree,
 } from 'lucide-react';
 
-// Curated Notion preset spiritual cover wallpapers
+// Curated nature cover wallpapers (50 photos, no religious content)
 const NOTION_PRESET_COVERS = [
-  { name: 'Sacred Sunrise', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80' },
+  // Sunrises & Sunsets
+  { name: 'Ocean Sunrise', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80' },
+  { name: 'Mountain Sunset', url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&q=80' },
+  { name: 'Lake Sunset Glow', url: 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=1600&q=80' },
+  { name: 'Purple Dusk Sky', url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1600&q=80' },
+  { name: 'Sunrise Over Hills', url: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=1600&q=80' },
+  { name: 'Warm Golden Horizon', url: 'https://images.unsplash.com/photo-1504608524841-42f8c3cf5e8e?w=1600&q=80' },
+  // Mountains
   { name: 'Mountain Dawn', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80' },
-  { name: 'Holy Bible', url: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=80' },
+  { name: 'Snowy Alpine Peak', url: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=1600&q=80' },
+  { name: 'Mountain Lake Reflection', url: 'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=1600&q=80' },
+  { name: 'Foggy Mountain Valley', url: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=1600&q=80' },
+  { name: 'Rocky Summit View', url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1600&q=80' },
+  { name: 'Green Mountain Range', url: 'https://images.unsplash.com/photo-1458668383970-8ddd3927deed?w=1600&q=80' },
+  // Forests & Trees
   { name: 'Golden Forest Rays', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80' },
-  { name: 'Cathedral Stained Glass', url: 'https://images.unsplash.com/photo-1548625361-19597a732a39?w=1600&q=80' },
+  { name: 'Autumn Forest Path', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80' },
+  { name: 'Misty Pine Forest', url: 'https://images.unsplash.com/photo-1448518340475-e3c680e9b4c5?w=1600&q=80' },
+  { name: 'Bamboo Forest Green', url: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=1600&q=80' },
+  { name: 'Tall Redwood Trees', url: 'https://images.unsplash.com/photo-1476362555312-ab9e108a0b7e?w=1600&q=80' },
+  { name: 'Forest Morning Mist', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80' },
+  // Oceans & Beaches
   { name: 'Calming Ocean Sunset', url: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=1600&q=80' },
+  { name: 'Tropical Beach Blue', url: 'https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1600&q=80' },
+  { name: 'Wild Ocean Waves', url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1600&q=80' },
+  { name: 'Turquoise Lagoon', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80' },
+  { name: 'Sea Cliffs & Waves', url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&q=80' },
+  { name: 'Quiet Sandy Shore', url: 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=1600&q=80' },
+  // Waterfalls & Rivers
+  { name: 'Waterfall Cascade', url: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=1600&q=80' },
+  { name: 'Hidden Waterfall', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80' },
+  { name: 'Mountain River Flow', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80' },
+  { name: 'Calm River Bend', url: 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=1600&q=80' },
+  // Sky & Clouds
+  { name: 'Peaceful Sky & Clouds', url: 'https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=1600&q=80' },
+  { name: 'Dramatic Storm Clouds', url: 'https://images.unsplash.com/photo-1504608524841-42f8c3cf5e8e?w=1600&q=80' },
+  { name: 'Milky Way Galaxy', url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1600&q=80' },
+  { name: 'Northern Lights Green', url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1600&q=80' },
+  { name: 'Moonrise Night Sky', url: 'https://images.unsplash.com/photo-1504608524841-42f8c3cf5e8e?w=1600&q=80' },
+  { name: 'Rainbow After Rain', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80' },
+  // Flowers & Gardens
+  { name: 'Cherry Blossom Pink', url: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1600&q=80' },
+  { name: 'Wildflower Meadow', url: 'https://images.unsplash.com/photo-1457269449834-928af64c684d?w=1600&q=80' },
+  { name: 'Lavender Fields', url: 'https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1600&q=80' },
+  { name: 'Sunflower Field', url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1600&q=80' },
+  { name: 'Rose Garden Bloom', url: 'https://images.unsplash.com/photo-1457269449834-928af64c684d?w=1600&q=80' },
+  { name: 'Tulip Season Color', url: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1600&q=80' },
+  // Green Landscapes
+  { name: 'Rolling Green Hills', url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&q=80' },
+  { name: 'Lush Valley View', url: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=1600&q=80' },
+  { name: 'Tea Plantation Rows', url: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=1600&q=80' },
+  { name: 'Countryside Path', url: 'https://images.unsplash.com/photo-1458668383970-8ddd3927deed?w=1600&q=80' },
+  // Desert & Rocks
+  { name: 'Sand Dunes Gold', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80' },
+  { name: 'Red Rock Canyon', url: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=1600&q=80' },
+  { name: 'Desert Dusk Silhouette', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80' },
+  // Snow & Winter
+  { name: 'Snowy Pine Forest', url: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=1600&q=80' },
+  { name: 'Frozen Mountain Lake', url: 'https://images.unsplash.com/photo-1455156218388-5e61b526818b?w=1600&q=80' },
+  { name: 'Winter Wonderland', url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1600&q=80' },
+  // Aerial
+  { name: 'Aerial Green Earth', url: 'https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=1600&q=80' },
+  { name: 'Aerial Ocean Reef', url: 'https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1600&q=80' },
 ];
 
 const NOTION_EMOJIS = [
