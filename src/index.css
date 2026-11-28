@@ -107,16 +107,20 @@ iframe, video, embed, object {
   font-weight: 700 !important;
 }
 
-/* Preserve & enhance Yellow / Amber Highlights */
+/* Strip unwanted background highlighter boxes from pasted docs */
 .rich-html-content mark,
-.rich-content-container mark,
-.rich-html-content [style*="background-color: yellow"],
-.rich-html-content [style*="background-color: #ff"],
-.rich-html-content [style*="background-color: rgb(255, 255"] {
-  background-color: #fef08a !important;
-  font-weight: 700 !important;
-  padding: 1px 4px;
-  border-radius: 4px;
+.rich-content-container mark {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.rich-html-content [style*="background"],
+.rich-content-container [style*="background"] {
+  background-color: transparent !important;
+  background: transparent !important;
 }
 
 /* Solid Bold headings and strong tags */

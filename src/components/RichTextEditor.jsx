@@ -331,6 +331,22 @@ export default function RichTextEditor({
     }
   };
 
+  const handlePaste = () => {
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      const elements = editorRef.current.querySelectorAll('[style*="background"], mark');
+      elements.forEach((el) => {
+        el.style.backgroundColor = '';
+        el.style.background = '';
+        if (el.tagName.toLowerCase() === 'mark') {
+          const textNode = document.createTextNode(el.textContent || '');
+          el.parentNode?.replaceChild(textNode, el);
+        }
+      });
+      handleInput();
+    }, 10);
+  };
+
   const execCmd = (cmd, val = null) => {
     try {
       document.execCommand('styleWithCSS', false, true);
@@ -1081,6 +1097,7 @@ export default function RichTextEditor({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
+              onPaste={handlePaste}
               onKeyUp={handleKeyUp}
               onMouseUp={updateActiveFormatting}
               onKeyDown={handleKeyDown}

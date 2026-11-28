@@ -37,8 +37,13 @@ export default function RichContentRenderer({
   if (!content) return null;
 
   // Clean [OBJ] (U+FFFC / U+FFFD) replacement characters completely
-  const sanitizedContent = cleanObjectReplacementChars(content);
+  let sanitizedContent = cleanObjectReplacementChars(content);
   if (!sanitizedContent) return null;
+
+  // Remove all background highlights and <mark> tags completely (no background highlighter)
+  sanitizedContent = sanitizedContent
+    .replace(/(background-color|background)\s*:\s*[^;"]+;?/gi, '')
+    .replace(/<mark\b[^>]*>([\s\S]*?)<\/mark>/gi, '$1');
 
   const fontStyle = activeFont ? { fontFamily: `'${activeFont}', sans-serif` } : undefined;
 
@@ -84,11 +89,9 @@ export default function RichContentRenderer({
             font-weight: 700 !important;
           }
           #${rendererId} mark,
-          #${rendererId} [style*="background-color: yellow"],
-          #${rendererId} [style*="background-color: #ff"],
-          #${rendererId} [style*="background-color: rgb(255, 255"] {
-            background-color: #fef08a !important;
-            font-weight: 700 !important;
+          #${rendererId} [style*="background"] {
+            background-color: transparent !important;
+            background: transparent !important;
           }
           #${rendererId} strong,
           #${rendererId} b {
@@ -191,12 +194,12 @@ export default function RichContentRenderer({
               );
             } else if (token.startsWith('==') && token.endsWith('==')) {
               return (
-                <mark
+                <span
                   key={tIdx}
-                  className="bg-amber-100/90 text-[#0F294A] px-1.5 py-0.5 rounded font-semibold border-b border-[#C59B27]"
+                  className="font-bold text-[#0F294A]"
                 >
                   {token.slice(2, -2)}
-                </mark>
+                </span>
               );
             } else if (token.startsWith('*') && token.endsWith('*')) {
               return (
